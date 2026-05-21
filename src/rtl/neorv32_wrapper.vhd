@@ -161,7 +161,7 @@ begin
         XBUS_REGSTAGE_EN     => true,    -- 改善时序
 
         -- GPIO --
-        IO_GPIO_NUM          => 18,
+        IO_GPIO_NUM          => 32,
         IO_GPIO_DIR_EN       => true,
 
         -- CLINT --

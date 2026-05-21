@@ -2,6 +2,8 @@
 
 > NEORV32 (RISC-V) + FreeRTOS + LVGL，目标：让 DE2-115 变成一台完整的计算机
 
+> **注意**：每次烧录前必须核对 QSF 中的引脚分配是否与 `FPGA/DE2-115引脚表.xlsx` 一致。引脚错误不会报编译错误，但会导致外设行为异常。
+
 ## 硬件平台
 
 **主平台**: Terasic DE2-115 (Cyclone IV E EP4CE115F29C7)

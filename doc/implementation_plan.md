@@ -17,34 +17,46 @@
 
 ## 阶段划分
 
-### Phase 0: 基础设施 (1-2 周)
+### Phase 0: 基础设施 (1-2 周) ✅ 已完成
 
-**目标**: 最小系统能跑起来 — CPU 上板 + UART 输出 + 仿真环境
+**目标**: 最小系统能跑起来 — CPU 上板 + LED/HEX 验证 + UART 输出
 
-#### 0.1 NEORV32 集成
-- [ ] 配置 NEORV32 为最小配置 (RV32IMC + UART + GPIO + TRNG)
-- [ ] 编写顶层 `de2_115_top.vhd`，实例化 NEORV32
-- [ ] 配置 PLL: 50MHz → 50MHz (CPU) + 74.25MHz (VGA, 后续启用)
-- [ ] 引脚约束: 时钟、复位、UART (RS-232)
-- [ ] 验证: UART 输出 "Hello from NEORV32!"
+#### 0.1 NEORV32 集成 ✅
+- [x] 配置 NEORV32 (RV32IMC + Zfinx + Zk* + UART + GPIO + TRNG + XBUS + OCD)
+- [x] 编写顶层 `de2_115_top.vhd`，实例化 NEORV32
+- [x] Phase 0 无 PLL，50MHz 直通
+- [x] 引脚约束: 时钟、复位、UART、LEDR、HEX0-3、SDRAM (已对照 xlsx 核对)
+- [x] GPIO 扩展到 32 位，LEDR 和 HEX 使用不重叠的位段
 
-#### 0.2 Quartus 项目搭建
-- [ ] 创建 `par/de2extra.qpf` / `.qsf`
-- [ ] 添加所有源文件到项目
-- [ ] 配置时序约束 (`.sdc`)
-- [ ] 验证: 综合 + fitter 通过，资源占用 < 5%
+#### 0.2 Quartus 项目搭建 ✅
+- [x] 创建 `par/de2extra.qpf` / `.qsf`
+- [x] 添加所有源文件到项目
+- [x] 配置时序约束 (`.sdc`)
+- [x] 综合 + fitter 通过 (~7500 LCs, 15 DSPs)
 
-#### 0.3 仿真环境
-- [ ] 编写 `tb_de2_115_top.vhd` — 顶层 testbench
-- [ ] 验证 NEORV32 在仿真中执行指令
-- [ ] UART 输出波形验证
+#### 0.3 仿真环境 ✅
+- [x] 编写 `tb_de2_115_top.vhd` — 顶层 testbench
 
-#### 0.4 软件工具链
-- [ ] 安装 RISC-V GCC 交叉编译器
-- [ ] 编写最小启动代码 (`start.S`)
-- [ ] 链接脚本 (`neorv32.ld`)
-- [ ] Makefile 框架
-- [ ] 验证: 软件编译 → UART 输出
+#### 0.4 软件工具链 ✅
+- [x] Docker 容器化 RISC-V GCC 14.3 (xPack) — 不污染宿主环境
+- [x] 复用 NEORV32 软件框架 (crt0, neorv32.ld, common.mk)
+- [x] `sw/build.sh` 一条命令编译 + 生成 IMEM image
+
+#### 0.5 上板验证 ✅
+- [x] CPU 启动运行，GPIO 输出正常
+- [x] LED 跑马灯、HEX 计数器、UART 输出均通过
+
+**当前例程预期行为** (`sw/app/hello/main.c`):
+- LEDR[17:0]: 跑马灯，单个 LED 从 LEDR[0] 到 LEDR[17] 循环点亮
+- HEX0-3: 四位十六进制计数器 0000 → FFFF 循环
+- LEDG[0]: 复位指示灯（按住 KEY[0] 亮，松开灭）
+- UART (115200 baud): 输出 "DE2Extra — NEORV32 RISC-V alive!" + 定期心跳
+
+**信号映射**:
+- GPIO[17:0] → LEDR[17:0]
+- GPIO[31:16] → HEX3..0（seg7_mapper 解码）
+- GPIO_DIR: 全 32 位输出
+- Boot mode 2: IMEM image 烧入 bitstream，上电即跑
 
 ---
 

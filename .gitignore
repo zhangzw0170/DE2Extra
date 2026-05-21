@@ -18,6 +18,18 @@ par/*.sof
 par/*.pof
 par/*.jic
 
+# Software build artifacts
+sw/app/hello/build/
+sw/app/hello/*.elf
+sw/app/hello/*.bin
+sw/app/hello/*.asm
+sw/app/hello/neorv32_exe.bin
+sw/app/hello/neorv32_raw_exe.*
+sw/app/hello/neorv32_imem_image.vhd
+
+# Docker toolchain tarball
+sw/riscv-gcc.tar.gz
+
 # Simulation
 *.wlf
 *.vstf

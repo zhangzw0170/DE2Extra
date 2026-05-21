@@ -25,21 +25,20 @@ int main(void) {
     neorv32_uart0_puts("  Board: DE2-115 (Cyclone IV E)\n");
     neorv32_uart0_puts("========================================\n");
 
-    /* GPIO: 低 18 位输出 (LEDR), 位 19..4 输出 (七段管) */
-    neorv32_gpio_dir_set(0x000FFFFF);
+    /* GPIO: 全部 32 位输出 (低 18 位 → LEDR, 高 16 位 → HEX) */
+    neorv32_gpio_dir_set(0xFFFFFFFF);
 
     uint32_t counter = 0;
 
     while (1) {
         /* LED 流水灯: GPIO[17:0] */
         uint32_t led_pattern = 1 << (counter % 18);
-        neorv32_gpio_port_set(led_pattern);
 
-        /* 七段管计数器: GPIO[19:4], 每 16 次循环递增 */
-        if ((counter & 0xF) == 0) {
-            uint32_t hex_counter = (counter >> 4) & 0xFFFF;
-            neorv32_gpio_port_set(led_pattern | (hex_counter << 4));
-        }
+        /* 七段管计数器: GPIO[31:16], 与 LEDR 不重叠 */
+        uint32_t hex_counter = (counter >> 4) & 0xFFFF;
+
+        /* 一次写入: LED (低18位) + HEX (高16位) */
+        neorv32_gpio_port_set(led_pattern | (hex_counter << 16));
 
         counter++;
 

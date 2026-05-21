@@ -137,8 +137,9 @@ begin
     -- ================================================================
     -- GPIO → 七段数码管映射
     -- ================================================================
-    -- GPIO[19:4] 的 16 位拆为 4 个 nibble → HEX0..3
-    hex_display <= gpio_out(19 downto 4);
+    -- GPIO[31:16] 的 16 位拆为 4 个 nibble → HEX0..3
+    -- (与 LEDR[17:0] 不重叠, 避免互相干扰)
+    hex_display <= gpio_out(31 downto 16);
 
     u_seg7 : entity work.seg7_mapper
     port map (

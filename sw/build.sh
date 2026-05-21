@@ -18,7 +18,13 @@ if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
 fi
 
 # Run build inside container
-docker run --rm \
+# MSYS_NO_PATHCONV prevents Git Bash from rewriting /project to a Windows path
+MSYS_NO_PATHCONV=1 docker run --rm \
     -v "$PROJ_ROOT:/project" \
     "$IMAGE_NAME" \
     bash -c "cd /project/sw/$APP_DIR && make clean all image NEORV32_HOME=/project/neorv32"
+
+# Copy generated IMEM image to src/rtl/ (outside submodule)
+cp "$PROJ_ROOT/neorv32/rtl/core/neorv32_imem_image.vhd" "$PROJ_ROOT/src/rtl/neorv32_imem_image.vhd"
+echo "IMEM image copied to src/rtl/neorv32_imem_image.vhd"
+echo "Now recompile in Quartus to bake the software into the bitstream."
