@@ -3,7 +3,9 @@ neorv32/
 
 # Quartus generated
 par/db/
+par/incremental_db/
 par/output_files/
+par/greybox_tmp/
 par/*.qws
 par/*.rpt
 par/*.summary
@@ -12,11 +14,9 @@ par/*.done
 par/*.pin
 par/*.jdi
 par/*.sld
-par/*.asm.rpt
-par/*.fit.rpt
-par/*.map.rpt
-par/*.flow.rpt
-par/greybox_tmp/
+par/*.sof
+par/*.pof
+par/*.jic
 
 # Simulation
 *.wlf
@@ -34,7 +34,3 @@ Thumbs.db
 *~
 .idea/
 .vscode/
-
-# Quartus project specific
-*.qws
-incremental_db/

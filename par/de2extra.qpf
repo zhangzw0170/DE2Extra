@@ -1,0 +1,11 @@
+# -------------------------------------------------------------------------- #
+# DE2Extra — NEORV32 RISC-V + FreeRTOS + LVGL on DE2-115                    #
+# Quartus Prime Project File                                                 #
+# -------------------------------------------------------------------------- #
+
+DATE = "20:33 May 21, 2026"
+QUARTUS_VERSION = "23.1"
+
+# Revisions
+
+PROJECT_REVISION = "de2extra"

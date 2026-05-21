@@ -78,22 +78,22 @@ end entity;
 
 ### 外设模块规划
 
-| 模块 | 说明 | 优先级 |
-|------|------|--------|
-| vga_controller | 720p 帧缓冲 + VGA 时序 | P0 |
-| sdram_ctrl | SDRAM 控制器 (帧缓冲+CPU 内存) | P0 |
-| ps2_keyboard | PS/2 键盘 | P0 |
-| ps2_mouse | PS/2 鼠标 | P1 |
-| uart | RS-232 调试串口 | P0 |
-| timer_module | 系统定时器 (FreeRTOS 心跳) | P0 |
-| interrupt_ctrl | 中断控制器 | P0 |
-| spi_sd_card | SD 卡 (存资源) | P1 |
-| i2c_master | I2C (配置音频/TV芯片) | P1 |
-| audio_i2s | I2S 音频输出 (WM8731) | P2 |
-| lcd_controller | HD44780 LCD | P2 |
-| irda_receiver | 红外 NEC 解码 | P2 |
-| eth_mac | 以太网 MAC | P3 |
-| usb_ctrl | USB OTG (ISP1362) | P3 |
+| 模块           | 说明                           | 优先级 |
+| -------------- | ------------------------------ | ------ |
+| vga_controller | 720p 帧缓冲 + VGA 时序         | P0     |
+| sdram_ctrl     | SDRAM 控制器 (帧缓冲+CPU 内存) | P0     |
+| ps2_keyboard   | PS/2 键盘                      | P0     |
+| ps2_mouse      | PS/2 鼠标                      | P1     |
+| uart           | RS-232 调试串口                | P0     |
+| timer_module   | 系统定时器 (FreeRTOS 心跳)     | P0     |
+| interrupt_ctrl | 中断控制器                     | P0     |
+| spi_sd_card    | SD 卡 (存资源)                 | P1     |
+| i2c_master     | I2C (配置音频/TV芯片)          | P1     |
+| audio_i2s      | I2S 音频输出 (WM8731)          | P2     |
+| lcd_controller | HD44780 LCD                    | P2     |
+| irda_receiver  | 红外 NEC 解码                  | P2     |
+| eth_mac        | 以太网 MAC                     | P3     |
+| usb_ctrl       | USB OTG (ISP1362)              | P3     |
 
 ## Conventions
 
@@ -138,18 +138,31 @@ DE2Extra/
 
 ## Toolchain
 
-| Tool | Purpose |
-|------|---------|
+| Tool                       | Purpose                   |
+| -------------------------- | ------------------------- |
 | Quartus Prime 23.1std Lite | FPGA 综合, 布局布线, 编程 |
-| QuestaSim | VHDL 仿真 |
-| RISC-V GCC (prebuilt) | 软件交叉编译 |
-| OpenOCD + GDB | JTAG 调试 |
-| FreeRTOS | 实时操作系统 |
-| LVGL | 图形界面库 |
+| QuestaSim                  | VHDL 仿真                 |
+| RISC-V GCC (prebuilt)      | 软件交叉编译              |
+| OpenOCD + GDB              | JTAG 调试                 |
+| FreeRTOS                   | 实时操作系统              |
+| LVGL                       | 图形界面库                |
 
 Target device: `EP4CE115F29C7`
 
 ## Build
+
+### 首次打开项目 (必须)
+
+NEORV32 使用 VHDL-2008 语法 (`std_ulogic`、record 类型等)，Quartus 默认是 VHDL-93，必须手动切换：
+
+1. 打开 `par/de2extra.qpf`
+2. **Assignments → Settings → Compiler Settings → VHDL Input**
+3. 改为 **VHDL 2008**
+4. 点 OK
+
+这一步只做一次，之后 Quartus 会记住设置。
+
+### 编译
 
 ```
 # Hardware (Quartus)
