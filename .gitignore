@@ -1,0 +1,40 @@
+# NEORV32 submodule
+neorv32/
+
+# Quartus generated
+par/db/
+par/output_files/
+par/*.qws
+par/*.rpt
+par/*.summary
+par/*.smsg
+par/*.done
+par/*.pin
+par/*.jdi
+par/*.sld
+par/*.asm.rpt
+par/*.fit.rpt
+par/*.map.rpt
+par/*.flow.rpt
+par/greybox_tmp/
+
+# Simulation
+*.wlf
+*.vstf
+transcript
+work/
+vsim.wlf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*~
+.idea/
+.vscode/
+
+# Quartus project specific
+*.qws
+incremental_db/
