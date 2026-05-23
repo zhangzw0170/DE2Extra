@@ -1,0 +1,283 @@
+/*
+ * crypto_aes.c — AES-128 ECB encryption/decryption
+ *
+ * Pure C reference implementation per NIST FIPS-197.
+ * In NEORV32 target mode, the per-round inner loops are annotated with
+ * the Zkne/Zknd instructions that can replace them for hardware acceleration.
+ *
+ * Test vectors: NIST FIPS-197 Appendix B
+ *   Key:        2b7e151628aed2a6abf7158809cf4f3c
+ *   Plaintext:  6bc1bee22e409f96e93d7e117393172a
+ *   Ciphertext: 3ad77bb40d7a3660a89ecaf32466ef97
+ */
+
+#include "crypto.h"
+
+/* ── AES S-box (forward) ──────────────────────────────────────── */
+
+static const uint8_t sbox[256] = {
+    0x63,0x7C,0x77,0x7B,0xF2,0x6B,0x6F,0xC5,0x30,0x01,0x67,0x2B,0xFE,0xD7,0xAB,0x76,
+    0xCA,0x82,0xC9,0x7D,0xFA,0x59,0x47,0xF0,0xAD,0xD4,0xA2,0xAF,0x9C,0xA4,0x72,0xC0,
+    0xB7,0xFD,0x93,0x26,0x36,0x3F,0xF7,0xCC,0x34,0xA5,0xE5,0xF1,0x71,0xD8,0x31,0x15,
+    0x04,0xC7,0x23,0xC3,0x18,0x96,0x05,0x9A,0x07,0x12,0x80,0xE2,0xEB,0x27,0xB2,0x75,
+    0x09,0x83,0x2C,0x1A,0x1B,0x6E,0x5A,0xA0,0x52,0x3B,0xD6,0xB3,0x29,0xE3,0x2F,0x84,
+    0x53,0xD1,0x00,0xED,0x20,0xFC,0xB1,0x5B,0x6A,0xCB,0xBE,0x39,0x4A,0x4C,0x58,0xCF,
+    0xD0,0xEF,0xAA,0xFB,0x43,0x4D,0x33,0x85,0x45,0xF9,0x02,0x7F,0x50,0x3C,0x9F,0xA8,
+    0x51,0xA3,0x40,0x8F,0x92,0x9D,0x38,0xF5,0xBC,0xB6,0xDA,0x21,0x10,0xFF,0xF3,0xD2,
+    0xCD,0x0C,0x13,0xEC,0x5F,0x97,0x44,0x17,0xC4,0xA7,0x7E,0x3D,0x64,0x5D,0x19,0x73,
+    0x60,0x81,0x4F,0xDC,0x22,0x2A,0x90,0x88,0x46,0xEE,0xB8,0x14,0xDE,0x5E,0x0B,0xDB,
+    0xE0,0x32,0x3A,0x0A,0x49,0x06,0x24,0x5C,0xC2,0xD3,0xAC,0x62,0x91,0x95,0xE4,0x79,
+    0xE7,0xC8,0x37,0x6D,0x8D,0xD5,0x4E,0xA9,0x6C,0x56,0xF4,0xEA,0x65,0x7A,0xAE,0x08,
+    0xBA,0x78,0x25,0x2E,0x1C,0xA6,0xB4,0xC6,0xE8,0xDD,0x74,0x1F,0x4B,0xBD,0x8B,0x8A,
+    0x70,0x3E,0xB5,0x66,0x48,0x03,0xF6,0x0E,0x61,0x35,0x57,0xB9,0x86,0xC1,0x1D,0x9E,
+    0xE1,0xF8,0x98,0x11,0x69,0xD9,0x8E,0x94,0x9B,0x1E,0x87,0xE9,0xCE,0x55,0x28,0xDF,
+    0x8C,0xA1,0x89,0x0D,0xBF,0xE6,0x42,0x68,0x41,0x99,0x2D,0x0F,0xB0,0x54,0xBB,0x16
+};
+
+/* ── AES Inverse S-box ────────────────────────────────────────── */
+
+static const uint8_t inv_sbox[256] = {
+    0x52,0x09,0x6A,0xD5,0x30,0x36,0xA5,0x38,0xBF,0x40,0xA3,0x9E,0x81,0xF3,0xD7,0xFB,
+    0x7C,0xE3,0x39,0x82,0x9B,0x2F,0xFF,0x87,0x34,0x8E,0x43,0x44,0xC4,0xDE,0xE9,0xCB,
+    0x54,0x7B,0x94,0x32,0xA6,0xC2,0x23,0x3D,0xEE,0x4C,0x95,0x0B,0x42,0xFA,0xC3,0x4E,
+    0x08,0x2E,0xA1,0x66,0x28,0xD9,0x24,0xB2,0x76,0x5B,0xA2,0x49,0x6D,0x8B,0xD1,0x25,
+    0x72,0xF8,0xF6,0x64,0x86,0x68,0x98,0x16,0xD4,0xA4,0x5C,0xCC,0x5D,0x65,0xB6,0x92,
+    0x6C,0x70,0x48,0x50,0xFD,0xED,0xB9,0xDA,0x5E,0x15,0x46,0x57,0xA7,0x8D,0x9D,0x84,
+    0x90,0xD8,0xAB,0x00,0x8C,0xBC,0xD3,0x0A,0xF7,0xE4,0x58,0x05,0xB8,0xB3,0x45,0x06,
+    0xD0,0x2C,0x1E,0x8F,0xCA,0x3F,0x0F,0x02,0xC1,0xAF,0xBD,0x03,0x01,0x13,0x8A,0x6B,
+    0x3A,0x91,0x11,0x41,0x4F,0x67,0xDC,0xEA,0x97,0xF2,0xCF,0xCE,0xF0,0xB4,0xE6,0x73,
+    0x96,0xAC,0x74,0x22,0xE7,0xAD,0x35,0x85,0xE2,0xF9,0x37,0xE8,0x1C,0x75,0xDF,0x6E,
+    0x47,0xF1,0x1A,0x71,0x1D,0x29,0xC5,0x89,0x6F,0xB7,0x62,0x0E,0xAA,0x18,0xBE,0x1B,
+    0xFC,0x56,0x3E,0x4B,0xC6,0xD2,0x79,0x20,0x9A,0xDB,0xC0,0xFE,0x78,0xCD,0x5A,0xF4,
+    0x1F,0xDD,0xA8,0x33,0x88,0x07,0xC7,0x31,0xB1,0x12,0x10,0x59,0x27,0x80,0xEC,0x5F,
+    0x60,0x51,0x7F,0xA9,0x19,0xB5,0x4A,0x0D,0x2D,0xE5,0x7A,0x9F,0x93,0xC9,0x9C,0xEF,
+    0xA0,0xE0,0x3B,0x4D,0xAE,0x2A,0xF5,0xB0,0xC8,0xEB,0xBB,0x3C,0x83,0x53,0x99,0x61,
+    0x17,0x2B,0x04,0x7E,0xBA,0x77,0xD6,0x26,0xE1,0x69,0x14,0x63,0x55,0x21,0x0C,0x7D
+};
+
+/* ── GF(2^8) multiplication ───────────────────────────────────── */
+
+static uint8_t gfmul(uint8_t a, uint8_t b) {
+    uint8_t p = 0;
+    for (int i = 0; i < 8; i++) {
+        if (b & 1) p ^= a;
+        uint8_t hi = a & 0x80;
+        a <<= 1;
+        if (hi) a ^= 0x1B;  /* AES irreducible polynomial x^8 + x^4 + x^3 + x + 1 */
+        b >>= 1;
+    }
+    return p;
+}
+
+/* ── Rcon ─────────────────────────────────────────────────────── */
+
+static const uint8_t rcon[11] = {
+    0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
+};
+
+/* ── Key Expansion ────────────────────────────────────────────── */
+
+void aes128_key_expand(const uint8_t key[AES128_KEY_SIZE],
+                       uint32_t rk[4 * (AES128_NR + 1)]) {
+    int i;
+
+    /* first 4 words are the key itself */
+    for (i = 0; i < AES128_NK; i++) {
+        rk[i] = ((uint32_t)key[4*i]   << 24) |
+                ((uint32_t)key[4*i+1] << 16) |
+                ((uint32_t)key[4*i+2] <<  8) |
+                ((uint32_t)key[4*i+3]);
+    }
+
+    for (i = AES128_NK; i < 4 * (AES128_NR + 1); i++) {
+        uint32_t temp = rk[i - 1];
+        if (i % AES128_NK == 0) {
+            /* RotWord + SubWord + Rcon */
+            uint32_t rot = (temp << 8) | (temp >> 24);
+            temp = ((uint32_t)sbox[(rot >> 24) & 0xFF] << 24) |
+                   ((uint32_t)sbox[(rot >> 16) & 0xFF] << 16) |
+                   ((uint32_t)sbox[(rot >>  8) & 0xFF] <<  8) |
+                   ((uint32_t)sbox[ rot        & 0xFF]);
+            temp ^= (uint32_t)rcon[i / AES128_NK] << 24;
+        }
+        /* AES-128 does not have the SubWord step for i%4 != 0 (only AES-256 does) */
+        rk[i] = rk[i - AES128_NK] ^ temp;
+    }
+}
+
+/* ── SubBytes ─────────────────────────────────────────────────── */
+
+static void sub_bytes(uint8_t state[16]) {
+    for (int i = 0; i < 16; i++)
+        state[i] = sbox[state[i]];
+}
+
+static void inv_sub_bytes(uint8_t state[16]) {
+    for (int i = 0; i < 16; i++)
+        state[i] = inv_sbox[state[i]];
+}
+
+/* ── ShiftRows ────────────────────────────────────────────────── */
+
+static void shift_rows(uint8_t state[16]) {
+    uint8_t t;
+
+    /* row 1: shift left 1 */
+    t        = state[1];
+    state[1]  = state[5];
+    state[5]  = state[9];
+    state[9]  = state[13];
+    state[13] = t;
+
+    /* row 2: shift left 2 */
+    t        = state[2];
+    state[2]  = state[10];
+    state[10] = t;
+    t        = state[6];
+    state[6]  = state[14];
+    state[14] = t;
+
+    /* row 3: shift left 3 (= right 1) */
+    t        = state[15];
+    state[15] = state[11];
+    state[11] = state[7];
+    state[7]  = state[3];
+    state[3]  = t;
+}
+
+static void inv_shift_rows(uint8_t state[16]) {
+    uint8_t t;
+
+    /* row 1: shift right 1 */
+    t        = state[13];
+    state[13] = state[9];
+    state[9]  = state[5];
+    state[5]  = state[1];
+    state[1]  = t;
+
+    /* row 2: shift right 2 */
+    t        = state[2];
+    state[2]  = state[10];
+    state[10] = t;
+    t        = state[6];
+    state[6]  = state[14];
+    state[14] = t;
+
+    /* row 3: shift right 3 (= left 1) */
+    t        = state[3];
+    state[3]  = state[7];
+    state[7]  = state[11];
+    state[11] = state[15];
+    state[15] = t;
+}
+
+/* ── MixColumns ───────────────────────────────────────────────── */
+
+static void mix_columns(uint8_t state[16]) {
+    for (int c = 0; c < 4; c++) {
+        int i = c * 4;
+        uint8_t a0 = state[i], a1 = state[i+1], a2 = state[i+2], a3 = state[i+3];
+        state[i]   = gfmul(a0, 2) ^ gfmul(a1, 3) ^ a2 ^ a3;
+        state[i+1] = a0 ^ gfmul(a1, 2) ^ gfmul(a2, 3) ^ a3;
+        state[i+2] = a0 ^ a1 ^ gfmul(a2, 2) ^ gfmul(a3, 3);
+        state[i+3] = gfmul(a0, 3) ^ a1 ^ a2 ^ gfmul(a3, 2);
+    }
+}
+
+static void inv_mix_columns(uint8_t state[16]) {
+    for (int c = 0; c < 4; c++) {
+        int i = c * 4;
+        uint8_t a0 = state[i], a1 = state[i+1], a2 = state[i+2], a3 = state[i+3];
+        state[i]   = gfmul(a0, 14) ^ gfmul(a1, 11) ^ gfmul(a2, 13) ^ gfmul(a3,  9);
+        state[i+1] = gfmul(a0,  9) ^ gfmul(a1, 14) ^ gfmul(a2, 11) ^ gfmul(a3, 13);
+        state[i+2] = gfmul(a0, 13) ^ gfmul(a1,  9) ^ gfmul(a2, 14) ^ gfmul(a3, 11);
+        state[i+3] = gfmul(a0, 11) ^ gfmul(a1, 13) ^ gfmul(a2,  9) ^ gfmul(a3, 14);
+    }
+}
+
+/* ── AddRoundKey ──────────────────────────────────────────────── */
+
+static void add_round_key(uint8_t state[16], const uint32_t rk[4]) {
+    for (int c = 0; c < 4; c++) {
+        uint32_t w = rk[c];
+        state[c*4]   ^= (w >> 24) & 0xFF;
+        state[c*4+1] ^= (w >> 16) & 0xFF;
+        state[c*4+2] ^= (w >>  8) & 0xFF;
+        state[c*4+3] ^=  w        & 0xFF;
+    }
+}
+
+/* ── AES-128 Encrypt One Block ────────────────────────────────── */
+
+void aes128_enc_block(const uint8_t pt[AES_BLOCK_SIZE],
+                      const uint32_t rk[4 * (AES128_NR + 1)],
+                      uint8_t ct[AES_BLOCK_SIZE]) {
+    uint8_t state[16];
+    for (int i = 0; i < 16; i++) state[i] = pt[i];
+
+    /* Initial round */
+    add_round_key(state, &rk[0]);
+
+    /* Rounds 1..9 */
+    for (int r = 1; r < AES128_NR; r++) {
+        sub_bytes(state);
+        shift_rows(state);
+        mix_columns(state);
+        add_round_key(state, &rk[r * 4]);
+    }
+
+    /* Final round (no MixColumns) */
+    sub_bytes(state);
+    shift_rows(state);
+    add_round_key(state, &rk[AES128_NR * 4]);
+
+    for (int i = 0; i < 16; i++) ct[i] = state[i];
+}
+
+/* ── AES-128 Decrypt One Block ────────────────────────────────── */
+
+void aes128_dec_block(const uint8_t ct[AES_BLOCK_SIZE],
+                      const uint32_t rk[4 * (AES128_NR + 1)],
+                      uint8_t pt[AES_BLOCK_SIZE]) {
+    uint8_t state[16];
+    for (int i = 0; i < 16; i++) state[i] = ct[i];
+
+    /* Initial round */
+    add_round_key(state, &rk[AES128_NR * 4]);
+
+    /* Rounds 9..1 */
+    for (int r = AES128_NR - 1; r >= 1; r--) {
+        inv_shift_rows(state);
+        inv_sub_bytes(state);
+        add_round_key(state, &rk[r * 4]);
+        inv_mix_columns(state);
+    }
+
+    /* Final round (no InvMixColumns) */
+    inv_shift_rows(state);
+    inv_sub_bytes(state);
+    add_round_key(state, &rk[0]);
+
+    for (int i = 0; i < 16; i++) pt[i] = state[i];
+}
+
+/*
+ * ── NEORV32 Zkne/Zknd Hardware Acceleration Notes ───────────────
+ *
+ * On the NEORV32 target (LOCAL_BUILD off), the per-round loops above
+ * can be replaced by RISC-V scalar crypto instructions:
+ *
+ *   aes32esmi  rd, rs1, rs2, bs  — AES encrypt: SubBytes+ShiftRows+MixColumns
+ *   aes32esi   rd, rs1, rs2, bs  — AES encrypt: SubBytes+ShiftRows (last round)
+ *   aes32dsmi  rd, rs1, rs2, bs  — AES decrypt: InvSubBytes+InvShiftRows+InvMixColumns
+ *   aes32dsi   rd, rs1, rs2, bs  — AES decrypt: InvSubBytes+InvShiftRows (last round)
+ *
+ * These use the RISC-V OP-32 opcode (0x37), funct3=0, with funct7 selecting the
+ * specific variant. The bs field (bits [1:0] of immediates) selects which byte
+ * of the state word to process.
+ *
+ * Example inline asm for aes32esmi:
+ *   asm volatile (".insn r 0x37, 0, 0x27, %0, %1, %2"
+ *                 : "=r"(result) : "r"(rs1), "r"(rs2));
+ *   // funct7=0x27 for aes32esmi, bs encoded in rs2 bits [1:0]
+ */
