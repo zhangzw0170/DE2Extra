@@ -12,9 +12,10 @@
 
 - **Phase 0**: NEORV32 @50MHz 上板，UART/GPIO/LED/HEX/LCD 已验证 ✅
 - **Phase 1**: SDRAM + `wb_intercon` 已上板跑通，`sdram_test` 四项全过 ✅
-- **Phase 2a**: Crypto CLI 纯 C 实现完成，NIST/国密测试向量全过，Docker text=13,556B ✅
-- **Phase 2b**: VGA 终端 + PS/2 键盘源码完成，QuestSim 可验证 🟡 **待上板** — VGA/PS/2 未接入顶层，VGA 转 HDMI 线 5/24 到货
-- **Phase 3**: Unified Shell 框架就位 (hello/memtest/crypto/snake/life/dash/info/exp1/4/5/12)，当前差 VGA 硬件接入与实板联调 🟡
+- **Phase 2a 基线**: `crypto_cli` 纯 C 版已上板跑通，RS-232 (`115200 8N1`) 下 `help/info/aes/sha/sm/trng/bench` 已实机验证，LCD 已切换为 `DE2Extra Crypto / UART CLI READY` ✅
+- **Phase 2a 收尾**: Zk* 指令加速版、纯 C vs Zk* 性能对比、TRNG 统计验证仍待完成 🟡 — 详见 `phases/phase2a-crypto-cli.md`
+- **Phase 2b**: VGA 终端 + PS/2 键盘源码完成，QuestaSim 可验证 🟡 当前可先做 PS/2 + `wb_intercon` + 顶层/QSF 接入；VGA 实显仍待显示链路
+- **Phase 3**: Unified Shell 框架就位 (hello/memtest/crypto/snake/life/dash/info/exp1/4/5/12)，当前差 VGA/PS2 硬件接入与实板联调 🟡
 - Zk* 密码学 ISA + TRNG 已启用，Docker 工具链就绪
 
 ### 核心决策
@@ -39,20 +40,23 @@ Phase 1           Phase 2a + 2b (并行)          Phase 3
 | **2a** | 密码学 UART 终端 (C 软件) | AES/SHA/SM4/SM3/TRNG + CLI | `phases/phase2a-crypto-cli.md` |
 | **2b** | VGA 文字终端 + PS/2 键盘 (VHDL 硬件) | 80×25 彩色终端 + Conway | `phases/phase2b-vga-terminal.md` |
 | **3** | 2a+2b 集成 + 已验收模块挂载 | 完整终端系统 | `phases/phase3-integration.md` |
-| **4** | 音频 + SD 卡 (可选扩展) | WM8731 + I2S + FAT | `phases/phase4-audio-sdcard.md` |
+| **4** | 硬件加速器 + 音频 | Conway + PONG + NTT + I2S | `phases/phase4-hardware-accelerators.md` |
+| **5** | 多核扩展 (研究储备) | NEORV32 SMP 双核 | `phases/phase5-multicore.md` |
 
 ## 时间线
 
 | 周次 | 工作内容 |
 |---|---|
 | 5/22-5/23 | ~~Phase 1: SDRAM timing + wb_intercon~~ 完成 |
-| 5/23 | ~~Phase 2a: Crypto CLI 完成~~ |
+| 5/23 | ~~Phase 2a: Crypto CLI 纯 C 完成~~ |
+| 5/23 | ~~Phase 2a 基线上板验证完成~~ (RS-232 + LCD 状态) |
 | 5/23 | ~~Phase 2b: VGA/PS2 源码完成~~ |
 | 5/23 | ~~Phase 3: Shell + hello/memtest 加入, 12 程序注册~~ |
-| 5/24-6/01 | Phase 2b + Phase 3: VGA/PS/2/IR 接入 + 实板联调 (**VGA→HDMI 线 5/24 到**) |
-| 6/02-6/08 | Phase 3: 集成 + 双输出 + 模块挂载 |
+| 5/24-6/01 | Phase 2b + Phase 3: PS/2/IR/总线接入 + VGA 实板联调 (**VGA→HDMI 线到位后补显示验证**) |
+| 6/02-6/08 | Phase 2a Zk* 加速 + Phase 3: 集成 + 双输出 + 模块挂载 |
 | 6/09-6/13 | Phase 3 (续): 联调 + 剪贴板 + F2 演示页 |
 | 6/14-6/15 | 收尾: 文档、演示准备 |
+| 6/15+ | Phase 4 (音频) / Phase 5 (多核): 暑期研究项目 |
 
 ## 资源预算
 
