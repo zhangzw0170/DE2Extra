@@ -52,6 +52,9 @@ int vga_col(void);
 /* Get current cursor row */
 int vga_row(void);
 
+/* Print 32-bit hex value */
+void vga_puthex32(uint32_t val);
+
 /* ── Program Interface (shared with shell) ─────────────────────── */
 
 typedef struct {

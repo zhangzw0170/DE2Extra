@@ -134,4 +134,16 @@
   int vga_col(void) { return cur_col; }
   int vga_row(void) { return cur_row; }
 
+  void vga_puthex32(uint32_t val) {
+      static const char h[] = "0123456789ABCDEF";
+      vga_putc(h[(val>>28)&0xF], VGA_WHITE);
+      vga_putc(h[(val>>24)&0xF], VGA_WHITE);
+      vga_putc(h[(val>>20)&0xF], VGA_WHITE);
+      vga_putc(h[(val>>16)&0xF], VGA_WHITE);
+      vga_putc(h[(val>>12)&0xF], VGA_WHITE);
+      vga_putc(h[(val>>8)&0xF], VGA_WHITE);
+      vga_putc(h[(val>>4)&0xF], VGA_WHITE);
+      vga_putc(h[(val)&0xF], VGA_WHITE);
+  }
+
 #endif

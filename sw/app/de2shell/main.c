@@ -63,6 +63,8 @@
 
 typedef enum {
     PROG_SHELL = 0,
+    PROG_HELLO,
+    PROG_MEMTEST,
     PROG_CRYPTO,
     PROG_SNAKE,
     PROG_LIFE,
@@ -72,6 +74,7 @@ typedef enum {
     PROG_EXP4,
     PROG_EXP5,
     PROG_EXP12,
+    PROG_MONITOR,
     PROG_COUNT
 } prog_id_t;
 
@@ -79,6 +82,8 @@ typedef enum {
 
 /* ── Forward declarations ──────────────────────────────────────── */
 
+extern const program_t prog_hello;
+extern const program_t prog_memtest;
 extern const program_t prog_crypto;
 extern const program_t prog_snake;
 extern const program_t prog_life;
@@ -88,6 +93,7 @@ extern const program_t prog_exp1;
 extern const program_t prog_exp4;
 extern const program_t prog_exp5;
 extern const program_t prog_exp12;
+extern const program_t prog_monitor;
 
 /* Dummy strcmp for NEORV32 target (no libc) */
 #ifndef LOCAL_BUILD
@@ -109,6 +115,8 @@ static int  stub_finish(void) { return 0; }
 
 static const program_t *programs[PROG_COUNT] = {
     [PROG_SHELL]     = NULL,   /* shell is built-in */
+    [PROG_HELLO]     = &prog_hello,
+    [PROG_MEMTEST]   = &prog_memtest,
     [PROG_CRYPTO]    = &prog_crypto,
     [PROG_SNAKE]     = &prog_snake,
     [PROG_LIFE]      = &prog_life,
@@ -118,6 +126,7 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_EXP4]      = &prog_exp4,
     [PROG_EXP5]      = &prog_exp5,
     [PROG_EXP12]     = &prog_exp12,
+    [PROG_MONITOR]   = &prog_monitor,
 };
 
 static prog_id_t active_prog = PROG_SHELL;
@@ -149,8 +158,16 @@ static void shell_input(char c) {
         if (line_pos == 0) {
             /* empty line — show prompt again */
         } else if (strcmp(line, "help") == 0) {
-            vga_puts("Commands: crypto, snake, life, dash, info, cls, quit\n",
+            vga_puts("Commands: hello, memtest, crypto, snake, life, dash, info, exp1, exp4, exp5, exp12, cls, quit\n",
                      VGA_GREEN);
+        } else if (strcmp(line, "hello") == 0) {
+            active_prog = PROG_HELLO;
+            if (programs[PROG_HELLO]->init)
+                programs[PROG_HELLO]->init();
+        } else if (strcmp(line, "memtest") == 0) {
+            active_prog = PROG_MEMTEST;
+            if (programs[PROG_MEMTEST]->init)
+                programs[PROG_MEMTEST]->init();
         } else if (strcmp(line, "crypto") == 0) {
             active_prog = PROG_CRYPTO;
             if (programs[PROG_CRYPTO]->init)
@@ -183,6 +200,9 @@ static void shell_input(char c) {
         } else if (strcmp(line, "exp12") == 0) {
             active_prog = PROG_EXP12;
             if (programs[PROG_EXP12]->init) programs[PROG_EXP12]->init();
+        } else if (strcmp(line, "monitor") == 0 || strcmp(line, "rv32") == 0) {
+            active_prog = PROG_MONITOR;
+            if (programs[PROG_MONITOR]->init) programs[PROG_MONITOR]->init();
         } else if (strcmp(line, "cls") == 0) {
             vga_clear();
         } else if (strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0) {
@@ -237,11 +257,13 @@ static void handle_ir(uint8_t cmd) {
     /* Global IR commands: program switching */
     prog_id_t new_prog = PROG_SHELL;
     switch (cmd) {
-        case 0x45: new_prog = PROG_CRYPTO;    break;  /* CH1 */
-        case 0x46: new_prog = PROG_SNAKE;     break;  /* CH2 */
-        case 0x47: new_prog = PROG_LIFE;      break;  /* CH3 */
-        case 0x44: new_prog = PROG_DASHBOARD; break;  /* CH4 */
-        case 0x43: new_prog = PROG_INFO;      break;  /* CH5 */
+        case 0x45: new_prog = PROG_HELLO;     break;  /* CH1 */
+        case 0x46: new_prog = PROG_MEMTEST;   break;  /* CH2 */
+        case 0x47: new_prog = PROG_CRYPTO;    break;  /* CH3 */
+        case 0x44: new_prog = PROG_SNAKE;     break;  /* CH4 */
+        case 0x43: new_prog = PROG_LIFE;      break;  /* CH5 */
+        case 0x40: new_prog = PROG_DASHBOARD; break;  /* CH6 */
+        case 0x07: new_prog = PROG_INFO;      break;  /* CH7 */
         case 0x16: if (active_prog > 0) active_prog--; return;  /* CH- */
         case 0x1A: if (active_prog < PROG_COUNT-1) active_prog++; return; /* CH+ */
         default:   return;  /* unknown key */
