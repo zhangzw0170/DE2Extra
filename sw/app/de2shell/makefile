@@ -14,7 +14,7 @@ include $(NEORV32_HOME)/sw/common/common.mk
 .PHONY: local clean-local
 
 local:
-	gcc -DLOCAL_BUILD -Wall -O2 -o de2shell main.c vga_hal.c crypto.c snake.c life.c dashboard.c info.c
+	gcc -DLOCAL_BUILD -Wall -O2 -o de2shell main.c vga_hal.c gpio_hal.c crypto.c snake.c life.c dashboard.c info.c exp1.c exp4.c exp5.c exp12.c
 
 clean-local:
 	rm -f de2shell de2shell.exe

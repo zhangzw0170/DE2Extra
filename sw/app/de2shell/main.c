@@ -68,6 +68,10 @@ typedef enum {
     PROG_LIFE,
     PROG_DASHBOARD,
     PROG_INFO,
+    PROG_EXP1,
+    PROG_EXP4,
+    PROG_EXP5,
+    PROG_EXP12,
     PROG_COUNT
 } prog_id_t;
 
@@ -80,6 +84,10 @@ extern const program_t prog_snake;
 extern const program_t prog_life;
 extern const program_t prog_dashboard;
 extern const program_t prog_info;
+extern const program_t prog_exp1;
+extern const program_t prog_exp4;
+extern const program_t prog_exp5;
+extern const program_t prog_exp12;
 
 /* Dummy strcmp for NEORV32 target (no libc) */
 #ifndef LOCAL_BUILD
@@ -106,6 +114,10 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_LIFE]      = &prog_life,
     [PROG_DASHBOARD] = &prog_dashboard,
     [PROG_INFO]      = &prog_info,
+    [PROG_EXP1]      = &prog_exp1,
+    [PROG_EXP4]      = &prog_exp4,
+    [PROG_EXP5]      = &prog_exp5,
+    [PROG_EXP12]     = &prog_exp12,
 };
 
 static prog_id_t active_prog = PROG_SHELL;
@@ -159,6 +171,18 @@ static void shell_input(char c) {
             active_prog = PROG_INFO;
             if (programs[PROG_INFO]->init)
                 programs[PROG_INFO]->init();
+        } else if (strcmp(line, "exp1") == 0) {
+            active_prog = PROG_EXP1;
+            if (programs[PROG_EXP1]->init) programs[PROG_EXP1]->init();
+        } else if (strcmp(line, "exp4") == 0) {
+            active_prog = PROG_EXP4;
+            if (programs[PROG_EXP4]->init) programs[PROG_EXP4]->init();
+        } else if (strcmp(line, "exp5") == 0) {
+            active_prog = PROG_EXP5;
+            if (programs[PROG_EXP5]->init) programs[PROG_EXP5]->init();
+        } else if (strcmp(line, "exp12") == 0) {
+            active_prog = PROG_EXP12;
+            if (programs[PROG_EXP12]->init) programs[PROG_EXP12]->init();
         } else if (strcmp(line, "cls") == 0) {
             vga_clear();
         } else if (strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0) {
