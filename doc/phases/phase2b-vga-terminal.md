@@ -6,14 +6,21 @@
 ## 本阶段概述
 
 纯 VHDL 硬件。用硬件实现 80×25 VGA 文字终端和 PS/2 键盘控制器，CPU 只需写字符到缓冲区。
-可立即开始写代码和仿真，不依赖 Phase 1。上板验证需要 Phase 1 的 wb_intercon。
+可立即开始写代码和仿真，不依赖 Phase 1。当前 Phase 1 已完成，上板验证条件已经具备。
 
 ---
 
 ## 验收表
 
-> 状态: 2026-05-23 — 源码完成，QuestSim testbench 可验证。上板验证等待 Phase 1。
+> 状态: 2026-05-23 — 源码完成，QuestSim testbench 可验证。Phase 1 已就绪，下一步是接入顶层并上板验证。
 > ☑ = 源码完成（已在 QuestaSim 验证时序），🟡 = 待上板验证。
+>
+> **阻塞项 (2026-05-23)**:
+> - VGA/PS/2 外设未接入 `de2_115_top.vhd` 和 `wb_intercon`
+> - QSF 中无 VGA (HSYNC/VSYNC/RGB) 和 PS/2 (CLK/DAT) 引脚分配
+> - 物理连线: VGA 转 HDMI 线预计 5/24 到货，接入 1024×600 HDMI 屏幕
+>
+> **显示方案**: DE2-115 输出标准 640×480@60Hz VGA → VGA 转 HDMI 有源适配器 → HDMI 显示器自动缩放。FPGA 端无需修改分辨率。
 
 | # | 验收项 | 通过条件 | 状态 |
 |---|---|---|---|
@@ -26,7 +33,7 @@
 | 7 | PS/2 接收 | 键盘输入的 ASCII 字符出现在 FIFO 中 | ☑ (复用 Exp8, 16-entry FIFO) |
 | 8 | PS/2 扩展键 | 方向键、F1/F2、Shift、Ctrl 的 scan code 正确 | ☑ (Exp8 已验证) |
 | 9 | Testbench 仿真 | VGA 时序波形 + PS/2 帧解码波形通过 | ☑ (tb_vga_terminal.vhd + compile.tcl) |
-| 10 | 上板验证 | 通过 wb_intercon (Phase 1) 后全部功能正常 | 🟡 (等待 Phase 1) |
+| 10 | 上板验证 | 通过 wb_intercon 后全部功能正常 | 🟡 (Phase 1 已完成，待接入顶层实测) |
 | 11 | Conway 基本规则 | 滑翔机正确移动 N 代不死 | ☑ (C 版本, game_life) |
 | 12 | Conway 双缓冲 | vblank 期间交换，画面无撕裂 | ☑ (C 双缓冲算法) |
 | 13 | Conway 暂停/继续 | CPU 命令控制启停 | ☑ (space/pause) |

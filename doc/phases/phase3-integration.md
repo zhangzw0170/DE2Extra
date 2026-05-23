@@ -1,7 +1,27 @@
 # Phase 3: 集成 + 多模块整合
 
 > 总纲: `../implementation_plan.md`
-> 状态: 2026-05-23 — 模块预备完成，等待 Phase 1 (wb_intercon) 上线
+> 状态: 2026-05-23 — 模块预备完成，Phase 1 已闭环，进入外设接入与实板联调阶段
+>
+> **de2shell 程序注册表 (2026-05-23 更新)**:
+>
+> | 命令 | 程序 | 来源 | 说明 |
+> |------|------|------|------|
+> | `hello` | prog_hello | Phase 0 | LED 跑马灯 + HEX/秒计数器演示 |
+> | `memtest` | prog_memtest | Phase 1 | SDRAM 4 项自检 (walking-1s ×2, checkerboard, addr-as-data) |
+> | `crypto` | prog_crypto | Phase 2a | AES/SHA/SM4/SM3/TRNG 密码学终端 |
+> | `snake` | prog_snake | Phase 3 | 贪吃蛇 (40×20) |
+> | `life` | prog_life | Phase 2b | Conway 生命游戏 |
+> | `dash` | prog_dashboard | Phase 3 | 系统仪表盘 |
+> | `info` | prog_info | Phase 3 | 系统信息 |
+> | `exp1` | prog_exp1 | Exp1 | 3-8 译码器 |
+> | `exp4` | prog_exp4 | Exp4 | 双端口 RAM |
+> | `exp5` | prog_exp5 | Exp5 | FSM 序列检测 |
+> | `exp12` | prog_exp12 | Exp12 | 简单 CPU |
+> | `cls` | — | — | 清屏 |
+> | `quit` | — | — | 回到 shell |
+>
+> **IR 遥控映射**: CH1=hello, CH2=memtest, CH3=crypto, CH4=snake, CH5=life, CH6=dash, CH7=info, CH+/CH-=切换
 
 ## 本阶段概述
 
@@ -14,7 +34,7 @@
 | # | 验收项 | 通过条件 | 状态 |
 |---|---|---|---|
 | 1 | Unified Shell 框架 | 命令解析 + 程序调度 + VGA HAL 双模式编译 | ☑ (本地+Docker) |
-| 2 | VGA 终端集成 | CPU 通过 XBUS 写 VGA buffer, 彩色显示 | 🟡 (HAL 已就位, 等 Phase 1) |
+| 2 | VGA 终端集成 | CPU 通过 XBUS 写 VGA buffer, 彩色显示 | 🟡 (HAL 已就位, 总线基础已具备) |
 | 3 | IR 遥控器输入 | NEC 解码 → 程序切换 | ☑ (ir_nec_decoder.vhd + handle_ir) |
 | 4 | 状态栏 | 底行常驻显示当前频道名 | ☑ (draw_status_bar) |
 | 5 | 实验 CLI 程序集 | exp1/4/5/12 通过 shell 命令运行 | ☑ (桩模块, text=7896B) |
@@ -83,6 +103,8 @@ sw/app/de2shell/
 ├── life.c          ← 康威生命游戏 (桩)
 ├── dashboard.c     ← 系统仪表盘 (桩)
 ├── info.c          ← 系统信息页
+├── hello.c         ← Phase 0 LED 跑马灯演示
+├── memtest.c       ← Phase 1 SDRAM 4 项自检
 ├── exp1.c          ← 3-8 译码器
 ├── exp4.c          ← 双口 RAM
 ├── exp5.c          ← FSM 序列检测
@@ -108,7 +130,8 @@ sw/app/ (独立 C 程序, 待合并入 de2shell)
 
 ## 待完成
 
-- Phase 1 (wb_intercon) 调通后: VGA + PS/2 + IR 接入 XBUS
+- **5/24**: VGA 转 HDMI 线到货 → 接 1024×600 HDMI 屏幕上板验证 (640×480 输出，适配器自动缩放)
+- VGA + PS/2 + IR 接入 `de2_115_top.vhd` / `wb_intercon` / QSF 引脚分配
 - VGA 转接线到后: Exp6/7 画廊频道
 - RS-232 线到后: Exp9 UART 验证
 - 独立游戏合并入 de2shell (替换桩模块)

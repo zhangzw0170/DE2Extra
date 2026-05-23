@@ -11,10 +11,10 @@
 ### 当前进度
 
 - **Phase 0**: NEORV32 @50MHz 上板，UART/GPIO/LED/HEX/LCD 已验证 ✅
-- **Phase 1**: SDRAM + `wb_intercon` 已上板跑通，`sdram_test` 四项全过，详见 `phases/phase1-sdram-debug-report.md` ✅
+- **Phase 1**: SDRAM + `wb_intercon` 已上板跑通，`sdram_test` 四项全过 ✅
 - **Phase 2a**: Crypto CLI 纯 C 实现完成，NIST/国密测试向量全过，Docker text=13,556B ✅
-- **Phase 2b**: VGA 终端 + PS/2 键盘源码完成，QuestSim 可验证，已具备上板联调前提 ✅
-- **Phase 3**: Unified Shell 框架 + 12/13 实验 CLI 就位，当前主要差外设接入与实板联调 ✅
+- **Phase 2b**: VGA 终端 + PS/2 键盘源码完成，QuestSim 可验证 🟡 **待上板** — VGA/PS/2 未接入顶层，VGA 转 HDMI 线 5/24 到货
+- **Phase 3**: Unified Shell 框架就位 (hello/memtest/crypto/snake/life/dash/info/exp1/4/5/12)，当前差 VGA 硬件接入与实板联调 🟡
 - Zk* 密码学 ISA + TRNG 已启用，Docker 工具链就绪
 
 ### 核心决策
@@ -39,6 +39,7 @@ Phase 1           Phase 2a + 2b (并行)          Phase 3
 | **2a** | 密码学 UART 终端 (C 软件) | AES/SHA/SM4/SM3/TRNG + CLI | `phases/phase2a-crypto-cli.md` |
 | **2b** | VGA 文字终端 + PS/2 键盘 (VHDL 硬件) | 80×25 彩色终端 + Conway | `phases/phase2b-vga-terminal.md` |
 | **3** | 2a+2b 集成 + 已验收模块挂载 | 完整终端系统 | `phases/phase3-integration.md` |
+| **4** | 音频 + SD 卡 (可选扩展) | WM8731 + I2S + FAT | `phases/phase4-audio-sdcard.md` |
 
 ## 时间线
 
@@ -47,8 +48,8 @@ Phase 1           Phase 2a + 2b (并行)          Phase 3
 | 5/22-5/23 | ~~Phase 1: SDRAM timing + wb_intercon~~ 完成 |
 | 5/23 | ~~Phase 2a: Crypto CLI 完成~~ |
 | 5/23 | ~~Phase 2b: VGA/PS2 源码完成~~ |
-| 5/23 | ~~Phase 3: Shell + 12/13 实验 CLI 就位~~ |
-| 5/24-6/01 | Phase 2b + Phase 3: VGA/PS/2/IR 接入 + 实板联调 (当前) |
+| 5/23 | ~~Phase 3: Shell + hello/memtest 加入, 12 程序注册~~ |
+| 5/24-6/01 | Phase 2b + Phase 3: VGA/PS/2/IR 接入 + 实板联调 (**VGA→HDMI 线 5/24 到**) |
 | 6/02-6/08 | Phase 3: 集成 + 双输出 + 模块挂载 |
 | 6/09-6/13 | Phase 3 (续): 联调 + 剪贴板 + F2 演示页 |
 | 6/14-6/15 | 收尾: 文档、演示准备 |
