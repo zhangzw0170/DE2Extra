@@ -12,8 +12,9 @@
 
 - **Phase 0**: NEORV32 @50MHz 上板，UART/GPIO/LED/HEX/LCD 已验证 ✅
 - **Phase 1**: SDRAM 控制器已实现（有 hold timing 违例，进行中）
-- **Phase 2a**: Crypto CLI 纯 C 实现完成，NIST/国密测试向量全部通过，Docker 交叉编译 text 13,556B ✅
-- **Phase 2b**: VGA 终端 + PS/2 键盘（待开始）
+- **Phase 2a**: Crypto CLI 纯 C 实现完成，NIST/国密测试向量全过，Docker text=13,556B ✅
+- **Phase 2b**: VGA 终端 + PS/2 键盘源码完成，QuestSim 可验证，等待 Phase 1 接入 ✅
+- **Phase 3**: Unified Shell 框架 + 12/13 实验 CLI 就位，等待 Phase 1 + VGA 线 ✅
 - Zk* 密码学 ISA + TRNG 已启用，Docker 工具链就绪
 
 ### 核心决策
@@ -44,8 +45,10 @@ Phase 1           Phase 2a + 2b (并行)          Phase 3
 | 周次 | 工作内容 |
 |---|---|
 | 5/22-5/25 | Phase 1: SDRAM timing + wb_intercon |
-| 5/23 | ~~Phase 2a: Crypto CLI 纯 C 实现完成~~ |
-| 5/22-6/01 | Phase 2b: VGA 终端 + PS/2 键盘 |
+| 5/23 | ~~Phase 2a: Crypto CLI 完成~~ |
+| 5/23 | ~~Phase 2b: VGA/PS2 源码完成~~ |
+| 5/23 | ~~Phase 3: Shell + 12/13 实验 CLI 就位~~ |
+| 5/22-6/01 | Phase 1: SDRAM timing + wb_intercon (当前) |
 | 6/02-6/08 | Phase 3: 集成 + 双输出 + 模块挂载 |
 | 6/09-6/13 | Phase 3 (续): 联调 + 剪贴板 + F2 演示页 |
 | 6/14-6/15 | 收尾: 文档、演示准备 |
