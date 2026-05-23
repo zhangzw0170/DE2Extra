@@ -29,12 +29,12 @@
 #ifdef LOCAL_BUILD
   static void io_putc(char c)     { putchar(c); }
   static void io_puts(const char *s) { printf("%s", s); }
-  static char io_getc(void)       { return (char)getchar(); }
+  static int io_getc(void)        { return getchar(); }
   static void io_flush(void)      { fflush(stdout); }
 #else
   static void io_putc(char c)     { neorv32_uart0_putc(c); }
   static void io_puts(const char *s) { neorv32_uart0_puts(s); }
-  static char io_getc(void)       { return (char)neorv32_uart0_getc(); }
+  static int io_getc(void)        { return (unsigned char)neorv32_uart0_getc(); }
   static void io_flush(void)      { /* UART is unbuffered */ }
 #endif
 
@@ -47,15 +47,13 @@ static char    cmd_buf[CMD_BUF_SIZE];
 static int     cmd_pos;
 static int     cmd_last = 0;          /* last command return code */
 
-/* Print 32-bit value as 8 hex digits (local bench + return code) */
-#ifdef LOCAL_BUILD
+/* Print 32-bit value as 8 hex digits */
 static void put_hex32(uint32_t val) {
     static const char hex[] = "0123456789abcdef";
     for (int i = 7; i >= 0; i--) {
         io_putc(hex[(val >> (i * 4)) & 0xF]);
     }
 }
-#endif /* LOCAL_BUILD */
 
 /* Print byte buffer as hex string */
 void hex_print(const uint8_t *data, int len) {
@@ -108,7 +106,18 @@ int hex_decode(const char *hex, uint8_t *out, int max_len) {
 static int read_line(void) {
     cmd_pos = 0;
     while (1) {
-        char c = io_getc();
+        int c = io_getc();
+        if (c < 0) {
+#ifdef LOCAL_BUILD
+            if (cmd_pos == 0) {
+                return 0;
+            }
+            cmd_buf[cmd_pos] = '\0';
+            return cmd_pos;
+#else
+            continue;
+#endif
+        }
         if (c == '\r' || c == '\n') {
             io_puts("\n");
             cmd_buf[cmd_pos] = '\0';
@@ -201,6 +210,16 @@ uint32_t bench_cycles(void) {
     /* Local mode: return elapsed microseconds (approximation) */
     clock_t now = clock();
     return (uint32_t)((now - bench_start) * 1000000 / CLOCKS_PER_SEC);
+}
+#else
+static uint64_t bench_start;
+
+void bench_reset(void) {
+    bench_start = neorv32_cpu_get_cycle();
+}
+
+uint32_t bench_cycles(void) {
+    return (uint32_t)(neorv32_cpu_get_cycle() - bench_start);
 }
 #endif
 
@@ -376,8 +395,6 @@ static int cmd_bench(void) {
     io_puts("Benchmark (lower is better):\n");
     io_puts("=============================\n");
 
-#ifdef LOCAL_BUILD
-    /* Quick benchmark — local mode uses clock() */
     uint8_t key[16], pt[16], ct[16], msg[64], digest[64];
     uint32_t rk_aes[44], rk_sm4[32];
     int i;
@@ -386,40 +403,65 @@ static int cmd_bench(void) {
     for (i = 0; i < 16; i++) { key[i] = (uint8_t)i; pt[i] = (uint8_t)(0x10 + i); }
     for (i = 0; i < 64; i++) msg[i] = (uint8_t)i;
 
+#ifdef LOCAL_BUILD
 #define BENCH_ITERS 10000
+#else
+#define BENCH_ITERS 1000
+#endif
 
     bench_reset();
     aes128_key_expand(key, rk_aes);
     for (i = 0; i < BENCH_ITERS; i++) aes128_enc_block(pt, rk_aes, ct);
     uint32_t t_aes = bench_cycles();
-    io_puts("AES-128 enc  x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_aes); io_puts(" us\n");
+    io_puts("AES-128 enc  x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_aes);
+#ifdef LOCAL_BUILD
+    io_puts(" us\n");
+#else
+    io_puts(" cycles\n");
+#endif
 
     bench_reset();
     for (i = 0; i < BENCH_ITERS; i++) sha256_hash(msg, 64, digest);
     uint32_t t_sha256 = bench_cycles();
-    io_puts("SHA-256      x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sha256); io_puts(" us\n");
+    io_puts("SHA-256      x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sha256);
+#ifdef LOCAL_BUILD
+    io_puts(" us\n");
+#else
+    io_puts(" cycles\n");
+#endif
 
     bench_reset();
     for (i = 0; i < BENCH_ITERS; i++) sha512_hash(msg, 64, digest);
     uint32_t t_sha512 = bench_cycles();
-    io_puts("SHA-512      x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sha512); io_puts(" us\n");
+    io_puts("SHA-512      x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sha512);
+#ifdef LOCAL_BUILD
+    io_puts(" us\n");
+#else
+    io_puts(" cycles\n");
+#endif
 
     bench_reset();
     sm4_key_schedule(key, rk_sm4);
     for (i = 0; i < BENCH_ITERS; i++) sm4_encrypt(pt, rk_sm4, ct);
     uint32_t t_sm4 = bench_cycles();
-    io_puts("SM4    enc   x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sm4); io_puts(" us\n");
+    io_puts("SM4    enc   x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sm4);
+#ifdef LOCAL_BUILD
+    io_puts(" us\n");
+#else
+    io_puts(" cycles\n");
+#endif
 
     bench_reset();
     for (i = 0; i < BENCH_ITERS; i++) sm3_hash(msg, 64, digest);
     uint32_t t_sm3 = bench_cycles();
-    io_puts("SM3          x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sm3); io_puts(" us\n");
+    io_puts("SM3          x"); put_hex32(BENCH_ITERS); io_puts(": "); put_hex32(t_sm3);
+#ifdef LOCAL_BUILD
+    io_puts(" us\n");
 #else
-    /* NEORV32: use CSR cycle counter */
-    /* TODO: implement with neorv32_cpu_csr_read(CSR_CYCLE) */
-    io_puts("Benchmarks available after NEORV32 CSR_CYCLE integration.\n");
+    io_puts(" cycles\n");
 #endif
 
+#undef BENCH_ITERS
     return 0;
 }
 
