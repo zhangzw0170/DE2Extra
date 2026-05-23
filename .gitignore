@@ -41,6 +41,9 @@ vsim.wlf
 .DS_Store
 Thumbs.db
 
+# DE2-115 System CD (reference only)
+DE2-115_v.3.0.6_SystemCD/
+
 # Editor
 *.swp
 *~
