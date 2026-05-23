@@ -57,12 +57,12 @@
 | 5 | FSM 序列检测 | ✅ 操作说明+状态 | CLI `exp5` |
 | 6 | VGA 彩条 | ⬜ 等 VGA 线 | 画廊频道 |
 | 7 | VGA 图像 | ⬜ 等 VGA 线 | 画廊频道 |
-| 8 | PS/2 键盘 | ✅ 驱动就绪 | `ps2_controller.vhd` |
+| 8 | PS/2 键盘 | ✅ 驱动就绪 + 实板已验证 + LCD 回显 | `ps2_controller.vhd` + `lcd_debug.vhd` |
 | 9 | UART 串行 | ⬜ 等 RS-232 线 | 已有 NEORV32 UART0 |
 | 10 | 红外 NEC | ✅ 解码+频道切换 | `ir_nec_decoder.vhd` |
 | 11 | DDS 频率合成 | ❌ 未验收 | 推迟 |
 | 12 | 简单 CPU | ✅ 操作说明+状态 | CLI `exp12` |
-| 13a | LCD (VHDL) | ✅ HD44780 驱动 | `lcd_debug.vhd` |
+| 13a | LCD (VHDL) | ✅ HD44780 驱动 + PS/2 键盘回显 | `lcd_debug.vhd` (SW16=1 实时回显) |
 
 **12/13 已覆盖**。Exp6/7/9 等硬件就位后补上。
 
@@ -114,9 +114,9 @@ sw/app/de2shell/
 src/rtl/periph/  (Phase 2b + Phase 3 VHDL)
 ├── vga_text_terminal.vhd
 ├── font_rom_pkg.vhd
-├── ps2_controller.vhd
+├── ps2_controller.vhd   ← 16-entry FIFO + IRQ + scancode 直出
 ├── ps2_sync.vhd / ps2_receiver.vhd
-├── lcd_debug.vhd
+├── lcd_debug.vhd         ← SW16=1: VGA/PS2 状态 + 键盘 ASCII 回显
 ├── ir_nec_decoder.vhd
 ├── led_patterns.vhd
 ├── digital_clock_core.vhd
@@ -130,9 +130,10 @@ sw/app/ (独立 C 程序, 待合并入 de2shell)
 
 ## 待完成
 
-- **5/24**: VGA 转 HDMI 线到货 → 接 1024×600 HDMI 屏幕上板验证 (640×480 输出，适配器自动缩放)
-- VGA + PS/2 + IR 接入 `de2_115_top.vhd` / `wb_intercon` / QSF 引脚分配
-- VGA 转接线到后: Exp6/7 画廊频道
-- RS-232 线到后: Exp9 UART 验证
-- 独立游戏合并入 de2shell (替换桩模块)
-- IR 遥控器 频道切换 end-to-end
+- ~~VGA + PS/2 + IR 接入 `de2_115_top.vhd` / `wb_intercon` / QSF 引脚分配~~ ✅ (commit `07615ba`)
+- ~~PS/2 上板验证~~ ✅ (扫描码、扩展键、Lock 灯同步均通过)
+- ~~独立游戏合并入 de2shell~~ ✅ (snake.c / life.c 已合并)
+- ⏳ **VGA→HDMI 有源转换器到货** (预计 5/26 周一) → 上板验证 VGA 终端渲染
+- ⏳ Exp6/7 画廊频道 (等 VGA 线后)
+- ⏳ RS-232 线到后: Exp9 UART 验证
+- ⏳ IR 遥控器频道切换 end-to-end (模块已就位，等 VGA 画面反馈)

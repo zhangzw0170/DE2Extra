@@ -14,7 +14,7 @@
 - **Phase 1**: SDRAM + `wb_intercon` 已上板跑通，`sdram_test` 四项全过 ✅
 - **Phase 2a 基线**: `crypto_cli` 纯 C 版已上板跑通，RS-232 (`115200 8N1`) 下 `help/info/aes/sha/sm/trng/bench` 已实机验证，LCD 已切换为 `DE2Extra Crypto / UART CLI READY` ✅
 - **Phase 2a 收尾**: Zk* 指令加速版、纯 C vs Zk* 性能对比、TRNG 统计验证仍待完成 🟡 — 详见 `phases/phase2a-crypto-cli.md`
-- **Phase 2b**: VGA 终端 + PS/2 键盘源码完成，PS/2 已接入顶层 (wb_intercon s2 + ps2_irq → mext_irq_i)；PS/2 扫描码、扩展键解析、LCD 键盘回显、键盘 Lock 灯双向同步均已实板验证 ✅；VGA 实显仍待显示链路 🟡
+- **Phase 2b**: VGA 终端 + PS/2 键盘源码完成，PS/2 已接入顶层 (wb_intercon s2 + ps2_irq → mext_irq_i)；PS/2 扫描码、扩展键解析、LCD 键盘回显、键盘 Lock 灯双向同步均已实板验证 ✅；VGA 画面待 VGA→HDMI 有源转换器到货 (预计 5/26 周一) ⏳
 - **Phase 3**: Unified Shell 框架就位 (hello/memtest/crypto/snake/life/dash/info/exp1/4/5/12)，当前差 VGA 实显与实板联调 🟡
 - Zk* 密码学 ISA + TRNG 已启用，Docker 工具链就绪
 
