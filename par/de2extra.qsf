@@ -25,7 +25,16 @@ set_global_assignment -name VHDL_FILE ../src/rtl/lib/de2extra_pkg.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/glue/clk_rst_gen.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/neorv32_wrapper.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/seg7_mapper.vhd
+set_global_assignment -name VHDL_FILE ../src/rtl/periph/sdram_ctrl.vhd
+set_global_assignment -name VHDL_FILE ../src/rtl/bus/wb_intercon.vhd
+set_global_assignment -name VHDL_FILE ../src/rtl/periph/lcd_status.vhd
+set_global_assignment -name VHDL_FILE ../src/rtl/periph/uart_jtag_bridge.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/de2_115_top.vhd
+
+# IP cores
+# JTAG UART (Platform Designer generated)
+set_global_assignment -name QIP_FILE ../par/jtag_uart_0/synthesis/jtag_uart_0.qip
+set_global_assignment -name VHDL_FILE ../src/ip/altpll_50_100.vhd
 
 # NEORV32 CPU (submodule) — all core VHDL files
 set_global_assignment -name VHDL_FILE ../neorv32/rtl/core/neorv32_package.vhd
@@ -229,6 +238,57 @@ set_location_assignment PIN_W4 -to DRAM_DQM[1]
 set_location_assignment PIN_K8 -to DRAM_DQM[2]
 set_location_assignment PIN_N8 -to DRAM_DQM[3]
 
+# Seven-segment HEX4 (active-low, 2.5V)
+set_location_assignment PIN_AB19 -to HEX4[0]
+set_location_assignment PIN_AA19 -to HEX4[1]
+set_location_assignment PIN_AG21 -to HEX4[2]
+set_location_assignment PIN_AH21 -to HEX4[3]
+set_location_assignment PIN_AE19 -to HEX4[4]
+set_location_assignment PIN_AF19 -to HEX4[5]
+set_location_assignment PIN_AE18 -to HEX4[6]
+
+# Seven-segment HEX5 (active-low, 2.5V)
+set_location_assignment PIN_AD18 -to HEX5[0]
+set_location_assignment PIN_AC18 -to HEX5[1]
+set_location_assignment PIN_AB18 -to HEX5[2]
+set_location_assignment PIN_AH19 -to HEX5[3]
+set_location_assignment PIN_AG19 -to HEX5[4]
+set_location_assignment PIN_AF18 -to HEX5[5]
+set_location_assignment PIN_AH18 -to HEX5[6]
+
+# Seven-segment HEX6 (active-low, 2.5V)
+set_location_assignment PIN_AA17 -to HEX6[0]
+set_location_assignment PIN_AB16 -to HEX6[1]
+set_location_assignment PIN_AA16 -to HEX6[2]
+set_location_assignment PIN_AB17 -to HEX6[3]
+set_location_assignment PIN_AB15 -to HEX6[4]
+set_location_assignment PIN_AA15 -to HEX6[5]
+set_location_assignment PIN_AC17 -to HEX6[6]
+
+# Seven-segment HEX7 (active-low, 2.5V; HEX7[6] PIN_AA14 needs 3.3V override)
+set_location_assignment PIN_AD17 -to HEX7[0]
+set_location_assignment PIN_AE17 -to HEX7[1]
+set_location_assignment PIN_AG17 -to HEX7[2]
+set_location_assignment PIN_AH17 -to HEX7[3]
+set_location_assignment PIN_AF17 -to HEX7[4]
+set_location_assignment PIN_AG18 -to HEX7[5]
+set_location_assignment PIN_AA14 -to HEX7[6]
+
+# LCD (HD44780, Bank 1, 3.3V)
+set_location_assignment PIN_L3 -to LCD_DATA[0]
+set_location_assignment PIN_L1 -to LCD_DATA[1]
+set_location_assignment PIN_L2 -to LCD_DATA[2]
+set_location_assignment PIN_K7 -to LCD_DATA[3]
+set_location_assignment PIN_K1 -to LCD_DATA[4]
+set_location_assignment PIN_K2 -to LCD_DATA[5]
+set_location_assignment PIN_M3 -to LCD_DATA[6]
+set_location_assignment PIN_M5 -to LCD_DATA[7]
+set_location_assignment PIN_M2 -to LCD_RS
+set_location_assignment PIN_M1 -to LCD_RW
+set_location_assignment PIN_L4 -to LCD_EN
+set_location_assignment PIN_L5 -to LCD_ON
+set_location_assignment PIN_L6 -to LCD_BLON
+
 # I/O Standard
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_TXD
@@ -243,6 +303,11 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX0[*]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX1[*]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX2[*]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX3[*]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX4[*]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX5[*]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX6[*]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to HEX7[*]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to HEX7[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to DRAM_CLK
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to DRAM_CKE
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to DRAM_CS_N
@@ -254,12 +319,25 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to DRAM_ADDR[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to DRAM_DQ[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to DRAM_DQM[*]
 
+# LCD (Bank 1, 3.3V)
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LCD_DATA[*]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LCD_RS
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LCD_RW
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LCD_EN
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LCD_ON
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LCD_BLON
+
+# Slide switches (Bank 5, 2.5V)
+set_location_assignment PIN_Y23 -to SW[17]
+set_location_assignment PIN_Y24 -to SW[16]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to SW[*]
+
 # Partition
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
-set_global_assignment -name LAST_QUARTUS_VERSION "23.1std.0 Lite Edition"
+set_global_assignment -name LAST_QUARTUS_VERSION "23.1std.0 SP0.02std Lite Edition"
 set_global_assignment -name VHDL_INPUT_VERSION VHDL_2008
 set_global_assignment -name VHDL_SHOW_LMF_MAPPING_MESSAGES OFF
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

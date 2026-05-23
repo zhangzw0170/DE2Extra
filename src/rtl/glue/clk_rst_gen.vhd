@@ -1,7 +1,7 @@
 -- clk_rst_gen.vhd — 时钟和复位信号生成
 --
--- Phase 0: 50MHz 直通 + 复位同步
--- Phase 2: 添加 PLL 生成 74.25MHz VGA 时钟
+-- Phase 1: PLL 生成 50MHz (CPU) + 100MHz (SDRAM)
+-- Phase 2: 添加 74.25MHz VGA 时钟
 --
 -- 换板子: 只需改这个文件
 library ieee;
@@ -9,11 +9,14 @@ use ieee.std_logic_1164.all;
 
 entity clk_rst_gen is
     port (
-        clk_50m_i   : in  std_logic;   -- 板载 50MHz 晶振
-        rst_key_n_i : in  std_logic;   -- KEY[0] 复位按键 (active-low)
-        clk_50m_o   : out std_logic;   -- 50MHz CPU 时钟
-        clk_vga_o   : out std_logic;   -- 74.25MHz VGA 时钟 (Phase 2, 当前直通)
-        rst_n_o     : out std_logic    -- 同步复位输出 (active-low)
+        clk_50m_i    : in  std_logic;   -- 板载 50MHz 晶振
+        rst_key_n_i  : in  std_logic;   -- KEY[0] 复位按键 (active-low)
+        clk_50m_o    : out std_logic;   -- 50MHz CPU 时钟
+        clk_sdram_o  : out std_logic;   -- 100MHz SDRAM 时钟
+        clk_sdram_shift_o : out std_logic; -- 100MHz SDRAM 引脚时钟 (相移版)
+        clk_vga_o    : out std_logic;   -- 74.25MHz VGA 时钟 (Phase 2, 当前直通)
+        rst_n_o      : out std_logic;   -- 同步复位输出 (active-low)
+        pll_locked_o : out std_logic    -- PLL 锁定状态
     );
 end entity clk_rst_gen;
 
@@ -21,19 +24,32 @@ architecture rtl of clk_rst_gen is
 
     signal rst_sync   : std_logic_vector(2 downto 0);
     signal rst_n_int  : std_logic;
+    signal pll_locked : std_logic;
 
 begin
 
-    -- Phase 0: 时钟直通 (50MHz in = 50MHz out)
-    -- Phase 2 将在此处实例化 ALTPLL IP:
-    --   c0 = 50MHz (CPU)
-    --   c1 = 74.25MHz (VGA)
-    --   locked 信号接入复位逻辑
-    clk_50m_o <= clk_50m_i;
-    clk_vga_o <= clk_50m_i;  -- Phase 2: 替换为 PLL c1 输出
+    -- ================================================================
+    -- PLL: 50MHz → 50MHz (CPU) + 100MHz internal + 100MHz shifted DRAM clock
+    -- ================================================================
+    u_pll : entity work.altpll_50_100
+    port map (
+        inclk0_i         => clk_50m_i,
+        clk_50m_o        => clk_50m_o,
+        clk_100m_o       => clk_sdram_o,
+        clk_100m_shift_o => clk_sdram_shift_o,
+        locked_o         => pll_locked
+    );
 
-    -- 复位同步: 异步按键输入 → 同步到 clk_50m 时钟域
-    -- 三级同步: 第一级消亚稳态, 后两级产生复位脉冲
+    pll_locked_o <= pll_locked;
+
+    -- VGA 时钟: Phase 2 替换为 PLL c2 输出
+    clk_vga_o <= clk_50m_i;
+
+    -- ================================================================
+    -- 复位同步: 按键 + PLL locked 联合复位
+    -- ================================================================
+    -- 异步按键输入 → 同步到 clk_50m 时钟域
+    -- 按键按下 或 PLL 未锁定 → 复位
     p_rst_sync : process (clk_50m_i, rst_key_n_i)
     begin
         if rst_key_n_i = '0' then
@@ -43,10 +59,7 @@ begin
         end if;
     end process p_rst_sync;
 
-    -- 上电复位: 初始为 reset 状态
-    -- rst_sync 初始为 "000", 3 个时钟周期后变为 "111"
-    -- 复位信号 = NOT (全 1)
     rst_n_int <= rst_sync(2);
-    rst_n_o   <= rst_n_int;
+    rst_n_o   <= rst_n_int and pll_locked;
 
 end architecture rtl;

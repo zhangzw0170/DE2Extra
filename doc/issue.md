@@ -40,6 +40,9 @@
 
 | # | 日期 | 问题 | 原因 | 解决 | Phase |
 |---|---|---|---|---|---|
+| 4 | 2026-05-23 | SDRAM 自检一开始即 `Load access fault` | `sdram_ctrl` 对 NEORV32 XBUS 连续请求的 CDC / 应答握手不稳，事务丢失 | 将请求/应答改为 toggle 型跨时钟握手，并把 `ack` 延后到控制器真正空闲时返回 | 1 |
+| 5 | 2026-05-23 | `TEST2` bulk 读回出现 `0x3d...` / `0xc2...` 垃圾值 | `ack` 已同步回 CPU 域，但 32-bit 读数据没有做 100MHz→50MHz CDC | 为读数据增加持有寄存器和两级同步，再输出到 `wb_dat_o` | 1 |
+| 6 | 2026-05-23 | `TEST3` checkerboard 只差 1 bit (`0xAAAAAAAA -> 0xAAAA2AAA`) | 外部 `DRAM_CLK` 相对控制器内部采样点还有轻微相位偏差 | 调整 `altpll_50_100.vhd` 中 `SDRAM_CLK_SHIFT_PS`，最终稳定值为 `1560ps` | 1 |
 
 ---
 

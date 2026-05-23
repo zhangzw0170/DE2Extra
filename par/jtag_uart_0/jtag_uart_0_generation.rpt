@@ -1,0 +1,40 @@
+Info: Starting: Create block symbol file (.bsf)
+Info: qsys-generate E:\Main\JuniorII\NonExam\FPGA\DE2Extra\par\jtag_uart_0.qsys --block-symbol-file --output-directory=E:\Main\JuniorII\NonExam\FPGA\DE2Extra\par\jtag_uart_0 --family="Cyclone IV E" --part=EP4CE115F29C7
+Progress: Loading par/jtag_uart_0.qsys
+Progress: Reading input file
+Progress: Adding clk_0 [clock_source 23.1]
+Progress: Parameterizing module clk_0
+Progress: Adding jtag_uart_0 [altera_avalon_jtag_uart 23.1]
+Progress: Parameterizing module jtag_uart_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: jtag_uart_0.jtag_uart_0: JTAG UART IP input clock need to be at least double (2x) the operating frequency of JTAG TCK on board
+Warning: jtag_uart_0.jtag_uart_0: Interrupt sender jtag_uart_0.irq is not connected to an interrupt receiver
+Info: qsys-generate succeeded.
+Info: Finished: Create block symbol file (.bsf)
+Info: 
+Info: Starting: Create HDL design files for synthesis
+Info: qsys-generate E:\Main\JuniorII\NonExam\FPGA\DE2Extra\par\jtag_uart_0.qsys --synthesis=VHDL --output-directory=E:\Main\JuniorII\NonExam\FPGA\DE2Extra\par\jtag_uart_0\synthesis --family="Cyclone IV E" --part=EP4CE115F29C7
+Progress: Loading par/jtag_uart_0.qsys
+Progress: Reading input file
+Progress: Adding clk_0 [clock_source 23.1]
+Progress: Parameterizing module clk_0
+Progress: Adding jtag_uart_0 [altera_avalon_jtag_uart 23.1]
+Progress: Parameterizing module jtag_uart_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: jtag_uart_0.jtag_uart_0: JTAG UART IP input clock need to be at least double (2x) the operating frequency of JTAG TCK on board
+Warning: jtag_uart_0.jtag_uart_0: Interrupt sender jtag_uart_0.irq is not connected to an interrupt receiver
+Info: jtag_uart_0: Generating jtag_uart_0 "jtag_uart_0" for QUARTUS_SYNTH
+Info: jtag_uart_0: Starting RTL generation for module 'jtag_uart_0_jtag_uart_0'
+Info: jtag_uart_0:   Generation command is [exec E:/software/intelfpga_lite/23.1std/quartus/bin64/perl/bin/perl.exe -I E:/software/intelfpga_lite/23.1std/quartus/bin64/perl/lib -I E:/software/intelfpga_lite/23.1std/quartus/sopc_builder/bin/europa -I E:/software/intelfpga_lite/23.1std/quartus/sopc_builder/bin -I E:/software/intelfpga_lite/23.1std/quartus/../ip/altera/sopc_builder_ip/common -I E:/software/intelfpga_lite/23.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart -- E:/software/intelfpga_lite/23.1std/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart/generate_rtl.pl --name=jtag_uart_0_jtag_uart_0 --dir=C:/Users/Lenovo/AppData/Local/Temp/alt0596_5064465778796213328.dir/0002_jtag_uart_0_gen/ --quartus_dir=E:/software/intelfpga_lite/23.1std/quartus --verilog --config=C:/Users/Lenovo/AppData/Local/Temp/alt0596_5064465778796213328.dir/0002_jtag_uart_0_gen//jtag_uart_0_jtag_uart_0_component_configuration.pl  --do_build_sim=0  ]
+Info: jtag_uart_0: Done RTL generation for module 'jtag_uart_0_jtag_uart_0'
+Info: jtag_uart_0: "jtag_uart_0" instantiated altera_avalon_jtag_uart "jtag_uart_0"
+Info: rst_controller: "jtag_uart_0" instantiated altera_reset_controller "rst_controller"
+Info: jtag_uart_0: Done "jtag_uart_0" with 3 modules, 5 files
+Info: qsys-generate succeeded.
+Info: Finished: Create HDL design files for synthesis

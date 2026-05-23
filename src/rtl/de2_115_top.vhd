@@ -3,13 +3,16 @@
 -- 唯一知道板级引脚的模块。职责:
 --   1. 实例化时钟/复位生成 (clk_rst_gen)
 --   2. 实例化 CPU (neorv32_wrapper)
---   3. 实例化七段管映射 (seg7_mapper)
---   4. 信号路由: GPIO ↔ LED/HEX, UART ↔ RS-232
---   5. 未使用引脚安全处理
+--   3. 实例化 Wishbone 总线互连 (wb_intercon)
+--   4. 实例化 SDRAM 控制器 (sdram_ctrl)
+--   5. 实例化七段管映射 (seg7_mapper)
+--   6. 信号路由: GPIO ↔ LED/HEX, UART ↔ RS-232
 --
--- 换板子: 新建 xxx_top.vhd 替换此文件，其他模块不动。
+-- 新外设: 在 wb_intercon 中添加 slave 端口 + 地址解码。
 library ieee;
 use ieee.std_logic_1164.all;
+use work.de2extra_pkg.all;
+library jtag_uart_0;
 
 entity de2_115_top is
     port (
@@ -27,23 +30,38 @@ entity de2_115_top is
         LEDR        : out std_logic_vector(17 downto 0);
         LEDG        : out std_logic_vector(8 downto 0);
 
+        -- 拨码开关
+        SW          : in  std_logic_vector(17 downto 0);
+
         -- 七段数码管 (active-low, gfedcba)
         HEX0        : out std_logic_vector(6 downto 0);
         HEX1        : out std_logic_vector(6 downto 0);
         HEX2        : out std_logic_vector(6 downto 0);
         HEX3        : out std_logic_vector(6 downto 0);
+        HEX4        : out std_logic_vector(6 downto 0);
+        HEX5        : out std_logic_vector(6 downto 0);
+        HEX6        : out std_logic_vector(6 downto 0);
+        HEX7        : out std_logic_vector(6 downto 0);
 
-        -- SDRAM (Phase 1 启用, 当前悬空)
+        -- SDRAM
         DRAM_ADDR   : out std_logic_vector(12 downto 0);
         DRAM_BA     : out std_logic_vector(1 downto 0);
         DRAM_CAS_N  : out std_logic;
-        DRAM_CKE    : out std_logic;
+        DRAM_cke    : out std_logic;
         DRAM_CLK    : out std_logic;
         DRAM_CS_N   : out std_logic;
         DRAM_DQ     : inout std_logic_vector(31 downto 0);
         DRAM_DQM    : out std_logic_vector(3 downto 0);
         DRAM_RAS_N  : out std_logic;
-        DRAM_WE_N   : out std_logic
+        DRAM_WE_N   : out std_logic;
+
+        -- LCD (HD44780, 16x2)
+        LCD_DATA    : out std_logic_vector(7 downto 0);
+        LCD_RS      : out std_logic;
+        LCD_RW      : out std_logic;
+        LCD_EN      : out std_logic;
+        LCD_ON      : out std_logic;
+        LCD_BLON    : out std_logic
     );
 end entity de2_115_top;
 
@@ -51,23 +69,64 @@ architecture rtl of de2_115_top is
 
     -- Clock/reset
     signal clk_50m     : std_logic;
+    signal clk_sdram   : std_logic;
+    signal clk_sdram_shift : std_logic;
     signal clk_vga     : std_logic;
     signal rst_n       : std_logic;
+    signal pll_locked  : std_logic;
+    signal rst_sdram_n : std_logic;
+    signal rst_sdram_sync : std_logic_vector(1 downto 0);
 
-    -- CPU ↔ 外部
+    -- CPU <-> 外部
     signal gpio_out    : std_logic_vector(31 downto 0);
     signal gpio_in     : std_logic_vector(31 downto 0);
+    signal uart_txd_int : std_logic;
 
-    -- XBUS (Phase 0 未使用)
+    -- XBUS
     signal xbus_adr    : std_logic_vector(31 downto 0);
     signal xbus_dat_o  : std_logic_vector(31 downto 0);
     signal xbus_we     : std_logic;
     signal xbus_sel    : std_logic_vector(3 downto 0);
     signal xbus_stb    : std_logic;
     signal xbus_cyc    : std_logic;
+    signal xbus_dat_i  : std_logic_vector(31 downto 0);
+    signal xbus_ack    : std_logic;
+    signal xbus_err    : std_logic;
 
-    -- 七段管显示数据 (来自 GPIO 高位)
-    signal hex_display : std_logic_vector(15 downto 0);
+    -- SDRAM Wishbone
+    signal sdram_wb_adr  : std_logic_vector(24 downto 0);
+    signal sdram_wb_dat_o : std_logic_vector(31 downto 0);
+    signal sdram_wb_dat_i : std_logic_vector(31 downto 0);
+    signal sdram_wb_we   : std_logic;
+    signal sdram_wb_sel  : std_logic_vector(3 downto 0);
+    signal sdram_wb_stb  : std_logic;
+    signal sdram_wb_cyc  : std_logic;
+    signal sdram_wb_ack  : std_logic;
+    signal sdram_wb_err  : std_logic;
+
+    -- JTAG UART Avalon bus
+    signal jtag_av_cs       : std_logic;
+    signal jtag_av_addr     : std_logic;
+    signal jtag_av_read_n   : std_logic;
+    signal jtag_av_readdata : std_logic_vector(31 downto 0);
+    signal jtag_av_write_n  : std_logic;
+    signal jtag_av_writedata: std_logic_vector(31 downto 0);
+    signal jtag_av_waitreq  : std_logic;
+
+    -- JTAG UART IP (Platform Designer, library jtag_uart_0)
+    component jtag_uart_0 is
+        port (
+            clk_clk                                   : in  std_logic;
+            reset_reset_n                             : in  std_logic;
+            jtag_uart_0_avalon_jtag_slave_chipselect  : in  std_logic;
+            jtag_uart_0_avalon_jtag_slave_address     : in  std_logic;
+            jtag_uart_0_avalon_jtag_slave_read_n      : in  std_logic;
+            jtag_uart_0_avalon_jtag_slave_readdata    : out std_logic_vector(31 downto 0);
+            jtag_uart_0_avalon_jtag_slave_write_n     : in  std_logic;
+            jtag_uart_0_avalon_jtag_slave_writedata   : in  std_logic_vector(31 downto 0);
+            jtag_uart_0_avalon_jtag_slave_waitrequest : out std_logic
+        );
+    end component;
 
 begin
 
@@ -79,9 +138,24 @@ begin
         clk_50m_i   => CLOCK_50,
         rst_key_n_i => KEY(0),
         clk_50m_o   => clk_50m,
+        clk_sdram_o => clk_sdram,
+        clk_sdram_shift_o => clk_sdram_shift,
         clk_vga_o   => clk_vga,
-        rst_n_o     => rst_n
+        rst_n_o     => rst_n,
+        pll_locked_o => pll_locked
     );
+
+    -- SDRAM 控制器复位在 100MHz 域内同步释放，避免上电时状态机异步出复位
+    p_rst_sdram_sync : process (clk_sdram, rst_n)
+    begin
+        if rst_n = '0' then
+            rst_sdram_sync <= (others => '0');
+        elsif rising_edge(clk_sdram) then
+            rst_sdram_sync <= rst_sdram_sync(0) & '1';
+        end if;
+    end process;
+
+    rst_sdram_n <= rst_sdram_sync(1);
 
     -- ================================================================
     -- NEORV32 CPU
@@ -91,77 +165,169 @@ begin
         CLOCK_FREQUENCY => 50_000_000,
         IMEM_SIZE       => 32*1024,
         DMEM_SIZE       => 16*1024,
-        BOOT_MODE       => 2          -- IMEM image (上电即跑)
+        BOOT_MODE       => 2
     )
     port map (
         clk_i       => clk_50m,
         rst_n_i     => rst_n,
-        -- UART
-        uart_txd_o  => UART_TXD,
+        uart_txd_o  => uart_txd_int,
         uart_rxd_i  => UART_RXD,
-        -- GPIO
         gpio_o      => gpio_out,
         gpio_i      => gpio_in,
-        -- JTAG (Quartus 自动连接 USB-Blaster)
         jtag_tck_i  => '0',
         jtag_tdi_i  => '0',
         jtag_tdo_o  => open,
         jtag_tms_i  => '0',
-        -- XBUS (Phase 0: 无外设, 返回 error)
         xbus_adr_o  => xbus_adr,
         xbus_dat_o  => xbus_dat_o,
-        xbus_dat_i  => (others => '0'),
+        xbus_dat_i  => xbus_dat_i,
         xbus_we_o   => xbus_we,
         xbus_sel_o  => xbus_sel,
         xbus_stb_o  => xbus_stb,
         xbus_cyc_o  => xbus_cyc,
-        xbus_ack_i  => '0',
-        xbus_err_i  => xbus_stb and xbus_cyc  -- 总线错误: 告知 CPU 无此设备
+        xbus_ack_i  => xbus_ack,
+        xbus_err_i  => xbus_err
     );
 
     -- ================================================================
-    -- GPIO → LED 映射
+    -- Wishbone Interconnect
     -- ================================================================
-    -- LEDR[17:0] ← GPIO 输出低 18 位
-    LEDR <= gpio_out(17 downto 0);
+    u_intercon : entity work.wb_intercon
+    port map (
+        m_adr_i  => xbus_adr,
+        m_dat_i  => xbus_dat_o,
+        m_dat_o  => xbus_dat_i,
+        m_we_i   => xbus_we,
+        m_sel_i  => xbus_sel,
+        m_stb_i  => xbus_stb,
+        m_cyc_i  => xbus_cyc,
+        m_ack_o  => xbus_ack,
+        m_err_o  => xbus_err,
+        s0_adr_o => sdram_wb_adr,
+        s0_dat_i => sdram_wb_dat_i,
+        s0_dat_o => sdram_wb_dat_o,
+        s0_we_o  => sdram_wb_we,
+        s0_sel_o => sdram_wb_sel,
+        s0_stb_o => sdram_wb_stb,
+        s0_cyc_o => sdram_wb_cyc,
+        s0_ack_i => sdram_wb_ack
+    );
 
-    -- LEDG 用作状态指示:
-    --   LEDG[0] = 复位状态 (rst_n 取反, 复位时亮)
-    --   LEDG[7:1] 悬空
-    LEDG(0) <= not rst_n;
-    LEDG(8 downto 1) <= (others => '0');
+    -- ================================================================
+    -- SDRAM Controller
+    -- ================================================================
+    u_sdram : entity work.sdram_ctrl
+    port map (
+        clk_cpu_i   => clk_50m,
+        rst_n_i     => rst_n,
+        wb_adr_i    => sdram_wb_adr,
+        wb_dat_i    => sdram_wb_dat_o,
+        wb_dat_o    => sdram_wb_dat_i,
+        wb_we_i     => sdram_wb_we,
+        wb_sel_i    => sdram_wb_sel,
+        wb_stb_i    => sdram_wb_stb,
+        wb_cyc_i    => sdram_wb_cyc,
+        wb_ack_o    => sdram_wb_ack,
+        wb_err_o    => sdram_wb_err,
+        clk_sdram_i => clk_sdram,
+        rst_sdram_n => rst_sdram_n,
+        dram_addr   => DRAM_ADDR,
+        dram_ba     => DRAM_BA,
+        dram_cas_n  => DRAM_CAS_N,
+        dram_cke    => DRAM_cke,
+        dram_cs_n   => DRAM_CS_N,
+        dram_dq     => DRAM_DQ,
+        dram_dqm    => DRAM_DQM,
+        dram_ras_n  => DRAM_RAS_N,
+        dram_we_n   => DRAM_WE_N
+    );
 
-    -- GPIO 输入 (高位, 可接拨码开关等, Phase 0 暂不使用)
+    -- DRAM 时钟使用相移版 PLL 输出，给板级地址/命令/写数据留 setup 裕量
+    DRAM_CLK <= clk_sdram_shift;
+
+    -- ================================================================
+    -- GPIO -> LED 映射
+    -- ================================================================
+    LEDR(15 downto 0) <= gpio_out(15 downto 0);
+    LEDR(17 downto 16) <= SW(17 downto 16);
+
+    LEDG(7 downto 0) <= gpio_out(23 downto 16);
+    LEDG(8) <= not rst_n;
+
     gpio_in <= (others => '0');
 
     -- ================================================================
-    -- GPIO → 七段数码管映射
+    -- GPIO -> 七段数码管映射
     -- ================================================================
-    -- GPIO[31:16] 的 16 位拆为 4 个 nibble → HEX0..3
-    -- (与 LEDR[17:0] 不重叠, 避免互相干扰)
-    hex_display <= gpio_out(31 downto 16);
-
-    u_seg7 : entity work.seg7_mapper
+    u_seg7_lo : entity work.seg7_mapper
     port map (
-        hex_nibbles => hex_display,
+        hex_nibbles => gpio_out(15 downto 0),
         seg0        => HEX0,
         seg1        => HEX1,
         seg2        => HEX2,
         seg3        => HEX3
     );
 
+    u_seg7_hi : entity work.seg7_mapper
+    port map (
+        hex_nibbles => x"00" & gpio_out(23 downto 16),
+        seg0        => HEX4,
+        seg1        => HEX5,
+        seg2        => open,
+        seg3        => open
+    );
+    HEX6 <= (others => '1');
+    HEX7 <= (others => '1');
+
     -- ================================================================
-    -- SDRAM: Phase 0 悬空 (安全输出)
+    -- JTAG UART -- CPU 输出通过 JTAG 在 PC 端查看
     -- ================================================================
-    DRAM_ADDR   <= (others => 'Z');
-    DRAM_BA     <= (others => 'Z');
-    DRAM_CAS_N  <= '1';
-    DRAM_CKE    <= '0';
-    DRAM_CLK    <= '0';
-    DRAM_CS_N   <= '1';
-    DRAM_DQ     <= (others => 'Z');
-    DRAM_DQM    <= (others => '1');
-    DRAM_RAS_N  <= '1';
-    DRAM_WE_N   <= '1';
+    UART_TXD <= uart_txd_int;
+
+    u_jtag_uart : component jtag_uart_0
+    port map (
+        clk_clk                                   => clk_50m,
+        reset_reset_n                             => rst_n,
+        jtag_uart_0_avalon_jtag_slave_chipselect  => jtag_av_cs,
+        jtag_uart_0_avalon_jtag_slave_address     => jtag_av_addr,
+        jtag_uart_0_avalon_jtag_slave_read_n      => jtag_av_read_n,
+        jtag_uart_0_avalon_jtag_slave_readdata    => jtag_av_readdata,
+        jtag_uart_0_avalon_jtag_slave_write_n     => jtag_av_write_n,
+        jtag_uart_0_avalon_jtag_slave_writedata   => jtag_av_writedata,
+        jtag_uart_0_avalon_jtag_slave_waitrequest => jtag_av_waitreq
+    );
+
+    u_jtag_bridge : entity work.uart_jtag_bridge
+    generic map (
+        CLOCK_FREQ_HZ => 50_000_000,
+        BAUD_RATE     => 115200
+    )
+    port map (
+        clk_i          => clk_50m,
+        rst_n_i        => rst_n,
+        uart_tx_i      => uart_txd_int,
+        av_chipselect  => jtag_av_cs,
+        av_address     => jtag_av_addr,
+        av_read_n      => jtag_av_read_n,
+        av_readdata    => jtag_av_readdata,
+        av_write_n     => jtag_av_write_n,
+        av_writedata   => jtag_av_writedata,
+        av_waitrequest => jtag_av_waitreq
+    );
+
+    -- ================================================================
+    -- LCD -- SDRAM 测试结果显示
+    -- ================================================================
+    u_lcd : entity work.lcd_status
+    port map (
+        clk_i    => clk_50m,
+        gpio_i   => gpio_out,
+        lcd_data => LCD_DATA,
+        lcd_rs   => LCD_RS,
+        lcd_rw   => LCD_RW,
+        lcd_en   => LCD_EN,
+        lcd_on   => LCD_ON,
+        lcd_blon => LCD_BLON
+    );
 
 end architecture rtl;

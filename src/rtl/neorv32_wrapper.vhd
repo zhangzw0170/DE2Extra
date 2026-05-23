@@ -165,7 +165,7 @@ begin
         IO_GPIO_DIR_EN       => true,
 
         -- CLINT --
-        IO_CLINT_EN          => false,   -- FreeRTOS 用自定义 timer
+        IO_CLINT_EN          => true,    -- FreeRTOS tick (MTIMER)
 
         -- UART --
         IO_UART0_EN          => true,

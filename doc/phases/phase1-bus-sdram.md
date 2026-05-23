@@ -1,11 +1,14 @@
 # Phase 1: 总线 + SDRAM 可靠
 
 > 总纲: `../implementation_plan.md`
+> 状态: 2026-05-23 — 已完成，`sdram_test` = `ALL PASS`
 
 ## 本阶段概述
 
 修复 SDRAM 控制器的 hold timing 违例，实现通用 Wishbone interconnect 替换硬编码地址解码。
-这是所有后续 Phase 的硬件基础。
+这是所有后续 Phase 的硬件基础，当前已经形成稳定可复现实板结果。
+
+完整调试过程见: `phase1-sdram-debug-report.md`
 
 ---
 
@@ -13,10 +16,10 @@
 
 | # | 验收项 | 通过条件 | 状态 |
 |---|---|---|---|
-| 1 | SDRAM Hold Timing 修复 | Quartus TimeQuest 报告 TNS >= 0 | ☐ |
-| 2 | wb_intercon 地址解码 | 未映射地址返回 bus error，无死锁 | ☐ |
-| 3 | SDRAM 通过 interconnect | `sdram_test` 通过 wb_intercon 仍然 ALL PASS | ☐ |
-| 4 | Quartus 编译通过 | 无错误，无关键警告 | ☐ |
+| 1 | SDRAM Hold Timing 修复 | Quartus TimeQuest 报告 TNS >= 0 | ✅ |
+| 2 | wb_intercon 地址解码 | 未映射地址返回 bus error，无死锁 | ✅ |
+| 3 | SDRAM 通过 interconnect | `sdram_test` 通过 wb_intercon 仍然 ALL PASS | ✅ |
+| 4 | Quartus 编译通过 | 无错误，无关键警告 | ✅ |
 
 ---
 

@@ -13,53 +13,15 @@ package de2extra_pkg is
     -- ================================================================
     -- Address space (used by Wishbone interconnect in Phase 1)
     -- ================================================================
-    constant ADDR_SDRAM_BASE  : std_logic_vector(31 downto 0) := x"01000000";
-    constant ADDR_PERIPH_BASE : std_logic_vector(31 downto 0) := x"F0000000";
-    constant ADDR_PERIPH_SIZE : natural := 16#1000#;  -- 4KB per peripheral slot
-
-    -- Peripheral address offsets (index into periph space)
-    constant PERIPH_VGA       : natural := 16#000#;
-    constant PERIPH_PS2_KBD   : natural := 16#001#;
-    constant PERIPH_PS2_MOUSE : natural := 16#002#;
-    constant PERIPH_TIMER     : natural := 16#003#;
-    constant PERIPH_IRQ_CTRL  : natural := 16#004#;
-    constant PERIPH_SPI_SD    : natural := 16#005#;
-    constant PERIPH_I2C       : natural := 16#006#;
-    constant PERIPH_AUDIO     : natural := 16#007#;
-    constant PERIPH_LCD       : natural := 16#008#;
-    constant PERIPH_IR        : natural := 16#009#;
-    constant PERIPH_ETH       : natural := 16#00A#;
-    constant PERIPH_GPIO_EXT  : natural := 16#00B#;
-
-    -- ================================================================
-    -- Generic register interface (platform-agnostic peripheral bus)
-    -- ================================================================
-    type reg_req_t is record
-        cs      : std_logic;
-        wr_en   : std_logic;
-        rd_en   : std_logic;
-        addr    : std_logic_vector(3 downto 0);
-        wr_data : std_logic_vector(31 downto 0);
-    end record;
-
-    type reg_rsp_t is record
-        rd_data : std_logic_vector(31 downto 0);
-        irq     : std_logic;
-    end record;
-
-    constant REG_REQ_IDLE : reg_req_t := (
-        cs      => '0',
-        wr_en   => '0',
-        rd_en   => '0',
-        addr    => (others => '0'),
-        wr_data => (others => '0')
-    );
-
-    constant REG_RSP_NULL : reg_rsp_t := (
-        rd_data => (others => '0'),
-        irq     => '0'
-    );
-
+    constant ADDR_SDRAM_BASE   : std_logic_vector(31 downto 0) := x"01000000"; -- 128MB
+    constant ADDR_VGA_BASE     : std_logic_vector(31 downto 0) := x"F0000000"; -- 8KB
+    constant ADDR_PS2_BASE     : std_logic_vector(31 downto 0) := x"F0002000"; -- 4KB
+    constant ADDR_TIMER_BASE   : std_logic_vector(31 downto 0) := x"F0004000"; -- 4KB
+    constant ADDR_INTC_BASE    : std_logic_vector(31 downto 0) := x"F0006000"; -- 4KB
+    constant ADDR_LCD_BASE     : std_logic_vector(31 downto 0) := x"F0008000"; -- 4KB
+    constant ADDR_IR_BASE      : std_logic_vector(31 downto 0) := x"F0009000"; -- 4KB
+    constant ADDR_DDS_BASE     : std_logic_vector(31 downto 0) := x"F000A000"; -- 4KB
+    constant ADDR_SD_BASE      : std_logic_vector(31 downto 0) := x"F000B000"; -- 4KB
     -- ================================================================
     -- Seven-segment display utility
     -- ================================================================
