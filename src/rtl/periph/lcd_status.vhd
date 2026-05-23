@@ -4,6 +4,7 @@
 --   0x0------- : TESTING
 --   0x1------- : ALL PASS
 --   0x2------- : CRYPTO CLI READY
+--   0x3sov00aa : PS/2 mode, s=seen, o=overflow, aa=last ASCII byte
 --   0x8tww0000 : fail meta, t=test#, ww=word index
 --   0x9---hhhh : fail got[31:16]
 --   0xA---llll : fail got[15:0]
@@ -11,6 +12,7 @@
 -- LCD 显示:
 --   正常: Line1 = "DE2Extra SDRAM  ", Line2 = "TESTING..." / "ALL PASS"
 --   2a  : Line1 = "DE2Extra Crypto ", Line2 = "UART CLI READY "
+--   2b  : Line1 = "DE2Extra PS/2   ", Line2 = "ASC XX ^D READY"
 --   失败: Line1 = "FAIL T? W??    ", Line2 = "GOT XXXXXXXX  "
 library ieee;
 use ieee.std_logic_1164.all;
@@ -19,6 +21,7 @@ use ieee.numeric_std.all;
 entity lcd_status is
     port (
         clk_i      : in  std_logic;
+        rst_n_i    : in  std_logic;
         gpio_i     : in  std_logic_vector(31 downto 0);
         lcd_data   : out std_logic_vector(7 downto 0);
         lcd_rs     : out std_logic;
@@ -39,7 +42,7 @@ architecture rtl of lcd_status is
         S_IDLE
     );
 
-    type disp_mode_t is (MODE_TESTING, MODE_PASS, MODE_CRYPTO, MODE_FAIL);
+    type disp_mode_t is (MODE_TESTING, MODE_PASS, MODE_CRYPTO, MODE_PS2, MODE_FAIL);
 
     type init_entry_t is record
         cmd   : std_logic_vector(7 downto 0);
@@ -90,6 +93,38 @@ architecture rtl of lcd_status is
         end case;
     end function;
 
+    function ps2_repr_char(
+        ps2_code : std_logic_vector(7 downto 0);
+        idx      : integer
+    ) return std_logic_vector is
+    begin
+        if unsigned(ps2_code) = to_unsigned(16#20#, 8) then
+            if idx = 0 then return ch('S'); else return ch('P'); end if;
+        elsif unsigned(ps2_code) = to_unsigned(16#7F#, 8) then
+            if idx = 0 then return ch('^'); else return ch('?'); end if;
+        elsif unsigned(ps2_code) < to_unsigned(16#20#, 8) then
+            if idx = 0 then
+                return ch('^');
+            else
+                return std_logic_vector(unsigned(ps2_code) + to_unsigned(64, 8));
+            end if;
+        elsif unsigned(ps2_code) = to_unsigned(16#60#, 8) then
+            if idx = 0 then return ch('G'); else return ch('R'); end if;
+        elsif unsigned(ps2_code) = to_unsigned(16#7E#, 8) then
+            if idx = 0 then return ch('T'); else return ch('I'); end if;
+        elsif unsigned(ps2_code) = to_unsigned(16#5C#, 8) then
+            if idx = 0 then return ch('B'); else return ch('S'); end if;
+        elsif unsigned(ps2_code) = to_unsigned(16#5F#, 8) then
+            if idx = 0 then return ch('U'); else return ch('S'); end if;
+        else
+            if idx = 0 then
+                return ps2_code;
+            else
+                return ch(' ');
+            end if;
+        end if;
+    end function;
+
     function line1_char(
         mode      : disp_mode_t;
         fail_test : std_logic_vector(3 downto 0);
@@ -131,6 +166,23 @@ architecture rtl of lcd_status is
                 when 14 => return ch('o');
                 when others => return ch(' ');
             end case;
+        elsif mode = MODE_PS2 then
+            case idx is
+                when 0  => return ch('D');
+                when 1  => return ch('E');
+                when 2  => return ch('2');
+                when 3  => return ch('E');
+                when 4  => return ch('x');
+                when 5  => return ch('t');
+                when 6  => return ch('r');
+                when 7  => return ch('a');
+                when 8  => return ch(' ');
+                when 9  => return ch('P');
+                when 10 => return ch('S');
+                when 11 => return ch('/');
+                when 12 => return ch('2');
+                when others => return ch(' ');
+            end case;
         else
             case idx is
                 when 0  => return ch('D');
@@ -155,6 +207,9 @@ architecture rtl of lcd_status is
     function line2_char(
         mode     : disp_mode_t;
         fail_got : std_logic_vector(31 downto 0);
+        ps2_seen : std_logic;
+        ps2_ovf  : std_logic;
+        ps2_code : std_logic_vector(7 downto 0);
         idx      : integer
     ) return std_logic_vector is
     begin
@@ -203,6 +258,50 @@ architecture rtl of lcd_status is
                     when 13 => return ch('Y');
                     when others => return ch(' ');
                 end case;
+            when MODE_PS2 =>
+                case idx is
+                    when 0  => return ch('A');
+                    when 1  => return ch('S');
+                    when 2  => return ch('C');
+                    when 3  => return ch(' ');
+                    when 4  => return hex_char(ps2_code(7 downto 4));
+                    when 5  => return hex_char(ps2_code(3 downto 0));
+                    when 6  => return ch(' ');
+                    when 7  =>
+                        if ps2_seen = '0' then
+                            return ch('-');
+                        else
+                            return ps2_repr_char(ps2_code, 0);
+                        end if;
+                    when 8  =>
+                        if ps2_seen = '0' then
+                            return ch('-');
+                        else
+                            return ps2_repr_char(ps2_code, 1);
+                        end if;
+                    when 9  => return ch(' ');
+                    when 10 =>
+                        if ps2_ovf = '1' then return ch('O');
+                        elsif ps2_seen = '1' then return ch('R');
+                        else return ch('I'); end if;
+                    when 11 =>
+                        if ps2_ovf = '1' then return ch('V');
+                        elsif ps2_seen = '1' then return ch('E');
+                        else return ch('D'); end if;
+                    when 12 =>
+                        if ps2_ovf = '1' then return ch('F');
+                        elsif ps2_seen = '1' then return ch('A');
+                        else return ch('L'); end if;
+                    when 13 =>
+                        if ps2_ovf = '1' then return ch(' ');
+                        elsif ps2_seen = '1' then return ch('D');
+                        else return ch('E'); end if;
+                    when 14 =>
+                        if ps2_ovf = '1' then return ch(' ');
+                        elsif ps2_seen = '1' then return ch('Y');
+                        else return ch(' '); end if;
+                    when others => return ch(' ');
+                end case;
             when MODE_FAIL =>
                 case idx is
                     when 0  => return ch('G');
@@ -233,181 +332,210 @@ architecture rtl of lcd_status is
     signal fail_test_r     : std_logic_vector(3 downto 0) := (others => '0');
     signal fail_word_r     : std_logic_vector(7 downto 0) := (others => '0');
     signal fail_got_r      : std_logic_vector(31 downto 0) := (others => '0');
+    signal ps2_seen_r      : std_logic := '0';
+    signal ps2_ovf_r       : std_logic := '0';
+    signal ps2_code_r      : std_logic_vector(7 downto 0) := (others => '0');
 
 begin
 
     process (clk_i)
     begin
         if rising_edge(clk_i) then
-            if gpio_prev /= gpio_i then
-                gpio_prev <= gpio_i;
-                case gpio_i(31 downto 28) is
-                    when "0000" =>
-                        disp_mode <= MODE_TESTING;
-                    when "0001" =>
-                        disp_mode <= MODE_PASS;
-                    when "0010" =>
-                        disp_mode <= MODE_CRYPTO;
-                    when "1000" =>
-                        disp_mode   <= MODE_FAIL;
-                        fail_test_r <= gpio_i(27 downto 24);
-                        fail_word_r <= gpio_i(23 downto 16);
-                    when "1001" =>
-                        disp_mode <= MODE_FAIL;
-                        fail_got_r(31 downto 16) <= gpio_i(15 downto 0);
-                    when "1010" =>
-                        disp_mode <= MODE_FAIL;
-                        fail_got_r(15 downto 0) <= gpio_i(15 downto 0);
-                    when others =>
-                        null;
-                end case;
-                refresh_pending <= '1';
-            end if;
+            if rst_n_i = '0' then
+                state           <= S_POWER_WAIT;
+                disp_mode       <= MODE_TESTING;
+                init_idx        <= 0;
+                msg_idx         <= 0;
+                en_cnt          <= 0;
+                delay_cnt       <= 0;
+                gpio_prev       <= (others => '1');
+                refresh_pending <= '0';
+                fail_test_r     <= (others => '0');
+                fail_word_r     <= (others => '0');
+                fail_got_r      <= (others => '0');
+                ps2_seen_r      <= '0';
+                ps2_ovf_r       <= '0';
+                ps2_code_r      <= (others => '0');
+                lcd_data        <= (others => '0');
+                lcd_rs          <= '0';
+                lcd_rw          <= '0';
+                lcd_en          <= '0';
+            else
+                if gpio_prev /= gpio_i then
+                    gpio_prev <= gpio_i;
+                    case gpio_i(31 downto 28) is
+                        when "0000" =>
+                            disp_mode <= MODE_TESTING;
+                        when "0001" =>
+                            disp_mode <= MODE_PASS;
+                        when "0010" =>
+                            disp_mode <= MODE_CRYPTO;
+                        when "0011" =>
+                            disp_mode  <= MODE_PS2;
+                            ps2_seen_r <= gpio_i(27);
+                            ps2_ovf_r  <= gpio_i(26);
+                            ps2_code_r <= gpio_i(7 downto 0);
+                        when "1000" =>
+                            disp_mode   <= MODE_FAIL;
+                            fail_test_r <= gpio_i(27 downto 24);
+                            fail_word_r <= gpio_i(23 downto 16);
+                        when "1001" =>
+                            disp_mode <= MODE_FAIL;
+                            fail_got_r(31 downto 16) <= gpio_i(15 downto 0);
+                        when "1010" =>
+                            disp_mode <= MODE_FAIL;
+                            fail_got_r(15 downto 0) <= gpio_i(15 downto 0);
+                        when others =>
+                            null;
+                    end case;
+                    refresh_pending <= '1';
+                end if;
 
-            lcd_en <= '0';
+                lcd_en <= '0';
 
-            case state is
+                case state is
 
-                when S_POWER_WAIT =>
-                    if delay_cnt < 2500000 then
-                        delay_cnt <= delay_cnt + 1;
-                    else
-                        delay_cnt <= 0;
-                        init_idx  <= 0;
-                        state     <= S_INIT;
-                    end if;
-
-                when S_INIT =>
-                    if init_idx <= 6 then
-                        lcd_rs    <= '0';
-                        lcd_rw    <= '0';
-                        lcd_data  <= INIT_SEQ(init_idx).cmd;
-                        lcd_en    <= '1';
-                        en_cnt    <= 100;
-                        delay_cnt <= 0;
-                        state     <= S_CMD_WAIT;
-                    else
-                        msg_idx <= 0;
-                        state   <= S_DATA;
-                    end if;
-
-                when S_CMD_WAIT =>
-                    if en_cnt > 50 then
-                        lcd_en <= '1';
-                    end if;
-                    if en_cnt > 0 then
-                        en_cnt <= en_cnt - 1;
-                    else
-                        if delay_cnt < INIT_SEQ(init_idx).delay then
+                    when S_POWER_WAIT =>
+                        if delay_cnt < 2500000 then
                             delay_cnt <= delay_cnt + 1;
                         else
                             delay_cnt <= 0;
-                            init_idx  <= init_idx + 1;
+                            init_idx  <= 0;
                             state     <= S_INIT;
                         end if;
-                    end if;
 
-                when S_REINIT =>
-                    if init_idx < 2 then
-                        lcd_rs    <= '0';
-                        lcd_rw    <= '0';
-                        lcd_data  <= REINIT_SEQ(init_idx).cmd;
+                    when S_INIT =>
+                        if init_idx <= 6 then
+                            lcd_rs    <= '0';
+                            lcd_rw    <= '0';
+                            lcd_data  <= INIT_SEQ(init_idx).cmd;
+                            lcd_en    <= '1';
+                            en_cnt    <= 100;
+                            delay_cnt <= 0;
+                            state     <= S_CMD_WAIT;
+                        else
+                            msg_idx <= 0;
+                            state   <= S_DATA;
+                        end if;
+
+                    when S_CMD_WAIT =>
+                        if en_cnt > 50 then
+                            lcd_en <= '1';
+                        end if;
+                        if en_cnt > 0 then
+                            en_cnt <= en_cnt - 1;
+                        else
+                            if delay_cnt < INIT_SEQ(init_idx).delay then
+                                delay_cnt <= delay_cnt + 1;
+                            else
+                                delay_cnt <= 0;
+                                init_idx  <= init_idx + 1;
+                                state     <= S_INIT;
+                            end if;
+                        end if;
+
+                    when S_REINIT =>
+                        if init_idx < 2 then
+                            lcd_rs    <= '0';
+                            lcd_rw    <= '0';
+                            lcd_data  <= REINIT_SEQ(init_idx).cmd;
+                            lcd_en    <= '1';
+                            en_cnt    <= 100;
+                            delay_cnt <= 0;
+                            state     <= S_REINIT_WAIT;
+                        else
+                            msg_idx <= 0;
+                            state   <= S_DATA;
+                        end if;
+
+                    when S_REINIT_WAIT =>
+                        if en_cnt > 50 then
+                            lcd_en <= '1';
+                        end if;
+                        if en_cnt > 0 then
+                            en_cnt <= en_cnt - 1;
+                        else
+                            if delay_cnt < REINIT_SEQ(init_idx).delay then
+                                delay_cnt <= delay_cnt + 1;
+                            else
+                                delay_cnt <= 0;
+                                init_idx  <= init_idx + 1;
+                                state     <= S_REINIT;
+                            end if;
+                        end if;
+
+                    when S_DATA =>
+                        lcd_rs <= '1';
+                        lcd_rw <= '0';
+                        if msg_idx < 16 then
+                            lcd_data <= line1_char(disp_mode, fail_test_r, fail_word_r, msg_idx);
+                        else
+                            lcd_data <= line2_char(disp_mode, fail_got_r, ps2_seen_r, ps2_ovf_r, ps2_code_r, msg_idx - 16);
+                        end if;
                         lcd_en    <= '1';
                         en_cnt    <= 100;
                         delay_cnt <= 0;
-                        state     <= S_REINIT_WAIT;
-                    else
-                        msg_idx <= 0;
-                        state   <= S_DATA;
-                    end if;
+                        state     <= S_DATA_WAIT;
 
-                when S_REINIT_WAIT =>
-                    if en_cnt > 50 then
-                        lcd_en <= '1';
-                    end if;
-                    if en_cnt > 0 then
-                        en_cnt <= en_cnt - 1;
-                    else
-                        if delay_cnt < REINIT_SEQ(init_idx).delay then
-                            delay_cnt <= delay_cnt + 1;
-                        else
-                            delay_cnt <= 0;
-                            init_idx  <= init_idx + 1;
-                            state     <= S_REINIT;
+                    when S_DATA_WAIT =>
+                        if en_cnt > 50 then
+                            lcd_en <= '1';
                         end if;
-                    end if;
-
-                when S_DATA =>
-                    lcd_rs <= '1';
-                    lcd_rw <= '0';
-                    if msg_idx < 16 then
-                        lcd_data <= line1_char(disp_mode, fail_test_r, fail_word_r, msg_idx);
-                    else
-                        lcd_data <= line2_char(disp_mode, fail_got_r, msg_idx - 16);
-                    end if;
-                    lcd_en    <= '1';
-                    en_cnt    <= 100;
-                    delay_cnt <= 0;
-                    state     <= S_DATA_WAIT;
-
-                when S_DATA_WAIT =>
-                    if en_cnt > 50 then
-                        lcd_en <= '1';
-                    end if;
-                    if en_cnt > 0 then
-                        en_cnt <= en_cnt - 1;
-                    else
-                        if delay_cnt < 2000 then
-                            delay_cnt <= delay_cnt + 1;
+                        if en_cnt > 0 then
+                            en_cnt <= en_cnt - 1;
                         else
-                            delay_cnt <= 0;
-                            if msg_idx = 15 then
-                                state <= S_LINE2;
-                            elsif msg_idx < 31 then
-                                msg_idx <= msg_idx + 1;
-                                state   <= S_DATA;
+                            if delay_cnt < 2000 then
+                                delay_cnt <= delay_cnt + 1;
                             else
-                                state <= S_IDLE;
+                                delay_cnt <= 0;
+                                if msg_idx = 15 then
+                                    state <= S_LINE2;
+                                elsif msg_idx < 31 then
+                                    msg_idx <= msg_idx + 1;
+                                    state   <= S_DATA;
+                                else
+                                    state <= S_IDLE;
+                                end if;
                             end if;
                         end if;
-                    end if;
 
-                when S_LINE2 =>
-                    lcd_rs    <= '0';
-                    lcd_rw    <= '0';
-                    lcd_data  <= x"C0";
-                    lcd_en    <= '1';
-                    en_cnt    <= 100;
-                    delay_cnt <= 0;
-                    state     <= S_LINE2_WAIT;
+                    when S_LINE2 =>
+                        lcd_rs    <= '0';
+                        lcd_rw    <= '0';
+                        lcd_data  <= x"C0";
+                        lcd_en    <= '1';
+                        en_cnt    <= 100;
+                        delay_cnt <= 0;
+                        state     <= S_LINE2_WAIT;
 
-                when S_LINE2_WAIT =>
-                    if en_cnt > 50 then
-                        lcd_en <= '1';
-                    end if;
-                    if en_cnt > 0 then
-                        en_cnt <= en_cnt - 1;
-                    else
-                        if delay_cnt < 2000 then
-                            delay_cnt <= delay_cnt + 1;
-                        else
-                            delay_cnt <= 0;
-                            msg_idx   <= 16;
-                            state     <= S_DATA;
+                    when S_LINE2_WAIT =>
+                        if en_cnt > 50 then
+                            lcd_en <= '1';
                         end if;
-                    end if;
+                        if en_cnt > 0 then
+                            en_cnt <= en_cnt - 1;
+                        else
+                            if delay_cnt < 2000 then
+                                delay_cnt <= delay_cnt + 1;
+                            else
+                                delay_cnt <= 0;
+                                msg_idx   <= 16;
+                                state     <= S_DATA;
+                            end if;
+                        end if;
 
-                when S_IDLE =>
-                    if refresh_pending = '1' then
-                        refresh_pending <= '0';
-                        init_idx        <= 0;
-                        msg_idx         <= 0;
-                        en_cnt          <= 0;
-                        delay_cnt       <= 0;
-                        state           <= S_REINIT;
-                    end if;
+                    when S_IDLE =>
+                        if refresh_pending = '1' then
+                            refresh_pending <= '0';
+                            init_idx        <= 0;
+                            msg_idx         <= 0;
+                            en_cnt          <= 0;
+                            delay_cnt       <= 0;
+                            state           <= S_REINIT;
+                        end if;
 
-            end case;
+                end case;
+            end if;
         end if;
     end process;
 

@@ -41,7 +41,9 @@ entity neorv32_wrapper is
         xbus_stb_o  : out std_logic;
         xbus_cyc_o  : out std_logic;
         xbus_ack_i  : in  std_logic;
-        xbus_err_i  : in  std_logic
+        xbus_err_i  : in  std_logic;
+        -- External interrupt (PS/2, etc.)
+        irq_mei_i  : in  std_logic
     );
 end entity neorv32_wrapper;
 
@@ -245,7 +247,10 @@ begin
 
         -- UART0
         uart0_txd_o    => uart_txd_sul,
-        uart0_rxd_i    => std_ulogic(uart_rxd_i)
+        uart0_rxd_i    => std_ulogic(uart_rxd_i),
+
+        -- External interrupt
+        irq_mei_i     => std_ulogic(irq_mei_i)
     );
 
 end architecture rtl;

@@ -26,6 +26,10 @@ entity de2_115_top is
         UART_TXD    : out std_logic;
         UART_RXD    : in  std_logic;
 
+        -- PS/2 keyboard
+        PS2_CLK     : in  std_logic;
+        PS2_DAT     : in  std_logic;
+
         -- LED
         LEDR        : out std_logic_vector(17 downto 0);
         LEDG        : out std_logic_vector(8 downto 0);
@@ -61,7 +65,17 @@ entity de2_115_top is
         LCD_RW      : out std_logic;
         LCD_EN      : out std_logic;
         LCD_ON      : out std_logic;
-        LCD_BLON    : out std_logic
+        LCD_BLON    : out std_logic;
+
+        -- VGA
+        VGA_R       : out std_logic_vector(7 downto 0);
+        VGA_G       : out std_logic_vector(7 downto 0);
+        VGA_B       : out std_logic_vector(7 downto 0);
+        VGA_HS      : out std_logic;
+        VGA_VS      : out std_logic;
+        VGA_CLK     : out std_logic;
+        VGA_SYNC_N  : out std_logic;
+        VGA_BLANK_N : out std_logic
     );
 end entity de2_115_top;
 
@@ -71,9 +85,7 @@ architecture rtl of de2_115_top is
     signal clk_50m     : std_logic;
     signal clk_sdram   : std_logic;
     signal clk_sdram_shift : std_logic;
-    signal clk_vga     : std_logic;
     signal rst_n       : std_logic;
-    signal pll_locked  : std_logic;
     signal rst_sdram_n : std_logic;
     signal rst_sdram_sync : std_logic_vector(1 downto 0);
 
@@ -102,7 +114,52 @@ architecture rtl of de2_115_top is
     signal sdram_wb_stb  : std_logic;
     signal sdram_wb_cyc  : std_logic;
     signal sdram_wb_ack  : std_logic;
-    signal sdram_wb_err  : std_logic;
+
+    -- VGA terminal register interface
+    signal vga_reg_adr   : std_logic_vector(15 downto 0);
+    signal vga_reg_dat_o : std_logic_vector(15 downto 0);
+    signal vga_reg_dat_i : std_logic_vector(15 downto 0);
+    signal vga_reg_we    : std_logic;
+    signal vga_reg_stb   : std_logic;
+    signal vga_reg_ack   : std_logic;
+
+    -- PS/2 controller register interface
+    signal ps2_reg_adr   : std_logic_vector(3 downto 0);
+    signal ps2_reg_dat_o : std_logic_vector(31 downto 0);
+    signal ps2_reg_dat_i : std_logic_vector(31 downto 0);
+    signal ps2_reg_we    : std_logic;
+    signal ps2_reg_stb   : std_logic;
+    signal ps2_reg_ack   : std_logic;
+    signal ps2_irq       : std_logic;
+    signal ps2_valid     : std_logic;
+    signal ps2_scancode  : std_logic_vector(7 downto 0);
+    -- VGA physical outputs
+    signal vga_r_int     : std_logic_vector(7 downto 0);
+    signal vga_g_int     : std_logic_vector(7 downto 0);
+    signal vga_b_int     : std_logic_vector(7 downto 0);
+    signal vga_hs_int    : std_logic;
+    signal vga_vs_int    : std_logic;
+    signal vga_clk_int   : std_logic;
+    signal vga_sync_int  : std_logic;
+    signal vga_blank_int : std_logic;
+
+    -- LCD mux (SW16=0: status, SW16=1: 2b debug)
+    signal lcd_status_data  : std_logic_vector(7 downto 0);
+    signal lcd_status_rs    : std_logic;
+    signal lcd_status_rw    : std_logic;
+    signal lcd_status_en    : std_logic;
+    signal lcd_status_on    : std_logic;
+    signal lcd_status_blon  : std_logic;
+    signal lcd_debug_data   : std_logic_vector(7 downto 0);
+    signal lcd_debug_rs     : std_logic;
+    signal lcd_debug_rw     : std_logic;
+    signal lcd_debug_en     : std_logic;
+    signal lcd_debug_on     : std_logic;
+    signal lcd_debug_blon   : std_logic;
+    signal sw16_meta        : std_logic := '0';
+    signal sw16_sel         : std_logic := '0';
+    signal lcd_status_rst_n : std_logic;
+    signal lcd_debug_rst_n  : std_logic;
 
     -- JTAG UART Avalon bus
     signal jtag_av_cs       : std_logic;
@@ -140,9 +197,9 @@ begin
         clk_50m_o   => clk_50m,
         clk_sdram_o => clk_sdram,
         clk_sdram_shift_o => clk_sdram_shift,
-        clk_vga_o   => clk_vga,
+        clk_vga_o   => open,
         rst_n_o     => rst_n,
-        pll_locked_o => pll_locked
+        pll_locked_o => open
     );
 
     -- SDRAM 控制器复位在 100MHz 域内同步释放，避免上电时状态机异步出复位
@@ -156,6 +213,20 @@ begin
     end process;
 
     rst_sdram_n <= rst_sdram_sync(1);
+
+    p_sw16_sync : process (clk_50m, rst_n)
+    begin
+        if rst_n = '0' then
+            sw16_meta <= '0';
+            sw16_sel  <= '0';
+        elsif rising_edge(clk_50m) then
+            sw16_meta <= SW(16);
+            sw16_sel  <= sw16_meta;
+        end if;
+    end process;
+
+    lcd_status_rst_n <= rst_n;
+    lcd_debug_rst_n  <= '0';
 
     -- ================================================================
     -- NEORV32 CPU
@@ -186,7 +257,8 @@ begin
         xbus_stb_o  => xbus_stb,
         xbus_cyc_o  => xbus_cyc,
         xbus_ack_i  => xbus_ack,
-        xbus_err_i  => xbus_err
+        xbus_err_i  => xbus_err,
+        irq_mei_i   => ps2_irq
     );
 
     -- ================================================================
@@ -210,7 +282,19 @@ begin
         s0_sel_o => sdram_wb_sel,
         s0_stb_o => sdram_wb_stb,
         s0_cyc_o => sdram_wb_cyc,
-        s0_ack_i => sdram_wb_ack
+        s0_ack_i => sdram_wb_ack,
+        s1_adr_o => vga_reg_adr,
+        s1_dat_i => vga_reg_dat_i,
+        s1_dat_o => vga_reg_dat_o,
+        s1_we_o  => vga_reg_we,
+        s1_stb_o => vga_reg_stb,
+        s1_ack_i => vga_reg_ack,
+        s2_adr_o => ps2_reg_adr,
+        s2_dat_i => ps2_reg_dat_i,
+        s2_dat_o => ps2_reg_dat_o,
+        s2_we_o  => ps2_reg_we,
+        s2_stb_o => ps2_reg_stb,
+        s2_ack_i => ps2_reg_ack
     );
 
     -- ================================================================
@@ -228,7 +312,7 @@ begin
         wb_stb_i    => sdram_wb_stb,
         wb_cyc_i    => sdram_wb_cyc,
         wb_ack_o    => sdram_wb_ack,
-        wb_err_o    => sdram_wb_err,
+        wb_err_o    => open,
         clk_sdram_i => clk_sdram,
         rst_sdram_n => rst_sdram_n,
         dram_addr   => DRAM_ADDR,
@@ -246,6 +330,58 @@ begin
     DRAM_CLK <= clk_sdram_shift;
 
     -- ================================================================
+    -- VGA Text Terminal (Phase 2b)
+    -- ================================================================
+    u_vga : entity work.vga_text_terminal
+    port map (
+        clk_50m_i   => clk_50m,
+        rst_n_i     => rst_n,
+        vga_r_o     => vga_r_int,
+        vga_g_o     => vga_g_int,
+        vga_b_o     => vga_b_int,
+        vga_hs_o    => vga_hs_int,
+        vga_vs_o    => vga_vs_int,
+        vga_blank_o => vga_blank_int,
+        vga_sync_o  => vga_sync_int,
+        vga_clk_o   => vga_clk_int,
+        reg_adr_i   => vga_reg_adr,
+        reg_dat_i   => vga_reg_dat_o,
+        reg_dat_o   => vga_reg_dat_i,
+        reg_we_i    => vga_reg_we,
+        reg_stb_i   => vga_reg_stb,
+        reg_ack_o   => vga_reg_ack
+    );
+
+    VGA_R       <= vga_r_int;
+    VGA_G       <= vga_g_int;
+    VGA_B       <= vga_b_int;
+    VGA_HS      <= vga_hs_int;
+    VGA_VS      <= vga_vs_int;
+    VGA_CLK     <= vga_clk_int;
+    VGA_SYNC_N  <= vga_sync_int;
+    VGA_BLANK_N <= vga_blank_int;
+
+    -- ================================================================
+    -- PS/2 Keyboard Controller (Phase 2b)
+    -- ================================================================
+    u_ps2 : entity work.ps2_controller
+    port map (
+        clk_50m_i   => clk_50m,
+        rst_n_i     => rst_n,
+        ps2_clk_i   => PS2_CLK,
+        ps2_dat_i   => PS2_DAT,
+        reg_adr_i   => ps2_reg_adr,
+        reg_dat_i   => ps2_reg_dat_o,
+        reg_dat_o   => ps2_reg_dat_i,
+        reg_we_i    => ps2_reg_we,
+        reg_stb_i   => ps2_reg_stb,
+        reg_ack_o   => ps2_reg_ack,
+        ps2_valid_o => ps2_valid,
+        ps2_scancode_o => ps2_scancode,
+        irq_o       => ps2_irq
+    );
+
+    -- ================================================================
     -- GPIO -> LED 映射
     -- ================================================================
     LEDR(15 downto 0) <= gpio_out(15 downto 0);
@@ -254,7 +390,8 @@ begin
     LEDG(7 downto 0) <= gpio_out(23 downto 16);
     LEDG(8) <= not rst_n;
 
-    gpio_in <= (others => '0');
+    gpio_in(17 downto 0)  <= SW;
+    gpio_in(31 downto 18) <= (others => '0');
 
     -- ================================================================
     -- GPIO -> 七段数码管映射
@@ -316,18 +453,41 @@ begin
     );
 
     -- ================================================================
-    -- LCD -- SDRAM 测试结果显示
+    -- LCD -- SW16=0 保持 Phase 1/2a 状态显示; SW16=1 切到 2b 调试显示
     -- ================================================================
-    u_lcd : entity work.lcd_status
+    u_lcd_status : entity work.lcd_status
     port map (
         clk_i    => clk_50m,
+        rst_n_i  => lcd_status_rst_n,
         gpio_i   => gpio_out,
-        lcd_data => LCD_DATA,
-        lcd_rs   => LCD_RS,
-        lcd_rw   => LCD_RW,
-        lcd_en   => LCD_EN,
-        lcd_on   => LCD_ON,
-        lcd_blon => LCD_BLON
+        lcd_data => lcd_status_data,
+        lcd_rs   => lcd_status_rs,
+        lcd_rw   => lcd_status_rw,
+        lcd_en   => lcd_status_en,
+        lcd_on   => lcd_status_on,
+        lcd_blon => lcd_status_blon
     );
+
+    u_lcd_debug : entity work.lcd_debug
+    port map (
+        clk_i       => clk_50m,
+        rst_n_i     => lcd_debug_rst_n,
+        vga_vs_i    => vga_vs_int,
+        ps2_valid_i => ps2_valid,
+        ps2_scancode_i => ps2_scancode,
+        lcd_data    => lcd_debug_data,
+        lcd_rs      => lcd_debug_rs,
+        lcd_rw      => lcd_debug_rw,
+        lcd_en      => lcd_debug_en,
+        lcd_on      => lcd_debug_on,
+        lcd_blon    => lcd_debug_blon
+    );
+
+    LCD_DATA <= lcd_status_data;
+    LCD_RS   <= lcd_status_rs;
+    LCD_RW   <= lcd_status_rw;
+    LCD_EN   <= lcd_status_en;
+    LCD_ON   <= lcd_status_on;
+    LCD_BLON <= lcd_status_blon;
 
 end architecture rtl;

@@ -9,6 +9,7 @@ entity ps2_sync is
         clk      : in  std_logic;
         ps2_clk  : in  std_logic;
         ps2_dat  : in  std_logic;
+        clk_sync : out std_logic;   -- 同步后的时钟电平
         clk_fall : out std_logic;   -- PS2_CLK 下降沿脉冲
         dat_sync : out std_logic    -- 同步后的数据
     );
@@ -26,6 +27,7 @@ begin
         end if;
     end process;
 
+    clk_sync <= clk_buf(1);
     clk_fall <= '1' when clk_buf(2) = '1' and clk_buf(1) = '0' else '0';
     dat_sync <= dat_buf(1);
 end rtl;
