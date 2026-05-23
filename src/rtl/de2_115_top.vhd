@@ -27,8 +27,8 @@ entity de2_115_top is
         UART_RXD    : in  std_logic;
 
         -- PS/2 keyboard
-        PS2_CLK     : in  std_logic;
-        PS2_DAT     : in  std_logic;
+        PS2_CLK     : inout std_logic;
+        PS2_DAT     : inout std_logic;
 
         -- LED
         LEDR        : out std_logic_vector(17 downto 0);
@@ -133,6 +133,8 @@ architecture rtl of de2_115_top is
     signal ps2_irq       : std_logic;
     signal ps2_valid     : std_logic;
     signal ps2_scancode  : std_logic_vector(7 downto 0);
+    signal ps2_clk_oe    : std_logic;
+    signal ps2_dat_oe    : std_logic;
     -- VGA physical outputs
     signal vga_r_int     : std_logic_vector(7 downto 0);
     signal vga_g_int     : std_logic_vector(7 downto 0);
@@ -370,6 +372,8 @@ begin
         rst_n_i     => rst_n,
         ps2_clk_i   => PS2_CLK,
         ps2_dat_i   => PS2_DAT,
+        ps2_clk_oe_o => ps2_clk_oe,
+        ps2_dat_oe_o => ps2_dat_oe,
         reg_adr_i   => ps2_reg_adr,
         reg_dat_i   => ps2_reg_dat_o,
         reg_dat_o   => ps2_reg_dat_i,
@@ -380,6 +384,9 @@ begin
         ps2_scancode_o => ps2_scancode,
         irq_o       => ps2_irq
     );
+
+    PS2_CLK <= '0' when ps2_clk_oe = '1' else 'Z';
+    PS2_DAT <= '0' when ps2_dat_oe = '1' else 'Z';
 
     -- ================================================================
     -- GPIO -> LED 映射

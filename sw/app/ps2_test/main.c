@@ -7,12 +7,24 @@
 #define LCD_STATUS_PS2_OVF   0x04000000u
 #define PS2_STATUS_READY     0x00000001u
 #define PS2_STATUS_OVERFLOW  0x00000002u
+#define PS2_STATUS_TX_BUSY   0x00010000u
+#define PS2_STATUS_TX_DONE   0x00020000u
+#define PS2_STATUS_TX_ERROR  0x00040000u
+#define PS2_STATUS_TX_RESP   0x00080000u
+#define PS2_STATUS_TX_RESP_SHIFT 20
+#define PS2_STATUS_BUS_IDLE  0x10000000u
+#define PS2_LED_SCROLL       0x01u
+#define PS2_LED_NUM          0x02u
+#define PS2_LED_CAPS         0x04u
+#define PS2_RESP_ACK         0xfau
+#define PS2_RESP_RESEND      0xfeu
+#define PS2_HOST_TIMEOUT     5000000u
 
 typedef volatile struct {
   uint32_t data;
   uint32_t status;
   uint32_t ctrl;
-  uint32_t reserved;
+  uint32_t tx_data;
 } ps2_regs_t;
 
 #define PS2 ((ps2_regs_t*)0xF0002000u)
@@ -84,9 +96,88 @@ static void print_status(void) {
   neorv32_uart0_putc((s & PS2_STATUS_READY) ? '1' : '0');
   neorv32_uart0_puts(" overflow=");
   neorv32_uart0_putc((s & PS2_STATUS_OVERFLOW) ? '1' : '0');
+  neorv32_uart0_puts(" tx_busy=");
+  neorv32_uart0_putc((s & PS2_STATUS_TX_BUSY) ? '1' : '0');
+  neorv32_uart0_puts(" tx_done=");
+  neorv32_uart0_putc((s & PS2_STATUS_TX_DONE) ? '1' : '0');
+  neorv32_uart0_puts(" tx_err=");
+  neorv32_uart0_putc((s & PS2_STATUS_TX_ERROR) ? '1' : '0');
+  neorv32_uart0_puts(" bus_idle=");
+  neorv32_uart0_putc((s & PS2_STATUS_BUS_IDLE) ? '1' : '0');
   neorv32_uart0_puts(" count=0x");
   put_hex8((uint8_t)(s >> 8));
   neorv32_uart0_putc('\n');
+}
+
+static int ps2_send_host_byte(uint8_t byte, uint8_t *resp_out) {
+  uint32_t timeout;
+
+  PS2->status = PS2_STATUS_TX_DONE | PS2_STATUS_TX_ERROR | PS2_STATUS_TX_RESP;
+
+  timeout = PS2_HOST_TIMEOUT;
+  while (((PS2->status & PS2_STATUS_TX_BUSY) != 0u) && (timeout != 0u)) {
+    --timeout;
+  }
+  if (timeout == 0u) {
+    return -1;
+  }
+
+  PS2->tx_data = (uint32_t)byte;
+
+  timeout = PS2_HOST_TIMEOUT;
+  while (timeout != 0u) {
+    uint32_t status = PS2->status;
+    if ((status & PS2_STATUS_TX_DONE) != 0u) {
+      if (resp_out != NULL) {
+        *resp_out = (uint8_t)((status >> PS2_STATUS_TX_RESP_SHIFT) & 0xffu);
+      }
+
+      if (((status & PS2_STATUS_TX_ERROR) != 0u) || ((status & PS2_STATUS_TX_RESP) == 0u)) {
+        return -1;
+      }
+      return 0;
+    }
+    --timeout;
+  }
+
+  return -1;
+}
+
+static int ps2_sync_leds(int caps_lock, int num_lock, int scroll_lock) {
+  uint8_t resp = 0u;
+  uint8_t led_mask = 0u;
+
+  if (scroll_lock != 0) {
+    led_mask |= PS2_LED_SCROLL;
+  }
+  if (num_lock != 0) {
+    led_mask |= PS2_LED_NUM;
+  }
+  if (caps_lock != 0) {
+    led_mask |= PS2_LED_CAPS;
+  }
+
+  for (int attempt = 0; attempt < 2; ++attempt) {
+    if ((ps2_send_host_byte(0xedu, &resp) == 0) && (resp == PS2_RESP_ACK) &&
+        (ps2_send_host_byte(led_mask, &resp) == 0) && (resp == PS2_RESP_ACK)) {
+      neorv32_uart0_puts("led sync ok mask=0x");
+      put_hex8(led_mask);
+      neorv32_uart0_putc('\n');
+      return 0;
+    }
+
+    if (resp != PS2_RESP_RESEND) {
+      break;
+    }
+  }
+
+  neorv32_uart0_puts("led sync failed mask=0x");
+  put_hex8(led_mask);
+  neorv32_uart0_puts(" resp=0x");
+  put_hex8(resp);
+  neorv32_uart0_putc('\n');
+  print_status();
+  return -1;
 }
 
 static void set_event(
@@ -321,7 +412,7 @@ int main(void) {
 
   neorv32_uart0_puts("\nDE2Extra PS/2 decode test\n");
   neorv32_uart0_puts("Logs include raw scan code, key name, row/col coordinate and ASCII/TTY.\n");
-  neorv32_uart0_puts("Lock state is tracked in software on the stable RX-only baseline.\n");
+  neorv32_uart0_puts("Lock state is tracked in software and mirrored back to keyboard LEDs.\n");
   print_status();
 
   while (1) {
@@ -405,18 +496,21 @@ int main(void) {
         } else if (code == 0x58u) {
           if (!is_release) {
             caps_lock ^= 1;
+            (void)ps2_sync_leds(caps_lock, num_lock, scroll_lock);
           }
           set_event(&ev, "mods", 2, 0, "CAPS", 0, 0x00u, NULL);
           ev_ptr = &ev;
         } else if (code == 0x77u) {
           if (!is_release) {
             num_lock ^= 1;
+            (void)ps2_sync_leds(caps_lock, num_lock, scroll_lock);
           }
           set_event(&ev, "keypad", 0, 0, "NUM", 0, 0x00u, NULL);
           ev_ptr = &ev;
         } else if (code == 0x7eu) {
           if (!is_release) {
             scroll_lock ^= 1;
+            (void)ps2_sync_leds(caps_lock, num_lock, scroll_lock);
           }
           set_event(&ev, "mods", 0, 2, "SCRLK", 0, 0x00u, NULL);
           ev_ptr = &ev;

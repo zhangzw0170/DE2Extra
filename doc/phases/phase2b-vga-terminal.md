@@ -16,8 +16,8 @@
 
 ## 验收表
 
-> 状态: 2026-05-23 — 源码完成，QuestSim testbench 可验证。Phase 1 已就绪，下一步是接入顶层并上板验证。
-> ☑ = 源码完成（已在 QuestaSim 验证时序），🟡 = 待上板验证。
+> 状态: 2026-05-23 — PS/2 接收、扫描码解析、LCD 回显、Lock 灯双向同步均已上板验证；VGA 仍待显示链路实测。
+> ☑ = 已完成并实测通过，🟡 = 待上板验证。
 >
 > **阻塞项 (2026-05-23)**:
 > - VGA/PS/2 外设未接入 `de2_115_top.vhd` 和 `wb_intercon`
@@ -34,10 +34,14 @@
 | 4 | 光标闪烁 | 光标按 ~1Hz 频率闪烁，位置可通过寄存器设置 | ☑ |
 | 5 | 双页切换 | F1/F2 切换后显示各自独立内容，无花屏 | ☑ |
 | 6 | 清屏 | 写清屏寄存器后当前页全部清空 | ☑ |
-| 7 | PS/2 接收 | 键盘输入的 ASCII 字符出现在 FIFO 中 | ☑ (复用 Exp8, 16-entry FIFO) |
-| 8 | PS/2 扩展键 | 方向键、F1/F2、Shift、Ctrl 的 scan code 正确 | ☑ (Exp8 已验证) |
+| 7 | PS/2 接收 | 键盘输入的 ASCII 字符出现在 FIFO 中 | ☑ (复用 Exp8, 16-entry FIFO, 实板已验证) |
+| 8 | PS/2 扩展键 | 方向键、F1/F2、Shift、Ctrl 的 scan code 正确 | ☑ (实板已验证) |
+| 8a | PS/2 主机发送 | CPU 可向键盘发送命令字节并收到 `0xFA` ACK | ☑ (实板验证 `ED` 命令链) |
+| 8b | 键盘 Lock 灯 | Caps/Num/Scroll Lock 状态与键盘 LED 同步 | ☑ (实板已验证) |
 | 9 | Testbench 仿真 | VGA 时序波形 + PS/2 帧解码波形通过 | ☑ (tb_vga_terminal.vhd + compile.tcl) |
-| 10 | 上板验证 | 通过 wb_intercon 后全部功能正常 | 🟡 (Phase 1 已完成，待接入顶层实测) |
+| 10 | 上板验证 | 通过 wb_intercon 后全部功能正常 | 🟡 (PS/2 链路已实测通过，VGA 画面待显示链路) |
+| 15 | PS/2 中断 | PS/2 IRQ → NEORV32 mext_irq_i 连接正确 | ☑ (ps2_controller.irq_o → neorv32_wrapper.mext_irq_i) |
+| 16 | LCD 键盘回显 | SW16=1 时 LCD 第 2 行实时回显键盘输入字符 | ☑ (lcd_debug 硬件扫描码译码) |
 | 11 | Conway 基本规则 | 滑翔机正确移动 N 代不死 | ☑ (C 版本, game_life) |
 | 12 | Conway 双缓冲 | vblank 期间交换，画面无撕裂 | ☑ (C 双缓冲算法) |
 | 13 | Conway 暂停/继续 | CPU 命令控制启停 | ☑ (space/pause) |
@@ -49,7 +53,7 @@
 2. `de2_115_top.vhd` 增加 PS/2 端口并实例化 `ps2_controller`；VGA 模块也可先接入但暂不做显示验收。
 3. QSF 加入 PS/2 与 VGA 引脚分配，先保证工程能全量编译、烧录。
 4. 写一个最小 PS/2 调试程序，经 UART 打印 raw scan code / FIFO 状态，确认键盘输入路径正常。
-5. 接入 `lcd_debug.vhd` 或等价状态指示，让 LCD 能显示 `PS2 OK` / FIFO 活跃，降低“没屏幕就盲调”的难度。
+5. 接入 `lcd_debug.vhd` 或等价状态指示，让 LCD 能显示 `PS2 OK` / FIFO 活跃，降低”没屏幕就盲调”的难度。 ☑ **已完成** — lcd_debug 硬件扫描码译码，SW16=1 时 LCD 第 2 行实时回显键盘字符。
 6. 提前完成软件侧键盘扫描码解析接口，后续 VGA 到位后直接接终端输入层。
 
 ## 无 VGA 时暂时不能验收的项
@@ -65,10 +69,10 @@
 |---|---|---|---|
 | `ps2_sync.vhd` | 31 | Exp8 原样 | PS/2 时钟同步 |
 | `ps2_receiver.vhd` | 61 | Exp8 原样 | 11-bit 帧接收 |
-| `ps2_controller.vhd` | 202 | 新建 | FIFO + 寄存器接口 |
+| `ps2_controller.vhd` | ~350 | 新建 | RX FIFO + 寄存器接口 + 主机发送 + ACK/响应状态 |
 | `vga_text_terminal.vhd` | 391 | Exp6 时序 + 新建 | 80×25 双页终端 |
 | `font_rom_pkg.vhd` | 2165 | Python 生成 | CP437 字库 |
-| `lcd_debug.vhd` | 368 | 新建 (复用 Exp13 HD44780) | VGA/PS2 状态指示 |
+| `lcd_debug.vhd` | ~560 | 新建 (复用 Exp13 HD44780) | VGA/PS2 状态 + 键盘 ASCII 回显 |
 | `tb_vga_terminal.vhd` | 219 | 新建 | QuestaSim testbench |
 
 ---
@@ -120,6 +124,7 @@
 - 11-bit 帧 (start + 8-data + parity + stop)
 - Set 2 扫描码，控制器转发原始 scan code 到 FIFO
 - 16-entry FIFO
+- 主机发送路径: CPU 写 `TXDATA` 后，控制器执行 bus-idle 检测、host inhibit、逐位发送、等待设备响应
 
 ### 扩展键
 
@@ -132,13 +137,46 @@
 | 偏移 | R/W | 说明 |
 |---|---|---|
 | 0x00 | R | 数据 (读后清 FIFO)，原始 scan code |
-| 0x04 | R | 状态: bit0=data_ready, bit1=fifo_overflow |
+| 0x04 | R/W | 状态: bit0=data_ready, bit1=fifo_overflow, bit16=tx_busy, bit17=tx_done, bit18=tx_error, bit19=tx_resp_valid, bit27:20=tx_resp_byte, bit28=bus_idle |
 | 0x08 | R/W | 中断使能: bit0=data_irq |
+| 0x0C | R/W | TXDATA: 写入后发送 1 字节；读取返回最近响应字节 |
 
 ### 中断路由
 
 - PS/2 data_irq → 中断控制器 (0xF0006000) IRQ1 → NEORV32 mext_irq_i
-- 降级方案: 直接 OR 门连接 mext_irq_i，软件轮询判断源
+- 当前方案: `ps2_controller.irq_o` 直连 `neorv32_wrapper.mext_irq_i`（软件轮询判断源）
+
+### 扫描码输出
+
+- `ps2_scancode_o` 端口透传内部 `rx_scan_code`，供 lcd_debug 硬件直读
+- 每当 `ps2_valid_o` 脉冲时，`ps2_scancode_o` 上是有效的 Set 2 扫描码
+
+### 2026-05-23 板测结论
+
+- RX-only 基线在重新插拔 PS/2 键盘后恢复稳定，说明此前“全键无响应”并非纯 RTL 故障。
+- 扫描码软件解析恢复后，普通键、扩展键、修饰键、控制区与 LCD 回显均已实板验证。
+- Lock 灯第一次失败的直接原因是 TX 状态机在 stop bit 后多等了一个阶段，错过了键盘返回 `0xFA` ACK 的起始位。
+- 修正为“发送 stop bit 后立即切到响应接收”后，`ED + LED mask` 命令链已稳定工作，Caps/Num/Scroll Lock 灯同步通过实测。
+
+---
+
+## 2b.2a LCD 键盘回显 (`lcd_debug.vhd`)
+
+SW16=1 时选中。纯硬件扫描码译码，不依赖 CPU 软件。
+
+### 显示内容
+
+- **Line 1**: `DE2Extra PS2 VP` — V=VGA 存活 (vsync 检测), P=PS2 存活 (10s 内有数据)
+- **Line 2**: 最近 16 个按键的 ASCII 字符，环形缓冲区滚动显示
+
+### 硬件功能
+
+- Set 2 协议状态机: 处理 E0 前缀 (扩展键) / F0 释放码
+- `sc2ascii` 组合逻辑: 26 字母 + 10 数字 + 常用符号 → ASCII (支持 Shift)
+- Shift 状态跟踪: 左/右 Shift (x"12"/x"59") 按下/释放
+- 16 字符环形缓冲区: 新字符立即触发 LCD 重绘
+- 特殊键显示: 方向键 `^v<>`，Enter `|`，Backspace `*`，Tab `>`，Esc `E`
+- 1 秒定时刷新 + 新字符即时刷新
 
 ---
 
