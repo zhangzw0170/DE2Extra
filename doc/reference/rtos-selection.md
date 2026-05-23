@@ -111,4 +111,54 @@ systick ISR: 保存当前上下文 → 选下一个就绪任务 → 恢复上下
 
 **现在不适合上 FreeRTOS 的真实原因**：不是做不了，而是 6/15 前没有足够的并发场景来体现它的价值。音频是第一个"不得不并发"的场景——I2S 需要定时喂数据、键盘要响应、VGA 要刷新——到那时上 Atomthreads 或 FreeRTOS 才划算。
 
-如果非要现在过把瘾，Atomthreads 一个晚上就能移植完——代码量小，踩坑范围可控。要试吗？
+如果非要现在过把瘾，Atomthreads 一个晚上就能移植完——代码量小，踩坑范围可控。
+
+---
+
+## 后期迁移成本分析
+
+### de2shell `program_t` 是天然的 RTOS 任务原型
+
+```c
+// 现状: 协作式轮询
+typedef struct {
+    void (*init)(void);
+    void (*update)(void);      // 每帧调用
+    void (*input)(char c);     // 键盘输入
+    int  (*finish)(void);      // 返回 1 = 结束
+} program_t;
+
+// 迁 FreeRTOS: 完全兼容
+void vTaskSnake(void *params) {
+    prog_snake.init();
+    while (1) {
+        char c; xQueueReceive(kb_queue, &c, portMAX_DELAY);
+        prog_snake.input(c);
+        prog_snake.update();
+        if (prog_snake.finish()) break;
+    }
+    vTaskDelete(NULL);
+}
+```
+
+### 改动范围
+
+| 文件 | 改动 | 说明 |
+|---|---|---|
+| `main.c` | 重写 | 用 `xTaskCreate` 替代 `while(1) { prog->update() }` |
+| `vga_hal.c` | +3 行 | VGA buffer 写操作套 `xSemaphoreTake/Give` |
+| `snake.c` ~ `exp12.c` (9 个程序) | **零改动** | `init/update/input/finish` 回调完全不变 |
+| `crypto_cli/` | **零改动** | Phase 2a 独立编译，不受影响 |
+| VHDL (`*.vhd`) | **零改动** | 纯硬件层不感知调度方式 |
+
+### 迁移代价
+
+| 方案 | 移植 port | 改 C 代码 | 总时间 |
+|---|---|---|---|
+| Atomthreads | 半天 (写 50 行 asm) | 半天 (重写 main.c) | 1 天 |
+| FreeRTOS | 1-2 天 (中断分发适配) | 半天 (重写 main.c) | 1.5-2.5 天 |
+| 自定义调度器 | 1 天 | 半天 | 1.5 天 |
+
+### 决定
+
+**先裸机完成 Phase 2b+3 上板联调**。后期心血来潮想移植 FreeRTOS，9 个 C 程序文件一个不用改，重写一个 `main.c` 即可。这份文档就是未来的迁移指南。
