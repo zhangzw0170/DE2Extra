@@ -110,7 +110,7 @@ begin
         RISCV_ISA_Zbkx       => true,    -- Crypto crossbar permutation
         RISCV_ISA_Zbs        => false,
         RISCV_ISA_Zcb        => false,
-        RISCV_ISA_Zfinx      => true,    -- 浮点 (x-register ABI)
+        RISCV_ISA_Zfinx      => false,   -- 浮点 (disabled — reduce synthesis memory)
         RISCV_ISA_Zibi       => false,
         RISCV_ISA_Zicntr     => true,    -- 基础计数器
         RISCV_ISA_Zicond     => false,

@@ -236,7 +236,7 @@ begin
     u_cpu : entity work.neorv32_wrapper
     generic map (
         CLOCK_FREQUENCY => 50_000_000,
-        IMEM_SIZE       => 32*1024,
+        IMEM_SIZE       => 64*1024,
         DMEM_SIZE       => 16*1024,
         BOOT_MODE       => 2
     )
@@ -398,7 +398,8 @@ begin
     LEDG(8) <= not rst_n;
 
     gpio_in(17 downto 0)  <= SW;
-    gpio_in(31 downto 18) <= (others => '0');
+    gpio_in(20 downto 18) <= not KEY(3 downto 1); -- pressed = '1'
+    gpio_in(31 downto 21) <= (others => '0');
 
     -- ================================================================
     -- GPIO -> 七段数码管映射

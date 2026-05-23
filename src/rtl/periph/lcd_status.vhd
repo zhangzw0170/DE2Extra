@@ -5,6 +5,7 @@
 --   0x1------- : ALL PASS
 --   0x2------- : CRYPTO CLI READY
 --   0x3sov00aa : PS/2 mode, s=seen, o=overflow, aa=last ASCII byte
+--   0x4p------ : DE2shell host mode, p=active program id
 --   0x8tww0000 : fail meta, t=test#, ww=word index
 --   0x9---hhhh : fail got[31:16]
 --   0xA---llll : fail got[15:0]
@@ -13,6 +14,7 @@
 --   正常: Line1 = "DE2Extra SDRAM  ", Line2 = "TESTING..." / "ALL PASS"
 --   2a  : Line1 = "DE2Extra Crypto ", Line2 = "UART CLI READY "
 --   2b  : Line1 = "DE2Extra PS/2   ", Line2 = "ASC XX ^D READY"
+--   3   : Line1 = "DE2Extra Shell  ", Line2 = "CHx XXXX READY "
 --   失败: Line1 = "FAIL T? W??    ", Line2 = "GOT XXXXXXXX  "
 library ieee;
 use ieee.std_logic_1164.all;
@@ -42,7 +44,7 @@ architecture rtl of lcd_status is
         S_IDLE
     );
 
-    type disp_mode_t is (MODE_TESTING, MODE_PASS, MODE_CRYPTO, MODE_PS2, MODE_FAIL);
+    type disp_mode_t is (MODE_TESTING, MODE_PASS, MODE_CRYPTO, MODE_PS2, MODE_SHELL, MODE_FAIL);
 
     type init_entry_t is record
         cmd   : std_logic_vector(7 downto 0);
@@ -125,6 +127,120 @@ architecture rtl of lcd_status is
         end if;
     end function;
 
+    function prog_abbr_char(
+        prog_id : std_logic_vector(3 downto 0);
+        idx     : integer
+    ) return std_logic_vector is
+    begin
+        case prog_id is
+            when "0000" =>
+                case idx is
+                    when 0 => return ch('S');
+                    when 1 => return ch('H');
+                    when 2 => return ch('E');
+                    when others => return ch('L');
+                end case;
+            when "0001" =>
+                case idx is
+                    when 0 => return ch('H');
+                    when 1 => return ch('E');
+                    when 2 => return ch('L');
+                    when others => return ch('O');
+                end case;
+            when "0010" =>
+                case idx is
+                    when 0 => return ch('S');
+                    when 1 => return ch('D');
+                    when 2 => return ch('R');
+                    when others => return ch('M');
+                end case;
+            when "0011" =>
+                case idx is
+                    when 0 => return ch('C');
+                    when 1 => return ch('R');
+                    when 2 => return ch('Y');
+                    when others => return ch('P');
+                end case;
+            when "0100" =>
+                case idx is
+                    when 0 => return ch('P');
+                    when 1 => return ch('S');
+                    when 2 => return ch('2');
+                    when others => return ch(' ');
+                end case;
+            when "0101" =>
+                case idx is
+                    when 0 => return ch('S');
+                    when 1 => return ch('N');
+                    when 2 => return ch('A');
+                    when others => return ch('K');
+                end case;
+            when "0110" =>
+                case idx is
+                    when 0 => return ch('L');
+                    when 1 => return ch('I');
+                    when 2 => return ch('F');
+                    when others => return ch('E');
+                end case;
+            when "0111" =>
+                case idx is
+                    when 0 => return ch('D');
+                    when 1 => return ch('A');
+                    when 2 => return ch('S');
+                    when others => return ch('H');
+                end case;
+            when "1000" =>
+                case idx is
+                    when 0 => return ch('I');
+                    when 1 => return ch('N');
+                    when 2 => return ch('F');
+                    when others => return ch('O');
+                end case;
+            when "1001" =>
+                case idx is
+                    when 0 => return ch('E');
+                    when 1 => return ch('X');
+                    when 2 => return ch('P');
+                    when others => return ch('1');
+                end case;
+            when "1010" =>
+                case idx is
+                    when 0 => return ch('E');
+                    when 1 => return ch('X');
+                    when 2 => return ch('P');
+                    when others => return ch('4');
+                end case;
+            when "1011" =>
+                case idx is
+                    when 0 => return ch('E');
+                    when 1 => return ch('X');
+                    when 2 => return ch('P');
+                    when others => return ch('5');
+                end case;
+            when "1100" =>
+                case idx is
+                    when 0 => return ch('E');
+                    when 1 => return ch('1');
+                    when 2 => return ch('2');
+                    when others => return ch(' ');
+                end case;
+            when "1101" =>
+                case idx is
+                    when 0 => return ch('M');
+                    when 1 => return ch('O');
+                    when 2 => return ch('N');
+                    when others => return ch(' ');
+                end case;
+            when others =>
+                case idx is
+                    when 0 => return ch('U');
+                    when 1 => return ch('N');
+                    when 2 => return ch('K');
+                    when others => return ch('N');
+                end case;
+        end case;
+    end function;
+
     function line1_char(
         mode      : disp_mode_t;
         fail_test : std_logic_vector(3 downto 0);
@@ -183,6 +299,24 @@ architecture rtl of lcd_status is
                 when 12 => return ch('2');
                 when others => return ch(' ');
             end case;
+        elsif mode = MODE_SHELL then
+            case idx is
+                when 0  => return ch('D');
+                when 1  => return ch('E');
+                when 2  => return ch('2');
+                when 3  => return ch('E');
+                when 4  => return ch('x');
+                when 5  => return ch('t');
+                when 6  => return ch('r');
+                when 7  => return ch('a');
+                when 8  => return ch(' ');
+                when 9  => return ch('S');
+                when 10 => return ch('h');
+                when 11 => return ch('e');
+                when 12 => return ch('l');
+                when 13 => return ch('l');
+                when others => return ch(' ');
+            end case;
         else
             case idx is
                 when 0  => return ch('D');
@@ -210,6 +344,7 @@ architecture rtl of lcd_status is
         ps2_seen : std_logic;
         ps2_ovf  : std_logic;
         ps2_code : std_logic_vector(7 downto 0);
+        shell_prog : std_logic_vector(3 downto 0);
         idx      : integer
     ) return std_logic_vector is
     begin
@@ -302,6 +437,24 @@ architecture rtl of lcd_status is
                         else return ch(' '); end if;
                     when others => return ch(' ');
                 end case;
+            when MODE_SHELL =>
+                case idx is
+                    when 0  => return ch('C');
+                    when 1  => return ch('H');
+                    when 2  => return hex_char(shell_prog);
+                    when 3  => return ch(' ');
+                    when 4  => return prog_abbr_char(shell_prog, 0);
+                    when 5  => return prog_abbr_char(shell_prog, 1);
+                    when 6  => return prog_abbr_char(shell_prog, 2);
+                    when 7  => return prog_abbr_char(shell_prog, 3);
+                    when 8  => return ch(' ');
+                    when 9  => return ch('R');
+                    when 10 => return ch('E');
+                    when 11 => return ch('A');
+                    when 12 => return ch('D');
+                    when 13 => return ch('Y');
+                    when others => return ch(' ');
+                end case;
             when MODE_FAIL =>
                 case idx is
                     when 0  => return ch('G');
@@ -335,6 +488,7 @@ architecture rtl of lcd_status is
     signal ps2_seen_r      : std_logic := '0';
     signal ps2_ovf_r       : std_logic := '0';
     signal ps2_code_r      : std_logic_vector(7 downto 0) := (others => '0');
+    signal shell_prog_r    : std_logic_vector(3 downto 0) := (others => '0');
 
 begin
 
@@ -356,6 +510,7 @@ begin
                 ps2_seen_r      <= '0';
                 ps2_ovf_r       <= '0';
                 ps2_code_r      <= (others => '0');
+                shell_prog_r    <= (others => '0');
                 lcd_data        <= (others => '0');
                 lcd_rs          <= '0';
                 lcd_rw          <= '0';
@@ -379,6 +534,9 @@ begin
                             disp_mode   <= MODE_FAIL;
                             fail_test_r <= gpio_i(27 downto 24);
                             fail_word_r <= gpio_i(23 downto 16);
+                        when "0100" =>
+                            disp_mode    <= MODE_SHELL;
+                            shell_prog_r <= gpio_i(27 downto 24);
                         when "1001" =>
                             disp_mode <= MODE_FAIL;
                             fail_got_r(31 downto 16) <= gpio_i(15 downto 0);
@@ -470,7 +628,7 @@ begin
                         if msg_idx < 16 then
                             lcd_data <= line1_char(disp_mode, fail_test_r, fail_word_r, msg_idx);
                         else
-                            lcd_data <= line2_char(disp_mode, fail_got_r, ps2_seen_r, ps2_ovf_r, ps2_code_r, msg_idx - 16);
+                            lcd_data <= line2_char(disp_mode, fail_got_r, ps2_seen_r, ps2_ovf_r, ps2_code_r, shell_prog_r, msg_idx - 16);
                         end if;
                         lcd_en    <= '1';
                         en_cnt    <= 100;

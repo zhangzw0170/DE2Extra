@@ -7,6 +7,7 @@
 
   uint32_t gpio_read_in(void)  { return sim_gpio_in; }
   uint32_t gpio_read_out(void) { return sim_gpio_out; }
+  void gpio_write_out(uint32_t val) { sim_gpio_out = val; }
   void gpio_set_sim_in(uint32_t val)  { sim_gpio_in = val; }
   void gpio_set_sim_out(uint32_t val) { sim_gpio_out = val; }
 #endif

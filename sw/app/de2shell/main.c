@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include "vga_hal.h"
+#include "gpio_hal.h"
 
 #ifdef LOCAL_BUILD
   #include <stdio.h>
@@ -66,6 +67,7 @@ typedef enum {
     PROG_HELLO,
     PROG_MEMTEST,
     PROG_CRYPTO,
+    PROG_PS2,
     PROG_SNAKE,
     PROG_LIFE,
     PROG_DASHBOARD,
@@ -82,9 +84,12 @@ typedef enum {
 
 /* ── Forward declarations ──────────────────────────────────────── */
 
+static void shell_init(void);
+
 extern const program_t prog_hello;
 extern const program_t prog_memtest;
 extern const program_t prog_crypto;
+extern const program_t prog_ps2;
 extern const program_t prog_snake;
 extern const program_t prog_life;
 extern const program_t prog_dashboard;
@@ -118,6 +123,7 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_HELLO]     = &prog_hello,
     [PROG_MEMTEST]   = &prog_memtest,
     [PROG_CRYPTO]    = &prog_crypto,
+    [PROG_PS2]       = &prog_ps2,
     [PROG_SNAKE]     = &prog_snake,
     [PROG_LIFE]      = &prog_life,
     [PROG_DASHBOARD] = &prog_dashboard,
@@ -131,6 +137,77 @@ static const program_t *programs[PROG_COUNT] = {
 
 static prog_id_t active_prog = PROG_SHELL;
 static prog_id_t ir_prog_map[16];   /* IR command → program mapping */
+static int status_dirty = 1;
+static uint8_t last_uart_char = 0;
+static uint8_t prev_key_bits = 0;
+static uint32_t shell_tick = 0;
+
+#define KEY1_MASK (1u << 0)
+#define KEY2_MASK (1u << 1)
+#define KEY3_MASK (1u << 2)
+
+static void shell_prompt(void) {
+    vga_puts("0000> ", VGA_GREEN);
+}
+
+static int valid_prog_id(uint32_t prog_id) {
+    return prog_id < PROG_COUNT;
+}
+
+static prog_id_t shell_selected_prog(uint32_t gpio_in) {
+    uint32_t sel = gpio_in & 0x0fu;
+    if (!valid_prog_id(sel)) {
+        return PROG_SHELL;
+    }
+    return (prog_id_t)sel;
+}
+
+static void board_status_push(uint32_t word) {
+    gpio_write_out(word);
+}
+
+static void board_status_refresh(void) {
+    uint32_t gpio_in = gpio_read_in();
+    uint32_t selected = (uint32_t)shell_selected_prog(gpio_in);
+    uint32_t key_bits = (gpio_in >> 18) & 0x7u;
+    uint32_t out;
+
+    if (active_prog == PROG_MEMTEST) {
+        return; /* memtest owns the LCD/LED fail/pass protocol */
+    }
+
+    if (active_prog == PROG_SHELL) {
+        out = 0x40000000u;
+        out |= ((uint32_t)active_prog & 0x0fu) << 24;
+        out |= (selected & 0x0fu) << 20;
+        out |= (key_bits & 0x07u) << 17;
+        out |= ((shell_tick >> 8) & 0x01u) << 16;
+        out |= (gpio_in & 0x000000ffu) << 8;
+        out |= (uint32_t)last_uart_char;
+        board_status_push(out);
+    } else {
+        out = gpio_read_out();
+        out &= 0x00ffffffu;
+        out |= 0x40000000u;
+        out |= ((uint32_t)active_prog & 0x0fu) << 24;
+        board_status_push(out);
+    }
+}
+
+static void enter_program(prog_id_t prog_id) {
+    active_prog = prog_id;
+    status_dirty = 1;
+    if ((prog_id < PROG_COUNT) && programs[prog_id] && programs[prog_id]->init) {
+        programs[prog_id]->init();
+    }
+}
+
+static void return_to_shell(void) {
+    active_prog = PROG_SHELL;
+    status_dirty = 1;
+    shell_init();
+    board_status_refresh();
+}
 
 /* ── Shell (built-in) ───────────────────────────────────────────── */
 
@@ -138,7 +215,8 @@ static void shell_init(void) {
     vga_clear();
     vga_goto(0, 0);
     vga_puts("DE2Extra Shell v0.1\n", VGA_CYAN);
-    vga_puts("Type 'help' for commands.\n", VGA_GRAY);
+    vga_puts("Type 'help' for commands.\n\n", VGA_GRAY);
+    shell_prompt();
 }
 
 static void shell_update(void) {
@@ -151,6 +229,8 @@ static void shell_input(char c) {
     static int  line_pos = 0;
 
     if (c == '\r' || c == '\n') {
+        int prompt_already_printed = 0;
+
         line[line_pos] = '\0';
         vga_putc('\n', VGA_WHITE);
 
@@ -158,62 +238,49 @@ static void shell_input(char c) {
         if (line_pos == 0) {
             /* empty line — show prompt again */
         } else if (strcmp(line, "help") == 0) {
-            vga_puts("Commands: hello, memtest, crypto, snake, life, dash, info, exp1, exp4, exp5, exp12, cls, quit\n",
+            vga_puts("Commands: hello, memtest, sdram, crypto, ps2, snake, life, dash, info, monitor, exp1, exp4, exp5, exp12, cls, quit\n",
                      VGA_GREEN);
         } else if (strcmp(line, "hello") == 0) {
-            active_prog = PROG_HELLO;
-            if (programs[PROG_HELLO]->init)
-                programs[PROG_HELLO]->init();
-        } else if (strcmp(line, "memtest") == 0) {
-            active_prog = PROG_MEMTEST;
-            if (programs[PROG_MEMTEST]->init)
-                programs[PROG_MEMTEST]->init();
+            enter_program(PROG_HELLO);
+        } else if (strcmp(line, "memtest") == 0 || strcmp(line, "sdram") == 0 ||
+                   strcmp(line, "sdram_test") == 0) {
+            enter_program(PROG_MEMTEST);
         } else if (strcmp(line, "crypto") == 0) {
-            active_prog = PROG_CRYPTO;
-            if (programs[PROG_CRYPTO]->init)
-                programs[PROG_CRYPTO]->init();
+            enter_program(PROG_CRYPTO);
+        } else if (strcmp(line, "ps2") == 0 || strcmp(line, "kbd") == 0) {
+            enter_program(PROG_PS2);
         } else if (strcmp(line, "snake") == 0) {
-            active_prog = PROG_SNAKE;
-            if (programs[PROG_SNAKE]->init)
-                programs[PROG_SNAKE]->init();
+            enter_program(PROG_SNAKE);
         } else if (strcmp(line, "life") == 0) {
-            active_prog = PROG_LIFE;
-            if (programs[PROG_LIFE]->init)
-                programs[PROG_LIFE]->init();
+            enter_program(PROG_LIFE);
         } else if (strcmp(line, "dash") == 0) {
-            active_prog = PROG_DASHBOARD;
-            if (programs[PROG_DASHBOARD]->init)
-                programs[PROG_DASHBOARD]->init();
+            enter_program(PROG_DASHBOARD);
         } else if (strcmp(line, "info") == 0) {
-            active_prog = PROG_INFO;
-            if (programs[PROG_INFO]->init)
-                programs[PROG_INFO]->init();
+            enter_program(PROG_INFO);
         } else if (strcmp(line, "exp1") == 0) {
-            active_prog = PROG_EXP1;
-            if (programs[PROG_EXP1]->init) programs[PROG_EXP1]->init();
+            enter_program(PROG_EXP1);
         } else if (strcmp(line, "exp4") == 0) {
-            active_prog = PROG_EXP4;
-            if (programs[PROG_EXP4]->init) programs[PROG_EXP4]->init();
+            enter_program(PROG_EXP4);
         } else if (strcmp(line, "exp5") == 0) {
-            active_prog = PROG_EXP5;
-            if (programs[PROG_EXP5]->init) programs[PROG_EXP5]->init();
+            enter_program(PROG_EXP5);
         } else if (strcmp(line, "exp12") == 0) {
-            active_prog = PROG_EXP12;
-            if (programs[PROG_EXP12]->init) programs[PROG_EXP12]->init();
+            enter_program(PROG_EXP12);
         } else if (strcmp(line, "monitor") == 0 || strcmp(line, "rv32") == 0) {
-            active_prog = PROG_MONITOR;
-            if (programs[PROG_MONITOR]->init) programs[PROG_MONITOR]->init();
+            enter_program(PROG_MONITOR);
         } else if (strcmp(line, "cls") == 0) {
-            vga_clear();
-        } else if (strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0) {
-            active_prog = PROG_SHELL;
             shell_init();
+            prompt_already_printed = 1;
+        } else if (strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0) {
+            return_to_shell();
+            prompt_already_printed = 1;
         } else {
             vga_puts("? Unknown command. Type 'help'\n", VGA_RED);
         }
 
         line_pos = 0;
-        vga_puts("0000> ", VGA_GREEN);
+        if ((active_prog == PROG_SHELL) && !prompt_already_printed) {
+            shell_prompt();
+        }
     } else if (c == '\b' || c == 0x7F) {
         if (line_pos > 0) {
             line_pos--;
@@ -230,9 +297,19 @@ static int shell_finish(void) { return 0; }
 /* ── Status Bar ─────────────────────────────────────────────────── */
 
 static void draw_status_bar(void) {
+    static const char hex[] = "0123456789ABCDEF";
+    int saved_col;
+    int saved_row;
+
+    if (!status_dirty) {
+        return;
+    }
+
+    saved_col = vga_col();
+    saved_row = vga_row();
     vga_goto(0, VGA_ROWS - 1);  /* last row */
     vga_puts(" DE2Extra | Ch:", VGA_CYAN);
-    vga_putc('1' + active_prog, VGA_YELLOW);
+    vga_putc(hex[active_prog & 0x0f], VGA_YELLOW);
     if (active_prog < PROG_COUNT && programs[active_prog]) {
         vga_putc(' ', VGA_WHITE);
         vga_puts(programs[active_prog]->name, VGA_GREEN);
@@ -242,6 +319,8 @@ static void draw_status_bar(void) {
     /* Pad to end of line */
     for (int i = vga_col(); i < VGA_COLS; i++)
         vga_putc(' ', VGA_BLACK);
+    vga_goto(saved_col, saved_row);
+    status_dirty = 0;
 }
 
 /* ── IR Command Handler ─────────────────────────────────────────── */
@@ -264,15 +343,57 @@ static void handle_ir(uint8_t cmd) {
         case 0x43: new_prog = PROG_LIFE;      break;  /* CH5 */
         case 0x40: new_prog = PROG_DASHBOARD; break;  /* CH6 */
         case 0x07: new_prog = PROG_INFO;      break;  /* CH7 */
-        case 0x16: if (active_prog > 0) active_prog--; return;  /* CH- */
-        case 0x1A: if (active_prog < PROG_COUNT-1) active_prog++; return; /* CH+ */
+        case 0x16:
+            if (active_prog > 0) {
+                new_prog = active_prog - 1;
+                break;
+            }
+            return;  /* CH- */
+        case 0x1A:
+            if (active_prog < PROG_COUNT - 1) {
+                new_prog = active_prog + 1;
+                break;
+            }
+            return; /* CH+ */
         default:   return;  /* unknown key */
     }
 
-    active_prog = new_prog;
-    vga_clear();
-    if (programs[active_prog] && programs[active_prog]->init)
-        programs[active_prog]->init();
+    if (new_prog == PROG_SHELL) {
+        return_to_shell();
+    } else {
+        enter_program(new_prog);
+    }
+}
+
+static void handle_keys(void) {
+    uint32_t gpio_in = gpio_read_in();
+    uint8_t key_bits = (uint8_t)((gpio_in >> 18) & 0x07u);
+    uint8_t pressed = (uint8_t)(key_bits & (uint8_t)(~prev_key_bits));
+    prog_id_t quick_prog = shell_selected_prog(gpio_in);
+    const program_t *prog = programs[active_prog];
+
+    prev_key_bits = key_bits;
+
+    if (pressed & KEY1_MASK) {
+        if (quick_prog == PROG_SHELL) {
+            return_to_shell();
+        } else {
+            enter_program(quick_prog);
+        }
+    }
+
+    if (pressed & KEY2_MASK) {
+        return_to_shell();
+    }
+
+    if (pressed & KEY3_MASK) {
+        if (active_prog == PROG_SHELL) {
+            shell_init();
+        } else if (prog && prog->init) {
+            prog->init();
+            status_dirty = 1;
+        }
+    }
 }
 
 /* ── Main ──────────────────────────────────────────────────────── */
@@ -286,12 +407,17 @@ int main(void) {
 #endif
     vga_init();
     shell_init();
+    board_status_refresh();
     draw_status_bar();
 
     while (1) {
+        shell_tick++;
+        handle_keys();
+
         /* Process UART input */
         while (uart_kbhit()) {
             char c = (char)uart_getc();
+            last_uart_char = (uint8_t)c;
             if (c == 27) {  /* ESC — check for IR or arrow */
                 /* For now, pass through to active program */
             }
@@ -311,13 +437,15 @@ int main(void) {
             prog->update();
             /* Check for program exit */
             if (prog->finish && prog->finish()) {
-                active_prog = PROG_SHELL;
+                return_to_shell();
                 prog = NULL;
             }
         }
         if (active_prog == PROG_SHELL) {
             shell_update();
         }
+
+        board_status_refresh();
 
         /* Redraw status bar */
         draw_status_bar();

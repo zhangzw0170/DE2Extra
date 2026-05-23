@@ -21,6 +21,7 @@ static int all_pass;
 static int current_test;
 static uint32_t fail_word, fail_test, fail_got, fail_expected;
 static int finished;
+static int done;
 
 static void lcd_status(uint32_t s) {
 #ifndef LOCAL_BUILD
@@ -110,6 +111,7 @@ static void init(void) {
     all_pass = 1;
     current_test = 0;
     finished = 0;
+    done = 0;
     fail_word = fail_test = fail_got = fail_expected = 0;
 
     vga_clear();
@@ -169,12 +171,16 @@ static void update(void) {
 }
 
 static void input(char c) {
+    if (c == 'q' || c == 'Q') {
+        done = 1;
+        return;
+    }
     if (c == 'r' || c == 'R') {
         init();
     }
 }
 
-static int finish(void) { return 0; }
+static int finish(void) { return done; }
 
 const program_t prog_memtest = {
     "MemTest", "SDRAM 4-test self-check",
