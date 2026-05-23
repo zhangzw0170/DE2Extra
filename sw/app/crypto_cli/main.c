@@ -16,11 +16,18 @@
 #else
   #include <neorv32.h>
   #define BAUD_RATE 115200
+  #define LCD_STATUS_CRYPTO 0x20000000u
 
   /* Bare-metal strcmp (NEORV32 has no libc string.h) */
   static int strcmp(const char *a, const char *b) {
       while (*a && *a == *b) { a++; b++; }
       return (unsigned char)*a - (unsigned char)*b;
+  }
+
+  static void board_set_status(uint32_t status) {
+      uint32_t gpio = neorv32_gpio_port_get();
+      gpio = (gpio & 0x0FFFFFFFu) | status;
+      neorv32_gpio_port_set(gpio);
   }
 #endif
 
@@ -521,6 +528,8 @@ static int dispatch(int argc, char *args[]) {
 int main(void) {
     neorv32_rte_setup();
     neorv32_uart0_setup(BAUD_RATE, 0);
+    neorv32_gpio_dir_set(0xFFFFFFFFu);
+    board_set_status(LCD_STATUS_CRYPTO);
     trng_init();
 
     io_puts("\nDE2Extra Crypto Terminal v0.1\n");

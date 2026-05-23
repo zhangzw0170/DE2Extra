@@ -3,12 +3,14 @@
 -- GPIO/LCD 调试协议:
 --   0x0------- : TESTING
 --   0x1------- : ALL PASS
+--   0x2------- : CRYPTO CLI READY
 --   0x8tww0000 : fail meta, t=test#, ww=word index
 --   0x9---hhhh : fail got[31:16]
 --   0xA---llll : fail got[15:0]
 --
 -- LCD 显示:
 --   正常: Line1 = "DE2Extra SDRAM  ", Line2 = "TESTING..." / "ALL PASS"
+--   2a  : Line1 = "DE2Extra Crypto ", Line2 = "UART CLI READY "
 --   失败: Line1 = "FAIL T? W??    ", Line2 = "GOT XXXXXXXX  "
 library ieee;
 use ieee.std_logic_1164.all;
@@ -37,7 +39,7 @@ architecture rtl of lcd_status is
         S_IDLE
     );
 
-    type disp_mode_t is (MODE_TESTING, MODE_PASS, MODE_FAIL);
+    type disp_mode_t is (MODE_TESTING, MODE_PASS, MODE_CRYPTO, MODE_FAIL);
 
     type init_entry_t is record
         cmd   : std_logic_vector(7 downto 0);
@@ -110,6 +112,25 @@ architecture rtl of lcd_status is
                 when 10 => return hex_char(fail_word(3 downto 0));
                 when others => return ch(' ');
             end case;
+        elsif mode = MODE_CRYPTO then
+            case idx is
+                when 0  => return ch('D');
+                when 1  => return ch('E');
+                when 2  => return ch('2');
+                when 3  => return ch('E');
+                when 4  => return ch('x');
+                when 5  => return ch('t');
+                when 6  => return ch('r');
+                when 7  => return ch('a');
+                when 8  => return ch(' ');
+                when 9  => return ch('C');
+                when 10 => return ch('r');
+                when 11 => return ch('y');
+                when 12 => return ch('p');
+                when 13 => return ch('t');
+                when 14 => return ch('o');
+                when others => return ch(' ');
+            end case;
         else
             case idx is
                 when 0  => return ch('D');
@@ -164,6 +185,24 @@ architecture rtl of lcd_status is
                     when 7 => return ch('S');
                     when others => return ch(' ');
                 end case;
+            when MODE_CRYPTO =>
+                case idx is
+                    when 0  => return ch('U');
+                    when 1  => return ch('A');
+                    when 2  => return ch('R');
+                    when 3  => return ch('T');
+                    when 4  => return ch(' ');
+                    when 5  => return ch('C');
+                    when 6  => return ch('L');
+                    when 7  => return ch('I');
+                    when 8  => return ch(' ');
+                    when 9  => return ch('R');
+                    when 10 => return ch('E');
+                    when 11 => return ch('A');
+                    when 12 => return ch('D');
+                    when 13 => return ch('Y');
+                    when others => return ch(' ');
+                end case;
             when MODE_FAIL =>
                 case idx is
                     when 0  => return ch('G');
@@ -207,6 +246,8 @@ begin
                         disp_mode <= MODE_TESTING;
                     when "0001" =>
                         disp_mode <= MODE_PASS;
+                    when "0010" =>
+                        disp_mode <= MODE_CRYPTO;
                     when "1000" =>
                         disp_mode   <= MODE_FAIL;
                         fail_test_r <= gpio_i(27 downto 24);
