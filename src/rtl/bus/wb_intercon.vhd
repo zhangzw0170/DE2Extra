@@ -50,7 +50,15 @@ entity wb_intercon is
         s3_dat_o   : out std_logic_vector(31 downto 0);
         s3_we_o    : out std_logic;
         s3_stb_o   : out std_logic;
-        s3_ack_i   : in  std_logic
+        s3_ack_i   : in  std_logic;
+
+        -- Slave 4: NTT accelerator @ 0xF000C000
+        s4_adr_o   : out std_logic_vector(11 downto 0);
+        s4_dat_i   : in  std_logic_vector(31 downto 0);
+        s4_dat_o   : out std_logic_vector(31 downto 0);
+        s4_we_o    : out std_logic;
+        s4_stb_o   : out std_logic;
+        s4_ack_i   : in  std_logic
     );
 end entity wb_intercon;
 
@@ -59,10 +67,12 @@ architecture rtl of wb_intercon is
     signal cs_vga   : std_logic;
     signal cs_ps2   : std_logic;
     signal cs_ir    : std_logic;
+    signal cs_ntt   : std_logic;
     constant SDRAM_END_C : unsigned(31 downto 0) := unsigned(ADDR_SDRAM_BASE) + to_unsigned(16#08000000#, 32);
     constant VGA_END_C   : unsigned(31 downto 0) := unsigned(ADDR_VGA_BASE)   + to_unsigned(16#00002000#, 32);
     constant PS2_END_C   : unsigned(31 downto 0) := unsigned(ADDR_PS2_BASE)   + to_unsigned(16#00001000#, 32);
     constant IR_END_C    : unsigned(31 downto 0) := unsigned(ADDR_IR_BASE)    + to_unsigned(16#00001000#, 32);
+    constant NTT_END_C   : unsigned(31 downto 0) := unsigned(ADDR_NTT_BASE)   + to_unsigned(16#00001000#, 32);
 begin
 
     -- SDRAM byte address window: 0x01000000 - 0x08FFFFFF (128MB)
@@ -74,6 +84,8 @@ begin
                         (unsigned(m_adr_i) <  PS2_END_C) else '0';
     cs_ir    <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_IR_BASE)) and
                          (unsigned(m_adr_i) <  IR_END_C) else '0';
+    cs_ntt   <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_NTT_BASE)) and
+                         (unsigned(m_adr_i) <  NTT_END_C) else '0';
 
     -- XBUS address is a full BYTE address. SDRAM controller expects a 25-bit
     -- WORD address, so drop byte-lane bits [1:0] and keep [26:2].
@@ -102,6 +114,12 @@ begin
     s3_we_o  <= m_we_i;
     s3_stb_o <= m_stb_i and m_cyc_i and cs_ir;
 
+    -- NTT accelerator is a 32-bit register block with 12-bit address.
+    s4_adr_o <= m_adr_i(13 downto 2);
+    s4_dat_o <= m_dat_i;
+    s4_we_o  <= m_we_i;
+    s4_stb_o <= m_stb_i and m_cyc_i and cs_ntt;
+
     -- Response mux
     process(all)
     begin
@@ -124,9 +142,12 @@ begin
         elsif cs_ir = '1' then
             m_dat_o <= s3_dat_i;
             m_ack_o <= s3_ack_i;
+        elsif cs_ntt = '1' then
+            m_dat_o <= s4_dat_i;
+            m_ack_o <= s4_ack_i;
         end if;
     end process;
 
-    m_err_o <= m_stb_i and m_cyc_i and not (cs_sdram or cs_vga or cs_ps2 or cs_ir);
+    m_err_o <= m_stb_i and m_cyc_i and not (cs_sdram or cs_vga or cs_ps2 or cs_ir or cs_ntt);
 
 end architecture rtl;

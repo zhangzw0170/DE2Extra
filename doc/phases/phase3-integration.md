@@ -1,7 +1,7 @@
 # Phase 3: 集成 + 多模块整合
 
 > 总纲: `../implementation_plan.md`
-> 状态: 2026-05-24 — shell 已上板跑通，正在把板载外设显示收口到统一状态层
+> 状态: 2026-05-24 — shell 已上板跑通，SDRAM 控制器稳定(memtest PASS)，SDL2 HAL + NTT 加速器 VHDL 已完成
 >
 > **de2shell 程序注册表 (2026-05-23 更新)**:
 >

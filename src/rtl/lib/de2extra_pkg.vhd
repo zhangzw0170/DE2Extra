@@ -22,6 +22,7 @@ package de2extra_pkg is
     constant ADDR_IR_BASE      : std_logic_vector(31 downto 0) := x"F0009000"; -- 4KB
     constant ADDR_DDS_BASE     : std_logic_vector(31 downto 0) := x"F000A000"; -- 4KB
     constant ADDR_SD_BASE      : std_logic_vector(31 downto 0) := x"F000B000"; -- 4KB
+    constant ADDR_NTT_BASE     : std_logic_vector(31 downto 0) := x"F000C000"; -- 4KB
     -- ================================================================
     -- Seven-segment display utility
     -- ================================================================

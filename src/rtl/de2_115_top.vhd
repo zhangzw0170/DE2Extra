@@ -174,6 +174,14 @@ architecture rtl of de2_115_top is
     signal ir_wb_stb   : std_logic;
     signal ir_wb_ack   : std_logic;
 
+    -- NTT accelerator Wishbone
+    signal ntt_wb_adr   : std_logic_vector(11 downto 0);
+    signal ntt_wb_dat_o : std_logic_vector(31 downto 0);
+    signal ntt_wb_dat_i : std_logic_vector(31 downto 0);
+    signal ntt_wb_we    : std_logic;
+    signal ntt_wb_stb   : std_logic;
+    signal ntt_wb_ack   : std_logic;
+
     -- JTAG UART Avalon bus
     signal jtag_av_cs       : std_logic;
     signal jtag_av_addr     : std_logic;
@@ -313,7 +321,13 @@ begin
         s3_dat_o => ir_wb_dat_o,
         s3_we_o  => ir_wb_we,
         s3_stb_o => ir_wb_stb,
-        s3_ack_i => ir_wb_ack
+        s3_ack_i => ir_wb_ack,
+        s4_adr_o => ntt_wb_adr,
+        s4_dat_i => ntt_wb_dat_i,
+        s4_dat_o => ntt_wb_dat_o,
+        s4_we_o  => ntt_wb_we,
+        s4_stb_o => ntt_wb_stb,
+        s4_ack_i => ntt_wb_ack
     );
 
     -- ================================================================
@@ -419,6 +433,21 @@ begin
         wb_we_i    => ir_wb_we,
         wb_stb_i   => ir_wb_stb,
         wb_ack_o   => ir_wb_ack
+    );
+
+    -- ================================================================
+    -- NTT Accelerator @ 0xF000C000
+    -- ================================================================
+    u_ntt : entity work.ntt_sdf
+    port map (
+        clk_i     => clk_50m,
+        rst_n_i   => rst_n,
+        wb_adr_i  => ntt_wb_adr,
+        wb_dat_i  => ntt_wb_dat_o,
+        wb_dat_o  => ntt_wb_dat_i,
+        wb_we_i   => ntt_wb_we,
+        wb_stb_i  => ntt_wb_stb,
+        wb_ack_o  => ntt_wb_ack
     );
 
     -- ================================================================
