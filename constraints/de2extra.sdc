@@ -9,6 +9,14 @@ create_clock -name clk_50m -period 20.000 [get_ports {CLOCK_50}]
 derive_pll_clocks
 derive_clock_uncertainty
 
+# VGA 25MHz pixel clock (derived from 50MHz toggle in vga_text_terminal).
+# Quartus needs this to infer M9K dual-port BRAM instead of logic.
+# NOTE: pin path is a placeholder — verify after first compile in Technology Map Viewer.
+# Temporarily commented out until exact path is confirmed from first compilation.
+# create_generated_clock -name clk_25m -period 40.000 \
+#     -source [get_pins {de2_115_top|vga_text_terminal:u_vga|clk_25m~reg0}] \
+#     [get_pins {de2_115_top|vga_text_terminal:u_vga|clk_25m~reg0}]
+
 # SDRAM clock: 100 MHz (10 ns period) — PLL generated
 create_clock -name clk_sdram -period 10.000 [get_ports {DRAM_CLK}]
 
