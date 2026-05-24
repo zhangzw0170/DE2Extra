@@ -23,7 +23,7 @@
   }
 
   void vga_init(void) {
-      printf("\033[2J\033[H\033[?25l");  /* clear, home, hide cursor */
+      printf("\033[2J\033[H\033[?25h");  /* clear, home, show cursor */
       cur_col = 0;
       cur_row = 0;
   }
@@ -155,12 +155,12 @@
 
   void vga_init(void) {
       vga_buf[VGA_CTRL_CLEAR / 2] = 0x0001;        /* clear screen */
-      vga_buf[VGA_CTRL_CONTROL / 2] = VGA_CTRL_ENABLE | VGA_CTRL_BLINK;
+      vga_buf[VGA_CTRL_CONTROL / 2] = VGA_CTRL_ENABLE; /* visible, non-blinking cursor */
       vga_buf[VGA_CTRL_BGCOLOR / 2] = VGA_BLACK;
       cur_col = 0;
       cur_row = 0;
       hw_cursor_sync();
-      neorv32_uart0_puts("\033[2J\033[H\033[?25l");
+      neorv32_uart0_puts("\033[2J\033[H\033[?25h");
   }
 
   void vga_putc(char c, uint8_t color) {
@@ -218,10 +218,12 @@
 
   void vga_cursor_show(int show) {
       uint16_t ctrl = vga_buf[VGA_CTRL_CONTROL / 2];
-      if (show)
-          ctrl |= VGA_CTRL_BLINK | VGA_CTRL_ENABLE;
-      else
-          ctrl &= ~VGA_CTRL_BLINK;
+      if (show) {
+          ctrl |= VGA_CTRL_ENABLE;
+          ctrl &= (uint16_t)~VGA_CTRL_BLINK;
+      } else {
+          ctrl &= (uint16_t)~VGA_CTRL_ENABLE;
+      }
       vga_buf[VGA_CTRL_CONTROL / 2] = ctrl;
       neorv32_uart0_puts(show ? "\033[?25h" : "\033[?25l");
   }

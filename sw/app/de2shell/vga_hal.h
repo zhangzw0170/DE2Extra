@@ -28,7 +28,7 @@
 #define VGA_COLS 80
 #define VGA_ROWS 25
 
-/* Initialize VGA (clear screen, hide cursor, home) */
+/* Initialize VGA (clear screen, show static cursor, home) */
 void vga_init(void);
 
 /* Write a character at current cursor position, advance cursor */
