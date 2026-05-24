@@ -2,12 +2,14 @@
  * DE2Extra — SDRAM 读写测试
  *
  * 测试模式:
- *   1. Walking 1s: 每次只有 1 位为 1, 遍历所有 32 位
- *   2. Checkerboard: 0x55555555 / 0xAAAAAAAA 交替写入
- *   3. Address-as-data: 地址值作为数据写入再读回
+ *   1. Walking 1s immediate
+ *   2. Walking 1s bulk
+ *   3. Checkerboard
+ *   4. Address-as-data
+ *   5. Sparse boundary probes
  *
  * SDRAM 基址: 0x01000000 (XBUS → sdram_ctrl)
- * 测试大小: 256 words (1KB)
+ * 密集测试大小: 4096 words (16KB)
  *
  * GPIO/LCD 调试协议:
  *   0x0------- : LCD 显示 TESTING
@@ -20,7 +22,7 @@
 
 #define BAUD_RATE 115200
 #define SDRAM_BASE ((volatile uint32_t *)0x01000000)
-#define TEST_WORDS 256
+#define TEST_WORDS 4096
 
 #define LCD_STATUS_TESTING   0x00000000u
 #define LCD_STATUS_PASS      0x10000000u
@@ -34,6 +36,23 @@ static uint32_t fail_test = 0;
 static uint32_t fail_addr = 0;
 static uint32_t fail_expected = 0;
 static uint32_t fail_got = 0;
+
+static const uint32_t sparse_words[] = {
+    0x00000000u, 0x00000001u, 0x00000002u, 0x00000003u,
+    0x000000FFu, 0x00000100u, 0x00000101u,
+    0x000001FFu, 0x00000200u, 0x00000201u,
+    0x000003FFu, 0x00000400u, 0x00000401u,
+    0x000007FFu, 0x00000800u, 0x00000801u,
+    0x00000FFFu, 0x00001000u, 0x00001001u,
+    0x00001FFFu, 0x00002000u, 0x00002001u,
+    0x0000FFFFu, 0x00010000u, 0x00010001u,
+    0x000FFFFFu, 0x00100000u, 0x00100001u,
+    0x007FFFFFu, 0x00800000u, 0x00800001u
+};
+
+static uint32_t sparse_pattern(uint32_t word_idx) {
+    return 0xA5A50000u ^ (word_idx * 0x1F123BB5u) ^ (word_idx >> 3);
+}
 
 static void lcd_status(uint32_t s) {
     neorv32_gpio_port_set(s);
@@ -91,7 +110,6 @@ static void test_walking_ones_bulk(void) {
     for (int i = 0; i < TEST_WORDS; i++) {
         SDRAM_BASE[i] = (uint32_t)1 << (i % 32);
     }
-
     for (int i = 0; i < TEST_WORDS; i++) {
         uint32_t expected = (uint32_t)1 << (i % 32);
         uint32_t got = SDRAM_BASE[i];
@@ -142,45 +160,35 @@ static void test_address_data(void) {
     neorv32_uart0_puts("[PASS] test4\n");
 }
 
-static void run_group_diagnostics(void) {
-    static const uint32_t patterns[] = {
-        0x0000FFFFu,
-        0xFFFF0000u,
-        0x00FF00FFu,
-        0xFF00FF00u
-    };
-    static const char *names[] = {
-        "low16",
-        "high16",
-        "byte02",
-        "byte13"
-    };
+static void test_sparse_boundaries(void) {
+    neorv32_uart0_puts("[TEST5] sparse boundary probes...\n");
 
-    volatile uint32_t *target = SDRAM_BASE + fail_word;
-
-    neorv32_uart0_printf("\n[DIAG] target word=%u addr=0x%x\n",
-        fail_word, (uint32_t)target);
-
-    for (int i = 0; i < 4; i++) {
-        uint32_t expected = patterns[i];
-        *target = expected;
-        for (volatile int d = 0; d < 2000; d++) {
-            __asm__ volatile("nop");
-        }
-
-        uint32_t got = *target;
-        neorv32_uart0_printf("[DIAG] %s expected=0x%x got=0x%x xor=0x%x\n",
-            names[i], expected, got, expected ^ got);
+    for (uint32_t i = 0; i < (uint32_t)(sizeof(sparse_words) / sizeof(sparse_words[0])); i++) {
+        uint32_t word_idx = sparse_words[i];
+        SDRAM_BASE[word_idx] = sparse_pattern(word_idx);
     }
 
-    if (fail_test == 2u) {
-        neorv32_uart0_puts("\n[DIAG] test2 first words dump\n");
-        for (int i = 0; i < 8; i++) {
-            uint32_t expected = (uint32_t)1 << (i % 32);
-            uint32_t got = SDRAM_BASE[i];
-            neorv32_uart0_printf("[DIAG] w%u expected=0x%x got=0x%x xor=0x%x\n",
-                (uint32_t)i, expected, got, expected ^ got);
+    for (uint32_t i = 0; i < (uint32_t)(sizeof(sparse_words) / sizeof(sparse_words[0])); i++) {
+        uint32_t word_idx = sparse_words[i];
+        uint32_t expected = sparse_pattern(word_idx);
+        uint32_t got = SDRAM_BASE[word_idx];
+        if (got != expected) {
+            record_fail(5, word_idx, expected, got);
+            return;
         }
+    }
+
+    neorv32_uart0_puts("[PASS] test5\n");
+}
+
+static void dump_fail_window(void) {
+    uint32_t start = (fail_word > 1u) ? (fail_word - 1u) : 0u;
+    uint32_t stop = fail_word + 2u;
+
+    neorv32_uart0_printf("\n[DIAG] fail window around word=%u\n", fail_word);
+    for (uint32_t word_idx = start; word_idx <= stop; word_idx++) {
+        uint32_t got = SDRAM_BASE[word_idx];
+        neorv32_uart0_printf("[DIAG] w%u -> 0x%x\n", word_idx, got);
     }
 }
 
@@ -197,7 +205,10 @@ int main(void) {
     neorv32_gpio_dir_set(0xFFFFFFFF);
 
     neorv32_uart0_puts("\n=== DE2Extra SDRAM self-test ===\n");
-    neorv32_uart0_printf("base=0x%x words=%u\n", (uint32_t)SDRAM_BASE, (uint32_t)TEST_WORDS);
+    neorv32_uart0_printf("base=0x%x dense_words=%u sparse_points=%u\n",
+        (uint32_t)SDRAM_BASE,
+        (uint32_t)TEST_WORDS,
+        (uint32_t)(sizeof(sparse_words) / sizeof(sparse_words[0])));
 
     sdram_wait_init();
     neorv32_uart0_puts("init wait done\n");
@@ -213,6 +224,9 @@ int main(void) {
     if (all_pass) {
         test_address_data();
     }
+    if (all_pass) {
+        test_sparse_boundaries();
+    }
 
     if (all_pass) {
         neorv32_uart0_puts("[PASS] all tests passed\n");
@@ -220,7 +234,7 @@ int main(void) {
     } else {
         print_fail_report();
         lcd_show_fail();
-        run_group_diagnostics();
+        dump_fail_window();
     }
 
     while (1) {}

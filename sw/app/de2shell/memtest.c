@@ -9,6 +9,11 @@
 
 #define SDRAM_BASE  ((volatile uint32_t *)0x01000000)
 #define TEST_WORDS  256
+#define CASE_LIST_ROW 3
+#define CASE_RESULT_ROW 11
+#define SUMMARY_ROW 16
+#define DETAIL_ROW 17
+#define PROMPT_ROW 19
 
 /* LCD 调试协议 */
 #define LCD_STATUS_TESTING  0x00000000u
@@ -57,16 +62,18 @@ static void record_fail(uint32_t test_num, uint32_t word_idx,
 /* 每次调用 run_one_step() 执行一项测试并更新 VGA */
 static void run_test(int test_id) {
     if (test_id < 0 || test_id >= 4) return;
-    vga_goto(0, 5 + test_id);
+    vga_goto(0, CASE_RESULT_ROW + test_id);
 
     int pass = 1;
     switch (test_id) {
     case 0: /* Walking-1s immediate */
         for (int i = 0; i < TEST_WORDS; i++) {
             uint32_t exp = (uint32_t)1 << (i % 32);
+            uint32_t got;
             SDRAM_BASE[i] = exp;
-            if (SDRAM_BASE[i] != exp) {
-                record_fail(1, i, exp, SDRAM_BASE[i]);
+            got = SDRAM_BASE[i];
+            if (got != exp) {
+                record_fail(1, i, exp, got);
                 pass = 0; break;
             }
         }
@@ -76,8 +83,9 @@ static void run_test(int test_id) {
             SDRAM_BASE[i] = (uint32_t)1 << (i % 32);
         for (int i = 0; i < TEST_WORDS; i++) {
             uint32_t exp = (uint32_t)1 << (i % 32);
-            if (SDRAM_BASE[i] != exp) {
-                record_fail(2, i, exp, SDRAM_BASE[i]);
+            uint32_t got = SDRAM_BASE[i];
+            if (got != exp) {
+                record_fail(2, i, exp, got);
                 pass = 0; break;
             }
         }
@@ -87,8 +95,9 @@ static void run_test(int test_id) {
             SDRAM_BASE[i] = (i & 1) ? 0xAAAAAAAA : 0x55555555;
         for (int i = 0; i < TEST_WORDS; i++) {
             uint32_t exp = (i & 1) ? 0xAAAAAAAA : 0x55555555;
-            if (SDRAM_BASE[i] != exp) {
-                record_fail(3, i, exp, SDRAM_BASE[i]);
+            uint32_t got = SDRAM_BASE[i];
+            if (got != exp) {
+                record_fail(3, i, exp, got);
                 pass = 0; break;
             }
         }
@@ -98,8 +107,9 @@ static void run_test(int test_id) {
             SDRAM_BASE[i] = (uint32_t)(uintptr_t)(SDRAM_BASE + i);
         for (int i = 0; i < TEST_WORDS; i++) {
             uint32_t exp = (uint32_t)(uintptr_t)(SDRAM_BASE + i);
-            if (SDRAM_BASE[i] != exp) {
-                record_fail(4, i, exp, SDRAM_BASE[i]);
+            uint32_t got = SDRAM_BASE[i];
+            if (got != exp) {
+                record_fail(4, i, exp, got);
                 pass = 0; break;
             }
         }
@@ -137,10 +147,10 @@ static void init(void) {
     }
 
 #ifndef LOCAL_BUILD
-    vga_goto(0, 13);
+    vga_goto(0, CASE_RESULT_ROW - 1);
     vga_puts("Waiting for SDRAM init...", VGA_GRAY);
     for (volatile int i = 0; i < 50000; i++) __asm__ volatile("nop");
-    vga_goto(0, 13);
+    vga_goto(0, CASE_RESULT_ROW - 1);
     vga_puts("                          ", VGA_BLACK);
 #endif
 
@@ -162,7 +172,7 @@ static void update(void) {
 
     if (current_test >= 4 || !all_pass) {
         finished = 1;
-        vga_goto(0, 14);
+        vga_goto(0, SUMMARY_ROW);
         if (all_pass) {
             vga_puts("[ALL PASS] All 4 SDRAM cases passed.", VGA_GREEN);
             lcd_status(LCD_STATUS_PASS);
@@ -181,13 +191,15 @@ static void update(void) {
             lcd_status(LCD_FAIL_META |
                        ((fail_test & 0xF) << 24) |
                        ((fail_word & 0xFF) << 16));
-            vga_goto(0, 15);
+            lcd_status(LCD_FAIL_GOT_HI | ((fail_got >> 16) & 0xFFFFu));
+            lcd_status(LCD_FAIL_GOT_LO | (fail_got & 0xFFFFu));
+            vga_goto(0, DETAIL_ROW);
             vga_puts("EXP ", VGA_RED);
             vga_puthex32(fail_expected);
             vga_puts("  GOT ", VGA_RED);
             vga_puthex32(fail_got);
         }
-        vga_goto(0, 17);
+        vga_goto(0, PROMPT_ROW);
         vga_puts("Press 'q' to return, 'r' to retest\n", VGA_GRAY);
     }
 }

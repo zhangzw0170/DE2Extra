@@ -339,12 +339,12 @@ begin
                         dram_ba       <= ba_r;
                         dram_dqm      <= (others => '0');
                     end if;
-                    -- READ is issued when cas_cnt=0. On hardware the 3rd internal
-                    -- edge proved too early, while the original 4th-edge sampling
-                    -- at least pushed the first failing word later. Keep the
-                    -- controller-side capture on the 4th internal edge and tune the
-                    -- external DRAM clock phase separately in the PLL wrapper.
-                    if cas_cnt = 3 then
+                    -- READ is issued when cas_cnt=0. Hardware logs still show
+                    -- "previous-word residue" on some bulk readbacks, which means
+                    -- the controller is sampling too close to the DQ transition.
+                    -- Push capture one more SDRAM clock later before touching the
+                    -- PLL phase again.
+                    if cas_cnt = 4 then
                         state <= S_READ_CAPTURE;
                     end if;
                     cas_cnt <= cas_cnt + 1;
