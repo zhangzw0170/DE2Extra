@@ -17,6 +17,7 @@
 #ifdef LOCAL_BUILD
   #include <string.h>
 #else
+  #include "../crypto_cli/crypto_zk.h"
   static int strcmp(const char *a, const char *b) {
       while (*a && *a == *b) { a++; b++; }
       return (unsigned char)*a - (unsigned char)*b;
@@ -46,26 +47,18 @@ static void demo_aes(void) {
     r_esmi = rs1 ^ rs2;
     r_esi  = r_esmi + 1;
 #else
-    /* aes32esmi — SubBytes+ShiftRows+MixColumns */
-    register uint32_t a0 asm("a0") = rs1;
-    register uint32_t a1 asm("a1") = rs2;
-    __asm__ volatile (".word 0x32B50533" : "+r"(a0) : "r"(a1));
-    r_esmi = a0;
-
-    /* aes32esi — SubBytes+ShiftRows (last round) */
-    a0 = rs1; a1 = rs2;
-    __asm__ volatile (".word 0x12B50533" : "+r"(a0) : "r"(a1));
-    r_esi = a0;
+    r_esmi = zk_aes32esmi(rs1, rs2, 0);
+    r_esi  = zk_aes32esi(rs1, rs2, 0);
 #endif
 
     vga_puts("\n=== AES-128 Demo ===\n", VGA_CYAN);
     vga_puts("Input state:  0x", VGA_WHITE); vga_puthex32(rs1);
     vga_puts("\nRound key:    0x", VGA_WHITE); vga_puthex32(rs2);
     vga_puts("\n\naes32esmi (SubBytes+ShiftRows+MixColumns):\n", VGA_GREEN);
-    vga_puts("  Encoding: 0x32B50533\n", VGA_GRAY);
+    vga_puts("  Encoding: 0x26B50533\n", VGA_GRAY);
     vga_puts("  Result:   0x", VGA_YELLOW); vga_puthex32(r_esmi);
     vga_puts("\n\naes32esi (SubBytes+ShiftRows, last round):\n", VGA_GREEN);
-    vga_puts("  Encoding: 0x12B50533\n", VGA_GRAY);
+    vga_puts("  Encoding: 0x22B50533\n", VGA_GRAY);
     vga_puts("  Result:   0x", VGA_YELLOW); vga_puthex32(r_esi);
     vga_puts("\n", VGA_BLACK);
 }
@@ -207,6 +200,18 @@ static void show_help(void) {
     vga_puts("  q                 Return to shell\n", VGA_WHITE);
 }
 
+static void usage_peek(void) {
+    vga_puts("Usage: peek ADDR\n", VGA_RED);
+}
+
+static void usage_poke(void) {
+    vga_puts("Usage: poke ADDR VAL\n", VGA_RED);
+}
+
+static void usage_dump(void) {
+    vga_puts("Usage: dump ADDR [N]\n", VGA_RED);
+}
+
 static void input(char c) {
     if (!active) return;
     if (c == 'q' || c == 'Q') { active = 0; return; }
@@ -229,6 +234,12 @@ static void input(char c) {
             demo_sha256();
         } else if (strcmp(cmd, "sm4") == 0) {
             demo_sm4();
+        } else if (strcmp(cmd, "peek") == 0) {
+            usage_peek();
+        } else if (strcmp(cmd, "poke") == 0) {
+            usage_poke();
+        } else if (strcmp(cmd, "dump") == 0) {
+            usage_dump();
         } else if (strncmp(cmd, "peek ", 5) == 0) {
             cmd_peek(parse_hex(cmd + 5));
         } else if (strncmp(cmd, "poke ", 5) == 0) {
