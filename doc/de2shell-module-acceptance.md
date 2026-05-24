@@ -70,11 +70,11 @@
 | A1.9 | `quit`/`exit` 命令 | 从子程序返回 shell 主界面 | ✅ |
 | A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | 🟡 (代码完成，待上板确认) |
 | A1.11 | 程序注册表完整性 | 14 个 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
-| A1.12 | IR 遥控切频 | CH1-CH7 映射到 hello/memtest/crypto/snake/life/dash/info；CH+/CH- 顺序切换 | 🟡 |
+| A1.12 | IR 遥控切频 | Exp10 遥控器数字键 `1-7` 映射到 hello/memtest/crypto/snake/life/dash/info；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | 🟡 |
 | A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | 🟡 |
 | A1.14 | Docker 交叉编译 | `build.sh` 分步执行 `make clean` + `make image`，当前 `de2shell` IMEM 镜像约 39KB，适配 64KB IMEM | ✅ |
 | A1.15 | LOCAL_BUILD 编译 | `make local` (host gcc) 编译通过 | ✅ |
-| A1.16 | 统一板级状态层 | `board_status.c/h` 负责 shell/子程序对 LCD/HEX/LED 的统一编码与接管 | 🟡 (代码完成，待上板确认) |
+| A1.16 | 统一板级状态层 | `board_status.c/h` 负责 shell/子程序对 LCD/HEX/LED 的统一编码与接管 | 🟡 (代码路径已闭环，待实板一次确认) |
 
 ### A2. VGA HAL (vga_hal.c/h)
 
@@ -120,13 +120,13 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| B2.1 | Walking-1s immediate | 逐字写入 `1<<(i%32)` 并立即回读比对，256 words | ✅ |
-| B2.2 | Walking-1s bulk | 先全部写入再全部回读，256 words | ✅ |
+| B2.1 | Walking-1s immediate | 逐字写入 `1<<(i%32)` 并立即回读比对，1024 words | ✅ |
+| B2.2 | Walking-1s bulk | 先全部写入再全部回读，1024 words | ✅ |
 | B2.3 | Checkerboard | 交替写入 `0xAAAAAAAA`/`0x55555555`，回读比对 | ✅ |
 | B2.4 | Address-as-data | 写入自身地址值，回读比对 | ✅ |
-| B2.5 | 全部通过 | VGA 显示 `[ALL PASS] SDRAM OK!`，LCD 显示 `LCD_STATUS_PASS` | ✅ |
-| B2.6 | 失败信息 | 显示失败测试号 T、word 索引 W、期望值和实际值 | 🟡 |
-| B2.7 | 重测 `r` | 按 `r` 重新执行全部 4 项测试 | 🟡 |
+| B2.5 | 全部通过 | VGA 显示 `All 5 SDRAM cases passed.`，LCD 显示 `LCD_STATUS_PASS` | ✅ |
+| B2.6 | 失败信息 | 显示完整 `test/word/addr/exp/got`，LCD 继续走 fail meta + got 协议 | ✅ |
+| B2.7 | 重测 `r` | 按 `r` 重新执行全部 5 项测试 | ✅ |
 | B2.8 | LCD 调试协议 | 测试中/通过/失败状态通过 GPIO 输出到 LCD | ✅ |
 | B2.9 | 命令行别名 | `memtest`、`sdram`、`sdram_test` 三个命令均能启动 | ✅ |
 | B2.10 | 退出 `q` | 返回 shell | ✅ |
@@ -144,17 +144,17 @@
 | B3.7 | `sm4 <key> <pt>` | SM4 加密，GB/T 32907-2016 测试向量通过 | ✅ |
 | B3.8 | `sm3 <hex-msg>` | SM3 哈希，GB/T 32905-2016 测试向量通过 | ✅ |
 | B3.9 | `trng [n]` | 从 TRNG 读取 n 个随机字节并以 hex 输出 | ✅ |
-| B3.10 | `bench` | 纯 C 与 Zk* 加速版本的性能对比表 (cycles + speedup) | 🟡 (Zk* 加速待实现) |
+| B3.10 | `bench` | 纯 C 与 Zk* 加速版本的性能对比表 (cycles + speedup) | 🟡 (代码已接入，待下一次实板确认数值) |
 | B3.11 | `cls` / `clear` | 清屏并重绘提示符 | ✅ |
 | B3.12 | `quit` / `exit` / `q` | 返回 shell | ✅ |
 | B3.13 | hex 解码容错 | `hex_decode()` 支持大小写、空格分隔 | ✅ |
 | B3.14 | 命令参数解析 | 支持最多 8 个参数 | ✅ |
-| B3.15 | AES-128 Zk* 加速 | `aes32esmi`/`aes32dsi` 替代查表，加速比 > 5x | ❌ |
-| B3.16 | SHA-256 Zk* 加速 | `sha256sig0/1` + `sha256sum0/1` 替代移位 | ❌ |
-| B3.17 | SHA-512 Zk* 加速 | `sha512sig0h/l` + `sha512sum0r/1r` 替代 | ❌ |
-| B3.18 | SM4 Zk* 加速 | `sm4ed`/`sm4ks` 替代 S-box 查表 | ❌ |
-| B3.19 | SM3 Zk* 加速 | `sm3p0`/`sm3p1` 替代 P0/P1 函数 | ❌ |
-| B3.20 | TRNG 统计验证 | 做频率检验 / 序列检验确认随机性 | ❌ |
+| B3.15 | AES-128 Zk* 加速 | `aes32esmi`/`aes32dsi` 路径已接入 `bench` | 🟡 |
+| B3.16 | SHA-256 Zk* 加速 | `sha256sig0/1` + `sha256sum0/1` 路径已接入 `bench` | 🟡 |
+| B3.17 | SHA-512 Zk* 加速 | `sha512sig0h/l` + `sha512sum0r/1r` 路径已接入 `bench` | 🟡 |
+| B3.18 | SM4 Zk* 加速 | `sm4ed`/`sm4ks` 路径已接入 `bench` | 🟡 |
+| B3.19 | SM3 Zk* 加速 | `sm3p0`/`sm3p1` 路径已接入 `bench` | 🟡 |
+| B3.20 | TRNG 统计验证 | `bench` 内置 256-byte 单比特统计，输出 `1-bits/0-bits/ratio` | 🟡 (代码已接入，待实板确认分布) |
 
 ### B4. ps2 — PS/2 键盘监视器 (ps2.c)
 
@@ -209,24 +209,17 @@
 | C2.9 | 图案切换 `r` | 按 `r` 随机初始化网格 | ✅ |
 | C2.10 | 清空 `c` | 按 `c` 清空所有细胞，重置代数为 0 | ✅ |
 | C2.11 | 速度调节 `+`/`-` | `+`/`=` 加速 (speed_ms-10, 下限 20)，`-`/`_` 减速 (上限 500) | ✅ |
-| C2.12 | VGA 渲染 | 40×20 网格 + 边框 + HUD (代数+状态+按键提示) | 🟡 (VGA 硬件待线) |
-| C2.13 | 退出 `q` | 返回 shell | ✅ |
+| C2.12 | 编辑模式默认进入 | 启动后进入 `EDIT`，光标位于网格中心 | ✅ |
+| C2.13 | 光标移动 | 方向键 / WASD 都能移动光标，支持边界回绕 | ✅ |
+| C2.14 | 细胞切换 | 编辑态按空格翻转当前光标位置细胞 | ✅ |
+| C2.15 | 运行 / 返回编辑 | `Enter` 进入运行，`E` 返回编辑 | ✅ |
+| C2.16 | HUD 坐标与状态 | HUD 显示 `RUN/EDIT/HOLD` 以及 `X/Y` 坐标 | ✅ |
+| C2.17 | VGA 渲染 | 40×20 网格 + 边框 + HUD (代数+状态+按键提示) | 🟡 (VGA 硬件待线) |
+| C2.18 | 退出 `q` | 返回 shell | ✅ |
 
-### C3. conway_ed — 康威编辑器 (conway_ed.c)
+### C3. `conway_ed` 旧实现
 
-> 注意：该文件当前仍是独立源码，**尚未注册进当前 `de2shell` 程序表，也未纳入 `make local` 构建入口**。
-> 当前 shell 中 `life` 命令实际运行的是 `life.c`，不是本文件。
-
-| # | 验收项 | 预期行为 | 状态 |
-|---|---|---|---|
-| C3.1 | 编辑模式 | 启动时进入编辑模式 (MODE=EDITING)，全网格 80×25 | ❌ (未接入当前 shell) |
-| C3.2 | 光标移动 | WASD 移动光标，边界回绕 | ❌ |
-| C3.3 | 细胞切换 `SPACE` | 空格键翻转光标位置细胞状态 | ❌ |
-| C3.4 | 运行 `ENTER` | 回车键开始模拟 (MODE=RUNNING) | ❌ |
-| C3.5 | 暂停 `p` | 模拟过程中暂停/恢复 | ❌ |
-| C3.6 | 清空 `c` | 清除全部细胞，回到编辑模式 | ❌ |
-| C3.7 | 退出 `ESC` | ESC 返回 shell | ❌ |
-| C3.8 | VGA 渲染 | 80×25 全屏 + HUD (代数和模式 + 光标坐标) | ❌ |
+`conway_ed.c` 已退出当前 `de2shell` 正式路径。编辑功能已并入 `life.c`，后续验收只看 `life`，不再把 `conway_ed` 作为并行实现维护。
 
 ---
 
@@ -307,10 +300,10 @@
 | E3.1 | 页面框架 | 显示 dashboard 标题、说明、实时状态区 | 🟡 (代码完成，待上板确认) |
 | E3.2 | 退出 `q` | 返回 shell | ✅ |
 | E3.3 | SW 实时读取 | 实时显示 18 个拨码开关状态 | 🟡 (代码完成，待上板确认) |
-| E3.4 | 板级外设接管 | dashboard 通过 `board_status` 主动驱动 LCD/HEX/LED | 🟡 |
+| E3.4 | 板级外设接管 | dashboard 通过 `board_status` 主动驱动 LCD/HEX/LED | 🟡 (代码路径已闭环，待实板一次确认) |
 | E3.5 | KEY 按键检测 | 显示 `KEY[3:1]` 当前状态，并映射到 flags/LEDG | 🟡 |
-| E3.6 | IR 码值显示 (future) | 显示最近收到的红外遥控码 (NEC 格式) | ❌ |
-| E3.7 | 系统时间栏 | 当前版本显示 uptime 秒数，不要求 RTC | 🟡 |
+| E3.6 | IR 码值与键义显示 | 显示最近收到的红外遥控码以及对应键义 (`CH+`/`1`/`RETURN` 等) | 🟡 |
+| E3.7 | 系统时间栏 | 当前版本显示 uptime 秒数，不要求 RTC | 🟡 (代码完成，待上板确认) |
 
 ---
 
@@ -368,8 +361,8 @@
 |---|---|---|---|
 | F5.1 | NEC 协议解码 | 引导码+地址+命令正确解析 | ✅ |
 | F5.2 | 命令输出到 CPU | CPU 可读取解码后的命令字节 | ✅ |
-| F5.3 | CH1-CH7 映射 | 7 个频道按钮正确路由 | ✅ |
-| F5.4 | CH+/CH- 顺序切换 | 频道+/- 在程序列表中顺序切换 | ✅ |
+| F5.3 | 数字键 1-7 映射 | 遥控器数字键 `1-7` 正确路由到 shell 程序 | 🟡 |
+| F5.4 | CH+/CH- 顺序切换 | `CH+`/`CH-` 在程序列表中顺序切换 | 🟡 |
 
 ---
 

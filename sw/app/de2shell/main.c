@@ -48,7 +48,7 @@
   #endif
   #define uart_putc(c)  putchar(c)
   #define uart_puts(s)  printf("%s", (s))
-  static void uart_init(void) {}
+  #define uart_init() ((void)0)
 #else
   #include <neorv32.h>
   #define BAUD_RATE 115200
@@ -120,12 +120,6 @@ static int strcmp(const char *a, const char *b) {
 
 /* Default empty callbacks — programs that don't implement a callback use these */
 
-static void stub_init(void) {}
-static void stub_update(void) {}
-static void stub_input(char c) { (void)c; }
-static void stub_ir_input(uint8_t cmd) { (void)cmd; }
-static int  stub_finish(void) { return 0; }
-
 /* ── Program Registry ───────────────────────────────────────────── */
 
 static const program_t *programs[PROG_COUNT] = {
@@ -146,11 +140,11 @@ static const program_t *programs[PROG_COUNT] = {
 };
 
 static prog_id_t active_prog = PROG_SHELL;
-static prog_id_t ir_prog_map[16];   /* IR command → program mapping */
 static int status_dirty = 1;
 static uint8_t last_uart_char = 0;
 static uint8_t prev_key_bits = 0;
-static uint8_t last_ir_cmd = 0;
+static uint8_t prev_ir_toggle = 0;
+uint8_t last_ir_cmd = 0;
 
 #define SHELL_LINE_SIZE 64
 #define SHELL_HISTORY_DEPTH 8
@@ -165,6 +159,32 @@ static int shell_esc_state = 0;
 #define KEY1_MASK (1u << 0)
 #define KEY2_MASK (1u << 1)
 #define KEY3_MASK (1u << 2)
+
+/* Exp10 remote profile (table 6-16 indexes the physical keys row-by-row) */
+#define IR_BTN_A       0x0Fu
+#define IR_BTN_B       0x13u
+#define IR_BTN_C       0x10u
+#define IR_BTN_POWER   0x12u
+#define IR_BTN_1       0x01u
+#define IR_BTN_2       0x02u
+#define IR_BTN_3       0x03u
+#define IR_BTN_CH_UP   0x1Au
+#define IR_BTN_4       0x04u
+#define IR_BTN_5       0x05u
+#define IR_BTN_6       0x06u
+#define IR_BTN_CH_DN   0x1Eu
+#define IR_BTN_7       0x07u
+#define IR_BTN_8       0x08u
+#define IR_BTN_9       0x09u
+#define IR_BTN_VOL_UP  0x1Bu
+#define IR_BTN_MENU    0x11u
+#define IR_BTN_0       0x00u
+#define IR_BTN_RETURN  0x17u
+#define IR_BTN_VOL_DN  0x1Fu
+#define IR_BTN_PLAY    0x16u
+#define IR_BTN_ADJ_LT  0x14u
+#define IR_BTN_ADJ_GT  0x18u
+#define IR_BTN_MUTE    0x0Cu
 
 static void shell_prompt(void) {
     vga_puts("0000> ", VGA_GREEN);
@@ -270,6 +290,13 @@ static prog_id_t shell_selected_prog(uint32_t gpio_in) {
     return (prog_id_t)sel;
 }
 
+static int global_key_hotkeys_enabled(void) {
+    /* Dashboard is used as a raw input monitor, so global KEY shortcuts
+     * must stay out of the way there.
+     */
+    return active_prog != PROG_DASHBOARD;
+}
+
 static void board_status_refresh(void) {
     uint32_t gpio_in = gpio_read_in();
     uint32_t selected = (uint32_t)shell_selected_prog(gpio_in);
@@ -287,8 +314,11 @@ static void board_status_refresh(void) {
 
     if (active_prog == PROG_SHELL) {
         board_status_set_program((uint8_t)active_prog, BOARD_STATE_READY, flags, data);
-    } else {
-        board_status_apply_fallback((uint8_t)active_prog, BOARD_STATE_LIVE);
+    } else if (!board_status_claimed()) {
+        /* Programs that do not actively own LCD/HEX/LED still get a live,
+         * deterministic fallback encoding instead of reusing stale GPIO data.
+         */
+        board_status_set_program((uint8_t)active_prog, BOARD_STATE_LIVE, flags, data);
     }
 }
 
@@ -422,8 +452,6 @@ static void shell_input(char c) {
     }
 }
 
-static int shell_finish(void) { return 0; }
-
 /* ── Status Bar ─────────────────────────────────────────────────── */
 
 static void draw_status_bar(void) {
@@ -475,6 +503,7 @@ static void draw_status_bar(void) {
 
 /* ── IR Command Handler ─────────────────────────────────────────── */
 
+#ifndef LOCAL_BUILD
 static void handle_ir(uint8_t cmd) {
     /* Forward IR input to active program first */
     const program_t *prog = programs[active_prog];
@@ -483,28 +512,34 @@ static void handle_ir(uint8_t cmd) {
         return;
     }
 
-    /* Global IR commands: program switching */
+    /* Global IR commands: use the physical key labels on the Exp10 remote.
+     * Table 6-16 numbers the keys by position, not by the printed legends.
+     */
     prog_id_t new_prog = PROG_SHELL;
     switch (cmd) {
-        case 0x45: new_prog = PROG_HELLO;     break;  /* CH1 */
-        case 0x46: new_prog = PROG_MEMTEST;   break;  /* CH2 */
-        case 0x47: new_prog = PROG_CRYPTO;    break;  /* CH3 */
-        case 0x44: new_prog = PROG_SNAKE;     break;  /* CH4 */
-        case 0x43: new_prog = PROG_LIFE;      break;  /* CH5 */
-        case 0x40: new_prog = PROG_DASHBOARD; break;  /* CH6 */
-        case 0x07: new_prog = PROG_INFO;      break;  /* CH7 */
-        case 0x16:
+        case IR_BTN_0:
+        case IR_BTN_RETURN:
+            return_to_shell();
+            return; /* 0 / RETURN */
+        case IR_BTN_1: new_prog = PROG_HELLO;     break;
+        case IR_BTN_2: new_prog = PROG_MEMTEST;   break;
+        case IR_BTN_3: new_prog = PROG_CRYPTO;    break;
+        case IR_BTN_4: new_prog = PROG_SNAKE;     break;
+        case IR_BTN_5: new_prog = PROG_LIFE;      break;
+        case IR_BTN_6: new_prog = PROG_DASHBOARD; break;
+        case IR_BTN_7: new_prog = PROG_INFO;      break;
+        case IR_BTN_CH_DN:
             if (active_prog > 0) {
                 new_prog = active_prog - 1;
                 break;
             }
-            return;  /* CH- */
-        case 0x1A:
+            return;  /* CH-: prev */
+        case IR_BTN_CH_UP:
             if (active_prog < PROG_COUNT - 1) {
                 new_prog = active_prog + 1;
                 break;
             }
-            return; /* CH+ */
+            return; /* CH+: next */
         default:   return;  /* unknown key */
     }
 
@@ -514,6 +549,7 @@ static void handle_ir(uint8_t cmd) {
         enter_program(new_prog);
     }
 }
+#endif
 
 static void handle_keys(void) {
     uint32_t gpio_in = gpio_read_in();
@@ -523,6 +559,10 @@ static void handle_keys(void) {
     const program_t *prog = programs[active_prog];
 
     prev_key_bits = key_bits;
+
+    if (!global_key_hotkeys_enabled()) {
+        return;
+    }
 
     if (pressed & KEY1_MASK) {
         if (quick_prog == PROG_SHELL) {
@@ -548,16 +588,14 @@ static void handle_keys(void) {
 
 #ifndef LOCAL_BUILD
 static void handle_ir_events(void) {
-    uint32_t status = IR->status;
+    uint32_t gpio_in = gpio_read_in();
+    uint8_t ir_toggle = (uint8_t)((gpio_in >> 31) & 0x01u);
+    uint8_t ir_cmd = (uint8_t)((gpio_in >> 22) & 0xffu);
 
-    if ((status & IR_STATUS_VALID) != 0u) {
-        uint8_t cmd = (uint8_t)(IR->data & 0xffu);
-        last_ir_cmd = cmd;
-        IR->status = ~(IR_STATUS_VALID);
-        handle_ir(cmd);
-    } else if (((status & IR_STATUS_REPEAT) != 0u) && (last_ir_cmd != 0u)) {
-        IR->status = ~(IR_STATUS_REPEAT);
-        handle_ir(last_ir_cmd);
+    if (ir_toggle != prev_ir_toggle) {
+        prev_ir_toggle = ir_toggle;
+        last_ir_cmd = ir_cmd;
+        handle_ir(ir_cmd);
     }
 }
 #endif
@@ -571,6 +609,7 @@ int main(void) {
 #else
 int main(void) {
 #endif
+    gpio_write_out(0);
     board_status_init();
     vga_init();
     shell_init();
