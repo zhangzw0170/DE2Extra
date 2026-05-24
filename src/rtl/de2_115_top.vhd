@@ -578,19 +578,10 @@ begin
     gpio_in(29 downto 22) <= dbg_ir_cmd;
 
     -- ================================================================
-    -- NTT Accelerator @ 0xF000C000
+    -- NTT Accelerator @ 0xF000C000 (stubbed out in reduced-fit build)
     -- ================================================================
-    u_ntt : entity work.ntt_sdf
-    port map (
-        clk_i    => clk_50m,
-        rst_n_i  => rst_n,
-        wb_adr_i => ntt_wb_adr,
-        wb_dat_i => ntt_wb_dat_o,
-        wb_dat_o => ntt_wb_dat_i,
-        wb_we_i  => ntt_wb_we,
-        wb_stb_i => ntt_wb_stb,
-        wb_ack_o => ntt_wb_ack
-    );
+    ntt_wb_dat_i <= (others => '0');
+    ntt_wb_ack   <= ntt_wb_stb;
 
     -- LCD @ 0xF0008000 (stub — de2shell uses hardware lcd_status/lcd_debug)
     lcd_wb_dat_i <= (others => '0');
