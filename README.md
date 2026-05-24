@@ -1,188 +1,163 @@
-# DE2Extra — FPGA 全外设操作系统级项目
+# DE2Extra — NEORV32 RISC-V 全外设终端系统
 
-> NEORV32 (RISC-V) + FreeRTOS + LVGL，目标：让 DE2-115 变成一台完整的计算机
+[English](README.en.md) | 中文
 
-> **注意**：每次烧录前必须核对 QSF 中的引脚分配是否与 `FPGA/DE2-115引脚表.xlsx` 一致。引脚错误不会报编译错误，但会导致外设行为异常。
+> 让 DE2-115 开发板变成一台完整的计算机：RISC-V CPU + VGA 终端 + PS/2 键盘 + SDRAM + 密码学加速 + 课程实验多路复用
 
-## 硬件平台
+## AI 使用声明
 
-**主平台**: Terasic DE2-115 (Cyclone IV E EP4CE115F29C7)
-**移植目标**: 达芬奇 A7Pro
+本项目在开发过程中使用了以下大语言模型辅助：GLM-5.1、DeepSeek V4 Pro、GPT-5.4。所有 AI 生成内容均经过人工审查和上板验证。
 
-- **FPGA**: 114,480 LEs, 266 hardware multipliers, 4 PLLs
-- **Memory**: 128MB SDRAM, 2MB SRAM, 8MB Flash, 32Kbit EEPROM, SD card
-- **Display**: 16x2 LCD, 8x 7-segment, 27 LEDs (9G + 18R), VGA (24-bit)
-- **Comms**: 2x Gigabit Ethernet, USB 2.0 OTG, RS-232, PS/2 x2, IR
-- **Audio**: WM8731 24-bit CODEC (line-in/out, mic-in)
-- **Video**: VGA out (24-bit DAC), TV in (ADV7180 NTSC/PAL/SECAM)
-- **Clock**: 3x 50MHz, SMA in/out
-- **Input**: 4 push-buttons, 18 slide switches
-- **Expansion**: 40-pin GPIO, 172-pin HSMC, 7-pin EX_IO
+## 项目概览
 
-Full pin tables: [DE2-115_Resource_Summary.md](DE2-115_Resource_Summary.md)
-
-## 技术路线
+在 DE2-115 (Cyclone IV E) 上运行 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 软核，通过自定义 Wishbone 外设驱动板载硬件，运行裸机 C 固件实现多频道终端系统。
 
 ```
 ┌──────────────────────────────────────────────────┐
-│              LVGL 720p GUI                        │
-│         按钮、图表、动画、虚拟键盘                  │
+│  de2shell — 多频道终端 (裸机 C)                   │
+│  help / memtest / crypto / snake / life / dash   │
+│  expdemo (11 个课程实验) / monitor / ps2 / ...   │
 ├──────────────────────────────────────────────────┤
-│              FreeRTOS                             │
-│     任务调度、定时器、中断管理、IPC                 │
+│     NEORV32 RISC-V 软核 (~4000 LUTs)             │
+│     RV32IMC + Zicsr + Zicntr + Zk* 密码扩展      │
 ├──────────────────────────────────────────────────┤
-│     NEORV32 RISC-V 软核 (~2300 LUTs)             │
-│     rv32imc_Zicsr, ~50 DMIPS @50MHz              │
+│  自定义 VHDL 外设 (通用寄存器接口, 平台无关)       │
+│  VGA | PS/2 | LCD | IR | NTT | ExpDemo | ...     │
 ├──────────────────────────────────────────────────┤
-│  自定义 VHDL 外设控制器 (平台无关寄存器接口)        │
-│  VGA | PS/2 | Audio | Ethernet | UART | SD | ...  │
-├──────────────────────────────────────────────────┤
-│     FPGA 硬件 (DE2-115 / 达芬奇 A7Pro)            │
+│     DE2-115 FPGA (Cyclone IV E, 114K LEs)        │
 └──────────────────────────────────────────────────┘
 ```
 
-### CPU: NEORV32 (RISC-V)
+## 硬件平台
 
-开源 RISC-V 处理器，纯 VHDL 实现，作为 submodule 引入。
+**主平台**: Terasic DE2-115 (`EP4CE115F29C7`)
 
-- 源码: [neorv32/](neorv32/) (submodule → github.com/stnolting/neorv32)
-- ISA: RV32IMC + Zicsr + Zicntr + 自定义扩展
-- Cyclone IV 实测: ~2300 LUTs, 128 MHz fmax, 95 CoreMark
-- 自带: UART, SPI, I2C, GPIO, PWM, WDT, TRNG, JTAG debugger
-- 外部总线: Wishbone (附赠 Avalon / AXI4 桥接)
-- 工具链: RISC-V GCC (主流，永久维护)
-- 许可: MIT
+- **FPGA**: Cyclone IV E, 114,480 LEs, 266 硬件乘法器, 4 PLL
+- **存储**: 128MB SDRAM, 2MB SRAM, 8MB Flash, SD 卡槽
+- **显示**: 16×2 LCD, 8 个七段数码管, 27 个 LED (9G+18R), VGA (24-bit)
+- **通信**: RS-232, PS/2 ×2, 红外接收, USB 2.0, 千兆以太网 ×2
+- **音频**: WM8731 24-bit CODEC
+- **输入**: 4 个按键, 18 个拨码开关
 
-### 外设设计规范
+引脚参考: [`DE2-115_pin_table_backup.md`](DE2-115_pin_table_backup.md)
 
-所有自定义外设只暴露通用寄存器接口，不绑定任何总线：
+## CPU 配置
 
-```vhdl
-entity xxx_controller is
-    port (
-        clk     : in  std_logic;
-        rst     : in  std_logic;
-        -- 通用寄存器接口
-        cs      : in  std_logic;
-        wr_en   : in  std_logic;
-        rd_en   : in  std_logic;
-        addr    : in  std_logic_vector(3 downto 0);
-        wr_data : in  std_logic_vector(31 downto 0);
-        rd_data : out std_logic_vector(31 downto 0);
-        irq     : out std_logic;
-        -- 硬件引脚
-        ...
-    );
-end entity;
-```
+NEORV32 (v1.13.1) 作为 git submodule 引入。
 
-总线适配层单独写，换 CPU / 换板子只需改适配层，外设核心不动。
+- **ISA**: RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx + Zknd/Zkne/Zknh/Zksed/Zksh
+- **频率**: 50 MHz
+- **存储**: 64KB IMEM (M9K) + 16KB DMEM (M9K) + 128MB SDRAM (外部)
+- **内置外设**: UART (115200), GPIO (32-bit), TRNG, CLINT, OCD debugger
+- **密码加速**: AES, SHA-256/512, SM3/SM4 硬件指令 (Zk*)
+- **外部总线**: Wishbone, 支持 burst 传输 (cti/tag)
+- **许可**: BSD-3-Clause (submodule)
 
-### 外设模块规划
+本地修改记录: [`doc/reference/neorv32-patches.md`](doc/reference/neorv32-patches.md)
 
-| 模块           | 说明                           | 优先级 |
-| -------------- | ------------------------------ | ------ |
-| vga_controller | 720p 帧缓冲 + VGA 时序         | P0     |
-| sdram_ctrl     | SDRAM 控制器 (帧缓冲+CPU 内存) | P0     |
-| ps2_keyboard   | PS/2 键盘                      | P0     |
-| ps2_mouse      | PS/2 鼠标                      | P1     |
-| uart           | RS-232 调试串口                | P0     |
-| timer_module   | 系统定时器 (FreeRTOS 心跳)     | P0     |
-| interrupt_ctrl | 中断控制器                     | P0     |
-| spi_sd_card    | SD 卡 (存资源)                 | P1     |
-| i2c_master     | I2C (配置音频/TV芯片)          | P1     |
-| audio_i2s      | I2S 音频输出 (WM8731)          | P2     |
-| lcd_controller | HD44780 LCD                    | P2     |
-| irda_receiver  | 红外 NEC 解码                  | P2     |
-| eth_mac        | 以太网 MAC                     | P3     |
-| usb_ctrl       | USB OTG (ISP1362)              | P3     |
+## 外设模块
 
-## Conventions
+所有自定义外设使用通用寄存器接口设计，不绑定特定总线，换板只需改适配层。
 
-- HDL language: **VHDL only** (VHDL-2008 where supported)
-- File extension: `.vhd`
-- Entity/architecture in one file, file name matches entity name
-- Active-low signals suffixed `_N` (e.g. `CS_N`, `RESET_N`)
-- Clock signals prefixed `clk_` (e.g. `clk_50m`, `clk_vga`)
-- Reset signals prefixed `rst_`, active-high unless suffixed `_N`
-- One clock domain per entity; cross-domain via synchronizer components
-- Top-level entity: `de2_115_top`
+| 模块 | 地址 | 说明 | 状态 |
+|------|------|------|------|
+| `sdram_ctrl` | `0x01000000` | 128MB SDRAM 控制器, 支持 burst | ✅ |
+| `vga_text_terminal` | `0xF0000000` | 80×25 彩色文字终端, 640×480@60Hz | ✅ |
+| `ps2_controller` | `0xF0002000` | PS/2 键盘 + FIFO + 中断 | ✅ |
+| `ir_nec_wb` | `0xF0009000` | 红外 NEC 协议解码 | ✅ |
+| `lcd_status` / `lcd_wb` | `0xF0008000` | HD44780 16×2 LCD | ✅ |
+| `expdemo_wb` | `0xF000D000` | 11 个课程实验硬件多路复用 | ✅ |
+| `ntt_sdf` | `0xF000C000` | NTT 加速器 (q=3329, N=256) | 🟡 编译通过, 待上板 |
+| `timer_wb` | `0xF0004000` | 系统定时器 | 🟡 预留 |
+| `intc_wb` | `0xF0006000` | 中断控制器 | 🟡 预留 |
 
-## Directory Layout
+## 软件应用
+
+| 应用 | 说明 |
+|------|------|
+| **de2shell** | 主固件: 命令行 shell, memtest, crypto (AES/SHA/SM4+Zk*加速), snake, life, dashboard, expdemo, monitor, PS/2 |
+| **de2os** | 实验性: FreeRTOS + SDRAM 执行 + ICACHE burst |
+| **crypto_cli** | 独立密码学 CLI |
+| **hello** | Phase 0 验证: LED 跑马灯 |
+| **sdram_test** | SDRAM 诊断工具 |
+| **ps2_test** | PS/2 扫描码测试 |
+| **ir_test** | 红外解码测试 |
+
+## 目录结构
 
 ```
 DE2Extra/
-├── README.md                       # this file
-├── DE2-115_Resource_Summary.md     # full pin tables & specs
-├── neorv32/                        # NEORV32 RISC-V CPU (git submodule)
-├── src/
-│   ├── rtl/                        # synthesizable VHDL
-│   │   ├── de2_115_top.vhd         # top-level entity
-│   │   ├── periph/                 # peripheral controllers
-│   │   │   ├── vga_controller.vhd
-│   │   │   ├── sdram_ctrl.vhd
-│   │   │   ├── ps2_keyboard.vhd
-│   │   │   └── ...
-│   │   ├── bus/                    # bus adapters (Wishbone ↔ register IF)
-│   │   └── glue/                   # clock/reset/glue logic
-│   ├── sim/                        # testbenches
-│   │   └── tb_*.vhd
-│   └── ip/                         # Quartus IP cores
-├── sw/                             # software (RISC-V GCC)
-│   ├── freertos/                   # FreeRTOS port
-│   ├── lvgl/                       # LVGL port
-│   ├── drivers/                    # peripheral drivers (C)
-│   └── app/                        # application code
-├── par/                            # Quartus project files
-├── constraints/                    # pin assignments, timing (.sdc, .tcl)
-└── doc/                            # design notes, block diagrams
+├── CLAUDE.md                  # AI agent 协作指南
+├── build.sh                   # 一键构建 (Git Bash)
+├── neorv32/                   # NEORV32 RISC-V CPU (submodule)
+├── src/rtl/
+│   ├── de2_115_top.vhd        # de2shell 顶层实体
+│   ├── de2os_top.vhd          # de2os 顶层实体 (独立工程)
+│   ├── neorv32_wrapper.vhd    # CPU 配置封装
+│   ├── bus/wb_intercon.vhd    # Wishbone 互连
+│   ├── periph/                # 外设控制器
+│   ├── exp/                   # 课程实验原始/适配模块
+│   └── lib/                   # 公共包 (de2extra_pkg)
+├── sw/app/
+│   ├── de2shell/              # 主固件 (裸机多频道终端)
+│   ├── de2os/                 # FreeRTOS 固件
+│   ├── crypto_cli/            # 密码学 CLI
+│   └── ...                    # 其他测试应用
+├── par/
+│   ├── de2extra.qpf/qsf       # de2shell Quartus 工程
+│   └── de2os/                 # de2os 独立 Quartus 工程
+├── constraints/               # 引脚约束 + 时序 (.sdc)
+├── run/                       # 部署脚本
+└── doc/                       # 设计文档, 验收表, 阶段计划
 ```
 
-## Toolchain
+## 构建
 
-| Tool                       | Purpose                   |
-| -------------------------- | ------------------------- |
-| Quartus Prime 23.1std Lite | FPGA 综合, 布局布线, 编程 |
-| QuestaSim                  | VHDL 仿真                 |
-| RISC-V GCC (prebuilt)      | 软件交叉编译              |
-| OpenOCD + GDB              | JTAG 调试                 |
-| FreeRTOS                   | 实时操作系统              |
-| LVGL                       | 图形界面库                |
+### 前置条件
 
-Target device: `EP4CE115F29C7`
+- Quartus Prime 23.1std Lite
+- Docker Desktop (RISC-V 交叉编译)
+- Git Bash (Windows)
 
-## Build
+### de2shell
 
-### 首次打开项目 (必须)
+```bash
+# 一键构建 (固件 + Quartus)
+./build.sh app/de2shell
 
-NEORV32 使用 VHDL-2008 语法 (`std_ulogic`、record 类型等)，Quartus 默认是 VHDL-93，必须手动切换：
-
-1. 打开 `par/de2extra.qpf`
-2. **Assignments → Settings → Compiler Settings → VHDL Input**
-3. 改为 **VHDL 2008**
-4. 点 OK
-
-这一步只做一次，之后 Quartus 会记住设置。
-
-### 编译
-
-```
-# Hardware (Quartus)
-quartus_sh --flow compile de2extra
-
-# Software (RISC-V GCC)
-cd sw/app && make
-
-# Flash
-quartus_pgm -m jtag -o "p;output_files/de2extra.sof"
+# 烧录
+./build.sh --flash app/de2shell
 ```
 
-## Portability
+或手动分步:
 
-外设控制器设计为平台无关，移植到其他 FPGA 板只需：
+```bash
+# 1. 固件编译
+docker run --rm -v "$(pwd):/project" de2extra-builder bash -lc \
+  'export PATH=/opt/riscv/bin:$PATH; cd /project/sw/app/de2shell && make clean && make image NEORV32_HOME=/project/neorv32'
 
-1. 替换顶层引脚约束 (`constraints/`)
-2. 替换 PLL 配置 (不同板子时钟频率可能不同)
-3. 外设模块 VHDL 代码 **零修改**
+# 2. 复制 IMEM 镜像
+cp sw/app/de2shell/neorv32_imem_image.vhd src/rtl/
 
-已知移植目标：达芬奇 A7Pro
+# 3. Quartus 编译 (GUI: Ctrl+L 或 CLI)
+quartus_sh --flow compile par/de2extra -c de2extra
+```
+
+> **重要**: NEORV32 使用 VHDL-2008。首次打开工程须在 Quartus 中设置: Assignments → Settings → VHDL Input → VHDL 2008。
+
+### de2os (实验)
+
+```bash
+# 独立工程, 详见 doc/phases/de2os-debug.md
+cd par/de2os && quartus_sh --flow compile de2os
+```
+
+## 验收状态
+
+详见 [`doc/de2shell-module-acceptance.md`](doc/de2shell-module-acceptance.md)。
+
+当前: **136/156 项通过** (17 项待 VGA 显示器, 3 项待 NTT 硬件恢复)
+
+## 许可
+
+本项目代码以 [MIT License](LICENSE) 发布。NEORV32 submodule 保持其原有的 BSD-3-Clause 许可。

@@ -1,40 +1,59 @@
 # NEORV32 submodule
 neorv32/
 
-# Quartus generated
-par/db/
-par/incremental_db/
-par/output_files/
-par/greybox_tmp/
-par/*.qws
-par/*.rpt
-par/*.summary
-par/*.smsg
-par/*.done
-par/*.pin
-par/*.jdi
-par/*.sld
-par/*.sof
-par/*.pof
-par/*.jic
+# Quartus generated (all projects under par/)
+par/**/db/
+par/**/incremental_db/
+par/**/output_files/
+par/**/greybox_tmp/
+par/**/greybox_tmp/
+par/**/*.qws
+par/**/*.rpt
+par/**/*.summary
+par/**/*.smsg
+par/**/*.done
+par/**/*.pin
+par/**/*.jdi
+par/**/*.sld
+par/**/*.sof
+par/**/*.pof
+par/**/*.jic
+par/**/.qsys_edit/
+par/**/*.mif
+!par/neorv32_imem.mif
+par/**/serv_req_info.txt
 
-# Software build artifacts
-sw/app/hello/build/
-sw/app/hello/*.elf
-sw/app/hello/*.bin
-sw/app/hello/*.asm
-sw/app/hello/neorv32_exe.bin
-sw/app/hello/neorv32_raw_exe.*
-sw/app/hello/neorv32_imem_image.vhd
-sw/app/de2os/build/
-sw/app/de2os/*.elf
-sw/app/de2os/elf.bin
-sw/app/de2os/neorv32_exe.bin
-sw/app/de2os/neorv32_raw_exe.*
-sw/app/de2os/neorv32_imem_image.vhd
+# Quartus IP generated files (not source)
+*.qip
+*.cmp
+*.ppf
+
+# Software build artifacts (all apps)
+sw/app/*/build/
+sw/app/*/*.elf
+sw/app/*/*.bin
+sw/app/*/elf.bin
+sw/app/*/neorv32_exe.bin
+sw/app/*/neorv32_raw_exe.*
+sw/app/*/neorv32_imem_image.vhd
+sw/app/**/*.o
+sw/app/**/*.d
+*.asm
+
+# SDL2 runtime DLL
+*.dll
 
 # Docker toolchain tarball
 sw/riscv-gcc.tar.gz
+
+# CodeGraph index
+.codegraph/
+
+# Logs
+logs/
+
+# Run-time artifacts
+run/*.pid
 
 # Simulation
 *.wlf
