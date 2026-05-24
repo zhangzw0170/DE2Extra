@@ -257,7 +257,11 @@ begin
         CLOCK_FREQUENCY => 50_000_000,
         IMEM_SIZE       => 64*1024,
         DMEM_SIZE       => 16*1024,
-        BOOT_MODE       => 2
+        BOOT_MODE       => 0,
+        ICACHE_EN       => true,
+        ICACHE_BLOCKS   => 64,
+        ICACHE_BLOCK_SZ => 32,
+        ICACHE_BURSTS   => false
     )
     port map (
         clk_i       => clk_50m,
@@ -436,19 +440,9 @@ begin
     );
 
     -- ================================================================
-    -- NTT Accelerator @ 0xF000C000
-    -- ================================================================
-    u_ntt : entity work.ntt_sdf
-    port map (
-        clk_i     => clk_50m,
-        rst_n_i   => rst_n,
-        wb_adr_i  => ntt_wb_adr,
-        wb_dat_i  => ntt_wb_dat_o,
-        wb_dat_o  => ntt_wb_dat_i,
-        wb_we_i   => ntt_wb_we,
-        wb_stb_i  => ntt_wb_stb,
-        wb_ack_o  => ntt_wb_ack
-    );
+    -- NTT Accelerator @ 0xF000C000 (disabled — ntt_sdf has synthesis errors)
+    ntt_wb_dat_i <= (others => '0');
+    ntt_wb_ack   <= '0';
 
     -- ================================================================
     -- GPIO -> LED 映射

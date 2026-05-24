@@ -15,7 +15,11 @@ entity neorv32_wrapper is
         CLOCK_FREQUENCY : natural := 50_000_000;
         IMEM_SIZE       : natural := 32*1024;   -- 指令内存 (bytes, power of 2)
         DMEM_SIZE       : natural := 16*1024;   -- 数据内存 (bytes, power of 2)
-        BOOT_MODE       : natural := 2          -- 0=bootloader, 2=IMEM image
+        BOOT_MODE       : natural := 2;         -- 0=bootloader, 2=IMEM image
+        ICACHE_EN       : boolean := false;     -- enable instruction cache for SDRAM exec
+        ICACHE_BLOCKS   : natural := 64;        -- i-cache number of blocks (power of 2)
+        ICACHE_BLOCK_SZ : natural := 32;        -- i-cache block size in bytes (power of 2)
+        ICACHE_BURSTS   : boolean := false      -- i-cache burst reads (needs burst-capable bus)
     );
     port (
         -- Clock and reset
@@ -154,7 +158,10 @@ begin
         DMEM_OUTREG_EN       => false,
 
         -- Cache --
-        ICACHE_EN            => false,   -- Phase 0 不需要
+        ICACHE_EN            => ICACHE_EN,
+        ICACHE_NUM_BLOCKS    => ICACHE_BLOCKS,
+        CACHE_BLOCK_SIZE     => ICACHE_BLOCK_SZ,
+        CACHE_BURSTS_EN      => ICACHE_BURSTS,
         DCACHE_EN            => false,
 
         -- XBUS --
