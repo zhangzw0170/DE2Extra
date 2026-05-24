@@ -1,52 +1,74 @@
-/* t_crypto.c — Crypto accelerator task (stub: periodic benchmark) */
+/* t_crypto.c -- crypto worker task */
 
 #include <neorv32.h>
+#include <stdint.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 
-extern QueueHandle_t xCryptoQueue;
+#include "de2os_hal.h"
+#include "de2os_state.h"
 
-/* Simple SW NTT for testing (N=4, q=13) — just to have crypto work to do */
 static uint16_t modmul(uint16_t a, uint16_t b, uint16_t q) {
     uint32_t p = (uint32_t)a * b;
     return (uint16_t)(p % q);
 }
 
-static void put_hex(uint32_t v) {
-    static const char hex[] = "0123456789abcdef";
-    char buf[9];
-    for (int i = 7; i >= 0; i--) {
-        buf[7 - i] = hex[(v >> (i * 4)) & 0xf];
+static uint32_t run_soft_benchmark(void) {
+    uint32_t t0 = neorv32_cpu_get_cycle();
+    volatile uint16_t acc = 1u;
+    int i;
+
+    for (i = 0; i < 1000; i++) {
+        acc = modmul(acc, 17u, 3329u);
     }
-    buf[8] = '\0';
-    neorv32_uart0_puts(buf);
+
+    (void)acc;
+    return neorv32_cpu_get_cycle() - t0;
 }
 
 void t_crypto_task(void *pv) {
     (void)pv;
-    TickType_t wake = xTaskGetTickCount();
-    uint32_t iter = 0;
+    uint32_t iter = 0u;
 
     neorv32_uart0_puts("[crypto] started\n");
 
     for (;;) {
-        uint32_t t0 = neorv32_cpu_get_cycle();
+        crypto_msg_t msg;
+        uint32_t cycles;
 
-        volatile uint16_t acc = 1;
-        for (int i = 0; i < 1000; i++) {
-            acc = modmul(acc, 17, 3329);
+        if (g_crypto_reset_request != 0u) {
+            iter = 0u;
+            g_crypto_iterations = 0u;
+            g_crypto_last_cycles = 0u;
+            g_crypto_reset_request = 0u;
         }
 
-        uint32_t t1 = neorv32_cpu_get_cycle();
-        (void)acc;
+        if ((g_crypto_enabled == 0u) && (g_crypto_single_shot_request == 0u)) {
+            vTaskDelay(pdMS_TO_TICKS(100));
+            continue;
+        }
+
+        cycles = run_soft_benchmark();
+        iter++;
+        g_crypto_iterations = iter;
+        g_crypto_last_cycles = cycles;
+        g_crypto_single_shot_request = 0u;
+
+        msg.msg_type = CRYPTO_MSG_RESULT;
+        msg.reserved0 = 0u;
+        msg.reserved1 = 0u;
+        msg.reserved2 = 0u;
+        msg.cycles = cycles;
+        msg.iteration = iter;
+        (void)xQueueSend(xCryptoQueue, &msg, 0);
 
         neorv32_uart0_puts("[crypto] #");
-        put_hex(iter++);
+        de2os_uart_put_hex(iter);
         neorv32_uart0_puts(" cycles=");
-        put_hex(t1 - t0);
+        de2os_uart_put_hex(cycles);
         neorv32_uart0_puts("\n");
 
-        vTaskDelayUntil(&wake, pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS((g_crypto_enabled != 0u) ? 1000 : 100));
     }
 }

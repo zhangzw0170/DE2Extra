@@ -113,6 +113,32 @@ void sm3_hash(const uint8_t *data, size_t len, uint8_t digest[SM3_DIGEST_SIZE]);
   void  trng_bytes(uint8_t *buf, int n);
 #endif
 
+/* ── Zk* Hardware-Accelerated Versions (NEORV32 only) ──────── */
+
+#ifndef LOCAL_BUILD
+
+void aes128_key_expand_zkn(const uint8_t key[AES128_KEY_SIZE],
+                          uint32_t rk[4 * (AES128_NR + 1)]);
+void aes128_enc_block_zkn(const uint8_t pt[AES_BLOCK_SIZE],
+                          const uint32_t rk[4 * (AES128_NR + 1)],
+                          uint8_t ct[AES_BLOCK_SIZE]);
+void aes128_dec_block_zkn(const uint8_t ct[AES_BLOCK_SIZE],
+                          const uint32_t rk[4 * (AES128_NR + 1)],
+                          uint8_t pt[AES_BLOCK_SIZE]);
+
+void sha256_hash_zkn(const uint8_t *data, size_t len,
+                     uint8_t digest[SHA256_DIGEST_SIZE]);
+void sha512_hash_zkn(const uint8_t *data, size_t len,
+                     uint8_t digest[SHA512_DIGEST_SIZE]);
+
+void sm4_key_schedule_zks(const uint8_t key[SM4_KEY_SIZE], uint32_t rk[SM4_NR]);
+void sm4_encrypt_zks(const uint8_t pt[SM4_BLOCK_SIZE], const uint32_t rk[SM4_NR],
+                      uint8_t ct[SM4_BLOCK_SIZE]);
+void sm3_hash_zks(const uint8_t *data, size_t len,
+                  uint8_t digest[SM3_DIGEST_SIZE]);
+
+#endif /* LOCAL_BUILD */
+
 /* ── Utility ──────────────────────────────────────────────────── */
 
 #ifdef LOCAL_BUILD

@@ -306,23 +306,210 @@ void sha512_hash(const uint8_t *data, size_t len, uint8_t digest[SHA512_DIGEST_S
     sha512_final(&ctx, digest);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+ * SHA-256 Zk* Hardware Acceleration
+ * ═══════════════════════════════════════════════════════════════ */
+
+#ifndef LOCAL_BUILD
+#include "crypto_zk.h"
+
+static void sha256_transform_zkn(uint32_t state[8], const uint8_t block[64]) {
+    uint32_t w[64];
+    int t;
+
+    for (t = 0; t < 16; t++) {
+        w[t] = bswap32(((uint32_t)block[t*4]) |
+                       ((uint32_t)block[t*4+1] << 8) |
+                       ((uint32_t)block[t*4+2] << 16) |
+                       ((uint32_t)block[t*4+3] << 24));
+    }
+    for (t = 16; t < 64; t++) {
+        uint32_t s0 = zk_sha256sig0(w[t-15]);
+        uint32_t s1 = zk_sha256sig1(w[t-2]);
+        w[t] = w[t-16] + s0 + w[t-7] + s1;
+    }
+
+    uint32_t a = state[0], b = state[1], c = state[2], d = state[3];
+    uint32_t e = state[4], f = state[5], g = state[6], h = state[7];
+
+    for (t = 0; t < 64; t++) {
+        uint32_t S1    = zk_sha256sum1(e);
+        uint32_t ch    = (e & f) ^ ((~e) & g);
+        uint32_t temp1 = h + S1 + ch + sha256_k[t] + w[t];
+        uint32_t S0    = zk_sha256sum0(a);
+        uint32_t maj   = (a & b) ^ (a & c) ^ (b & c);
+        uint32_t temp2 = S0 + maj;
+
+        h = g;  g = f;  f = e;
+        e = d + temp1;
+        d = c;  c = b;  b = a;
+        a = temp1 + temp2;
+    }
+
+    state[0] += a;  state[1] += b;  state[2] += c;  state[3] += d;
+    state[4] += e;  state[5] += f;  state[6] += g;  state[7] += h;
+}
+
+void sha256_hash_zkn(const uint8_t *data, size_t len,
+                     uint8_t digest[SHA256_DIGEST_SIZE]) {
+    sha256_ctx_t ctx;
+    sha256_init(&ctx);
+
+    ctx.count += (uint64_t)len * 8;
+
+    while (len > 0) {
+        size_t space = SHA256_BLOCK_SIZE - ctx.buf_len;
+        size_t copy  = (len < space) ? len : space;
+        memcpy(ctx.buf + ctx.buf_len, data, copy);
+        ctx.buf_len += (uint32_t)copy;
+        data += copy;
+        len  -= copy;
+
+        if (ctx.buf_len == SHA256_BLOCK_SIZE) {
+            sha256_transform_zkn(ctx.state, ctx.buf);
+            ctx.buf_len = 0;
+        }
+    }
+
+    /* Padding */
+    uint64_t bit_count = ctx.count;
+    ctx.buf[ctx.buf_len++] = 0x80;
+    if (ctx.buf_len > 56) {
+        memset(ctx.buf + ctx.buf_len, 0, SHA256_BLOCK_SIZE - ctx.buf_len);
+        sha256_transform_zkn(ctx.state, ctx.buf);
+        ctx.buf_len = 0;
+    }
+    memset(ctx.buf + ctx.buf_len, 0, 56 - ctx.buf_len);
+    for (int i = 0; i < 8; i++)
+        ctx.buf[56 + i] = (bit_count >> (56 - i*8)) & 0xFF;
+
+    sha256_transform_zkn(ctx.state, ctx.buf);
+
+    for (int i = 0; i < 8; i++) {
+        uint32_t w = ctx.state[i];
+        digest[i*4]   = (w >> 24) & 0xFF;
+        digest[i*4+1] = (w >> 16) & 0xFF;
+        digest[i*4+2] = (w >>  8) & 0xFF;
+        digest[i*4+3] =  w        & 0xFF;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * SHA-512 Zk* Hardware Acceleration (RV32 — 64-bit via high/low pairs)
+ * ═══════════════════════════════════════════════════════════════ */
+
 /*
- * ── NEORV32 Zknh Hardware Acceleration Notes ────────────────────
+ * On RV32, 64-bit values are split into (high, low) 32-bit halves.
+ * The Zknh SHA-512 instructions operate on these pairs:
  *
- * On NEORV32 target, the SHA-256 round functions can use:
- *   sha256sig0 rd, rs1   — σ0 for message schedule (rotr 7,18, shr 3)
- *   sha256sig1 rd, rs1   — σ1 for message schedule (rotr 17,19, shr 10)
- *   sha256sum0 rd, rs1   — Σ0 for compression   (rotr 2,13,22)
- *   sha256sum1 rd, rs1   — Σ1 for compression   (rotr 6,11,25)
+ *   sig0(x) = rotr64(x,1) ^ rotr64(x,8) ^ (x >> 7)
+ *     → sig0h(x_hi, x_lo) = rotr32(x_hi, 1) ^ x_lo >> 8
+ *     → sig0l(x_hi, x_lo) = rotr32(x_lo, 8) ^ x_hi << 24 ^ x_lo >> 7 ^ x_hi >> 8
+ *     But the instruction returns the full 32-bit partial, so:
+ *       sig0h = sha512sig0h(x_hi, x_lo)  — upper bits of the result
+ *       sig0l = sha512sig0l(x_hi, x_lo)  — lower bits of the result
  *
- * SHA-512 uses separate high/low instructions:
- *   sha512sig0h rd, rs1, rs2 — σ0 high bits
- *   sha512sig0l rd, rs1, rs2 — σ0 low bits
- *   sha512sig1h rd, rs1, rs2 — σ1 high bits
- *   sha512sig1l rd, rs1, rs2 — σ1 low bits
- *   sha512sum0r rd, rs1, rs2 — Σ0 (64→32): part of the operation
- *   sha512sum1r rd, rs1, rs2 — Σ1 (64→32): part of the operation
- *
- * These use opcode 0x33 (OP) or 0x3B (OP-32), funct3, funct7 per the
- * RISC-V Scalar Cryptography specification.
+ * Similarly for sig1, sum0r, sum1r.
  */
+
+static void sha512_transform_zkn(uint64_t state[8], const uint8_t block[128]) {
+    uint64_t w[80];
+    int t;
+
+    for (t = 0; t < 16; t++) {
+        w[t] = ((uint64_t)block[t*8]   << 56) |
+               ((uint64_t)block[t*8+1] << 48) |
+               ((uint64_t)block[t*8+2] << 40) |
+               ((uint64_t)block[t*8+3] << 32) |
+               ((uint64_t)block[t*8+4] << 24) |
+               ((uint64_t)block[t*8+5] << 16) |
+               ((uint64_t)block[t*8+6] <<  8) |
+               ((uint64_t)block[t*8+7]);
+    }
+    for (t = 16; t < 80; t++) {
+        uint32_t w15h = (uint32_t)(w[t-15] >> 32), w15l = (uint32_t)w[t-15];
+        uint32_t w2h  = (uint32_t)(w[t-2]  >> 32), w2l  = (uint32_t)w[t-2];
+        uint64_t s0 = ((uint64_t)zk_sha512sig0h(w15h, w15l) << 32) |
+                      zk_sha512sig0l(w15h, w15l);
+        uint64_t s1 = ((uint64_t)zk_sha512sig1h(w2h, w2l) << 32) |
+                      zk_sha512sig1l(w2h, w2l);
+        w[t] = w[t-16] + s0 + w[t-7] + s1;
+    }
+
+    uint64_t a = state[0], b = state[1], c = state[2], d = state[3];
+    uint64_t e = state[4], f = state[5], g = state[6], h = state[7];
+
+    for (t = 0; t < 80; t++) {
+        uint32_t eh = (uint32_t)(e >> 32), el = (uint32_t)e;
+        uint32_t ah = (uint32_t)(a >> 32), al = (uint32_t)a;
+
+        uint64_t S1 = ((uint64_t)zk_sha512sum1r(eh, el) << 32) |
+                      zk_sha512sum1r(el, eh);
+        uint64_t ch = (e & f) ^ ((~e) & g);
+        uint64_t temp1 = h + S1 + ch + sha512_k[t] + w[t];
+        uint64_t S0 = ((uint64_t)zk_sha512sum0r(ah, al) << 32) |
+                      zk_sha512sum0r(al, ah);
+        uint64_t maj = (a & b) ^ (a & c) ^ (b & c);
+        uint64_t temp2 = S0 + maj;
+
+        h = g;  g = f;  f = e;
+        e = d + temp1;
+        d = c;  c = b;  b = a;
+        a = temp1 + temp2;
+    }
+
+    state[0] += a;  state[1] += b;  state[2] += c;  state[3] += d;
+    state[4] += e;  state[5] += f;  state[6] += g;  state[7] += h;
+}
+
+void sha512_hash_zkn(const uint8_t *data, size_t len,
+                     uint8_t digest[SHA512_DIGEST_SIZE]) {
+    sha512_ctx_t ctx;
+    sha512_init(&ctx);
+
+    uint64_t bits = (uint64_t)len * 8;
+    ctx.count_low += bits;
+    if (ctx.count_low < bits) ctx.count_high++;
+
+    while (len > 0) {
+        size_t space = SHA512_BLOCK_SIZE - ctx.buf_len;
+        size_t copy  = (len < space) ? len : space;
+        memcpy(ctx.buf + ctx.buf_len, data, copy);
+        ctx.buf_len += (uint32_t)copy;
+        data += copy;
+        len  -= copy;
+
+        if (ctx.buf_len == SHA512_BLOCK_SIZE) {
+            sha512_transform_zkn(ctx.state, ctx.buf);
+            ctx.buf_len = 0;
+        }
+    }
+
+    ctx.buf[ctx.buf_len++] = 0x80;
+    if (ctx.buf_len > 112) {
+        memset(ctx.buf + ctx.buf_len, 0, SHA512_BLOCK_SIZE - ctx.buf_len);
+        sha512_transform_zkn(ctx.state, ctx.buf);
+        ctx.buf_len = 0;
+    }
+    memset(ctx.buf + ctx.buf_len, 0, 112 - ctx.buf_len);
+    for (int i = 0; i < 8; i++) {
+        ctx.buf[112 + i] = (ctx.count_high >> (56 - i*8)) & 0xFF;
+        ctx.buf[120 + i] = (ctx.count_low  >> (56 - i*8)) & 0xFF;
+    }
+
+    sha512_transform_zkn(ctx.state, ctx.buf);
+
+    for (int i = 0; i < 8; i++) {
+        uint64_t w = ctx.state[i];
+        digest[i*8]   = (w >> 56) & 0xFF;
+        digest[i*8+1] = (w >> 48) & 0xFF;
+        digest[i*8+2] = (w >> 40) & 0xFF;
+        digest[i*8+3] = (w >> 32) & 0xFF;
+        digest[i*8+4] = (w >> 24) & 0xFF;
+        digest[i*8+5] = (w >> 16) & 0xFF;
+        digest[i*8+6] = (w >>  8) & 0xFF;
+        digest[i*8+7] =  w        & 0xFF;
+    }
+}
+
+#endif /* LOCAL_BUILD */

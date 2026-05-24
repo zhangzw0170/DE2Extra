@@ -1,8 +1,8 @@
 # DE2Extra — Hello World Makefile
 # 复用 NEORV32 软件框架
 
-# RISC-V ISA: IMC + Zfinx + Zicntr + Zbkb + Zbkc + Zbkx + Zknd + Zkne + Zknh + Zksed + Zksh
-MARCH = rv32imc_zicsr_zicntr_zifencei_zfinx_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_zksh
+# RISC-V ISA: IMC + Zicntr + Zbkb + Zbkc + Zbkx + Zknd + Zkne + Zknh + Zksed + Zksh
+MARCH = rv32imc_zicsr_zicntr_zifencei_zbkb_zbkc_zbkx_zknd_zkne_zknh_zksed_zksh
 MABI  = ilp32
 EFFORT = -Os
 

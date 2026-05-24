@@ -315,17 +315,183 @@ void sm3_hash(const uint8_t *data, size_t len, uint8_t digest[SM3_DIGEST_SIZE]) 
     sm3_final(&ctx, digest);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+ * SM4 Zks* Hardware Acceleration
+ * ═══════════════════════════════════════════════════════════════ */
+
+#ifndef LOCAL_BUILD
+#include "crypto_zk.h"
+
 /*
- * ── NEORV32 Zksed/Zksh Hardware Acceleration Notes ──────────────
+ * sm4ed rd, rs1, rs2, bs — one byte of τ + partial L:
+ *   rd = rs1 ^ (L_partial ^ rol32(sbox(byte_bs(rs2)), bs*8))
+ * sm4ks rd, rs1, rs2, bs — one byte of τ + partial L':
+ *   rd = rs1 ^ (L'_partial ^ rol32(sbox(byte_bs(rs2)), bs*8))
  *
- * SM4:
- *   sm4ed  rd, rs1, rs2, bs — SM4 encrypt/decrypt round
- *   sm4ks  rd, rs1, rs2, bs — SM4 key schedule round
- *
- * SM3:
- *   sm3p0  rd, rs1 — SM3 P0 permutation
- *   sm3p1  rd, rs1 — SM3 P1 permutation
- *
- * These use opcode 0x33 (OP) with funct3=0x1 for SM4, funct3=0x2 for SM3.
- * The bs immediate selects the byte lane for SM4 instructions.
+ * Pattern: accumulate 4 bs values (0..3) per round word.
+ * L = x ^ rotl(x,2) ^ rotl(x,10) ^ rotl(x,18) ^ rotl(x,24)
+ *   emerges from the 4 partial L results XORed together.
  */
+
+static uint32_t sm4_ed_zk(uint32_t src, uint32_t x, uint32_t rk_val) {
+    uint32_t b = 0;
+    b ^= zk_sm4ed(0, x, 0);
+    b ^= zk_sm4ed(0, x, 1);
+    b ^= zk_sm4ed(0, x, 2);
+    b ^= zk_sm4ed(0, x, 3);
+    return src ^ b ^ rk_val;
+}
+
+static uint32_t sm4_ks_zk(uint32_t x, uint32_t ck_val) {
+    uint32_t b = 0;
+    b ^= zk_sm4ks(0, x, 0);
+    b ^= zk_sm4ks(0, x, 1);
+    b ^= zk_sm4ks(0, x, 2);
+    b ^= zk_sm4ks(0, x, 3);
+    return b ^ ck_val;
+}
+
+void sm4_key_schedule_zks(const uint8_t key[SM4_KEY_SIZE], uint32_t rk[SM4_NR]) {
+    uint32_t k[36];
+
+    for (int i = 0; i < 4; i++) {
+        k[i] = ((uint32_t)key[4*i]   << 24) |
+               ((uint32_t)key[4*i+1] << 16) |
+               ((uint32_t)key[4*i+2] <<  8) |
+               ((uint32_t)key[4*i+3]) ^ sm4_fk[i];
+    }
+
+    for (int i = 0; i < 32; i++)
+        k[i+4] = k[i] ^ sm4_ks_zk(k[i+1] ^ k[i+2] ^ k[i+3], sm4_ck[i]);
+
+    for (int i = 0; i < 32; i++)
+        rk[i] = k[i+4];
+}
+
+void sm4_encrypt_zks(const uint8_t pt[SM4_BLOCK_SIZE], const uint32_t rk[SM4_NR],
+                     uint8_t ct[SM4_BLOCK_SIZE]) {
+    uint32_t x[36];
+
+    for (int i = 0; i < 4; i++) {
+        x[i] = ((uint32_t)pt[4*i]   << 24) |
+               ((uint32_t)pt[4*i+1] << 16) |
+               ((uint32_t)pt[4*i+2] <<  8) |
+               ((uint32_t)pt[4*i+3]);
+    }
+
+    for (int i = 0; i < 32; i++)
+        x[i+4] = sm4_ed_zk(x[i], x[i+1] ^ x[i+2] ^ x[i+3], rk[i]);
+
+    for (int i = 0; i < 4; i++) {
+        uint32_t w = x[35 - i];
+        ct[4*i]   = (w >> 24) & 0xFF;
+        ct[4*i+1] = (w >> 16) & 0xFF;
+        ct[4*i+2] = (w >>  8) & 0xFF;
+        ct[4*i+3] =  w        & 0xFF;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * SM3 Zksh Hardware Acceleration
+ * ═══════════════════════════════════════════════════════════════ */
+
+/*
+ * sm3p0 rd, rs1 — P0(x) = x ^ rotl(x,9) ^ rotl(x,17)
+ * sm3p1 rd, rs1 — P1(x) = x ^ rotl(x,15) ^ rotl(x,23)
+ *
+ * P1 replaces sm3_p1() in message expansion (W[16..67]).
+ * P0 replaces sm3_p0() in compression (e = P0(tt2)).
+ */
+
+static void sm3_compress_zkn(uint32_t state[8], const uint8_t block[64]) {
+    uint32_t w[68], w1[64];
+
+    for (int t = 0; t < 16; t++) {
+        w[t] = ((uint32_t)block[t*4]   << 24) |
+               ((uint32_t)block[t*4+1] << 16) |
+               ((uint32_t)block[t*4+2] <<  8) |
+               ((uint32_t)block[t*4+3]);
+    }
+
+    for (int t = 16; t < 68; t++) {
+        w[t] = zk_sm3p1(w[t-16] ^ w[t-9] ^ rotl32(w[t-3], 15))
+             ^ rotl32(w[t-13], 7) ^ w[t-6];
+    }
+
+    for (int t = 0; t < 64; t++)
+        w1[t] = w[t] ^ w[t+4];
+
+    uint32_t a = state[0], b = state[1], c = state[2], d = state[3];
+    uint32_t e = state[4], f = state[5], g = state[6], h = state[7];
+
+    for (int j = 0; j < 64; j++) {
+        uint32_t ss1 = rotl32(rotl32(a, 12) + e + rotl32(sm3_tj(j), j % 32), 7);
+        uint32_t ss2 = ss1 ^ rotl32(a, 12);
+        uint32_t tt1, tt2;
+
+        if (j < 16) {
+            tt1 = sm3_ff0(a, b, c) + d + ss2 + w1[j];
+            tt2 = sm3_gg0(e, f, g) + h + ss1 + w[j];
+        } else {
+            tt1 = sm3_ff1(a, b, c) + d + ss2 + w1[j];
+            tt2 = sm3_gg1(e, f, g) + h + ss1 + w[j];
+        }
+
+        d = c;
+        c = rotl32(b, 9);
+        b = a;
+        a = tt1;
+        h = g;
+        g = rotl32(f, 19);
+        f = e;
+        e = zk_sm3p0(tt2);   /* was: sm3_p0(tt2) */
+    }
+
+    state[0] ^= a;  state[1] ^= b;  state[2] ^= c;  state[3] ^= d;
+    state[4] ^= e;  state[5] ^= f;  state[6] ^= g;  state[7] ^= h;
+}
+
+void sm3_hash_zks(const uint8_t *data, size_t len,
+                  uint8_t digest[SM3_DIGEST_SIZE]) {
+    sm3_ctx_t ctx;
+    sm3_init(&ctx);
+
+    ctx.count += (uint64_t)len * 8;
+
+    while (len > 0) {
+        size_t space = SM3_BLOCK_SIZE - ctx.buf_len;
+        size_t copy  = (len < space) ? len : space;
+        memcpy(ctx.buf + ctx.buf_len, data, copy);
+        ctx.buf_len += (uint32_t)copy;
+        data += copy;
+        len  -= copy;
+
+        if (ctx.buf_len == SM3_BLOCK_SIZE) {
+            sm3_compress_zkn(ctx.state, ctx.buf);
+            ctx.buf_len = 0;
+        }
+    }
+
+    uint64_t bit_count = ctx.count;
+    ctx.buf[ctx.buf_len++] = 0x80;
+    if (ctx.buf_len > 56) {
+        memset(ctx.buf + ctx.buf_len, 0, SM3_BLOCK_SIZE - ctx.buf_len);
+        sm3_compress_zkn(ctx.state, ctx.buf);
+        ctx.buf_len = 0;
+    }
+    memset(ctx.buf + ctx.buf_len, 0, 56 - ctx.buf_len);
+    for (int i = 0; i < 8; i++)
+        ctx.buf[56 + i] = (bit_count >> (56 - i*8)) & 0xFF;
+
+    sm3_compress_zkn(ctx.state, ctx.buf);
+
+    for (int i = 0; i < 8; i++) {
+        uint32_t w = ctx.state[i];
+        digest[i*4]   = (w >> 24) & 0xFF;
+        digest[i*4+1] = (w >> 16) & 0xFF;
+        digest[i*4+2] = (w >>  8) & 0xFF;
+        digest[i*4+3] =  w        & 0xFF;
+    }
+}
+
+#endif /* LOCAL_BUILD */

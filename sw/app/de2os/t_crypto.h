@@ -1,4 +1,4 @@
-/* t_crypto.h — Crypto accelerator task */
+/* t_crypto.h -- crypto worker task */
 
 #ifndef T_CRYPTO_H
 #define T_CRYPTO_H

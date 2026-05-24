@@ -1,57 +1,73 @@
 /*
- * DE2Extra — Hello World + LED 闪烁心跳
+ * DE2Extra — Phase 0 验证程序
  *
- * Phase 0 验证程序:
- *   - LEDR[0..17] 循环流水灯
- *   - 七段管显示递增计数器 (GPIO[19:4])
- *   - UART 输出 "DE2Extra alive!"
+ * 功能:
+ *   - LEDR[15:0]: 16-bit 跑马灯, 1秒跑完一轮
+ *   - HEX3-0: 实时显示 LEDR[15:0] 的十六进制值
+ *   - HEX7-6: 秒计数器 (00~FF, 每秒 +1)
+ *   - HEX5-4: 始终显示 00
+ *   - LEDG[7:0]: 秒计数器的二进制表示
+ *   - LEDG[8]: 复位指示灯
+ *   - UART 输出启动信息 + 定期心跳
  *
- * NEORV32 boot mode 2: 程序烧入 IMEM image, 上电即跑。
+ * GPIO 位段分配 (32 位, 无重叠):
+ *   [15:0]  → LEDR[15:0] + seg7_mapper → HEX0-3
+ *   [23:16] → LEDG[7:0] + seg7_mapper → HEX4-5 (秒计数器)
+ *   [31:24] → 保留给 lcd_status 协议 (必须为 0)
  */
 #include <neorv32.h>
 
 #define BAUD_RATE 115200
 
+/*
+ * 延时常量: 16 LEDs × ~62.5ms/LED ≈ 1s 一轮
+ * RV32IMC -Os 每次循环约 4 cycles × 20ns = 80ns
+ * 62.5ms / 80ns ≈ 781250, 取 800000
+ */
+#define DELAY_PER_LED 50000
+
 int main(void) {
-    /* 安装安全异常处理器 */
     neorv32_rte_setup();
 
-    /* 初始化 UART0 */
     neorv32_uart0_setup(BAUD_RATE, 0);
     neorv32_uart0_puts("\n");
     neorv32_uart0_puts("========================================\n");
     neorv32_uart0_puts("  DE2Extra — NEORV32 RISC-V alive!\n");
-    neorv32_uart0_puts("  CPU: RV32IMC + Zfinx + Zk*\n");
+    neorv32_uart0_puts("  CPU: RV32IMC + Zk*\n");
     neorv32_uart0_puts("  Board: DE2-115 (Cyclone IV E)\n");
     neorv32_uart0_puts("========================================\n");
 
-    /* GPIO: 全部 32 位输出 (低 18 位 → LEDR, 高 16 位 → HEX) */
     neorv32_gpio_dir_set(0xFFFFFFFF);
 
-    uint32_t counter = 0;
+    uint32_t led_idx = 0;
+    uint32_t seconds = 0;
 
     while (1) {
-        /* LED 流水灯: GPIO[17:0] */
-        uint32_t led_pattern = 1 << (counter % 18);
+        /* LED 跑马灯: 单 bit 左移循环 */
+        uint32_t led_pattern = 1u << led_idx;
 
-        /* 七段管计数器: GPIO[31:16], 与 LEDR 不重叠 */
-        uint32_t hex_counter = (counter >> 4) & 0xFFFF;
+        /* 组合 GPIO 输出:
+         *   [15:0]  = led_pattern  → LEDR + HEX0-3
+         *   [23:16] = seconds      → LEDG[7:0] 二进制 + HEX4-5
+         *   [31:24] = 0            → lcd_status 保持 TESTING
+         */
+        neorv32_gpio_port_set(led_pattern
+                            | (seconds << 16));
 
-        /* 一次写入: LED (低18位) + HEX (高16位) */
-        neorv32_gpio_port_set(led_pattern | (hex_counter << 16));
+        led_idx++;
+        if (led_idx >= 16) {
+            led_idx = 0;
+            seconds++;
+        }
 
-        counter++;
-
-        /* 简单延时 (~10ms @50MHz) */
-        for (volatile int d = 0; d < 250000; d++) {
+        for (volatile int d = 0; d < DELAY_PER_LED; d++) {
             /* busy wait */
         }
 
-        /* 每 256 次循环输出一次心跳 */
-        if ((counter & 0xFF) == 0) {
+        if ((seconds & 0x0F) == 0) {
             neorv32_uart0_puts("tick ");
         }
     }
 
-    return 0;  /* never reached */
+    return 0;
 }

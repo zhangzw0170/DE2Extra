@@ -281,3 +281,158 @@ void aes128_dec_block(const uint8_t ct[AES_BLOCK_SIZE],
  *                 : "=r"(result) : "r"(rs1), "r"(rs2));
  *   // funct7=0x27 for aes32esmi, bs encoded in rs2 bits [1:0]
  */
+
+#ifndef LOCAL_BUILD
+#include "crypto_zk.h"
+
+/*
+ * AES-32 qround pattern (from Linux kernel arch/riscv/crypto/aes32-core.S):
+ *
+ *   aes32esmi o0, o0, i0, 0   — output word depends on input word + bs
+ *   aes32esmi o1, o1, i1, 1
+ *   aes32esmi o2, o2, i2, 2
+ *   aes32esmi o3, o3, i3, 3
+ *
+ * Each output word oX is a serial accumulation: it reads the current oX
+ * and the corresponding input word iX at byte-select bs. The instruction
+ * internally does: oX = oX ^ rol32(MC(SB(byte bs of iX)), bs*8).
+ * MixColumns emerges from the serial chain (4 partial column products
+ * from bs=0..3 XOR together to form one column).
+ *
+ * ShiftRows is handled by the bs field: byte bs of input word iX is
+ * extracted, SubBytes'd, MixColumn'd, then rotated left by bs*8 bits
+ * before XOR into oX — the rotation places it in the correct row position.
+ *
+ * For AddRoundKey we XOR the key word into oX after the chain.
+ *
+ * aes32esi (final round) is identical but without MixColumn — only
+ * SubBytes + ShiftRows + XOR.
+ */
+
+/* ── AES-128 Key Expansion (Zkne) ──────────────────────────────── */
+
+void aes128_key_expand_zkn(const uint8_t key[AES128_KEY_SIZE],
+                          uint32_t rk[4 * (AES128_NR + 1)]) {
+    int i;
+
+    for (i = 0; i < AES128_NK; i++) {
+        rk[i] = ((uint32_t)key[4*i]   << 24) |
+                ((uint32_t)key[4*i+1] << 16) |
+                ((uint32_t)key[4*i+2] <<  8) |
+                ((uint32_t)key[4*i+3]);
+    }
+
+    for (i = AES128_NK; i < 4 * (AES128_NR + 1); i++) {
+        uint32_t temp = rk[i - 1];
+        if (i % AES128_NK == 0) {
+            /* RotWord: rotate 32-bit word left by 8 bits */
+            uint32_t rot = (temp << 8) | (temp >> 24);
+            /*
+             * SubWord via aes32esi (no MixColumn):
+             * aes32esi(0, rot, bs) = 0 ^ rol32(sbox(byte_bs(rot)), bs*8)
+             * Accumulate bs=0..3 to get full 32-bit SubWord result.
+             */
+            uint32_t sw = 0;
+            sw ^= zk_aes32esi(0, rot, 0);
+            sw ^= zk_aes32esi(0, rot, 1);
+            sw ^= zk_aes32esi(0, rot, 2);
+            sw ^= zk_aes32esi(0, rot, 3);
+            temp = sw ^ ((uint32_t)rcon[i / AES128_NK] << 24);
+        }
+        rk[i] = rk[i - AES128_NK] ^ temp;
+    }
+}
+
+/* ── AES-128 Encrypt Block (Zkne) ──────────────────────────────── */
+
+void aes128_enc_block_zkn(const uint8_t pt[AES_BLOCK_SIZE],
+                          const uint32_t rk[4 * (AES128_NR + 1)],
+                          uint8_t ct[AES_BLOCK_SIZE]) {
+    uint32_t s0, s1, s2, s3;
+
+    s0 = ((uint32_t)pt[0]  << 24) | ((uint32_t)pt[1]  << 16) |
+         ((uint32_t)pt[2]  <<  8) | (uint32_t)pt[3];
+    s1 = ((uint32_t)pt[4]  << 24) | ((uint32_t)pt[5]  << 16) |
+         ((uint32_t)pt[6]  <<  8) | (uint32_t)pt[7];
+    s2 = ((uint32_t)pt[8]  << 24) | ((uint32_t)pt[9]  << 16) |
+         ((uint32_t)pt[10] <<  8) | (uint32_t)pt[11];
+    s3 = ((uint32_t)pt[12] << 24) | ((uint32_t)pt[13] << 16) |
+         ((uint32_t)pt[14] <<  8) | (uint32_t)pt[15];
+
+    /* Initial AddRoundKey */
+    s0 ^= rk[0]; s1 ^= rk[1]; s2 ^= rk[2]; s3 ^= rk[3];
+
+    /* Rounds 1..9: SubBytes + ShiftRows + MixColumns + AddRoundKey */
+    for (int r = 1; r < AES128_NR; r++) {
+        /*
+         * qround with serial dependency chain (4 instructions per round).
+         * aes32esmi(oX, oX, iX, bs) XORs the MixColumn'd SubByte of
+         * byte bs from iX into oX. After bs=0..3, oX contains the full
+         * MixColumns result for one column.
+         */
+        s0 = zk_aes32esmi(s0, s0, 0) ^ rk[r*4];
+        s1 = zk_aes32esmi(s1, s1, 1) ^ rk[r*4+1];
+        s2 = zk_aes32esmi(s2, s2, 2) ^ rk[r*4+2];
+        s3 = zk_aes32esmi(s3, s3, 3) ^ rk[r*4+3];
+    }
+
+    /* Round 10 (final): SubBytes + ShiftRows + AddRoundKey (no MixColumns) */
+    s0 = zk_aes32esi(s0, s0, 0) ^ rk[40];
+    s1 = zk_aes32esi(s1, s1, 1) ^ rk[41];
+    s2 = zk_aes32esi(s2, s2, 2) ^ rk[42];
+    s3 = zk_aes32esi(s3, s3, 3) ^ rk[43];
+
+    ct[0]  = (s0 >> 24) & 0xFF; ct[1]  = (s0 >> 16) & 0xFF;
+    ct[2]  = (s0 >>  8) & 0xFF; ct[3]  = s0 & 0xFF;
+    ct[4]  = (s1 >> 24) & 0xFF; ct[5]  = (s1 >> 16) & 0xFF;
+    ct[6]  = (s1 >>  8) & 0xFF; ct[7]  = s1 & 0xFF;
+    ct[8]  = (s2 >> 24) & 0xFF; ct[9]  = (s2 >> 16) & 0xFF;
+    ct[10] = (s2 >>  8) & 0xFF; ct[11] = s2 & 0xFF;
+    ct[12] = (s3 >> 24) & 0xFF; ct[13] = (s3 >> 16) & 0xFF;
+    ct[14] = (s3 >>  8) & 0xFF; ct[15] = s3 & 0xFF;
+}
+
+/* ── AES-128 Decrypt Block (Zknd) ──────────────────────────────── */
+
+void aes128_dec_block_zkn(const uint8_t ct[AES_BLOCK_SIZE],
+                          const uint32_t rk[4 * (AES128_NR + 1)],
+                          uint8_t pt[AES_BLOCK_SIZE]) {
+    uint32_t s0, s1, s2, s3;
+
+    s0 = ((uint32_t)ct[0]  << 24) | ((uint32_t)ct[1]  << 16) |
+         ((uint32_t)ct[2]  <<  8) | (uint32_t)ct[3];
+    s1 = ((uint32_t)ct[4]  << 24) | ((uint32_t)ct[5]  << 16) |
+         ((uint32_t)ct[6]  <<  8) | (uint32_t)ct[7];
+    s2 = ((uint32_t)ct[8]  << 24) | ((uint32_t)ct[9]  << 16) |
+         ((uint32_t)ct[10] <<  8) | (uint32_t)ct[11];
+    s3 = ((uint32_t)ct[12] << 24) | ((uint32_t)ct[13] << 16) |
+         ((uint32_t)ct[14] <<  8) | (uint32_t)ct[15];
+
+    /* Initial AddRoundKey (last round key) */
+    s0 ^= rk[40]; s1 ^= rk[41]; s2 ^= rk[42]; s3 ^= rk[43];
+
+    /* Rounds 9..1: InvSubBytes + InvShiftRows + InvMixColumns + AddRoundKey */
+    for (int r = AES128_NR - 1; r >= 1; r--) {
+        s0 = zk_aes32dsmi(s0, s0, 0) ^ rk[r*4];
+        s1 = zk_aes32dsmi(s1, s1, 1) ^ rk[r*4+1];
+        s2 = zk_aes32dsmi(s2, s2, 2) ^ rk[r*4+2];
+        s3 = zk_aes32dsmi(s3, s3, 3) ^ rk[r*4+3];
+    }
+
+    /* Final round: InvSubBytes + InvShiftRows + AddRoundKey */
+    s0 = zk_aes32dsi(s0, s0, 0) ^ rk[0];
+    s1 = zk_aes32dsi(s1, s1, 1) ^ rk[1];
+    s2 = zk_aes32dsi(s2, s2, 2) ^ rk[2];
+    s3 = zk_aes32dsi(s3, s3, 3) ^ rk[3];
+
+    pt[0]  = (s0 >> 24) & 0xFF; pt[1]  = (s0 >> 16) & 0xFF;
+    pt[2]  = (s0 >>  8) & 0xFF; pt[3]  = s0 & 0xFF;
+    pt[4]  = (s1 >> 24) & 0xFF; pt[5]  = (s1 >> 16) & 0xFF;
+    pt[6]  = (s1 >>  8) & 0xFF; pt[7]  = s1 & 0xFF;
+    pt[8]  = (s2 >> 24) & 0xFF; pt[9]  = (s2 >> 16) & 0xFF;
+    pt[10] = (s2 >>  8) & 0xFF; pt[11] = s2 & 0xFF;
+    pt[12] = (s3 >> 24) & 0xFF; pt[13] = (s3 >> 16) & 0xFF;
+    pt[14] = (s3 >>  8) & 0xFF; pt[15] = s3 & 0xFF;
+}
+
+#endif /* LOCAL_BUILD */

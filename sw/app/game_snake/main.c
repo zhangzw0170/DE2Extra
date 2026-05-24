@@ -15,7 +15,31 @@
   #include <stdlib.h>
   #include <string.h>
   #include <time.h>
-  #include <conio.h>  /* _kbhit, _getch on Windows */
+  #ifdef _WIN32
+    #include <windows.h>
+    #include <conio.h>
+    #include <io.h>
+    static int kbhit_pipe(void) {
+        if (_isatty(_fileno(stdin)))
+            return _kbhit();
+        HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD avail = 0;
+        return PeekNamedPipe(h, NULL, 0, NULL, &avail, NULL) && avail > 0;
+    }
+    static int getch_pipe(void) {
+        if (_isatty(_fileno(stdin)))
+            return _getch();
+        char c;
+        DWORD n;
+        if (ReadFile(GetStdHandle(STD_INPUT_HANDLE), &c, 1, &n, NULL) && n == 1)
+            return (unsigned char)c;
+        return -1;
+    }
+    #define _kbhit() kbhit_pipe()
+    #define _getch() getch_pipe()
+  #else
+    #include <conio.h>
+  #endif
   #define BAUD_RATE 115200
 #else
   #include <neorv32.h>

@@ -1,4 +1,4 @@
-/* t_input.h — Input handler task */
+/* t_input.h -- UART command task */
 
 #ifndef T_INPUT_H
 #define T_INPUT_H

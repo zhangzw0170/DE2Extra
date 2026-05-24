@@ -29,6 +29,61 @@
       gpio = (gpio & 0x0FFFFFFFu) | status;
       neorv32_gpio_port_set(gpio);
   }
+
+  /* ── VGA text terminal (0xF0000000) ── */
+  #define VGA_BASE            0xF0000000u
+  #define VGA_CTRL_CURSOR_X   0x1000
+  #define VGA_CTRL_CURSOR_Y   0x1004
+  #define VGA_CTRL_CONTROL    0x1008
+  #define VGA_CTRL_BGCOLOR    0x1010
+  #define VGA_CTRL_CLEAR      0x1014
+  #define VGA_COLS            80
+  #define VGA_ROWS            25
+  #define VGA_WHITE           0xFF   /* RGB332 */
+  #define VGA_BLACK           0x00
+
+  static volatile uint16_t *const vga_buf = (volatile uint16_t *)VGA_BASE;
+  static int vga_cur_col, vga_cur_row;
+
+  static void vga_init(void) {
+      vga_buf[VGA_CTRL_CLEAR / 2]    = 0x0001;
+      vga_buf[VGA_CTRL_BGCOLOR / 2]  = VGA_BLACK;
+      vga_buf[VGA_CTRL_CONTROL / 2]  = 0x03;  /* enable + blink */
+      vga_buf[VGA_CTRL_CURSOR_X / 2] = 0;
+      vga_buf[VGA_CTRL_CURSOR_Y / 2] = 0;
+      vga_cur_col = 0;
+      vga_cur_row = 0;
+  }
+
+  static void vga_putc(char c, uint16_t color) {
+      if (c == '\n') {
+          vga_cur_col = 0;
+          vga_cur_row++;
+          if (vga_cur_row >= VGA_ROWS) vga_cur_row = 0;
+      } else {
+          int addr = vga_cur_row * VGA_COLS + vga_cur_col;
+          vga_buf[addr] = (color << 8) | (uint8_t)c;
+          vga_cur_col++;
+          if (vga_cur_col >= VGA_COLS) {
+              vga_cur_col = 0;
+              vga_cur_row++;
+              if (vga_cur_row >= VGA_ROWS) vga_cur_row = 0;
+          }
+      }
+      vga_buf[VGA_CTRL_CURSOR_X / 2] = (uint16_t)vga_cur_col;
+      vga_buf[VGA_CTRL_CURSOR_Y / 2] = (uint16_t)vga_cur_row;
+  }
+
+  static void vga_puts(const char *s, uint16_t color) {
+      while (*s) vga_putc(*s++, color);
+  }
+
+  static void vga_goto(int col, int row) {
+      vga_cur_col = col;
+      vga_cur_row = row;
+      vga_buf[VGA_CTRL_CURSOR_X / 2] = (uint16_t)col;
+      vga_buf[VGA_CTRL_CURSOR_Y / 2] = (uint16_t)row;
+  }
 #endif
 
 /* ── I/O abstraction ──────────────────────────────────────────── */
@@ -230,13 +285,48 @@ uint32_t bench_cycles(void) {
 }
 #endif
 
+/* ── VGA test command (NEORV32 only) ─────────────────────────── */
+
+#ifndef LOCAL_BUILD
+static int cmd_vga_test(int argc, char *args[]) {
+    vga_init();
+    vga_puts("VGA Text Terminal Test\n", VGA_WHITE);
+    vga_puts("=======================\n", VGA_WHITE);
+    vga_puts("01234567890123456789012345678901234567890123456789\n", 0x07);
+    vga_puts("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\n", 0x0A);
+    vga_puts("!@#$%^&*()_+-={}[]|\\:;\"'<>,.?/~`\n", 0x0C);
+    vga_puts("RGB332 colors: ", VGA_WHITE);
+    const char *hexd = "0123456789ABCDEF";
+    for (int i = 0; i < 16; i++) {
+        vga_putc(hexd[i], (uint16_t)(i << 5));  /* red channel sweep */
+    }
+    vga_putc('\n', VGA_WHITE);
+    for (int i = 0; i < 16; i++) {
+        vga_putc(hexd[i], (uint16_t)(i << 2));  /* green channel sweep */
+    }
+    vga_putc('\n', VGA_WHITE);
+    for (int i = 0; i < 16; i++) {
+        vga_putc(hexd[i], (uint16_t)(i));      /* blue channel sweep */
+    }
+    vga_putc('\n', VGA_WHITE);
+    vga_goto(0, VGA_ROWS - 1);
+    vga_puts("-- VGA OK --", 0xE0);
+    return 0;
+}
+
+static int cmd_vga_clear(int argc, char *args[]) {
+    vga_init();
+    return 0;
+}
+#endif
+
 /* ── info command ─────────────────────────────────────────────── */
 
 static void show_info(void) {
     io_puts("DE2Extra Crypto Terminal\n");
     io_puts("========================\n");
     io_puts("Target: NEORV32 RISC-V @ 50 MHz\n");
-    io_puts("ISA:    RV32IMC + Zfinx + Zbkb + Zbkc + Zbkx\n");
+    io_puts("ISA:    RV32IMC + Zbkb + Zbkc + Zbkx\n");
     io_puts("        Zkne + Zknd + Zknh (AES/SHA)\n");
     io_puts("        Zksed + Zksh (SM4/SM3)\n");
     io_puts("Memory: IMEM 32KB, DMEM 16KB\n");
@@ -255,7 +345,7 @@ static void show_help(void) {
     io_puts(
         "Commands:\n"
         "  help                              Show this help\n"
-        "  clear                             Clear screen\n"
+        "  clear                             Clear UART screen\n"
         "  info                              Show system information\n"
         "  aes enc <key> <pt>                AES-128 ECB encrypt (hex)\n"
         "  aes dec <key> <ct>                AES-128 ECB decrypt (hex)\n"
@@ -265,8 +355,10 @@ static void show_help(void) {
         "  sm3 <msg>                         SM3 hash (hex input)\n"
         "  trng [n]                          Read n random bytes (default 16)\n"
         "  bench                             Run all benchmarks\n"
-        "  hex <addr> [n]                    Memory dump (not implemented)\n"
-        "  led <val>                         Set LED output (not implemented)\n"
+#ifndef LOCAL_BUILD
+        "  vga_test                          VGA rendering test pattern\n"
+        "  vga_clear                         Clear VGA display\n"
+#endif
         "\n"
     );
 }
@@ -468,6 +560,80 @@ static int cmd_bench(void) {
     io_puts(" cycles\n");
 #endif
 
+#ifndef LOCAL_BUILD
+    /* ── Zk* Hardware Acceleration Benchmarks ── */
+    io_puts("\n--- Zk* HW Acceleration ---\n");
+
+    uint32_t rk_zkn[44], rk_zks[32];
+    uint32_t t_zkn_aes, t_zkn_sha256, t_zkn_sha512;
+    uint32_t t_zks_sm4, t_zks_sm3;
+
+    bench_reset();
+    aes128_key_expand_zkn(key, rk_zkn);
+    for (i = 0; i < BENCH_ITERS; i++) aes128_enc_block_zkn(pt, rk_zkn, ct);
+    t_zkn_aes = bench_cycles();
+
+    bench_reset();
+    for (i = 0; i < BENCH_ITERS; i++) sha256_hash_zkn(msg, 64, digest);
+    t_zkn_sha256 = bench_cycles();
+
+    bench_reset();
+    for (i = 0; i < BENCH_ITERS; i++) sha512_hash_zkn(msg, 64, digest);
+    t_zkn_sha512 = bench_cycles();
+
+    bench_reset();
+    sm4_key_schedule_zks(key, rk_zks);
+    for (i = 0; i < BENCH_ITERS; i++) sm4_encrypt_zks(pt, rk_zks, ct);
+    t_zks_sm4 = bench_cycles();
+
+    bench_reset();
+    for (i = 0; i < BENCH_ITERS; i++) sm3_hash_zks(msg, 64, digest);
+    t_zks_sm3 = bench_cycles();
+
+    /* Speedup table (fixed-point: speedup_x10 = sw * 10 / hw) */
+    io_puts("              SW       Zk*      Speedup\n");
+    io_puts("AES-128 enc  "); put_hex32(t_aes); io_puts("  "); put_hex32(t_zkn_aes);
+    io_puts("  "); put_hex32(t_zkn_aes ? (t_aes * 10 / t_zkn_aes) : 0);
+    io_puts("."); put_hex32(t_zkn_aes ? (t_aes * 100 / t_zkn_aes) % 10 : 0);
+    io_puts("x\n");
+
+    io_puts("SHA-256      "); put_hex32(t_sha256); io_puts("  "); put_hex32(t_zkn_sha256);
+    io_puts("  "); put_hex32(t_zkn_sha256 ? (t_sha256 * 10 / t_zkn_sha256) : 0);
+    io_puts("."); put_hex32(t_zkn_sha256 ? (t_sha256 * 100 / t_zkn_sha256) % 10 : 0);
+    io_puts("x\n");
+
+    io_puts("SHA-512      "); put_hex32(t_sha512); io_puts("  "); put_hex32(t_zkn_sha512);
+    io_puts("  "); put_hex32(t_zkn_sha512 ? (t_sha512 * 10 / t_zkn_sha512) : 0);
+    io_puts("."); put_hex32(t_zkn_sha512 ? (t_sha512 * 100 / t_zkn_sha512) % 10 : 0);
+    io_puts("x\n");
+
+    io_puts("SM4 enc      "); put_hex32(t_sm4); io_puts("  "); put_hex32(t_zks_sm4);
+    io_puts("  "); put_hex32(t_zks_sm4 ? (t_sm4 * 10 / t_zks_sm4) : 0);
+    io_puts("."); put_hex32(t_zks_sm4 ? (t_sm4 * 100 / t_zks_sm4) % 10 : 0);
+    io_puts("x\n");
+
+    io_puts("SM3          "); put_hex32(t_sm3); io_puts("  "); put_hex32(t_zks_sm3);
+    io_puts("  "); put_hex32(t_zks_sm3 ? (t_sm3 * 10 / t_zks_sm3) : 0);
+    io_puts("."); put_hex32(t_zks_sm3 ? (t_sm3 * 100 / t_zks_sm3) % 10 : 0);
+    io_puts("x\n");
+
+    /* ── TRNG basic statistical test ── */
+    io_puts("\n--- TRNG Statistics (256 bytes) ---\n");
+    uint8_t trng_buf[256];
+    trng_bytes(trng_buf, 256);
+    uint32_t trng_ones = 0;
+    for (i = 0; i < 256; i++) {
+        uint8_t b = trng_buf[i];
+        while (b) { trng_ones += b & 1; b >>= 1; }
+    }
+    io_puts("Total bits: 2048\n");
+    io_puts("1-bits  : "); put_hex32(trng_ones); io_puts("\n");
+    io_puts("0-bits  : "); put_hex32(2048 - trng_ones); io_puts("\n");
+    io_puts("Ratio   : "); put_hex32(trng_ones * 1000 / 2048);
+    io_puts("."); put_hex32((trng_ones * 10000 / 2048) % 10);
+    io_puts("%\n");
+#endif
+
 #undef BENCH_ITERS
     return 0;
 }
@@ -512,6 +678,14 @@ static int dispatch(int argc, char *args[]) {
     if (strcmp(cmd, "bench") == 0) {
         return cmd_bench();
     }
+#ifndef LOCAL_BUILD
+    if (strcmp(cmd, "vga_test") == 0) {
+        return cmd_vga_test(argc, args);
+    }
+    if (strcmp(cmd, "vga_clear") == 0) {
+        return cmd_vga_clear(argc, args);
+    }
+#endif
     if (strcmp(cmd, "hex") == 0 || strcmp(cmd, "led") == 0) {
         io_puts("FFF0 > Not implemented in this build\n");
         return 0xFFF0;
@@ -531,6 +705,12 @@ int main(void) {
     neorv32_gpio_dir_set(0xFFFFFFFFu);
     board_set_status(LCD_STATUS_CRYPTO);
     trng_init();
+
+    /* Init VGA and show startup banner */
+    vga_init();
+    vga_puts("DE2Extra Crypto Terminal v0.1\n", VGA_WHITE);
+    vga_puts("Type 'vga_test' to verify display.\n", 0x07);
+    vga_goto(0, 2);
 
     io_puts("\nDE2Extra Crypto Terminal v0.1\n");
     io_puts("Type 'help' for commands.\n\n");

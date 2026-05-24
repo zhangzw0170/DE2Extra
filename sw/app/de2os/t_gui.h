@@ -1,4 +1,4 @@
-/* t_gui.h — GUI task */
+/* t_gui.h -- GUI/status task */
 
 #ifndef T_GUI_H
 #define T_GUI_H
