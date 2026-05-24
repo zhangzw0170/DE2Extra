@@ -6,10 +6,10 @@
 --   - 自动刷新管理 (7.8125us 间隔)
 --   - CAS Latency 3, Burst Length 1
 --
--- 地址映射 (CPU 字地址 25-bit):
---   [24]    = bank[1], [23] = bank[0]
---   [22:10] = row[12:0]
---   [9:0]   = col[9:0]
+-- 地址映射 (25-bit word address, aligned to Terasic reference controller):
+--   bank = {addr[24], addr[10]}
+--   row  = addr[23:11]
+--   col  = addr[9:0]
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -300,8 +300,8 @@ begin
                         we_r      <= req_we;
                         wr_data_r <= req_dat;
                         sel_r     <= req_sel;
-                        ba_r      <= req_adr(24 downto 23);
-                        row_r     <= req_adr(22 downto 10);
+                        ba_r      <= req_adr(24) & req_adr(10);
+                        row_r     <= req_adr(23 downto 11);
                         col_r     <= req_adr(9 downto 0);
                         state     <= S_ACTIVATE;
                     end if;

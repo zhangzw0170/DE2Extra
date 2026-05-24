@@ -275,7 +275,8 @@ static void board_status_refresh(void) {
     uint32_t selected = (uint32_t)shell_selected_prog(gpio_in);
     uint32_t key_bits = (gpio_in >> 18) & 0x7u;
     uint32_t heartbeat = board_status_uptime_seconds() & 0x01u;
-    uint8_t flags = (uint8_t)(((heartbeat & 0x01u) << 1) | (key_bits & 0x01u));
+    /* flags[0] -> LEDG0 heartbeat, flags[1] -> KEY1 live state */
+    uint8_t flags = (uint8_t)((heartbeat & 0x01u) | ((key_bits & 0x01u) << 1));
     uint16_t data = (uint16_t)(((selected & 0x0fu) << 12) |
                                ((key_bits & 0x07u) << 8) |
                                (uint32_t)last_uart_char);
