@@ -1,6 +1,8 @@
 # Phase 4: 硬件加速器 + 音频
 
-> 日期: 2026-05-23 | 状态: Planning
+> **已合并到 V3** — 内容已移至 `phase5-sdram-gui.md` (5.7-5.10 节)，本文档仅作历史参考。
+>
+> 日期: 2026-05-23 | 状态: Merged into V3
 > 前提: Phase 2b (VGA+PS/2) 上板, Phase 1 (wb_intercon) 稳定
 
 ## 本阶段概述
@@ -123,7 +125,7 @@ h_count, v_count → 球拍碰撞? → 球位置? → 得分区? → 输出 RGB
 
 ### 背景
 
-Number Theoretic Transform — FFT 在有限域上的类比，Kyber/Dilithium 等后量子密码的核心运算。完美结合 DE2Extra 的密码学主题和 FFT 项目的 DSP 经验。
+Number Theoretic Transform — FFT 在有限域上的类比，ML-KEM (FIPS-203) 和 ML-DSA (FIPS-204) 等后量子密码标准的核心运算。完美结合 DE2Extra 的密码学主题和 FFT 项目的 DSP 经验。
 
 ### 为什么 NTT 在 DE2-115 上特别合适
 
@@ -148,7 +150,7 @@ input → [BF stage0] → [×ω₀] → [delay N/2] → [BF stage1] → ... → 
 
 | 参数 | 值 |
 |---|---|
-| 模数 | q = 3329 (Kyber 推荐, 12-bit 素数) |
+| 模数 | q = 3329 (ML-KEM-512 参数, 12-bit 素数) |
 | 点数 | 128 或 256 |
 | 数据宽度 | 12-bit 输入, 12-bit 输出 |
 | 蝶形运算 | (a+b, (a-b)×ω mod q) |
@@ -156,7 +158,7 @@ input → [BF stage0] → [×ω₀] → [delay N/2] → [BF stage1] → ... → 
 | 延迟线 | 可变长移位寄存器 (SRL32 → 寄存器链) |
 | DSP 用量 | ~64 (256 点, 8 级, 每级 ~8 DSP) |
 
-### 寄存器接口 (0xF000G000)
+### 寄存器接口 (0xF000C000)
 
 | 偏移 | R/W | 说明 |
 |---|---|---|
@@ -165,6 +167,8 @@ input → [BF stage0] → [×ω₀] → [delay N/2] → [BF stage1] → ... → 
 | 0x400 | W | 控制: bit0=start, bit1=dir (0=Fwd, 1=Inv) |
 | 0x404 | R | 状态: bit0=busy, bit1=done |
 | 0x408 | R | 周期数计数器 [31:0] |
+
+> **Note**: 实际实现为单文件 `ntt_sdf.vhd` (迭代 SDF 架构, 编译通过，待上板验证)，而非上述多文件 SDF 流水线。上表为规划规格，以实际代码为准。
 
 ### 软件演示
 
@@ -218,22 +222,26 @@ vs RISC-V C:  ~50 ms (9,766× speedup)
 
 ## 文件列表
 
+### 已实现
+
 ```
-src/rtl/periph/ (新增)
+src/rtl/periph/
+└── ntt_sdf.vhd             # NTT 加速器 (单文件, 迭代 SDF, 编译通过待上板)
+
+sw/app/de2shell/
+└── ntt.c / ntt.h           # NTT C 驱动 (SW reference + HW MMIO, LOCAL_BUILD 已验证)
+```
+
+### 规划中 (尚未实现)
+
+```
+src/rtl/periph/
 ├── conway_engine.vhd       # Conway 硬件引擎
-├── conway_vga.vhd          # Conway VGA 像素映射
 ├── pong_engine.vhd         # PONG 物理引擎
-├── pong_vga.vhd            # PONG VGA 像素输出
-├── ntt_top.vhd             # NTT 顶层
-├── ntt_stage.vhd           # NTT 单级
-├── ntt_butterfly.vhd       # NTT 蝶形
-├── ntt_modmul.vhd          # 模乘
-├── ntt_twiddle_rom.vhd     # 旋转因子 ROM
 ├── wm8731_ctrl.vhd         # I2C + WM8731 初始化
 └── i2s_tx.vhd              # I2S 发送器
 
-sw/app/de2shell/ (新增)
-├── ntt_demo.c              # NTT 加速器演示子程序
+sw/app/de2shell/
 └── audio.c                 # 音频播放子程序
 ```
 

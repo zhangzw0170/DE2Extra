@@ -3,7 +3,7 @@
 > 总纲: `../implementation_plan.md`
 > 状态: 2026-05-24 — shell 已上板跑通，SDRAM 控制器稳定(memtest PASS)，SDL2 HAL + NTT 加速器 VHDL 已完成
 >
-> **de2shell 程序注册表 (2026-05-23 更新)**:
+> **de2shell 程序注册表 (2026-05-24 更新)**:
 >
 > | 命令 | 程序 | 来源 | 说明 |
 > |------|------|------|------|
@@ -14,14 +14,13 @@
 > | `life` | prog_life | Phase 2b | Conway 生命游戏 |
 > | `dash` | prog_dashboard | Phase 3 | 系统仪表盘 |
 > | `info` | prog_info | Phase 3 | 系统信息 |
-> | `exp1` | prog_exp1 | Exp1 | 3-8 译码器 |
-> | `exp4` | prog_exp4 | Exp4 | 双端口 RAM |
-> | `exp5` | prog_exp5 | Exp5 | FSM 序列检测 |
-> | `exp12` | prog_exp12 | Exp12 | 简单 CPU |
+> | `ps2` | prog_ps2 | Phase 2b | PS/2 键盘扫描码测试 |
+> | `monitor` | prog_monitor | Phase 3 | 系统监控 (GPIO/UART 轮询) |
+> | `expdemo` | prog_expdemo | ExpDemo | 硬件实验多路复用 (11 实验) |
 > | `cls` | — | — | 清屏 |
 > | `quit` | — | — | 回到 shell |
 >
-> **IR 遥控映射**: CH1=hello, CH2=memtest, CH3=crypto, CH4=snake, CH5=life, CH6=dash, CH7=info, CH+/CH-=切换
+> **IR 遥控映射**: `1-9` 按 shell 内部频道号对应 hello/memtest/crypto/ps2/snake/life/dash/info/monitor，`A=expdemo`，`CH+/CH-` 顺序切换
 
 ## 本阶段概述
 
@@ -37,11 +36,11 @@
 | 2 | VGA 终端集成 | CPU 通过 XBUS 写 VGA buffer, 彩色显示 | 🟡 (HAL 已就位, 总线基础已具备) |
 | 3 | IR 遥控器输入 | NEC 解码 → 程序切换 | ☑ (ir_nec_decoder.vhd + handle_ir) |
 | 4 | 状态栏 | 底行常驻显示当前频道名，右侧显示 uptime | ☑ (代码完成) |
-| 5 | 实验 CLI 程序集 | exp1/4/5/12 通过 shell 命令运行 | ☑ (桩模块, text=7896B) |
+| 5 | 实验 CLI 程序集 | expdemo 通过 shell 命令运行 (11 实验多路复用) | ☑ (expdemo_wb.vhd + de2shell expdemo 命令) |
 | 6 | C 游戏 | Snake + Conway Life | ☑ (独立编译通过, text=4400+4876B) |
 | 7 | 密码学终端 | AES/SHA/SM4/SM3 CLI | ☑ (Phase 2a 独立编译) |
 | 8 | F1/F2 双页 | VGA 硬件双页缓冲 | ☑ (vga_text_terminal.vhd) |
-| 9 | 已验收模块挂载 | 当前 shell 已集成 hello/memtest/crypto/ps2/snake/life/dash/info/exp1/4/5/12/monitor | ☑ |
+| 9 | 已验收模块挂载 | 当前 shell 已集成 hello/memtest/crypto/ps2/snake/life/dash/info/monitor/expdemo | ☑ |
 | 10 | 板级状态统一层 | LCD/HEX/LED 通过 `board_status` 统一声明与接管 | 🟡 (代码完成，待下一次上板确认) |
 | 11 | Docker 编译 | 所有 C 程序交叉编译通过, text < 64KB IMEM | 🟡 (本轮编译被中断，待继续) |
 
@@ -51,18 +50,18 @@
 
 | # | 实验 | VGA 展示 | 接入方式 |
 |---|---|---|---|
-| 1 | 3-8 译码器 | ✅ SW→LEDR 实时映射 | CLI `exp1` |
-| 2 | 彩灯显示 | ✅ LED 9 模式 | `led_patterns.vhd` |
-| 3 | 七段管+电子钟 | ✅ BCD 时间 | `digital_clock_core.vhd` |
-| 4 | 双口 RAM | ✅ 操作说明+状态 | CLI `exp4` |
-| 5 | FSM 序列检测 | ✅ 操作说明+状态 | CLI `exp5` |
+| 1 | 3-8 译码器 | ✅ SW→LEDR 实时映射 | ExpDemo 通道 |
+| 2 | 彩灯显示 | ✅ LED 9 模式 | ExpDemo 通道 |
+| 3 | 七段管+电子钟 | ✅ BCD 时间 | ExpDemo 通道 |
+| 4 | 双口 RAM | ✅ 操作说明+状态 | ExpDemo 通道 |
+| 5 | FSM 序列检测 | ✅ 操作说明+状态 | ExpDemo 通道 |
 | 6 | VGA 彩条 | ⬜ 等 VGA 线 | 画廊频道 |
 | 7 | VGA 图像 | ⬜ 等 VGA 线 | 画廊频道 |
 | 8 | PS/2 键盘 | ✅ 驱动就绪 + 实板已验证 + LCD 回显 | `ps2_controller.vhd` + `lcd_debug.vhd` |
 | 9 | UART 串行 | ⬜ 等 RS-232 线 | 已有 NEORV32 UART0 |
 | 10 | 红外 NEC | ✅ 解码+频道切换 | `ir_nec_decoder.vhd` |
 | 11 | DDS 频率合成 | ❌ 未验收 | 推迟 |
-| 12 | 简单 CPU | ✅ 操作说明+状态 | CLI `exp12` |
+| 12 | 简单 CPU | ✅ 操作说明+状态 | ExpDemo 通道 |
 | 13a | LCD (VHDL) | ✅ HD44780 驱动 + PS/2 键盘回显 | `lcd_debug.vhd` (SW16=1 实时回显) |
 
 **12/13 已覆盖**。Exp6/7/9 等硬件就位后补上。
@@ -85,9 +84,9 @@
 │  - VGA HAL (vga_hal.c)                   │
 │  - Board Status (board_status.c)         │
 ├─────────────────────────────────────────┤
-│  子程序:                                  │
-│  crypto │ snake │ life │ dashboard       │
-│  exp1   │ exp4  │ exp5 │ exp12 │ info    │
+│  子程序:                                     │
+│  crypto │ snake │ life │ dashboard │ ps2     │
+│  monitor │ info │ expdemo (11 实验多路复用)  │
 └──────────────────────────────────────────┘
 ```
 
@@ -101,17 +100,15 @@ sw/app/de2shell/
 ├── board_status.h/c← LCD/HEX/LED 统一状态层 + uptime
 ├── vga_hal.h/c     ← VGA 硬件抽象层 (ANSI / XBUS 0xF0000000)
 ├── gpio_hal.h/c    ← GPIO 硬件抽象层 (仿真 / NEORV32)
-├── crypto.c        ← 密码学终端 (桩)
-├── snake.c         ← 贪吃蛇 (桩)
-├── life.c          ← 康威生命游戏 (桩)
-├── dashboard.c     ← 系统仪表盘 (当前已接 live board ownership demo)
+├── crypto.c        ← 密码学终端 (链接 crypto_cli/)
+├── snake.c         ← 贪吃蛇
+├── life.c          ← 康威生命游戏
+├── dashboard.c     ← 系统仪表盘
+├── monitor.c       ← 系统监控 (GPIO/UART 轮询)
+├── ps2.c           ← PS/2 键盘扫描码测试
 ├── info.c          ← 系统信息页
 ├── hello.c         ← Phase 0 LED 跑马灯演示
 ├── memtest.c       ← Phase 1 SDRAM 4 项自检
-├── exp1.c          ← 3-8 译码器
-├── exp4.c          ← 双口 RAM
-├── exp5.c          ← FSM 序列检测
-├── exp12.c         ← 简单 CPU
 └── makefile
 
 src/rtl/periph/  (Phase 2b + Phase 3 VHDL)
@@ -120,15 +117,22 @@ src/rtl/periph/  (Phase 2b + Phase 3 VHDL)
 ├── ps2_controller.vhd   ← 16-entry FIFO + IRQ + scancode 直出
 ├── ps2_sync.vhd / ps2_receiver.vhd
 ├── lcd_debug.vhd         ← SW16=1: VGA/PS2 状态 + 键盘 ASCII 回显
-├── ir_nec_decoder.vhd
+├── lcd_wb.vhd            ← LCD Wishbone 控制器
+├── ir_nec_wb.vhd         ← NEC IR 解码器 (Wishbone 接口)
+├── ir_exp10.vhd          ← IR 实验10 适配器
+├── ir_dbg_exp10.vhd      ← IR 实验10 调试适配器
+├── expdemo_top.vhd       ← 硬件实验多路复用顶层
+├── expdemo_wb.vhd        ← ExpDemo Wishbone 接口
+├── intc_wb.vhd           ← 中断控制器
+├── timer_wb.vhd          ← 定时器
+├── ntt_sdf.vhd           ← NTT 加速器 (单文件, 编译通过)
 ├── led_patterns.vhd
 ├── digital_clock_core.vhd
 └── sys_dashboard.vhd
 
-sw/app/ (独立 C 程序, 待合并入 de2shell)
-├── crypto_cli/     ← text=13556B
-├── game_snake/     ← text=4400B
-└── game_life/      ← text=4876B
+src/rtl/periph/ (CDC + 互连)
+├── async_fifo.vhd        ← 8-deep × 32-bit 双时钟域异步 FIFO
+└── sdram_ctrl.vhd        ← SDRAM 控制器 (含 burst 支持)
 ```
 
 ## 待完成

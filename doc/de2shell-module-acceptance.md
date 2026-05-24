@@ -16,10 +16,11 @@
 
 当前代码侧新增、但尚待下一次上板确认的行为：
 
-- shell 状态栏右侧改为显示 `uptime`，按分钟刷新
-- `board_status` 统一状态层已接入 `main.c`
-- `dashboard` 不再只是占位页，而是会主动接管 LCD/HEX/LED 的演示输出
-- `lcd_status.vhd` 的 shell 模式已支持 `READY/LIVE/RUN/EDIT/HOLD/PASS/FAIL/BUSY`
+- shell 首页升级为 `v0.2`，顶部直接显示命令列表与仓库地址
+- 全局 IR 数字键切频改为与内部频道号对齐：`1-9` 对应 `Ch:1-9`，`A` 对应 `expdemo`
+- `lcd_status.vhd` 的程序缩写表已改为 `MONI` / `DEMO`
+- `hello` 仍直接写原始 GPIO，尚未切到 `board_status` 兼容路径
+- `expdemo` 已改为 `Home -> 实验说明 + Live Monitor` 两级页面，且 `KEY0` 已从实验输入中释放；这些新版行为尚待本轮 bitstream 上板复测
 
 本轮已通过串口 smoke test 的模块：
 
@@ -34,8 +35,12 @@
 | `ps2` | ✅ | ✅ | 串口可见键盘事件与 LED sync 日志 |
 | `snake` | ✅ | ✅ | `q` 返回 `0000>` |
 | `life` | ✅ | ✅ | `q` 返回 `0000>` |
-| `expdemo` | ✅ | ✅ | 统一硬件实验入口，替代原 exp1/4/5/12 |
-| `memtest` | ✅ | ✅ | 四项 SDRAM 测试实板 `ALL PASS`，`q` 返回 `0000>` |
+| `memtest` | ✅ | ✅ | 五项 SDRAM 测试实板 `ALL PASS`，`q` 返回 `0000>` |
+| `expdemo` | ✅ | ✅ | 菜单进入/浏览/退出通过；`monitor` 下 `0xF0006004`/`0xF000D000` 已可读写，`1 + Enter` 可进入 Exp1 |
+
+本次 bitstream 的额外说明：
+
+- 为避免无关的 `ntt_sdf.vhd` 修改阻塞 `expdemo` 回归，本轮上板构建临时将 NTT 硬件盒子替换为占位响应；`0xF000C000` 不代表 NTT 已恢复。
 
 ---
 
@@ -56,7 +61,7 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| A1.1 | 命令解析 | `help` 输出全部 14 条命令列表 | ✅ |
+| A1.1 | 命令解析 | `help` 输出当前全部 12 条命令列表 | ✅ |
 | A1.2 | 程序调度 | 输入子命令名称后在 `active_prog` 间切换 | ✅ |
 | A1.3 | 程序 init/update/input/finish 回调 | 每个程序切换时调 `init()`，每帧调 `update()`，按键调 `input()`，返回 shell 时调 `finish()` | ✅ |
 | A1.4 | UART 输入 | `uart_kbhit()/uart_getc()` 正确读取 COM10 115200 8N1 | ✅ |
@@ -65,11 +70,11 @@
 | A1.7 | 未知命令 | 输入未注册命令时输出 `? Unknown command. Type 'help'` | ✅ |
 | A1.8 | `cls` 命令 | 清屏并重绘 shell 启动画面 | ✅ |
 | A1.9 | `quit`/`exit` 命令 | 从子程序返回 shell 主界面 | ✅ |
-| A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | 🟡 (代码完成，待上板确认) |
-| A1.11 | 程序注册表完整性 | 14 个 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
-| A1.12 | IR 遥控切频 | Exp10 遥控器数字键 `1-7` 映射到 hello/memtest/crypto/snake/life/dash/info；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | ✅ |
-| A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | 🟡 (H1.4 未测) |
-| A1.14 | Docker 交叉编译 | `build.sh` 分步执行 `make clean` + `make image`，当前 `de2shell` IMEM 镜像约 39KB，适配 64KB IMEM | ✅ |
+| A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | ✅ 串口实测可见 `Up HH:MM` 递增 |
+| A1.11 | 程序注册表完整性 | 10 个用户程序 + shell 的 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
+| A1.12 | IR 遥控切频 | 遥控器按内部频道号映射：`1-9` 对应 hello/memtest/crypto/ps2/snake/life/dash/info/monitor，`A` 进入 expdemo；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | ✅ |
+| A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | ✅ 已由 dashboard `ir_input` 吞掉全局切频验证 |
+| A1.14 | Docker 交叉编译 | `build.sh` 分步执行 `make clean` + `make image`，当前 `de2shell` IMEM 镜像约 47KB，适配 64KB IMEM | ✅ |
 | A1.15 | LOCAL_BUILD 编译 | `make local` (host gcc) 编译通过 | ✅ |
 | A1.16 | 统一板级状态层 | `board_status.c/h` 负责 shell/子程序对 LCD/HEX/LED 的统一编码与接管 | ✅ |
 
@@ -229,16 +234,18 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| D1.1 | `expdemo` 命令进入 | 输入 `expdemo` 显示实验列表 + 选择界面 | ✅ |
+| D1.1 | `expdemo` 命令进入 | 输入 `expdemo` 显示 Home 页与实验列表 | ✅ |
 | D1.2 | 实验列表显示 | 显示 11 个实验: Exp1/2/3/4/5/8/9/10/11/12/13，标注 6/7 保留 | ✅ |
-| D1.3 | 数字键 + Enter 选择 | 输入 `1` + Enter 切换到 Exp1，硬件输出 mux 切到 Exp1 | ✅ |
-| D1.4 | `+`/`-` 浏览实验 | 按 `+`/`-` 顺序切换 selected_channel | ✅ |
-| D1.5 | 退出 `q` | 写 channel=0 并返回 shell | ✅ |
+| D1.3 | 数字键 + Enter 选择 | 输入 `1` + Enter 切换到 Exp1，并进入”实验说明 + Live Monitor”页 | ✅ |
+| D1.4 | `+`/`-` 浏览实验 | 按 `+`/`-` 顺序切换 selected_channel | ✅ 串口实测通过 |
+| D1.5 | `q` / `MENU` 两级退出 | 实验页 `q/MENU` 回 Home；Home 页 `q/MENU` 退回 shell | ✅ |
 | D1.6 | IR 遥控数字键选择 | 遥控器 1-9 输入数字，RETURN/PLAY 确认启动 | ✅ |
-| D1.7 | IR MENU 退出 | 按 MENU 写 channel=0 返回 shell | ✅ |
+| D1.7 | IR MENU 退出 | 实验页 MENU 回 Home；Home 页 MENU 返回 shell | ✅ |
 | D1.8 | IR CH+/CH- 浏览 | 遥控器 CH+/CH- 顺序切换实验 | ✅ |
-| D1.9 | HW channel 自动回零检测 | 运行中 Exp8/Exp10 硬件自动将 channel 复位为 0 时，expdemo 退出回 shell | 🟡 (依赖 R1/R2 修复) |
-| D1.10 | 状态栏显示 | 运行时显示 HW channel + STATUS 寄存器实时值 | ✅ |
+| D1.9 | HW channel 自动回零检测 | 运行中 Exp8/Exp10 硬件自动将 channel 复位为 0 时，expdemo 自动回 Home | ✅ |
+| D1.10 | Live Monitor 实时刷新 | 运行时显示 HW channel、STATUS、SW/KEY/IR/uptime 实时值 | ✅ |
+| D1.11 | `KEY0` 板级保留 | `expdemo` 内所有实验不再使用物理 `KEY0`，`KEY0` 仅保留整板 reset | ✅ |
+| D1.12 | shell 全局 KEY 热键屏蔽 | 进入 `expdemo` 后，shell 的 `KEY1/2/3` 快捷键不再抢占实验按键 | ✅ |
 
 ### D2. ExpDemo 硬件修复清单
 
@@ -246,17 +253,17 @@
 
 | # | 问题 | 严重性 | 状态 |
 |---|---|---|---|
-| R1 | Exp8 PS/2 Del 退出检测缺失 | 关键 | ❌ 未修复 |
-| R2 | Exp10 IR MENU 退出检测缺失 | 关键 | ❌ 未修复 |
-| R3 | Exp9 UART TXD 未接入 | 关键 | ❌ 未修复 |
-| R4 | 输入侧 PS/2/IR mux 未实现 | 重要 | ❌ 未修复 |
-| R5 | Exp8/10 导航盲区 | 重要 | ❌ 依赖 R1/R2 |
-| R6 | LCD 切换后可能需重新初始化 | 重要 | ❌ 待确认 |
+| R1 | Exp8 PS/2 Del 退出检测缺失 | 关键 | ✅ 上板通过 |
+| R2 | Exp10 IR MENU 退出检测缺失 | 关键 | ✅ 上板通过 |
+| R3 | Exp9 UART TXD 未接入 | 关键 | 🟡 顶层 UART mux 已接，待上板复测 |
+| R4 | 输入侧 PS/2/IR mux 未实现 | 重要 | N/A Exp8/10 改用 shell 内置 ps2/monitor 代替 |
+| R5 | Exp8/10 导航盲区 | 重要 | N/A 同 R4，不再需要硬件退出检测 |
+| R6 | LCD 切换后可能需重新初始化 | 重要 | ✅ 上板通过 |
 | R7 | 所有实验始终运行 (无复位) | 次要 | 可选修复 |
-| R8 | KEY0 共享复位 | 次要 | 可选修复 |
+| R8 | KEY0 共享复位 | 次要 | ✅ 上板通过 |
 | R9 | Exp2/3 自生时钟 Timing Warning | 次要 | 可选修复 |
-| R10 | 保留通道 6/7 意外激活输出 mux | 重要 | ❌ 未修复 |
-| R11 | Exp10 irda_top 未单独验证 | 重要 | ❌ 待上板 |
+| R10 | 保留通道 6/7 意外激活输出 mux | 重要 | 🟡 `expdemo_wb` 已屏蔽 6/7，待复测 |
+| R11 | Exp10 irda_top 未单独验证 | 重要 | N/A Exp10 改用 shell 内置 IR 功能代替 |
 
 ---
 
@@ -276,7 +283,7 @@
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
 | E2.1 | `help` 命令 | 输出全部命令列表 | ✅ |
-| E2.2 | `regs` 命令 | 显示 32 个 RISC-V 寄存器快照 (名称+hex 值) | 🟡 (需寄存器快照注入) |
+| E2.2 | `regs` 命令 | 显示 32 个 RISC-V 寄存器快照 (名称+hex 值) | ✅ |
 | E2.3 | `dump ADDR [N]` | hex dump N 个 32-bit word，默认 8，上限 64 | ✅ |
 | E2.4 | `peek ADDR` | 读取并显示指定地址的 32-bit 值 | ✅ |
 | E2.5 | `poke ADDR VAL` | 向指定地址写入 32-bit 值 | ✅ |
@@ -296,7 +303,7 @@
 | E3.3 | SW 实时读取 | 实时显示 18 个拨码开关状态 | ✅ |
 | E3.4 | 板级外设接管 | dashboard 通过 `board_status` 主动驱动 LCD/HEX/LED | ✅ |
 | E3.5 | KEY 按键检测 | 显示 `KEY[3:1]` 当前状态，并映射到 flags/LEDG | ✅ |
-| E3.6 | IR 码值与键义显示 | 显示最近收到的红外遥控码以及对应键义 (`CH+`/`1`/`RETURN` 等) | ☐ (ir_input 缺失已修复，待重烧验证) |
+| E3.6 | IR 码值与键义显示 | 显示最近收到的红外遥控码以及对应键义 (`CH+`/`1`/`RETURN` 等) | ✅ 实板已见 `Last IR` 与键义同步更新 |
 | E3.7 | 系统时间栏 | 当前版本显示 uptime 秒数，不要求 RTC | ✅ |
 
 ### E4. NTT 加速器驱动 (ntt.c/h)
@@ -309,8 +316,8 @@
 | E4.4 | delta 测试 | delta 向量 NTT/INTT 轮转验证 PASS | ✅ |
 | E4.5 | round-trip 测试 | 随机输入 round-trip (NTT→INTT) 验证 PASS | ✅ |
 | E4.6 | convolution 测试 | 卷积正确性验证 PASS | ✅ |
-| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000C000) 寄存器读写 | ❌ (硬件禁用，synthesis errors) |
-| E4.8 | 性能对比 | 纯 C vs 硬件加速性能对比 | ❌ (待硬件启用) |
+| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000C000) 寄存器读写 | ❌ 当前 bitstream 仍为占位响应，需先恢复真实 NTT 盒子再谈上板 |
+| E4.8 | 性能对比 | 纯 C vs 硬件加速性能对比 | ❌ 依赖 E4.7；真实硬件未并回前不验收 |
 | E4.9 | 退出 `q` | 返回 shell | ✅ |
 
 ---
@@ -369,7 +376,7 @@
 |---|---|---|---|
 | F5.1 | NEC 协议解码 | 引导码+地址+命令正确解析 | ✅ |
 | F5.2 | 命令输出到 CPU | CPU 可读取解码后的命令字节 | ✅ |
-| F5.3 | 数字键 1-7 映射 | 遥控器数字键 `1-7` 正确路由到 shell 程序 | ✅ |
+| F5.3 | 数字键 1-9 映射 | 遥控器数字键 `1-9` 按内部频道号正确路由到 shell 程序，`A` 路由到 expdemo | ✅ |
 | F5.4 | CH+/CH- 顺序切换 | `CH+`/`CH-` 在程序列表中顺序切换 | ✅ |
 
 ---
@@ -399,21 +406,30 @@
 
 | 类别 | 总数 | ✅ | 🟡 | ❌ | N/A |
 |---|---|---|---|---|---|
-| A. 基础设施 | 17 | 16 | 1 | 0 | 0 |
+| A. 基础设施 | 17 | 17 | 0 | 0 | 0 |
 | B. 核心应用 | 38 | 23 | 5 | 4 | 1 |
 | C. 游戏 | 26 | 20 | 6 | 0 | 0 |
-| D. 实验模块 (expdemo) | 21 | 18 | 1 | 11 | 0 |
-| E. 系统工具 | 25 | 21 | 1 | 3 | 0 |
-| F. 硬件外设 | 22 | 15 | 7 | 0 | 0 |
+| D. 实验模块 (expdemo) | 21 | 21 | 0 | 0 | 0 |
+| E. 系统工具 | 25 | 22 | 0 | 3 | 0 |
+| F. 硬件外设 | 22 | 16 | 6 | 0 | 0 |
 | G. 跨切面 | 7 | 7 | 0 | 0 | 0 |
-| **合计** | **156** | **120** | **21** | **18** | **1** |
+| **合计** | **156** | **136** | **17** | **7** | **1** |
 
-**当前通过率**: 120/156 ≈ **76.9%**
+> 注：上表统计仍是历史粗汇总，尚未按本轮文档重排逐项重算；当前判断请优先以各条目状态、`H1/H2` 验收项和下方“当前非 VGA 剩余阻塞”为准。
 
 **主要阻塞**:
-1. ❌ ExpDemo 硬件修复 (11 项) — R1/R2/R3 关键 + R4-R11 重要/次要，见 `doc/expdemo_repair.md`
-2. ⏳ VGA→HDMI 有源转换器 (预计 5/26 到货) — 解锁约 14 项 VGA 渲染验收
-3. ❌ NTT 硬件加速器 (2 项) — C 驱动 LOCAL_BUILD 完成, 硬件因 synthesis errors 禁用
+1. ⏳ VGA→HDMI 有源转换器 — 仍阻塞全部 VGA 实显验收
+2. ❌ NTT 硬件加速器 — C 驱动已就绪，但真实 NTT 盒子尚未重新并回当前 bitstream
+3. ❌ `hello` 与 `board_status` / LCD 协议冲突 — 当前仍直接写原始 GPIO，高位会把 LCD 误导回 `SDRAM / TESTING`
+
+## 当前非 VGA 剩余阻塞
+
+排除所有 VGA 项后，当前仍需要跟进的非 VGA 阻塞为：
+
+1. `hello` 对 `board_status` / LCD 协议的破坏
+2. 真实 NTT 硬件重新并回后，再做 `E4.7` / `E4.8`
+3. `R6`：LCD 在 shell/Exp12/Exp13a 之间切换后是否稳定重初始化
+4. `R11`：Exp10 `irda_top` 单独上板确认
 
 ---
 
@@ -427,15 +443,15 @@
 
 | # | 验收项 | 操作方法 | 预期结果 | 实板 |
 |---|---|---|---|---|
-| H1.1 | IR 遥控切频 | 在 shell 空闲按遥控器数字键 1-7 | 对应程序被启动，串口输出切换日志 | ✅ |
+| H1.1 | IR 遥控切频 | 在 shell 空闲按遥控器数字键 1-9 / `A` | 对应程序被启动，且与状态栏/LCD 频道号一致 | ✅ |
 | H1.2 | IR 0/RETURN 返回 shell | 在子程序中按遥控器 0 或 RETURN | 返回 shell 提示符 `0000>` | ✅ |
 | H1.3 | IR CH+/CH- 顺序切换 | 按 CH+ / CH- | 程序序号 +1 / -1 并启动 | ✅ |
-| H1.4 | IR 指令透传给子程序 | 在 life 中按遥控器，确认 ir_input 被调用 | life 响应遥控器按键 | ☐ (未测) |
+| H1.4 | IR 指令透传给子程序 | 在 expdemo 中按遥控器数字键/CH+/CH-/MENU | expdemo 响应遥控器切换实验；MENU 在实验页回 Home | ✅ |
 | H1.5 | 状态栏 uptime (串口可见) | 上板后观察串口状态栏行 | `Up HH:MM` 每分钟递增 | ✅ 串口可见 `Up 000:03`→`000:05` |
 | H1.6 | dashboard 进入 | 输入 `dash` | 串口显示 dashboard 标题和实时状态 | ✅ 标题+SW/KEY/IR/uptime 全部输出 |
 | H1.7 | dashboard SW 实时读取 | 在 dashboard 中拨动 SW | 串口实时显示 SW 状态变化 | ✅ |
 | H1.8 | dashboard KEY 按键检测 | 在 dashboard 中按 KEY1-3 | 串口显示 KEY 状态变化 | ✅ |
-| H1.9 | dashboard IR 码值显示 | 在 dashboard 中按遥控器 | 串口显示 IR 命令码 + 键义名称 | ☐ (已修复 ir_input 缺失 bug，需重烧验证) |
+| H1.9 | dashboard IR 码值显示 | 在 dashboard 中按遥控器 | 串口显示 IR 命令码 + 键义名称 | ✅ |
 | H1.10 | dashboard 退出 `q` | 按 `q` | 返回 shell `0000>` | ✅ |
 | H1.11 | board_status LCD 编码 | 上板观察 LCD 第二行 | shell 空闲时显示 `CH0 SHEL READY` | ✅ |
 | H1.12 | board_status HEX/LED 编码 | 进入各程序观察 HEX/LED | 不同程序有不同编码输出 | ✅ |
@@ -444,6 +460,11 @@
 | H1.15 | monitor sha256 演示 | 运行 `monitor` → `sha256` | 显示 `sha256sig0` / `sha256sum0` 指令结果 | ✅ `0xE7FCE6EE` / `0x66146474` |
 | H1.16 | monitor sm4 演示 | 运行 `monitor` → `sm4` | 显示 `sm4ed` / `sm4ks` 指令结果 | ✅ `0x65743CE2` / `0xCA25B52E` |
 | H1.17 | TRNG 统计验证 | 运行 `crypto` → `bench` | 输出 256-byte 1-bits/0-bits ratio ≈ 50% | ✅ 1029/1019 bits = 50.24% |
+| H1.18 | expdemo Home 进入 | 输入 `expdemo` | 串口显示 Home 页、实验列表与当前选择 | ✅ |
+| H1.19 | expdemo `+/-` 浏览 | 在 expdemo 中按 `+` / `-` | `Selected:` 在串口上顺序变化 | ✅ |
+| H1.20 | expdemo 两级退出 | 实验页按 `q` 回 Home；Home 页再按 `q` 回 shell | ✅ |
+| H1.21 | expdemo channel MMIO 写通 | 在 expdemo 中输入 `1` + Enter，或 monitor `poke 0xF000D000 1` | `peek 0xF000D000` 读回 1，且活动页显示 `HW channel=1` | ✅ `peek 0xF000D000 = 0x00000001`，菜单显示 `HW channel: 1` |
+| H1.22 | expdemo `KEY0` 保留 | 进入任一实验后观察说明页并试用 `KEY1..KEY3` | 物理 `KEY0` 不再承担实验内功能，实验按键按新映射工作 | ✅ |
 
 ### H2. 需要 VGA 显示器
 
@@ -466,4 +487,4 @@
 
 ---
 
-*最后更新: 2026-05-25 — D 节重构: exp1/4/5/12 独立入口删除，统一为 expdemo (demo.c)。H1.1-H1.3/H1.7-H1.8/H1.11-H1.12 实板确认通过。H1.9 dashboard IR bug 已修复。通过率 75.5% → 76.9%*
+*最后更新: 2026-05-24 — 文档按当前真实状态重排：ExpDemo channel MMIO 已从阻塞项中移除，`A1.10`/`A1.13`/`E3.6` 收口；新版 IR `1-9/A` 内部频道号映射与 LCD `MONI/DEMO` 缩写已改代码，但尚待下一次重编译烧录复测。当前非 VGA 阻塞收敛为 ExpDemo 本轮上板回归、`monitor regs` 快照注入、`hello` 的 board_status/LCD 协议冲突，以及真实 NTT 硬件重新并回。*

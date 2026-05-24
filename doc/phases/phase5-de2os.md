@@ -1,42 +1,33 @@
 # de2os: FreeRTOS + SDRAM 执行
 
-> 日期: 2026-05-24 | 状态: 固件编译通过，待上板验证
+> 日期: 2026-05-24 | 状态: 固件+硬件编译通过 (ICACHE burst 已实现)，待上板验证
 > 前提: SDRAM 稳定 (memtest PASS)，CLINT 已启用
 
-## 与 de2shell 的配置差异
+## 与 de2shell 的架构差异
 
-de2shell (裸机) 和 de2os (FreeRTOS) 在同一套 VHDL 代码上通过 **generic 参数切换**，共用同一个 Quartus 工程。切换时只需改 `de2_115_top.vhd` 中 `u_cpu` 的 generic map。
+de2shell 和 de2os 使用 **独立的 Quartus 工程** 和 **独立的顶层实体**。de2shell 使用 `par/de2extra.qpf` (顶层 `de2_115_top`)，de2os 使用 `par/de2os/de2os.qpf` (顶层 `de2os_top`)。
 
 | 项目 | de2shell (裸机) | de2os (FreeRTOS) |
 |------|-----------------|-------------------|
+| Quartus 工程 | `par/de2extra.qpf` | `par/de2os/de2os.qpf` |
+| 顶层实体 | `de2_115_top` | `de2os_top` |
 | `BOOT_MODE` | 2 (IMEM 直接执行) | 0 (bootloader) |
 | `ICACHE_EN` | false | true |
 | `ICACHE_BLOCKS` | — | 64 |
 | `ICACHE_BLOCK_SZ` | — | 32 |
-| `ICACHE_BURSTS` | — | false |
+| `ICACHE_BURSTS` | — | true |
+| XBUS cti/tag | 未接线 (tie "000") | 接线 (burst 支持) |
+| sdram_ctrl | 仅 single-word | single-word + burst (async FIFO CDC) |
 | 代码存放 | IMEM (64KB M9K) | SDRAM (0x01000000) |
 | 数据存放 | DMEM (16KB) | DMEM (16KB) |
 | 固件格式 | `neorv32_imem_image.vhd` (综合进 FPGA) | `neorv32_exe.bin` (UART 上传) |
 | 构建目标 | `make image` | `make exe` |
 | 固件更新 | 需要 Quartus 重新综合 | 仅 UART 重传，无需重新综合 |
 | 操作系统 | 裸机轮询 (main loop) | FreeRTOS (3 任务抢占调度) |
-| UART 波特率 | 115200 (应用) | 19200 (bootloader) → 115200 (应用) |
+| UART 波特率 | 115200 (应用) | 115200 (bootloader + 应用，已 patch) |
 
-### de2_115_top.vhd 切换点
+### de2os_top.vhd CPU 配置
 
-**de2shell (当前默认)**:
-```vhdl
-u_cpu : entity work.neorv32_wrapper
-generic map (
-    CLOCK_FREQUENCY => 50_000_000,
-    IMEM_SIZE       => 64*1024,
-    DMEM_SIZE       => 16*1024,
-    BOOT_MODE       => 2,
-    ICACHE_EN       => false
-)
-```
-
-**de2os**:
 ```vhdl
 u_cpu : entity work.neorv32_wrapper
 generic map (
@@ -47,18 +38,15 @@ generic map (
     ICACHE_EN       => true,
     ICACHE_BLOCKS   => 64,
     ICACHE_BLOCK_SZ => 32,
-    ICACHE_BURSTS   => false
+    ICACHE_BURSTS   => true
+)
+port map (
+    ...
+    xbus_cti_o => xbus_cti,
+    xbus_tag_o => xbus_tag,
+    ...
 )
 ```
-
-> 使用 `sw/app/de2os/switch_hw.sh` 自动切换，无需手动编辑 VHDL：
-> ```bash
-> cd sw/app/de2os
-> ./switch_hw.sh de2os    # 切换到 de2os 配置
-> ./switch_hw.sh de2shell # 恢复 de2shell 配置
-> ./switch_hw.sh status   # 查看当前配置
-> ```
-> 切换后需 Quartus 重新综合 (Ctrl+L)。
 
 ## 部署流程
 
@@ -79,18 +67,17 @@ MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd):/project" de2extra-builder \
 
 ### 2. Quartus 综合
 
-1. `cd sw/app/de2os && ./switch_hw.sh de2os` — 切换到 de2os 配置
+1. 打开 `par/de2os/de2os.qpf`
 2. Quartus → Ctrl+L
-3. 生成 `par/de2extra.sof`
-4. 测试完成后 `./switch_hw.sh de2shell` — 恢复 de2shell 配置
+3. 生成 `par/de2os/de2os.sof`
 
 ### 3. 烧录 FPGA
 
-Quartus Programmer → 烧录 `de2extra.sof`
+Quartus Programmer → 烧录 `par/de2os/de2os.sof`
 
 ### 4. UART 上传固件
 
-板子启动后进入 NEORV32 bootloader (19200 8N1):
+板子启动后进入 NEORV32 bootloader (115200 8N1):
 
 ```
 NEORV32 Bootloader
@@ -145,19 +132,34 @@ Starting scheduler...
 | 现象 | 可能原因 | 解决 |
 |------|---------|------|
 | bootloader 无输出 | BOOT_MODE 仍是 2 | 确认 generic map |
-| bootloader 不接受上传 | UART 波特率不匹配 | bootloader 固定 19200 |
+| bootloader 不接受上传 | UART 波特率不匹配 | bootloader 已 patch 为 115200，确认串口工具一致 |
 | 上传后无输出 | SDRAM 写入失败 | 先用 de2shell 跑 memtest 确认 SDRAM |
+| ICACHE 启用后死机 | burst CDC 问题 | 确认 async_fifo.vhd 已加入 QSF; 可回退 `ICACHE_EN => false` |
 | 只看到第一条输出就死机 | FreeRTOS 栈溢出 | 增大 configMINIMAL_STACK_SIZE |
 | 看不到 tick 输出 | CLINT 未启用 | 确认 `IO_CLINT_EN => true` |
 
 ## 文件结构
 
 ```
+par/de2os/                     # 独立 Quartus 工程
+├── de2os.qpf                  # Quartus 项目文件
+├── de2os.qsf                  # 引脚分配 + VHDL 文件列表
+└── output_files/
+    └── de2os.sof              # 编译输出
+
+src/rtl/
+├── de2os_top.vhd              # de2os 顶层实体 (独立于 de2_115_top)
+├── neorv32_wrapper.vhd        # CPU 配置 (含 cti/tag 输出)
+├── bus/wb_intercon.vhd        # 互连 (含 m_cti_i → s0_cti_o 通路)
+└── periph/
+    ├── sdram_ctrl.vhd         # SDRAM 控制器 (single-word + burst)
+    └── async_fifo.vhd         # 8-deep × 32-bit 双时钟域 FIFO
+
 sw/app/de2os/
 ├── makefile                  # SDRAM 链接 + FreeRTOS 源文件
 ├── FreeRTOSConfig.h          # NEORV32 @ 50MHz, CLINT 地址
 ├── de2os.ld                  # IRQ 栈符号 (FreeRTOS portASM.S 需要)
-├── switch_hw.sh              # 硬件配置切换脚本 (de2os ↔ de2shell)
+├── switch_hw.sh              # 硬件配置切换脚本 (仅用于共享工程模式, 已废弃)
 ├── main.c                    # 硬件初始化 + 任务创建 + 平台 hooks
 ├── t_gui.c / t_gui.h         # GUI 任务 (stub: UART heartbeat)
 ├── t_crypto.c / t_crypto.h   # Crypto 任务 (stub: 模乘 benchmark)
