@@ -18,10 +18,16 @@
 
 #define CMD_BUF_SIZE 256
 #define MAX_ARGS 8
+#define HISTORY_DEPTH 8
 
 static char cmd_buf[CMD_BUF_SIZE];
 static int cmd_pos;
 static int done;
+static char saved_cmd[CMD_BUF_SIZE];
+static char cmd_history[HISTORY_DEPTH][CMD_BUF_SIZE];
+static int cmd_history_count;
+static int cmd_history_nav;
+static int esc_state;
 
 static void put_dec(unsigned value, uint8_t color) {
     char buf[10];
@@ -185,6 +191,94 @@ void trng_bytes(uint8_t *buf, int n) {
 
 static void prompt(void) {
     vga_puts("crypto> ", VGA_GREEN);
+}
+
+static void redraw_input_line(int old_len) {
+    vga_putc('\r', VGA_WHITE);
+    prompt();
+    for (int i = 0; i < cmd_pos; i++) {
+        vga_putc(cmd_buf[i], VGA_WHITE);
+    }
+    for (int i = cmd_pos; i < old_len; i++) {
+        vga_putc(' ', VGA_WHITE);
+    }
+    vga_putc('\r', VGA_WHITE);
+    prompt();
+    for (int i = 0; i < cmd_pos; i++) {
+        vga_putc(cmd_buf[i], VGA_WHITE);
+    }
+}
+
+static void history_store_current(void) {
+    for (int i = 0; i <= cmd_pos; i++) {
+        saved_cmd[i] = cmd_buf[i];
+    }
+}
+
+static void history_load(const char *src) {
+    int i = 0;
+    while (src[i] && i < CMD_BUF_SIZE - 1) {
+        cmd_buf[i] = src[i];
+        i++;
+    }
+    cmd_buf[i] = '\0';
+    cmd_pos = i;
+}
+
+static void history_push(void) {
+    if (cmd_pos == 0) {
+        return;
+    }
+    if ((cmd_history_count > 0) && (strcmp(cmd_history[cmd_history_count - 1], cmd_buf) == 0)) {
+        return;
+    }
+    if (cmd_history_count < HISTORY_DEPTH) {
+        for (int i = 0; i <= cmd_pos; i++) {
+            cmd_history[cmd_history_count][i] = cmd_buf[i];
+        }
+        cmd_history_count++;
+    } else {
+        for (int i = 1; i < HISTORY_DEPTH; i++) {
+            for (int j = 0; j < CMD_BUF_SIZE; j++) {
+                cmd_history[i - 1][j] = cmd_history[i][j];
+            }
+        }
+        for (int i = 0; i <= cmd_pos; i++) {
+            cmd_history[HISTORY_DEPTH - 1][i] = cmd_buf[i];
+        }
+    }
+}
+
+static void history_prev(void) {
+    int old_len = cmd_pos;
+    if (cmd_history_count <= 0) {
+        return;
+    }
+    if (cmd_history_nav < 0) {
+        history_store_current();
+        cmd_history_nav = cmd_history_count - 1;
+    } else if (cmd_history_nav > 0) {
+        cmd_history_nav--;
+    } else {
+        return;
+    }
+    history_load(cmd_history[cmd_history_nav]);
+    redraw_input_line(old_len);
+}
+
+static void history_next(void) {
+    int old_len = cmd_pos;
+    if (cmd_history_nav < 0) {
+        return;
+    }
+    if (cmd_history_nav < (cmd_history_count - 1)) {
+        cmd_history_nav++;
+        history_load(cmd_history[cmd_history_nav]);
+    } else {
+        cmd_history_nav = -1;
+        history_load(saved_cmd);
+    }
+    redraw_input_line(old_len);
 }
 
 static void redraw(void) {
@@ -629,6 +723,10 @@ static int dispatch(int argc, char *args[], int *printed_prompt) {
 static void init(void) {
     done = 0;
     cmd_pos = 0;
+    cmd_buf[0] = '\0';
+    saved_cmd[0] = '\0';
+    cmd_history_nav = -1;
+    esc_state = 0;
     trng_init();
     redraw();
 }
@@ -642,15 +740,39 @@ static void input(char c) {
         return;
     }
 
+    if (esc_state == 1) {
+        esc_state = (c == '[') ? 2 : 0;
+        return;
+    }
+    if (esc_state == 2) {
+        if (c == 'A') {
+            history_prev();
+        } else if (c == 'B') {
+            history_next();
+        }
+        esc_state = 0;
+        return;
+    }
+    if (c == 27) {
+        esc_state = 1;
+        return;
+    }
+
     if ((c == '\r') || (c == '\n')) {
         char *args[MAX_ARGS];
         int argc;
 
         cmd_buf[cmd_pos] = '\0';
         vga_putc('\n', VGA_WHITE);
+        if (cmd_pos > 0) {
+            history_push();
+        }
+        cmd_history_nav = -1;
+        saved_cmd[0] = '\0';
         argc = parse_args(args, MAX_ARGS);
         (void)dispatch(argc, args, &printed_prompt);
         cmd_pos = 0;
+        cmd_buf[0] = '\0';
         if (!done && !printed_prompt) {
             prompt();
         }
@@ -660,6 +782,7 @@ static void input(char c) {
     if ((c == '\b') || (c == 0x7f)) {
         if (cmd_pos > 0) {
             cmd_pos--;
+            cmd_buf[cmd_pos] = '\0';
             vga_putc('\b', VGA_WHITE);
         }
         return;
@@ -667,6 +790,7 @@ static void input(char c) {
 
     if ((c >= 0x20) && (c < 0x7f) && (cmd_pos < CMD_BUF_SIZE - 1)) {
         cmd_buf[cmd_pos++] = c;
+        cmd_buf[cmd_pos] = '\0';
         vga_putc(c, VGA_WHITE);
     }
 }

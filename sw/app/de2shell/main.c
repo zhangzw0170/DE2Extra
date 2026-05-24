@@ -142,12 +142,110 @@ static uint8_t last_uart_char = 0;
 static uint8_t prev_key_bits = 0;
 static uint32_t shell_tick = 0;
 
+#define SHELL_LINE_SIZE 64
+#define SHELL_HISTORY_DEPTH 8
+static char shell_line[SHELL_LINE_SIZE];
+static int shell_line_pos = 0;
+static char shell_saved_line[SHELL_LINE_SIZE];
+static char shell_history[SHELL_HISTORY_DEPTH][SHELL_LINE_SIZE];
+static int shell_history_count = 0;
+static int shell_history_nav = -1;
+static int shell_esc_state = 0;
+
 #define KEY1_MASK (1u << 0)
 #define KEY2_MASK (1u << 1)
 #define KEY3_MASK (1u << 2)
 
 static void shell_prompt(void) {
     vga_puts("0000> ", VGA_GREEN);
+}
+
+static void shell_redraw_line(int old_len) {
+    vga_putc('\r', VGA_WHITE);
+    shell_prompt();
+    for (int i = 0; i < shell_line_pos; i++) {
+        vga_putc(shell_line[i], VGA_WHITE);
+    }
+    for (int i = shell_line_pos; i < old_len; i++) {
+        vga_putc(' ', VGA_WHITE);
+    }
+    vga_putc('\r', VGA_WHITE);
+    shell_prompt();
+    for (int i = 0; i < shell_line_pos; i++) {
+        vga_putc(shell_line[i], VGA_WHITE);
+    }
+}
+
+static void shell_history_store_current(void) {
+    for (int i = 0; i <= shell_line_pos; i++) {
+        shell_saved_line[i] = shell_line[i];
+    }
+}
+
+static void shell_history_load(const char *src) {
+    int i = 0;
+    while (src[i] && i < SHELL_LINE_SIZE - 1) {
+        shell_line[i] = src[i];
+        i++;
+    }
+    shell_line[i] = '\0';
+    shell_line_pos = i;
+}
+
+static void shell_history_push(void) {
+    if (shell_line_pos == 0) {
+        return;
+    }
+    if ((shell_history_count > 0) && (strcmp(shell_history[shell_history_count - 1], shell_line) == 0)) {
+        return;
+    }
+    if (shell_history_count < SHELL_HISTORY_DEPTH) {
+        for (int i = 0; i <= shell_line_pos; i++) {
+            shell_history[shell_history_count][i] = shell_line[i];
+        }
+        shell_history_count++;
+    } else {
+        for (int i = 1; i < SHELL_HISTORY_DEPTH; i++) {
+            for (int j = 0; j < SHELL_LINE_SIZE; j++) {
+                shell_history[i - 1][j] = shell_history[i][j];
+            }
+        }
+        for (int i = 0; i <= shell_line_pos; i++) {
+            shell_history[SHELL_HISTORY_DEPTH - 1][i] = shell_line[i];
+        }
+    }
+}
+
+static void shell_history_prev(void) {
+    int old_len = shell_line_pos;
+    if (shell_history_count <= 0) {
+        return;
+    }
+    if (shell_history_nav < 0) {
+        shell_history_store_current();
+        shell_history_nav = shell_history_count - 1;
+    } else if (shell_history_nav > 0) {
+        shell_history_nav--;
+    } else {
+        return;
+    }
+    shell_history_load(shell_history[shell_history_nav]);
+    shell_redraw_line(old_len);
+}
+
+static void shell_history_next(void) {
+    int old_len = shell_line_pos;
+    if (shell_history_nav < 0) {
+        return;
+    }
+    if (shell_history_nav < (shell_history_count - 1)) {
+        shell_history_nav++;
+        shell_history_load(shell_history[shell_history_nav]);
+    } else {
+        shell_history_nav = -1;
+        shell_history_load(shell_saved_line);
+    }
+    shell_redraw_line(old_len);
 }
 
 static int valid_prog_id(uint32_t prog_id) {
@@ -216,6 +314,11 @@ static void shell_init(void) {
     vga_goto(0, 0);
     vga_puts("DE2Extra Shell v0.1\n", VGA_CYAN);
     vga_puts("Type 'help' for commands.\n\n", VGA_GRAY);
+    shell_line_pos = 0;
+    shell_line[0] = '\0';
+    shell_saved_line[0] = '\0';
+    shell_history_nav = -1;
+    shell_esc_state = 0;
     shell_prompt();
 }
 
@@ -224,70 +327,94 @@ static void shell_update(void) {
 }
 
 static void shell_input(char c) {
-    /* Shell command dispatch */
-    static char line[64];
-    static int  line_pos = 0;
+    if (shell_esc_state == 1) {
+        shell_esc_state = (c == '[') ? 2 : 0;
+        return;
+    }
+    if (shell_esc_state == 2) {
+        if (c == 'A') {
+            shell_history_prev();
+        } else if (c == 'B') {
+            shell_history_next();
+        }
+        shell_esc_state = 0;
+        return;
+    }
+    if (c == 27) {
+        shell_esc_state = 1;
+        return;
+    }
 
     if (c == '\r' || c == '\n') {
         int prompt_already_printed = 0;
 
-        line[line_pos] = '\0';
+        shell_line[shell_line_pos] = '\0';
         vga_putc('\n', VGA_WHITE);
 
         /* Parse command */
-        if (line_pos == 0) {
+        if (shell_line_pos == 0) {
             /* empty line — show prompt again */
-        } else if (strcmp(line, "help") == 0) {
+        } else {
+            shell_history_push();
+            shell_history_nav = -1;
+            shell_saved_line[0] = '\0';
+        }
+        if (shell_line_pos == 0) {
+            /* empty line — show prompt again */
+        } else if (strcmp(shell_line, "help") == 0) {
             vga_puts("Commands: hello, memtest, sdram, crypto, ps2, snake, life, dash, info, monitor, exp1, exp4, exp5, exp12, cls, quit\n",
                      VGA_GREEN);
-        } else if (strcmp(line, "hello") == 0) {
+        } else if (strcmp(shell_line, "hello") == 0) {
             enter_program(PROG_HELLO);
-        } else if (strcmp(line, "memtest") == 0 || strcmp(line, "sdram") == 0 ||
-                   strcmp(line, "sdram_test") == 0) {
+        } else if (strcmp(shell_line, "memtest") == 0 || strcmp(shell_line, "sdram") == 0 ||
+                   strcmp(shell_line, "sdram_test") == 0) {
             enter_program(PROG_MEMTEST);
-        } else if (strcmp(line, "crypto") == 0) {
+        } else if (strcmp(shell_line, "crypto") == 0) {
             enter_program(PROG_CRYPTO);
-        } else if (strcmp(line, "ps2") == 0 || strcmp(line, "kbd") == 0) {
+        } else if (strcmp(shell_line, "ps2") == 0 || strcmp(shell_line, "kbd") == 0) {
             enter_program(PROG_PS2);
-        } else if (strcmp(line, "snake") == 0) {
+        } else if (strcmp(shell_line, "snake") == 0) {
             enter_program(PROG_SNAKE);
-        } else if (strcmp(line, "life") == 0) {
+        } else if (strcmp(shell_line, "life") == 0) {
             enter_program(PROG_LIFE);
-        } else if (strcmp(line, "dash") == 0) {
+        } else if (strcmp(shell_line, "dash") == 0) {
             enter_program(PROG_DASHBOARD);
-        } else if (strcmp(line, "info") == 0) {
+        } else if (strcmp(shell_line, "info") == 0) {
             enter_program(PROG_INFO);
-        } else if (strcmp(line, "exp1") == 0) {
+        } else if (strcmp(shell_line, "exp1") == 0) {
             enter_program(PROG_EXP1);
-        } else if (strcmp(line, "exp4") == 0) {
+        } else if (strcmp(shell_line, "exp4") == 0) {
             enter_program(PROG_EXP4);
-        } else if (strcmp(line, "exp5") == 0) {
+        } else if (strcmp(shell_line, "exp5") == 0) {
             enter_program(PROG_EXP5);
-        } else if (strcmp(line, "exp12") == 0) {
+        } else if (strcmp(shell_line, "exp12") == 0) {
             enter_program(PROG_EXP12);
-        } else if (strcmp(line, "monitor") == 0 || strcmp(line, "rv32") == 0) {
+        } else if (strcmp(shell_line, "monitor") == 0 || strcmp(shell_line, "rv32") == 0) {
             enter_program(PROG_MONITOR);
-        } else if (strcmp(line, "cls") == 0) {
+        } else if (strcmp(shell_line, "cls") == 0) {
             shell_init();
             prompt_already_printed = 1;
-        } else if (strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0) {
+        } else if (strcmp(shell_line, "quit") == 0 || strcmp(shell_line, "exit") == 0) {
             return_to_shell();
             prompt_already_printed = 1;
         } else {
             vga_puts("? Unknown command. Type 'help'\n", VGA_RED);
         }
 
-        line_pos = 0;
+        shell_line_pos = 0;
+        shell_line[0] = '\0';
         if ((active_prog == PROG_SHELL) && !prompt_already_printed) {
             shell_prompt();
         }
     } else if (c == '\b' || c == 0x7F) {
-        if (line_pos > 0) {
-            line_pos--;
+        if (shell_line_pos > 0) {
+            shell_line_pos--;
+            shell_line[shell_line_pos] = '\0';
             vga_putc('\b', VGA_WHITE);
         }
-    } else if (c >= ' ' && c < 0x7F && line_pos < (int)sizeof(line) - 1) {
-        line[line_pos++] = c;
+    } else if (c >= ' ' && c < 0x7F && shell_line_pos < SHELL_LINE_SIZE - 1) {
+        shell_line[shell_line_pos++] = c;
+        shell_line[shell_line_pos] = '\0';
         vga_putc(c, VGA_WHITE);
     }
 }

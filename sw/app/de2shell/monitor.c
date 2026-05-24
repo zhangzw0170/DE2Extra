@@ -178,13 +178,115 @@ static void cmd_regs(void) {
 static int active = 0;
 static char line[64];
 static int  pos = 0;
+static char saved_line[64];
+static char history[8][64];
+static int history_count = 0;
+static int history_nav = -1;
+static int esc_state = 0;
+
+static void prompt(void) {
+    vga_puts("rv32> ", VGA_GREEN);
+}
+
+static void redraw_input_line(int old_len) {
+    vga_putc('\r', VGA_WHITE);
+    prompt();
+    for (int i = 0; i < pos; i++) {
+        vga_putc(line[i], VGA_WHITE);
+    }
+    for (int i = pos; i < old_len; i++) {
+        vga_putc(' ', VGA_WHITE);
+    }
+    vga_putc('\r', VGA_WHITE);
+    prompt();
+    for (int i = 0; i < pos; i++) {
+        vga_putc(line[i], VGA_WHITE);
+    }
+}
+
+static void history_store_current(void) {
+    for (int i = 0; i <= pos; i++) {
+        saved_line[i] = line[i];
+    }
+}
+
+static void history_load(const char *src) {
+    int i = 0;
+    while (src[i] && i < (int)sizeof(line) - 1) {
+        line[i] = src[i];
+        i++;
+    }
+    line[i] = '\0';
+    pos = i;
+}
+
+static void history_push(void) {
+    if (pos == 0) {
+        return;
+    }
+    if ((history_count > 0) && (strcmp(history[history_count - 1], line) == 0)) {
+        return;
+    }
+    if (history_count < (int)(sizeof(history) / sizeof(history[0]))) {
+        for (int i = 0; i <= pos; i++) {
+            history[history_count][i] = line[i];
+        }
+        history_count++;
+    } else {
+        for (int i = 1; i < (int)(sizeof(history) / sizeof(history[0])); i++) {
+            for (int j = 0; j < (int)sizeof(line); j++) {
+                history[i - 1][j] = history[i][j];
+            }
+        }
+        for (int i = 0; i <= pos; i++) {
+            history[(sizeof(history) / sizeof(history[0])) - 1][i] = line[i];
+        }
+    }
+}
+
+static void history_prev(void) {
+    int old_len = pos;
+    if (history_count <= 0) {
+        return;
+    }
+    if (history_nav < 0) {
+        history_store_current();
+        history_nav = history_count - 1;
+    } else if (history_nav > 0) {
+        history_nav--;
+    } else {
+        return;
+    }
+    history_load(history[history_nav]);
+    redraw_input_line(old_len);
+}
+
+static void history_next(void) {
+    int old_len = pos;
+    if (history_nav < 0) {
+        return;
+    }
+    if (history_nav < (history_count - 1)) {
+        history_nav++;
+        history_load(history[history_nav]);
+    } else {
+        history_nav = -1;
+        history_load(saved_line);
+    }
+    redraw_input_line(old_len);
+}
 
 static void init(void) {
     vga_clear();
     vga_puts("RISC-V Assembly Monitor v0.1\n", VGA_CYAN);
     vga_puts("Type 'help' for commands.\n\n", VGA_GRAY);
-    vga_puts("rv32> ", VGA_GREEN);
-    active = 1; pos = 0;
+    prompt();
+    active = 1;
+    pos = 0;
+    line[0] = '\0';
+    saved_line[0] = '\0';
+    history_nav = -1;
+    esc_state = 0;
 }
 
 static void show_help(void) {
@@ -216,11 +318,34 @@ static void input(char c) {
     if (!active) return;
     if (c == 'q' || c == 'Q') { active = 0; return; }
 
+    if (esc_state == 1) {
+        esc_state = (c == '[') ? 2 : 0;
+        return;
+    }
+    if (esc_state == 2) {
+        if (c == 'A') {
+            history_prev();
+        } else if (c == 'B') {
+            history_next();
+        }
+        esc_state = 0;
+        return;
+    }
+    if (c == 27) {
+        esc_state = 1;
+        return;
+    }
+
     if (c == '\r' || c == '\n') {
         line[pos] = '\0';
         vga_puts("\n", VGA_BLACK);
         char *cmd = line;
         while (*cmd == ' ') cmd++;
+        if (pos > 0) {
+            history_push();
+        }
+        history_nav = -1;
+        saved_line[0] = '\0';
 
         if (pos == 0) {
             /* empty */
@@ -258,11 +383,17 @@ static void input(char c) {
             vga_puts("? Unknown. Type 'help'\n", VGA_RED);
         }
         pos = 0;
-        vga_puts("rv32> ", VGA_GREEN);
+        line[0] = '\0';
+        prompt();
     } else if (c == '\b' || c == 0x7F) {
-        if (pos > 0) pos--;
+        if (pos > 0) {
+            pos--;
+            line[pos] = '\0';
+            vga_putc('\b', VGA_WHITE);
+        }
     } else if (c >= ' ' && c < 0x7F && pos < (int)sizeof(line)-1) {
         line[pos++] = c;
+        line[pos] = '\0';
         vga_putc(c, VGA_WHITE);
     }
 }
