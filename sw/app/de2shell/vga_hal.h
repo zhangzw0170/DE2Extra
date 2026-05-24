@@ -43,6 +43,9 @@ void vga_goto(int col, int row);
 /* Clear entire screen */
 void vga_clear(void);
 
+/* Monotonic counter incremented by every vga_clear() */
+uint32_t vga_clear_epoch(void);
+
 /* Show/hide cursor */
 void vga_cursor_show(int show);
 

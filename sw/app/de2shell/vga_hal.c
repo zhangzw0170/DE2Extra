@@ -13,6 +13,7 @@
 
   static int cur_col = 0;
   static int cur_row = 0;
+  static uint32_t clear_epoch = 0;
 
   static void advance_cursor(void) {
       cur_col++;
@@ -67,6 +68,7 @@
       printf("\033[2J\033[H");
       cur_col = 0;
       cur_row = 0;
+      clear_epoch++;
   }
 
   void vga_cursor_show(int show) {
@@ -75,6 +77,7 @@
 
   int vga_col(void) { return cur_col; }
   int vga_row(void) { return cur_row; }
+  uint32_t vga_clear_epoch(void) { return clear_epoch; }
 
   void vga_puthex32(uint32_t val) {
       printf("%08X", (unsigned)val);
@@ -110,6 +113,7 @@
 
   static int cur_col = 0;
   static int cur_row = 0;
+  static uint32_t clear_epoch = 0;
 
   static void hw_cursor_sync(void) {
 #if VGA_MMIO_ENABLED
@@ -232,6 +236,7 @@
 #endif
       cur_col = 0;
       cur_row = 0;
+      clear_epoch++;
       hw_cursor_sync();
       neorv32_uart0_puts("\033[2J\033[H");
   }
@@ -252,6 +257,7 @@
 
   int vga_col(void) { return cur_col; }
   int vga_row(void) { return cur_row; }
+  uint32_t vga_clear_epoch(void) { return clear_epoch; }
 
   void vga_puthex32(uint32_t val) {
       static const char h[] = "0123456789ABCDEF";

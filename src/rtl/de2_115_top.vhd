@@ -486,19 +486,27 @@ begin
     DRAM_CLK <= clk_sdram_shift;
 
     -- ================================================================
-    -- VGA Text Terminal (temporarily disabled to isolate non-VGA bring-up)
+    -- VGA Text Terminal (Phase 2b)
     -- ================================================================
-    vga_reg_dat_i <= (others => '0');
-    vga_reg_ack   <= vga_reg_stb;
-
-    vga_r_int     <= (others => '0');
-    vga_g_int     <= (others => '0');
-    vga_b_int     <= (others => '0');
-    vga_hs_int    <= '1';
-    vga_vs_int    <= '0';
-    vga_clk_int   <= '0';
-    vga_sync_int  <= '0';
-    vga_blank_int <= '0';
+    u_vga : entity work.vga_text_terminal
+    port map (
+        clk_50m_i   => clk_50m,
+        rst_n_i     => rst_n,
+        vga_r_o     => vga_r_int,
+        vga_g_o     => vga_g_int,
+        vga_b_o     => vga_b_int,
+        vga_hs_o    => vga_hs_int,
+        vga_vs_o    => vga_vs_int,
+        vga_blank_o => vga_blank_int,
+        vga_sync_o  => vga_sync_int,
+        vga_clk_o   => vga_clk_int,
+        reg_adr_i   => vga_reg_adr,
+        reg_dat_i   => vga_reg_dat_o,
+        reg_dat_o   => vga_reg_dat_i,
+        reg_we_i    => vga_reg_we,
+        reg_stb_i   => vga_reg_stb,
+        reg_ack_o   => vga_reg_ack
+    );
 
     VGA_R       <= vga_r_int;
     VGA_G       <= vga_g_int;
@@ -583,9 +591,24 @@ begin
     ntt_wb_dat_i <= (others => '0');
     ntt_wb_ack   <= ntt_wb_stb;
 
-    -- LCD @ 0xF0008000 (stub — de2shell uses hardware lcd_status/lcd_debug)
-    lcd_wb_dat_i <= (others => '0');
-    lcd_wb_ack   <= '0';
+    -- LCD @ 0xF0008000 — shell/de2os-style Wishbone LCD controller
+    u_lcd_shell : entity work.lcd_wb
+    port map (
+        clk_i    => clk_50m,
+        rst_n_i  => lcd_status_rst_n,
+        wb_adr_i => lcd_wb_adr,
+        wb_dat_i => lcd_wb_dat_o,
+        wb_dat_o => lcd_wb_dat_i,
+        wb_we_i  => lcd_wb_we,
+        wb_stb_i => lcd_wb_stb,
+        wb_ack_o => lcd_wb_ack,
+        lcd_data => lcd_status_data,
+        lcd_rs   => lcd_status_rs,
+        lcd_rw   => lcd_status_rw,
+        lcd_en   => lcd_status_en,
+        lcd_on   => lcd_status_on,
+        lcd_blon => lcd_status_blon
+    );
 
     -- ================================================================
     -- Timer @ 0xF0004000 — captures IR pulse widths
@@ -659,7 +682,7 @@ begin
     -- When shell mode (channel=0): board outputs from CPU GPIO + seg7_mapper
 
     LEDR <= exp_ledr when expdemo_active = '1' else
-            gpio_out(15 downto 0) & SW(17 downto 16);
+            SW(17 downto 16) & gpio_out(15 downto 0);
 
     LEDG <= exp_ledg when expdemo_active = '1' else
             (not rst_n) & gpio_out(23 downto 16);
@@ -740,36 +763,10 @@ begin
     );
 
     -- ================================================================
-    -- LCD -- SW16=0 保持 Phase 1/2a 状态显示; SW16=1 切到 2b 调试显示
+    -- LCD output routing
+    -- expdemo_active = 1: preserve pure-VHDL experiment LCD behavior
+    -- expdemo_active = 0: shell-side software owns LCD via lcd_wb
     -- ================================================================
-    u_lcd_status : entity work.lcd_status
-    port map (
-        clk_i    => clk_50m,
-        rst_n_i  => lcd_status_rst_n,
-        gpio_i   => gpio_out,
-        lcd_data => lcd_status_data,
-        lcd_rs   => lcd_status_rs,
-        lcd_rw   => lcd_status_rw,
-        lcd_en   => lcd_status_en,
-        lcd_on   => lcd_status_on,
-        lcd_blon => lcd_status_blon
-    );
-
-    u_lcd_debug : entity work.lcd_debug
-    port map (
-        clk_i       => clk_50m,
-        rst_n_i     => lcd_debug_rst_n,
-        vga_vs_i    => vga_vs_int,
-        ps2_valid_i => ps2_valid,
-        ps2_scancode_i => ps2_scancode,
-        lcd_data    => lcd_debug_data,
-        lcd_rs      => lcd_debug_rs,
-        lcd_rw      => lcd_debug_rw,
-        lcd_en      => lcd_debug_en,
-        lcd_on      => lcd_debug_on,
-        lcd_blon    => lcd_debug_blon
-    );
-
     LCD_DATA <= exp_lcd_data when expdemo_active = '1' else lcd_status_data;
     LCD_RS   <= exp_lcd_rs   when expdemo_active = '1' else lcd_status_rs;
     LCD_RW   <= exp_lcd_rw   when expdemo_active = '1' else lcd_status_rw;

@@ -16,9 +16,9 @@
   }
 #endif
 
-#define CMD_BUF_SIZE 256
+#define CMD_BUF_SIZE 128
 #define MAX_ARGS 8
-#define HISTORY_DEPTH 8
+#define HISTORY_DEPTH 4
 
 static char cmd_buf[CMD_BUF_SIZE];
 static int cmd_pos;
@@ -299,7 +299,7 @@ static void history_next(void) {
     redraw_input_line(old_len);
 }
 
-static void redraw(void) {
+static void draw_page(void) {
     vga_clear();
     vga_goto(0, 0);
     vga_puts("DE2Extra Crypto CLI\n", VGA_CYAN);
@@ -307,10 +307,21 @@ static void redraw(void) {
     vga_puts("          bench clear quit\n", VGA_GRAY);
     vga_puts("ISA: RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_GRAY);
     vga_puts("     Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n\n", VGA_GRAY);
+}
+
+static void redraw(void) {
+    draw_page();
     prompt();
 }
 
+static void ensure_lines_available(int lines) {
+    if ((vga_row() + lines) >= (VGA_ROWS - 1)) {
+        draw_page();
+    }
+}
+
 static void show_info(void) {
+    ensure_lines_available(6);
     vga_puts("Target: NEORV32 RISC-V @ 50 MHz\n", VGA_WHITE);
     vga_puts("ISA:    RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_WHITE);
     vga_puts("        Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n", VGA_WHITE);
@@ -324,6 +335,7 @@ static void show_info(void) {
 }
 
 static void show_help(void) {
+    ensure_lines_available(12);
     vga_puts("  help                              Show help\n", VGA_WHITE);
     vga_puts("  info                              Show system information\n", VGA_WHITE);
     vga_puts("  aes enc <key> <pt>                AES-128 ECB encrypt\n", VGA_WHITE);
@@ -610,6 +622,7 @@ static int cmd_bench(void) {
     t_sm3 = bench_cycles_now();
 #endif
 
+    ensure_lines_available(17);
     vga_puts("Software benchmark\n", VGA_CYAN);
     vga_puts("AES-128 enc  x", VGA_WHITE);
     put_dec((unsigned)bench_iters, VGA_YELLOW);
@@ -679,7 +692,7 @@ static int cmd_bench(void) {
         }
         t_zks_sm3 = bench_cycles_now();
 
-        vga_puts("\nZk* acceleration\n", VGA_CYAN);
+        vga_puts("Zk* acceleration\n", VGA_CYAN);
         vga_puts("Label          SW        Zk*       Speedup\n", VGA_WHITE);
         bench_print_line("AES-128 enc", t_aes, t_zkn_aes);
         bench_print_line("SHA-256", t_sha256, t_zkn_sha256);
@@ -689,7 +702,7 @@ static int cmd_bench(void) {
     }
 #endif
 
-    vga_puts("\nTRNG statistics (256 bytes)\n", VGA_CYAN);
+    vga_puts("TRNG statistics (256 bytes)\n", VGA_CYAN);
     trng_bytes(trng_buf, (int)sizeof(trng_buf));
     for (i = 0; i < (int)sizeof(trng_buf); i++) {
         uint8_t b = trng_buf[i];
@@ -699,10 +712,9 @@ static int cmd_bench(void) {
         }
     }
     vga_puts("Total bits : 2048\n", VGA_WHITE);
-    vga_puts("1-bits     : ", VGA_WHITE);
+    vga_puts("1-bits/0-bits : ", VGA_WHITE);
     put_dec(trng_ones, VGA_YELLOW);
-    vga_putc('\n', VGA_WHITE);
-    vga_puts("0-bits     : ", VGA_WHITE);
+    vga_puts(" / ", VGA_WHITE);
     put_dec(2048u - trng_ones, VGA_YELLOW);
     vga_putc('\n', VGA_WHITE);
     vga_puts("One ratio  : ", VGA_WHITE);
@@ -813,6 +825,7 @@ static void input(char c) {
 
         cmd_buf[cmd_pos] = '\0';
         vga_putc('\n', VGA_WHITE);
+        ensure_lines_available(1);
         if (cmd_pos > 0) {
             history_push();
         }
@@ -823,6 +836,7 @@ static void input(char c) {
         cmd_pos = 0;
         cmd_buf[0] = '\0';
         if (!done && !printed_prompt) {
+            ensure_lines_available(1);
             prompt();
         }
         return;

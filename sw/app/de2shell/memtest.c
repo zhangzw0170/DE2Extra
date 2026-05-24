@@ -7,6 +7,7 @@
  */
 #include "vga_hal.h"
 #include "gpio_hal.h"
+#include "lcd_hal.h"
 #include <stddef.h>
 
 #define SDRAM_BASE  ((volatile uint32_t *)0x01000000)
@@ -65,10 +66,43 @@ static uint32_t sparse_pattern(uint32_t word_idx) {
     return 0xA5A50000u ^ (word_idx * 0x1F123BB5u) ^ (word_idx >> 3);
 }
 
+static char hex_digit(unsigned value) {
+    value &= 0x0fu;
+    return (value < 10u) ? (char)('0' + value) : (char)('A' + (value - 10u));
+}
+
+static void lcd_show_fail(uint32_t test_num, uint32_t word_idx, uint32_t got) {
+    char line1[17] = "                ";
+    char line2[17] = "                ";
+
+    line1[0] = 'F'; line1[1] = 'A'; line1[2] = 'I'; line1[3] = 'L';
+    line1[4] = ' '; line1[5] = 'T'; line1[6] = hex_digit(test_num);
+    line1[7] = ' '; line1[8] = 'W';
+    line1[9] = hex_digit((word_idx >> 4) & 0x0fu);
+    line1[10] = hex_digit(word_idx & 0x0fu);
+
+    line2[0] = 'G'; line2[1] = 'O'; line2[2] = 'T'; line2[3] = ' ';
+    for (int i = 0; i < 8; i++) {
+        line2[4 + i] = hex_digit((unsigned)(got >> ((7 - i) * 4)));
+    }
+
+    lcd_write_lines(line1, line2);
+}
+
 static void lcd_status(uint32_t s) {
-#ifndef LOCAL_BUILD
-    neorv32_gpio_port_set(s);
-#endif
+    char line1[17] = "DE2Extra SDRAM  ";
+    char line2[17] = "                ";
+
+    if (s == LCD_STATUS_TESTING) {
+        line2[0] = 'T'; line2[1] = 'E'; line2[2] = 'S'; line2[3] = 'T';
+        line2[4] = 'I'; line2[5] = 'N'; line2[6] = 'G'; line2[7] = '.';
+        line2[8] = '.'; line2[9] = '.';
+    } else if (s == LCD_STATUS_PASS) {
+        line2[0] = 'A'; line2[1] = 'L'; line2[2] = 'L'; line2[3] = ' ';
+        line2[4] = 'P'; line2[5] = 'A'; line2[6] = 'S'; line2[7] = 'S';
+    }
+
+    lcd_write_lines(line1, line2);
 }
 
 static void put_hex32_color(uint32_t val, uint16_t color) {
@@ -225,11 +259,7 @@ static void update(void) {
             put_hex32_color(fail_word, VGA_RED);
             vga_puts(" A=", VGA_RED);
             put_hex32_color(fail_addr, VGA_RED);
-            lcd_status(LCD_FAIL_META |
-                       ((fail_test & 0xF) << 24) |
-                       ((fail_word & 0xFF) << 16));
-            lcd_status(LCD_FAIL_GOT_HI | ((fail_got >> 16) & 0xFFFFu));
-            lcd_status(LCD_FAIL_GOT_LO | (fail_got & 0xFFFFu));
+            lcd_show_fail(fail_test, fail_word, fail_got);
             vga_goto(0, DETAIL_ROW);
             vga_puts("EXP ", VGA_RED);
             put_hex32_color(fail_expected, VGA_YELLOW);

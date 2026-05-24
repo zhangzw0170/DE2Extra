@@ -40,12 +40,8 @@ architecture rtl of lcd_wb is
     type state_t is (S_IDLE, S_PULSE, S_DELAY);
     signal state     : state_t;
     signal delay_cnt : integer range 0 to DELAY_LONG_C;
-    signal pend_data : std_logic_vector(7 downto 0);
-    signal pend_rs   : std_logic;
     signal busy      : std_logic;
     signal ack_reg   : std_logic;
-
-    signal is_long_cmd : std_logic;
 
 begin
 
@@ -73,28 +69,6 @@ begin
         end if;
     end process;
 
-    -- Wishbone write: latch command/data
-    process(clk_i, rst_n_i)
-    begin
-        if rst_n_i = '0' then
-            pend_data <= (others => '0');
-            pend_rs   <= '0';
-        elsif rising_edge(clk_i) then
-            if wb_stb_i = '1' and wb_we_i = '1' and busy = '0' then
-                pend_data <= wb_dat_i(7 downto 0);
-                if wb_adr_i(3 downto 2) = "00" then  -- offset 0x00: data
-                    pend_rs <= '1';
-                else                                    -- offset 0x04: command
-                    pend_rs <= '0';
-                end if;
-            end if;
-        end if;
-    end process;
-
-    -- Detect clear/home command (0x01 or 0x02) for longer delay
-    is_long_cmd <= '1' when pend_rs = '0' and
-                   (pend_data = x"01" or pend_data = x"02") else '0';
-
     -- HD44780 timing state machine
     process(clk_i, rst_n_i)
     begin
@@ -109,9 +83,13 @@ begin
             case state is
                 when S_IDLE =>
                     lcd_en <= '0';
-                    if wb_stb_i = '1' and wb_we_i = '1' then
-                        lcd_data  <= pend_data;
-                        lcd_rs    <= pend_rs;
+                    if wb_stb_i = '1' and wb_we_i = '1' and busy = '0' then
+                        lcd_data  <= wb_dat_i(7 downto 0);
+                        if wb_adr_i(3 downto 2) = "00" then
+                            lcd_rs <= '1'; -- offset 0x00: data
+                        else
+                            lcd_rs <= '0'; -- offset 0x04: command
+                        end if;
                         busy      <= '1';
                         state     <= S_PULSE;
                         delay_cnt <= EN_PULSE_C;
@@ -122,7 +100,7 @@ begin
                     if delay_cnt = 1 then
                         lcd_en    <= '0';
                         state     <= S_DELAY;
-                        if is_long_cmd = '1' then
+                        if (lcd_rs = '0') and ((lcd_data = x"01") or (lcd_data = x"02")) then
                             delay_cnt <= DELAY_LONG_C;
                         else
                             delay_cnt <= DELAY_NORM_C;

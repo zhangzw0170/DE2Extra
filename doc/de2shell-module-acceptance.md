@@ -11,22 +11,25 @@
 - 构建/烧录命令: `MSYS_NO_PATHCONV=1 bash build.sh --flash app/de2shell`
 - 实测板卡: `EP4CE115F29C7`
 - 串口: `COM10`, `115200 8N1`
+- shell 首页: `DE2Extra Shell v0.2`
 - LCD 常驻状态: 第一行 `DE2Extra Shell`，第二行 `CH0 SHEL READY`
 - HEX/状态字: shell 空闲时可见心跳翻转，证明主循环仍在推进
 
-当前代码侧新增、但尚待下一次上板确认的行为：
+本轮已通过编译/烧录/串口复测确认的新增行为：
 
 - shell 首页升级为 `v0.2`，顶部直接显示命令列表与仓库地址
-- 全局 IR 数字键切频改为与内部频道号对齐：`1-9` 对应 `Ch:1-9`，`A` 对应 `expdemo`
-- `lcd_status.vhd` 的程序缩写表已改为 `MONI` / `DEMO`
+- 新增 `lcdmon` 命令，可从串口读取软件侧 LCD 16x2 阴影缓冲
+- `lcdmon` 当前实测输出：`L0=[DE2Extra Shell  ]`，`L1=[CH0 SHEL READY  ]`
+- 当前稳定手动构建链下，`Executable (VHD)` 为 `64800 bytes`，仍适配 64KB IMEM 预算
+- 全局 IR 数字键切频已与内部频道号对齐：`1-9` 对应 `Ch:1-9`，`A` 对应 `expdemo`
 - `hello` 仍直接写原始 GPIO，尚未切到 `board_status` 兼容路径
-- `expdemo` 已改为 `Home -> 实验说明 + Live Monitor` 两级页面，且 `KEY0` 已从实验输入中释放；这些新版行为尚待本轮 bitstream 上板复测
 
 本轮已通过串口 smoke test 的模块：
 
 | 模块 | 进入 | 退出 | 备注 |
 |---|---|---|---|
 | `help` | ✅ | N/A | 列出全部命令 |
+| `lcdmon` | ✅ | N/A | 输出软件侧 LCD 16x2 阴影缓冲 |
 | `info` | ✅ | ✅ | `q` 返回 `0000>` |
 | `hello` | ✅ | ✅ | `q` 返回 `0000>` |
 | `dash` | ✅ | ✅ | 串口验收通过 |
@@ -61,7 +64,7 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| A1.1 | 命令解析 | `help` 输出当前全部 12 条命令列表 | ✅ |
+| A1.1 | 命令解析 | `help` 输出当前全部 14 条命令列表 | ✅ |
 | A1.2 | 程序调度 | 输入子命令名称后在 `active_prog` 间切换 | ✅ |
 | A1.3 | 程序 init/update/input/finish 回调 | 每个程序切换时调 `init()`，每帧调 `update()`，按键调 `input()`，返回 shell 时调 `finish()` | ✅ |
 | A1.4 | UART 输入 | `uart_kbhit()/uart_getc()` 正确读取 COM10 115200 8N1 | ✅ |
@@ -71,12 +74,13 @@
 | A1.8 | `cls` 命令 | 清屏并重绘 shell 启动画面 | ✅ |
 | A1.9 | `quit`/`exit` 命令 | 从子程序返回 shell 主界面 | ✅ |
 | A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | ✅ 串口实测可见 `Up HH:MM` 递增 |
-| A1.11 | 程序注册表完整性 | 10 个用户程序 + shell 的 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
+| A1.11 | 程序注册表完整性 | 11 个用户程序 + shell 的 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
 | A1.12 | IR 遥控切频 | 遥控器按内部频道号映射：`1-9` 对应 hello/memtest/crypto/ps2/snake/life/dash/info/monitor，`A` 进入 expdemo；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | ✅ |
 | A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | ✅ 已由 dashboard `ir_input` 吞掉全局切频验证 |
-| A1.14 | Docker 交叉编译 | `build.sh` 分步执行 `make clean` + `make image`，当前 `de2shell` IMEM 镜像约 47KB，适配 64KB IMEM | ✅ |
+| A1.14 | Docker 交叉编译 | 手动 Docker 构建链可稳定生成 `de2shell` IMEM 镜像；当前 `Executable (VHD)` 为 `64800 bytes`，适配 64KB IMEM | ✅ |
 | A1.15 | LOCAL_BUILD 编译 | `make local` (host gcc) 编译通过 | ✅ |
 | A1.16 | 统一板级状态层 | `board_status.c/h` 负责 shell/子程序对 LCD/HEX/LED 的统一编码与接管 | ✅ |
+| A1.17 | `lcdmon` 命令 | 输出软件侧 LCD 16x2 阴影缓冲，不依赖物理 LCD 回读 | ✅ |
 
 ### A2. VGA HAL (vga_hal.c/h)
 
@@ -277,6 +281,7 @@
 | E1.2 | 内存信息 | IMEM 64KB, DMEM 16KB, SDRAM 128MB | ✅ |
 | E1.3 | 外设信息 | VGA 640×480@60Hz 80×25 text, 输入方式, 密码学算法列表 | ✅ |
 | E1.4 | 退出 `q` | 返回 shell | ✅ |
+| E1.5 | 版本/仓库信息 | 显示 `v0.2` 与 GitHub 仓库地址 | ✅ |
 
 ### E2. monitor — RISC-V 汇编监视器 (monitor.c)
 
@@ -389,7 +394,7 @@
 |---|---|---|---|
 | G1.1 | NEORV32 交叉编译 | `make clean all image` 无错误 | ✅ |
 | G1.2 | LOCAL_BUILD 编译 | `make local` (host gcc) 无错误 | ✅ |
-| G1.3 | IMEM 镜像尺寸 | `neorv32_imem_image.vhd` 产生的 text < 32KB | ✅ |
+| G1.3 | IMEM 镜像尺寸 | `neorv32_imem_image.vhd` 适配 64KB IMEM 预算；当前 `Executable (VHD)` 为 `64800 bytes` | ✅ |
 | G1.4 | Quartus 全工程编译 | Fitter/Assembler 无错误 | ✅ |
 
 ### G2. 接口一致性
@@ -465,6 +470,7 @@
 | H1.20 | expdemo 两级退出 | 实验页按 `q` 回 Home；Home 页再按 `q` 回 shell | ✅ |
 | H1.21 | expdemo channel MMIO 写通 | 在 expdemo 中输入 `1` + Enter，或 monitor `poke 0xF000D000 1` | `peek 0xF000D000` 读回 1，且活动页显示 `HW channel=1` | ✅ `peek 0xF000D000 = 0x00000001`，菜单显示 `HW channel: 1` |
 | H1.22 | expdemo `KEY0` 保留 | 进入任一实验后观察说明页并试用 `KEY1..KEY3` | 物理 `KEY0` 不再承担实验内功能，实验按键按新映射工作 | ✅ |
+| H1.23 | `lcdmon` 远程 LCD 阴影读取 | shell 输入 `lcdmon` | 串口输出 `L0/L1` 两行 16 字符阴影缓冲；当前 shell 空闲值为 `DE2Extra Shell` / `CH0 SHEL READY` | ✅ |
 
 ### H2. 需要 VGA 显示器
 
@@ -487,4 +493,4 @@
 
 ---
 
-*最后更新: 2026-05-24 — 文档按当前真实状态重排：ExpDemo channel MMIO 已从阻塞项中移除，`A1.10`/`A1.13`/`E3.6` 收口；新版 IR `1-9/A` 内部频道号映射与 LCD `MONI/DEMO` 缩写已改代码，但尚待下一次重编译烧录复测。当前非 VGA 阻塞收敛为 ExpDemo 本轮上板回归、`monitor regs` 快照注入、`hello` 的 board_status/LCD 协议冲突，以及真实 NTT 硬件重新并回。*
+*最后更新: 2026-05-25 — 已补记本轮 `lcdmon` 远程验收、shell `v0.2` 首页与命令表、`info` 页版本/仓库信息、以及当前 64KB IMEM 预算下的真实 `Executable (VHD)=64800 bytes`。当前非 VGA 阻塞继续收敛到 `hello` 的 board_status/LCD 协议冲突、物理 LCD 最后一段链路排查，以及真实 NTT 硬件重新并回。*

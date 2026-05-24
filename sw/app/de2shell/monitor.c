@@ -28,6 +28,8 @@
   }
 #endif
 
+static void draw_header(void);
+
 /* ── Register Snapshot ────────────────────────────────────────── */
 
 static uint32_t snap_x[32];
@@ -92,6 +94,9 @@ static void demo_aes(void) {
     r_esi  = zk_aes32esi(rs1, rs2, 0);
 #endif
 
+    if ((vga_row() + 10) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     vga_puts("\n=== AES-128 Demo ===\n", VGA_CYAN);
     vga_puts("Input state:  0x", VGA_WHITE); vga_puthex32(rs1);
     vga_puts("\nRound key:    0x", VGA_WHITE); vga_puthex32(rs2);
@@ -119,6 +124,9 @@ static void demo_sha256(void) {
     r_sum0 = a0;
 #endif
 
+    if ((vga_row() + 8) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     vga_puts("\n=== SHA-256 Demo ===\n", VGA_CYAN);
     vga_puts("Input word:   0x", VGA_WHITE); vga_puthex32(rs1);
     vga_puts("\n\nsha256sig0 (sigma0 function):\n", VGA_GREEN);
@@ -146,6 +154,9 @@ static void demo_sm4(void) {
     r_sm4ks = a0;
 #endif
 
+    if ((vga_row() + 10) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     vga_puts("\n=== SM4 Demo ===\n", VGA_CYAN);
     vga_puts("Input state:  0x", VGA_WHITE); vga_puthex32(rs1);
     vga_puts("\nRound key:    0x", VGA_WHITE); vga_puthex32(rs2);
@@ -183,6 +194,9 @@ static uint32_t parse_hex(const char *s) {
 static void cmd_dump(uint32_t addr, int n) {
     volatile uint32_t *p = (volatile uint32_t*)(uintptr_t)addr;
     for (int i = 0; i < n; i++) {
+        if ((vga_row() + 1) >= (VGA_ROWS - 1)) {
+            draw_header();
+        }
         vga_puthex32(addr + i*4); vga_puts(": 0x", VGA_WHITE);
         vga_puthex32(p[i]);
         vga_puts("\n", VGA_BLACK);
@@ -190,6 +204,9 @@ static void cmd_dump(uint32_t addr, int n) {
 }
 
 static void cmd_peek(uint32_t addr) {
+    if ((vga_row() + 1) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     volatile uint32_t *p = (volatile uint32_t*)(uintptr_t)addr;
     vga_puts("0x", VGA_WHITE); vga_puthex32(addr);
     vga_puts(" = 0x", VGA_WHITE); vga_puthex32(*p);
@@ -197,12 +214,18 @@ static void cmd_peek(uint32_t addr) {
 }
 
 static void cmd_poke(uint32_t addr, uint32_t val) {
+    if ((vga_row() + 1) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     volatile uint32_t *p = (volatile uint32_t*)(uintptr_t)addr;
     *p = val;
     vga_puts("OK\n", VGA_GREEN);
 }
 
 static void cmd_regs(void) {
+    if ((vga_row() + 9) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     capture_regs_snapshot();
     vga_puts("Registers (snapshot):\n", VGA_CYAN);
     for (int i = 0; i < 32; i += 4) {
@@ -227,8 +250,22 @@ static int history_count = 0;
 static int history_nav = -1;
 static int esc_state = 0;
 
+static void draw_header(void) {
+    vga_clear();
+    vga_puts("RISC-V Assembly Monitor v0.2\n", VGA_CYAN);
+    vga_puts("Commands: help regs peek poke dump aes sha256 sm4 q\n", VGA_GRAY);
+    vga_puts("ISA: RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_GRAY);
+    vga_puts("     Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n\n", VGA_GRAY);
+}
+
 static void prompt(void) {
     vga_puts("riscvasm > ", VGA_GREEN);
+}
+
+static void ensure_output_room(void) {
+    if (vga_row() >= VGA_ROWS - 1) {
+        draw_header();
+    }
 }
 
 static void redraw_input_line(int old_len) {
@@ -320,11 +357,7 @@ static void history_next(void) {
 }
 
 static void init(void) {
-    vga_clear();
-    vga_puts("RISC-V Assembly Monitor v0.2\n", VGA_CYAN);
-    vga_puts("Commands: help regs peek poke dump aes sha256 sm4 q\n", VGA_GRAY);
-    vga_puts("ISA: RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_GRAY);
-    vga_puts("     Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n\n", VGA_GRAY);
+    draw_header();
     prompt();
     active = 1;
     pos = 0;
@@ -335,6 +368,9 @@ static void init(void) {
 }
 
 static void show_help(void) {
+    if ((vga_row() + 10) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     vga_puts("Commands:\n", VGA_CYAN);
     vga_puts("  regs              Show register snapshot\n", VGA_WHITE);
     vga_puts("  dump ADDR [N]     Hex dump (default 8 words)\n", VGA_WHITE);
@@ -348,14 +384,23 @@ static void show_help(void) {
 }
 
 static void usage_peek(void) {
+    if ((vga_row() + 1) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     vga_puts("Usage: peek ADDR\n", VGA_RED);
 }
 
 static void usage_poke(void) {
+    if ((vga_row() + 1) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     vga_puts("Usage: poke ADDR VAL\n", VGA_RED);
 }
 
 static void usage_dump(void) {
+    if ((vga_row() + 1) >= (VGA_ROWS - 1)) {
+        draw_header();
+    }
     vga_puts("Usage: dump ADDR [N]\n", VGA_RED);
 }
 
@@ -384,6 +429,7 @@ static void input(char c) {
     if (c == '\r' || c == '\n') {
         line[pos] = '\0';
         vga_puts("\n", VGA_BLACK);
+        ensure_output_room();
         char *cmd = line;
         while (*cmd == ' ') cmd++;
         if (pos > 0) {
@@ -438,6 +484,7 @@ static void input(char c) {
         }
         pos = 0;
         line[0] = '\0';
+        ensure_output_room();
         prompt();
     } else if (c == '\b' || c == 0x7F) {
         if (pos > 0) {

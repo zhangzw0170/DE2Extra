@@ -36,6 +36,7 @@ static inline uint8_t fb_rgb332(uint8_t r, uint8_t g, uint8_t b) {
 #define FB_LTGRAY  0xDB
 #define FB_ORANGE  0xF8
 #define FB_BROWN   0x90
+#define FB_TEAL    0x12    /* Win 3.1 desktop: #008080 */
 
 /* Initialize framebuffer backend */
 void fb_init(void);

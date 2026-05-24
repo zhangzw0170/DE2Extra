@@ -46,6 +46,7 @@ set_global_assignment -name VHDL_FILE ../src/rtl/exp/deco138_for.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/exp/adapt_exp1.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/font_rom_pkg.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/vga_text_terminal.vhd
+set_global_assignment -name VHDL_FILE ../src/rtl/periph/lcd_wb.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/lcd_debug.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/uart_jtag_bridge.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/de2_115_top.vhd
