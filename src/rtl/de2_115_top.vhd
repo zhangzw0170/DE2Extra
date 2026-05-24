@@ -11,6 +11,7 @@
 -- 新外设: 在 wb_intercon 中添加 slave 端口 + 地址解码。
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use work.de2extra_pkg.all;
 library jtag_uart_0;
 
@@ -174,6 +175,29 @@ architecture rtl of de2_115_top is
     signal ir_wb_stb   : std_logic;
     signal ir_wb_ack   : std_logic;
 
+    -- IR debug: parallel Exp10-style decoder for A/B test
+    signal dbg_ir_valid : std_logic;
+    signal dbg_ir_cmd   : std_logic_vector(7 downto 0);
+    signal dbg_ir_toggle : std_logic := '0';
+
+    -- Timer @ 0xF0004000
+    signal tmr_wb_adr   : std_logic_vector(2 downto 0);
+    signal tmr_wb_dat_o : std_logic_vector(31 downto 0);
+    signal tmr_wb_dat_i : std_logic_vector(31 downto 0);
+    signal tmr_wb_we    : std_logic;
+    signal tmr_wb_stb   : std_logic;
+    signal tmr_wb_ack   : std_logic;
+    signal tmr_irq      : std_logic;
+
+    -- INTC @ 0xF0006000
+    signal intc_wb_adr   : std_logic_vector(2 downto 0);
+    signal intc_wb_dat_o : std_logic_vector(31 downto 0);
+    signal intc_wb_dat_i : std_logic_vector(31 downto 0);
+    signal intc_wb_we    : std_logic;
+    signal intc_wb_stb   : std_logic;
+    signal intc_wb_ack   : std_logic;
+    signal intc_irq      : std_logic;
+
     -- NTT accelerator Wishbone
     signal ntt_wb_adr   : std_logic_vector(11 downto 0);
     signal ntt_wb_dat_o : std_logic_vector(31 downto 0);
@@ -181,6 +205,49 @@ architecture rtl of de2_115_top is
     signal ntt_wb_we    : std_logic;
     signal ntt_wb_stb   : std_logic;
     signal ntt_wb_ack   : std_logic;
+
+    -- LCD Wishbone (stub — not used in de2shell)
+    signal lcd_wb_adr   : std_logic_vector(3 downto 0);
+    signal lcd_wb_dat_o : std_logic_vector(31 downto 0);
+    signal lcd_wb_dat_i : std_logic_vector(31 downto 0);
+    signal lcd_wb_we    : std_logic;
+    signal lcd_wb_stb   : std_logic;
+    signal lcd_wb_ack   : std_logic;
+
+    -- ExpDemo Wishbone
+    signal expdemo_wb_adr   : std_logic_vector(2 downto 0);
+    signal expdemo_wb_dat_o : std_logic_vector(31 downto 0);
+    signal expdemo_wb_dat_i : std_logic_vector(31 downto 0);
+    signal expdemo_wb_we    : std_logic;
+    signal expdemo_wb_stb   : std_logic;
+    signal expdemo_wb_ack   : std_logic;
+    signal expdemo_active   : std_logic;
+    signal expdemo_channel  : integer range 0 to 13;
+
+    -- ExpDemo board outputs
+    signal exp_hex  : std_logic_vector(55 downto 0);
+    signal exp_ledr : std_logic_vector(17 downto 0);
+    signal exp_ledg : std_logic_vector(8 downto 0);
+    signal exp_lcd_data : std_logic_vector(7 downto 0);
+    signal exp_lcd_rs   : std_logic;
+    signal exp_lcd_rw   : std_logic;
+    signal exp_lcd_en   : std_logic;
+    signal exp_uart_txd : std_logic;
+    signal exp_uart_rxd : std_logic;
+    signal ps2_clk_shell_in : std_logic;
+    signal ps2_dat_shell_in : std_logic;
+    signal ps2_clk_exp_in   : std_logic;
+    signal ps2_dat_exp_in   : std_logic;
+    signal irda_shell_in    : std_logic;
+    signal irda_exp_in      : std_logic;
+
+    -- Shell-mode HEX intermediate signals (before mux)
+    signal hex0_shell : std_logic_vector(6 downto 0);
+    signal hex1_shell : std_logic_vector(6 downto 0);
+    signal hex2_shell : std_logic_vector(6 downto 0);
+    signal hex3_shell : std_logic_vector(6 downto 0);
+    signal hex4_shell : std_logic_vector(6 downto 0);
+    signal hex5_shell : std_logic_vector(6 downto 0);
 
     -- JTAG UART Avalon bus
     signal jtag_av_cs       : std_logic;
@@ -249,6 +316,15 @@ begin
     lcd_status_rst_n <= rst_n;
     lcd_debug_rst_n  <= '0';
 
+    -- Exp8 and Exp10 own PS/2 / IR respectively while active.
+    -- Non-exclusive channels leave these inputs connected to the shell side.
+    ps2_clk_shell_in <= PS2_CLK when expdemo_channel /= 8 else '1';
+    ps2_dat_shell_in <= PS2_DAT when expdemo_channel /= 8 else '1';
+    ps2_clk_exp_in   <= PS2_CLK when expdemo_channel = 8 else '1';
+    ps2_dat_exp_in   <= PS2_DAT when expdemo_channel = 8 else '1';
+    irda_shell_in    <= IRDA_RXD when expdemo_channel /= 10 else '1';
+    irda_exp_in      <= IRDA_RXD when expdemo_channel = 10 else '1';
+
     -- ================================================================
     -- NEORV32 CPU
     -- ================================================================
@@ -280,7 +356,7 @@ begin
         xbus_cyc_o  => xbus_cyc,
         xbus_ack_i  => xbus_ack,
         xbus_err_i  => xbus_err,
-        irq_mei_i   => ps2_irq
+        irq_mei_i   => intc_irq
     );
 
     -- ================================================================
@@ -328,7 +404,31 @@ begin
         s4_dat_o => ntt_wb_dat_o,
         s4_we_o  => ntt_wb_we,
         s4_stb_o => ntt_wb_stb,
-        s4_ack_i => ntt_wb_ack
+        s4_ack_i => ntt_wb_ack,
+        s5_adr_o => lcd_wb_adr,
+        s5_dat_i => lcd_wb_dat_i,
+        s5_dat_o => lcd_wb_dat_o,
+        s5_we_o  => lcd_wb_we,
+        s5_stb_o => lcd_wb_stb,
+        s5_ack_i => lcd_wb_ack,
+        s6_adr_o => tmr_wb_adr,
+        s6_dat_i => tmr_wb_dat_i,
+        s6_dat_o => tmr_wb_dat_o,
+        s6_we_o  => tmr_wb_we,
+        s6_stb_o => tmr_wb_stb,
+        s6_ack_i => tmr_wb_ack,
+        s7_adr_o => intc_wb_adr,
+        s7_dat_i => intc_wb_dat_i,
+        s7_dat_o => intc_wb_dat_o,
+        s7_we_o  => intc_wb_we,
+        s7_stb_o => intc_wb_stb,
+        s7_ack_i => intc_wb_ack,
+        s8_adr_o => expdemo_wb_adr,
+        s8_dat_i => expdemo_wb_dat_i,
+        s8_dat_o => expdemo_wb_dat_o,
+        s8_we_o  => expdemo_wb_we,
+        s8_stb_o => expdemo_wb_stb,
+        s8_ack_i => expdemo_wb_ack
     );
 
     -- ================================================================
@@ -402,8 +502,8 @@ begin
     port map (
         clk_50m_i   => clk_50m,
         rst_n_i     => rst_n,
-        ps2_clk_i   => PS2_CLK,
-        ps2_dat_i   => PS2_DAT,
+        ps2_clk_i   => ps2_clk_shell_in,
+        ps2_dat_i   => ps2_dat_shell_in,
         ps2_clk_oe_o => ps2_clk_oe,
         ps2_dat_oe_o => ps2_dat_oe,
         reg_adr_i   => ps2_reg_adr,
@@ -427,7 +527,7 @@ begin
     port map (
         clk_i      => clk_50m,
         rst_n_i    => rst_n,
-        irda_rxd_i => IRDA_RXD,
+        irda_rxd_i => irda_shell_in,
         wb_adr_i   => ir_wb_adr,
         wb_dat_i   => ir_wb_dat_o,
         wb_dat_o   => ir_wb_dat_i,
@@ -437,45 +537,156 @@ begin
     );
 
     -- ================================================================
+    -- IR debug: parallel Exp10-style decoder for A/B test
+    -- gpio_in(30) = exp10_valid, gpio_in(29 downto 22) = exp10_cmd
+    -- ================================================================
+    u_ir_dbg : entity work.ir_dbg_exp10
+        port map (
+            clk_i      => clk_50m,
+            rst_n_i    => rst_n,
+            irda_rxd_i => irda_shell_in,
+            valid_o    => dbg_ir_valid,
+            cmd_o      => dbg_ir_cmd
+        );
+
+    process(clk_50m)
+    begin
+        if rising_edge(clk_50m) then
+            if rst_n = '0' then
+                dbg_ir_toggle <= '0';
+            elsif dbg_ir_valid = '1' then
+                dbg_ir_toggle <= not dbg_ir_toggle;
+            end if;
+        end if;
+    end process;
+
+    gpio_in(30) <= dbg_ir_valid;
+    gpio_in(29 downto 22) <= dbg_ir_cmd;
+
+    -- ================================================================
     -- NTT Accelerator @ 0xF000C000 (disabled — ntt_sdf has synthesis errors)
     ntt_wb_dat_i <= (others => '0');
     ntt_wb_ack   <= '0';
 
-    -- ================================================================
-    -- GPIO -> LED 映射
-    -- ================================================================
-    LEDR(15 downto 0) <= gpio_out(15 downto 0);
-    LEDR(17 downto 16) <= SW(17 downto 16);
+    -- LCD @ 0xF0008000 (stub — de2shell uses hardware lcd_status/lcd_debug)
+    lcd_wb_dat_i <= (others => '0');
+    lcd_wb_ack   <= '0';
 
-    LEDG(7 downto 0) <= gpio_out(23 downto 16);
-    LEDG(8) <= not rst_n;
+    -- ================================================================
+    -- Timer @ 0xF0004000 — captures IR pulse widths
+    -- ================================================================
+    u_timer : entity work.timer_wb
+    port map (
+        clk_i      => clk_50m,
+        rst_n_i    => rst_n,
+        cap_trig_i => irda_shell_in,
+        irq_o      => tmr_irq,
+        wb_adr_i   => tmr_wb_adr,
+        wb_dat_i   => tmr_wb_dat_o,
+        wb_dat_o   => tmr_wb_dat_i,
+        wb_we_i    => tmr_wb_we,
+        wb_stb_i   => tmr_wb_stb,
+        wb_ack_o   => tmr_wb_ack
+    );
+
+    -- ================================================================
+    -- INTC @ 0xF0006000 — irq_i(0)=IR, (1)=timer, (2)=PS2
+    -- ================================================================
+    u_intc : entity work.intc_wb
+    port map (
+        clk_i   => clk_50m,
+        rst_n_i => rst_n,
+        irq_i   => dbg_ir_valid & tmr_irq & ps2_irq,
+        irq_o   => intc_irq,
+        wb_adr_i   => intc_wb_adr,
+        wb_dat_i   => intc_wb_dat_o,
+        wb_dat_o   => intc_wb_dat_i,
+        wb_we_i    => intc_wb_we,
+        wb_stb_i   => intc_wb_stb,
+        wb_ack_o   => intc_wb_ack
+    );
+
+    -- ================================================================
+    -- ExpDemo: Hardware experiment multiplexer @ 0xF000D000
+    -- ================================================================
+    u_expdemo : entity work.expdemo_top
+    port map (
+        clk_i       => clk_50m,
+        rst_n_i     => rst_n,
+        sw          => SW,
+        key_n       => KEY,
+        ps2_clk_i   => ps2_clk_exp_in,
+        ps2_dat_i   => ps2_dat_exp_in,
+        uart_rxd_i  => UART_RXD,
+        uart_txd_o  => exp_uart_txd,
+        irda_rxd_i  => irda_exp_in,
+        hex_o       => exp_hex,
+        ledr_o      => exp_ledr,
+        ledg_o      => exp_ledg,
+        lcd_data_o  => exp_lcd_data,
+        lcd_rs_o    => exp_lcd_rs,
+        lcd_rw_o    => exp_lcd_rw,
+        lcd_en_o    => exp_lcd_en,
+        active_o    => expdemo_active,
+        channel_o   => expdemo_channel,
+        wb_adr_i    => expdemo_wb_adr,
+        wb_dat_i    => expdemo_wb_dat_o,
+        wb_dat_o    => expdemo_wb_dat_i,
+        wb_we_i     => expdemo_wb_we,
+        wb_stb_i    => expdemo_wb_stb,
+        wb_ack_o    => expdemo_wb_ack
+    );
+
+    -- ================================================================
+    -- GPIO / ExpDemo -> Board output routing
+    -- ================================================================
+    -- When expdemo_active: board outputs from expdemo_top
+    -- When shell mode (channel=0): board outputs from CPU GPIO + seg7_mapper
+
+    LEDR <= exp_ledr when expdemo_active = '1' else
+            gpio_out(15 downto 0) & SW(17 downto 16);
+
+    LEDG <= exp_ledg when expdemo_active = '1' else
+            (not rst_n) & gpio_out(23 downto 16);
+
 
     gpio_in(17 downto 0)  <= SW;
     gpio_in(20 downto 18) <= not KEY(3 downto 1); -- pressed = '1'
-    gpio_in(31 downto 21) <= (others => '0');
+    gpio_in(31) <= dbg_ir_toggle;
+    gpio_in(21) <= IRDA_RXD;  -- DEBUG: raw IR signal
+    -- gpio_in(30) and (29 downto 22) driven by ir_dbg_exp10
+    gpio_in(21) <= IRDA_RXD;  -- DEBUG: expose raw IR signal to GPIO bit 21
 
     -- ================================================================
-    -- GPIO -> 七段数码管映射
+    -- GPIO / ExpDemo -> Seven-segment display routing
     -- ================================================================
     u_seg7_lo : entity work.seg7_mapper
     port map (
         hex_nibbles => gpio_out(15 downto 0),
-        seg0        => HEX0,
-        seg1        => HEX1,
-        seg2        => HEX2,
-        seg3        => HEX3
+        seg0        => hex0_shell,
+        seg1        => hex1_shell,
+        seg2        => hex2_shell,
+        seg3        => hex3_shell
     );
 
     u_seg7_hi : entity work.seg7_mapper
     port map (
         hex_nibbles => x"00" & gpio_out(23 downto 16),
-        seg0        => HEX4,
-        seg1        => HEX5,
+        seg0        => hex4_shell,
+        seg1        => hex5_shell,
         seg2        => open,
         seg3        => open
     );
-    HEX6 <= (others => '1');
-    HEX7 <= (others => '1');
+
+    -- Board-level HEX output: mux between shell seg7 and expdemo
+    HEX0 <= exp_hex(6 downto 0)   when expdemo_active = '1' else hex0_shell;
+    HEX1 <= exp_hex(13 downto 7)  when expdemo_active = '1' else hex1_shell;
+    HEX2 <= exp_hex(20 downto 14) when expdemo_active = '1' else hex2_shell;
+    HEX3 <= exp_hex(27 downto 21) when expdemo_active = '1' else hex3_shell;
+    HEX4 <= exp_hex(34 downto 28) when expdemo_active = '1' else hex4_shell;
+    HEX5 <= exp_hex(41 downto 35) when expdemo_active = '1' else hex5_shell;
+    HEX6 <= exp_hex(48 downto 42) when expdemo_active = '1' else (others => '1');
+    HEX7 <= exp_hex(55 downto 49) when expdemo_active = '1' else (others => '1');
 
     -- ================================================================
     -- JTAG UART -- CPU 输出通过 JTAG 在 PC 端查看
@@ -544,10 +755,10 @@ begin
         lcd_blon    => lcd_debug_blon
     );
 
-    LCD_DATA <= lcd_status_data;
-    LCD_RS   <= lcd_status_rs;
-    LCD_RW   <= lcd_status_rw;
-    LCD_EN   <= lcd_status_en;
+    LCD_DATA <= exp_lcd_data when expdemo_active = '1' else lcd_status_data;
+    LCD_RS   <= exp_lcd_rs   when expdemo_active = '1' else lcd_status_rs;
+    LCD_RW   <= exp_lcd_rw   when expdemo_active = '1' else lcd_status_rw;
+    LCD_EN   <= exp_lcd_en   when expdemo_active = '1' else lcd_status_en;
     LCD_ON   <= lcd_status_on;
     LCD_BLON <= lcd_status_blon;
 

@@ -10,6 +10,10 @@
    除 `KEY0` 保留板级 reset 语义外，SW / KEY / HEX / LED / LCD 的主显示行为应与原实验一致。
 3. VGA 与串口只承担 monitor / 远程诊断角色。
    它们用于显示实验状态、调试信息和退出提示，但不替代原实验在板级外设上的展示。
+4. 实验本体必须保持纯 VHDL 实现。
+   `expdemo` 可以复用 `de2shell` 里已经验证过的总线封装、输入同步、显示适配、monitor 和 mux 逻辑，但被展示的实验逻辑本身不能退化成 C 侧模拟。
+5. 优先复用，避免平移复制。
+   只有当原实验模块无法直接接入 `expdemo` 时，才允许写适配层；适配层的职责应限于接口转换、信号整理和板级输出归一化。
 
 ## 入口
 
@@ -82,13 +86,13 @@ Channel = 实验编号，写入 WB 寄存器 `0xF000D000`：
 
 ```
 de2_115_top.vhd
-├── neorv32_wrapper (CPU — 仅用于导航/调试)
+├── neorv32_wrapper (CPU — 仅用于导航/调试/monitor)
 ├── wb_intercon
 │   └── s8: expdemo_wb  ← 0xF000D000
 │
 ├── expdemo_top
 │   ├── channel_reg     — 当前通道
-│   ├── adapt_exp1 ~ adapt_exp13a  — 11 个实验适配器
+│   ├── adapt_exp1 ~ adapt_exp13a  — 纯 VHDL 实验 + 必要适配层
 │   ├── output_mux      — HEX/LEDR/LEDG/LCD 多路复用
 │   └── peripheral_mux  — PS2/UART/IR 输入侧切换
 │
