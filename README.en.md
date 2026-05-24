@@ -6,7 +6,13 @@ English | [中文](README.md)
 
 ## AI Disclosure
 
-This project was developed with assistance from the following large language models: GLM-5.1, DeepSeek V4 Pro, GPT-5.4. All AI-generated content has been manually reviewed and verified on hardware.
+This project was developed with assistance from: [DeepSeek V4](https://chat.deepseek.com/), [GLM 5.1](https://chatglm.cn/), [GPT 5.4](https://chat.openai.com/). All AI-generated content has been manually reviewed and verified on hardware.
+
+## References
+
+- [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) — RISC-V soft core used in this project
+- [FreeRTOS](https://www.freertos.org/) — Real-time OS kernel used by de2os
+- [DE2-115 System CD](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=167&No=506) — Terasic official examples and reference materials
 
 ## Overview
 

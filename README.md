@@ -6,7 +6,13 @@
 
 ## AI 使用声明
 
-本项目在开发过程中使用了以下大语言模型辅助：GLM-5.1、DeepSeek V4 Pro、GPT-5.4。所有 AI 生成内容均经过人工审查和上板验证。
+本项目在开发过程中使用了以下大语言模型辅助：[DeepSeek V4](https://chat.deepseek.com/)、[GLM 5.1](https://chatglm.cn/)、[GPT 5.4](https://chat.openai.com/)。所有 AI 生成内容均经过人工审查和上板验证。
+
+## 参考资源
+
+- [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) — 本项目使用的 RISC-V 软核
+- [FreeRTOS](https://www.freertos.org/) — de2os 使用的实时操作系统内核
+- [DE2-115 System CD](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=167&No=506) — Terasic 官方例程与参考资料
 
 ## 项目概览
 
