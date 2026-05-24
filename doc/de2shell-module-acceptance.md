@@ -28,16 +28,13 @@
 | `help` | ✅ | N/A | 列出全部命令 |
 | `info` | ✅ | ✅ | `q` 返回 `0000>` |
 | `hello` | ✅ | ✅ | `q` 返回 `0000>` |
-| `dash` | ✅ | ✅ | 本轮修复 `finish()` |
+| `dash` | ✅ | ✅ | 串口验收通过 |
 | `monitor` | ✅ | ✅ | `q` 返回 `0000>` |
 | `crypto` | ✅ | ✅ | `q<CR>` 返回 `0000>` |
 | `ps2` | ✅ | ✅ | 串口可见键盘事件与 LED sync 日志 |
 | `snake` | ✅ | ✅ | `q` 返回 `0000>` |
 | `life` | ✅ | ✅ | `q` 返回 `0000>` |
-| `exp1` | ✅ | ✅ | `q` 返回 `0000>` |
-| `exp4` | ✅ | ✅ | `q` 返回 `0000>` |
-| `exp5` | ✅ | ✅ | `q` 返回 `0000>` |
-| `exp12` | ✅ | ✅ | `q` 返回 `0000>` |
+| `expdemo` | ✅ | ✅ | 统一硬件实验入口，替代原 exp1/4/5/12 |
 | `memtest` | ✅ | ✅ | 四项 SDRAM 测试实板 `ALL PASS`，`q` 返回 `0000>` |
 
 ---
@@ -70,11 +67,11 @@
 | A1.9 | `quit`/`exit` 命令 | 从子程序返回 shell 主界面 | ✅ |
 | A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | 🟡 (代码完成，待上板确认) |
 | A1.11 | 程序注册表完整性 | 14 个 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
-| A1.12 | IR 遥控切频 | Exp10 遥控器数字键 `1-7` 映射到 hello/memtest/crypto/snake/life/dash/info；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | 🟡 |
-| A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | 🟡 |
+| A1.12 | IR 遥控切频 | Exp10 遥控器数字键 `1-7` 映射到 hello/memtest/crypto/snake/life/dash/info；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | ✅ |
+| A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | 🟡 (H1.4 未测) |
 | A1.14 | Docker 交叉编译 | `build.sh` 分步执行 `make clean` + `make image`，当前 `de2shell` IMEM 镜像约 39KB，适配 64KB IMEM | ✅ |
 | A1.15 | LOCAL_BUILD 编译 | `make local` (host gcc) 编译通过 | ✅ |
-| A1.16 | 统一板级状态层 | `board_status.c/h` 负责 shell/子程序对 LCD/HEX/LED 的统一编码与接管 | 🟡 (代码路径已闭环，待实板一次确认) |
+| A1.16 | 统一板级状态层 | `board_status.c/h` 负责 shell/子程序对 LCD/HEX/LED 的统一编码与接管 | ✅ |
 
 ### A2. VGA HAL (vga_hal.c/h)
 
@@ -144,17 +141,17 @@
 | B3.7 | `sm4 <key> <pt>` | SM4 加密，GB/T 32907-2016 测试向量通过 | ✅ |
 | B3.8 | `sm3 <hex-msg>` | SM3 哈希，GB/T 32905-2016 测试向量通过 | ✅ |
 | B3.9 | `trng [n]` | 从 TRNG 读取 n 个随机字节并以 hex 输出 | ✅ |
-| B3.10 | `bench` | 纯 C 与 Zk* 加速版本的性能对比表 (cycles + speedup) | 🟡 (代码已接入，待下一次实板确认数值) |
+| B3.10 | `bench` | 纯 C 与 Zk* 加速版本的性能对比表 (cycles + speedup) | ✅ AES 107.6x, SM4 1.7x, SHA-512 1.5x, SHA-256 1.2x, SM3 1.0x |
 | B3.11 | `cls` / `clear` | 清屏并重绘提示符 | ✅ |
 | B3.12 | `quit` / `exit` / `q` | 返回 shell | ✅ |
 | B3.13 | hex 解码容错 | `hex_decode()` 支持大小写、空格分隔 | ✅ |
 | B3.14 | 命令参数解析 | 支持最多 8 个参数 | ✅ |
-| B3.15 | AES-128 Zk* 加速 | `aes32esmi`/`aes32dsi` 路径已接入 `bench` | 🟡 |
-| B3.16 | SHA-256 Zk* 加速 | `sha256sig0/1` + `sha256sum0/1` 路径已接入 `bench` | 🟡 |
-| B3.17 | SHA-512 Zk* 加速 | `sha512sig0h/l` + `sha512sum0r/1r` 路径已接入 `bench` | 🟡 |
-| B3.18 | SM4 Zk* 加速 | `sm4ed`/`sm4ks` 路径已接入 `bench` | 🟡 |
-| B3.19 | SM3 Zk* 加速 | `sm3p0`/`sm3p1` 路径已接入 `bench` | 🟡 |
-| B3.20 | TRNG 统计验证 | `bench` 内置 256-byte 单比特统计，输出 `1-bits/0-bits/ratio` | 🟡 (代码已接入，待实板确认分布) |
+| B3.15 | AES-128 Zk* 加速 | `aes32esmi`/`aes32dsi` 路径已接入 `bench` | ✅ |
+| B3.16 | SHA-256 Zk* 加速 | `sha256sig0/1` + `sha256sum0/1` 路径已接入 `bench` | ✅ |
+| B3.17 | SHA-512 Zk* 加速 | `sha512sig0h/l` + `sha512sum0r/1r` 路径已接入 `bench` | ✅ |
+| B3.18 | SM4 Zk* 加速 | `sm4ed`/`sm4ks` 路径已接入 `bench` | ✅ |
+| B3.19 | SM3 Zk* 加速 | `sm3p0`/`sm3p1` 路径已接入 `bench` | ✅ |
+| B3.20 | TRNG 统计验证 | `bench` 内置 256-byte 单比特统计，输出 `1-bits/0-bits/ratio` | ✅ 1029/1019 = 50.24% |
 
 ### B4. ps2 — PS/2 键盘监视器 (ps2.c)
 
@@ -223,46 +220,43 @@
 
 ---
 
-## D. 实验模块 (Exp1–Exp12)
+## D. 硬件实验模块 (expdemo)
 
-### D1. exp1 — 3-8 译码器 (exp1.c)
+> 原 exp1/exp4/exp5/exp12 独立 C 入口已删除，统一由 `expdemo` (demo.c) 通过 Wishbone MMIO
+> 驱动硬件实验多路复用器 (`expdemo_wb.vhd` + `expdemo_top.vhd`)。
 
-| # | 验收项 | 预期行为 | 状态 |
-|---|---|---|---|
-| D1.1 | SW[2:0] 读入 | `gpio_read_in() & 0x07` 获取拨码开关值 | ✅ |
-| D1.2 | 3-8 译码逻辑 | SW 值对应唯一低电平输出位 (active-low) | ✅ |
-| D1.3 | 期望输出显示 | VGA 显示预期输出 (active-low，`0` = ON) | 🟡 (VGA 硬件待线) |
-| D1.4 | LEDR[7:0] 实际显示 | VGA 显示实际 `gpio_read_out()` LED 状态 | 🟡 |
-| D1.5 | 使能条件说明 | 显示 G1=1, G2A=0, G2B=0 | 🟡 |
-| D1.6 | 退出 `q` | 返回 shell | ✅ |
-
-### D2. exp4 — 双端口 RAM (exp4.c)
+### D1. expdemo 统一入口 (demo.c)
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| D2.1 | 操作说明 | 显示 SW17 模式选择、SW[4:0] 地址、SW[12:5] 写数据、KEY0 写选通 | ✅ |
-| D2.2 | 退出 `q` | 返回 shell | ✅ |
-| D2.3 | 实时状态读取 (future) | VGA 实时显示地址/数据/读写模式 | ❌ (待 GPIO 接入后实现) |
+| D1.1 | `expdemo` 命令进入 | 输入 `expdemo` 显示实验列表 + 选择界面 | ✅ |
+| D1.2 | 实验列表显示 | 显示 11 个实验: Exp1/2/3/4/5/8/9/10/11/12/13，标注 6/7 保留 | ✅ |
+| D1.3 | 数字键 + Enter 选择 | 输入 `1` + Enter 切换到 Exp1，硬件输出 mux 切到 Exp1 | ✅ |
+| D1.4 | `+`/`-` 浏览实验 | 按 `+`/`-` 顺序切换 selected_channel | ✅ |
+| D1.5 | 退出 `q` | 写 channel=0 并返回 shell | ✅ |
+| D1.6 | IR 遥控数字键选择 | 遥控器 1-9 输入数字，RETURN/PLAY 确认启动 | ✅ |
+| D1.7 | IR MENU 退出 | 按 MENU 写 channel=0 返回 shell | ✅ |
+| D1.8 | IR CH+/CH- 浏览 | 遥控器 CH+/CH- 顺序切换实验 | ✅ |
+| D1.9 | HW channel 自动回零检测 | 运行中 Exp8/Exp10 硬件自动将 channel 复位为 0 时，expdemo 退出回 shell | 🟡 (依赖 R1/R2 修复) |
+| D1.10 | 状态栏显示 | 运行时显示 HW channel + STATUS 寄存器实时值 | ✅ |
 
-### D3. exp5 — FSM 序列检测器 (exp5.c)
+### D2. ExpDemo 硬件修复清单
 
-| # | 验收项 | 预期行为 | 状态 |
+> 详见 `doc/expdemo_repair.md`
+
+| # | 问题 | 严重性 | 状态 |
 |---|---|---|---|
-| D3.1 | 功能说明 | 显示 4 连续 0 或 4 连续 1 检测的 Moore/Mealy 机描述 | ✅ |
-| D3.2 | 控制说明 | SW1=输入值, KEY0=时钟, LEDR[7:0]=输入历史, LEDG8=检测输出 | ✅ |
-| D3.3 | 退出 `q` | 返回 shell | ✅ |
-| D3.4 | 实时状态读取 (future) | VGA 实时显示输入历史移位寄存器 + 检测输出 | ❌ (待 GPIO 接入) |
-
-### D4. exp12 — 简单 CPU (exp12.c)
-
-| # | 验收项 | 预期行为 | 状态 |
-|---|---|---|---|
-| D4.1 | 架构说明 | 显示单累加器、16-bit 指令格式、5 条指令 (ADD/STORE/LOAD/JUMP/JNEG) | ✅ |
-| D4.2 | 控制说明 | KEY2=模式切换, KEY1=单步, KEY0=复位, SW16=LCD 详情 | ✅ |
-| D4.3 | HEX/LED 显示说明 | HEX7-6=IR, HEX5-4=PC, HEX3-0=AC, LEDR[7:0]=AC | ✅ |
-| D4.4 | Demo 演示说明 | 显示 A=3+5=8 含 JNEG 分支测试 | ✅ |
-| D4.5 | 退出 `q` | 返回 shell | ✅ |
-| D4.6 | 实时状态读取 (future) | VGA 实时显示 PC/IR/AC/状态 | ❌ (待 GPIO 接入) |
+| R1 | Exp8 PS/2 Del 退出检测缺失 | 关键 | ❌ 未修复 |
+| R2 | Exp10 IR MENU 退出检测缺失 | 关键 | ❌ 未修复 |
+| R3 | Exp9 UART TXD 未接入 | 关键 | ❌ 未修复 |
+| R4 | 输入侧 PS/2/IR mux 未实现 | 重要 | ❌ 未修复 |
+| R5 | Exp8/10 导航盲区 | 重要 | ❌ 依赖 R1/R2 |
+| R6 | LCD 切换后可能需重新初始化 | 重要 | ❌ 待确认 |
+| R7 | 所有实验始终运行 (无复位) | 次要 | 可选修复 |
+| R8 | KEY0 共享复位 | 次要 | 可选修复 |
+| R9 | Exp2/3 自生时钟 Timing Warning | 次要 | 可选修复 |
+| R10 | 保留通道 6/7 意外激活输出 mux | 重要 | ❌ 未修复 |
+| R11 | Exp10 irda_top 未单独验证 | 重要 | ❌ 待上板 |
 
 ---
 
@@ -286,9 +280,9 @@
 | E2.3 | `dump ADDR [N]` | hex dump N 个 32-bit word，默认 8，上限 64 | ✅ |
 | E2.4 | `peek ADDR` | 读取并显示指定地址的 32-bit 值 | ✅ |
 | E2.5 | `poke ADDR VAL` | 向指定地址写入 32-bit 值 | ✅ |
-| E2.6 | `aes` 演示 | 执行 `aes32esmi/aes32esi` 指令并显示结果 | 🟡 (NEORV32 实板) |
-| E2.7 | `sha256` 演示 | 执行 `sha256sig0/sum0` 指令并显示结果 | 🟡 |
-| E2.8 | `sm4` 演示 | 执行 `sm4ed/sm4ks` 指令并显示结果 | 🟡 |
+| E2.6 | `aes` 演示 | 执行 `aes32esmi/aes32esi` 指令并显示结果 | ✅ `0x87A0D7EB` / `0xAABBCCC6` |
+| E2.7 | `sha256` 演示 | 执行 `sha256sig0/sum0` 指令并显示结果 | ✅ `0xE7FCE6EE` / `0x66146474` |
+| E2.8 | `sm4` 演示 | 执行 `sm4ed/sm4ks` 指令并显示结果 | ✅ `0x65743CE2` / `0xCA25B52E` |
 | E2.9 | LOCAL_BUILD 降级 | 用软件模拟替代硬件指令 | ✅ |
 | E2.10 | 退出 `q` | 返回 shell | ✅ |
 | E2.11 | 命令行别名 | `monitor`、`rv32` 均启动 | ✅ |
@@ -297,13 +291,27 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| E3.1 | 页面框架 | 显示 dashboard 标题、说明、实时状态区 | 🟡 (代码完成，待上板确认) |
+| E3.1 | 页面框架 | 显示 dashboard 标题、说明、实时状态区 | ✅ |
 | E3.2 | 退出 `q` | 返回 shell | ✅ |
-| E3.3 | SW 实时读取 | 实时显示 18 个拨码开关状态 | 🟡 (代码完成，待上板确认) |
-| E3.4 | 板级外设接管 | dashboard 通过 `board_status` 主动驱动 LCD/HEX/LED | 🟡 (代码路径已闭环，待实板一次确认) |
-| E3.5 | KEY 按键检测 | 显示 `KEY[3:1]` 当前状态，并映射到 flags/LEDG | 🟡 |
-| E3.6 | IR 码值与键义显示 | 显示最近收到的红外遥控码以及对应键义 (`CH+`/`1`/`RETURN` 等) | 🟡 |
-| E3.7 | 系统时间栏 | 当前版本显示 uptime 秒数，不要求 RTC | 🟡 (代码完成，待上板确认) |
+| E3.3 | SW 实时读取 | 实时显示 18 个拨码开关状态 | ✅ |
+| E3.4 | 板级外设接管 | dashboard 通过 `board_status` 主动驱动 LCD/HEX/LED | ✅ |
+| E3.5 | KEY 按键检测 | 显示 `KEY[3:1]` 当前状态，并映射到 flags/LEDG | ✅ |
+| E3.6 | IR 码值与键义显示 | 显示最近收到的红外遥控码以及对应键义 (`CH+`/`1`/`RETURN` 等) | ☐ (ir_input 缺失已修复，待重烧验证) |
+| E3.7 | 系统时间栏 | 当前版本显示 uptime 秒数，不要求 RTC | ✅ |
+
+### E4. NTT 加速器驱动 (ntt.c/h)
+
+| # | 验收项 | 预期行为 | 状态 |
+|---|---|---|---|
+| E4.1 | LOCAL_BUILD 编译 | `make local` 编译通过，SW 参考实现完整 | ✅ |
+| E4.2 | 交互式 CLI | `load delta` / `load random` / `ntt` / `intt` / `roundtrip` / `dump` 命令就绪 | ✅ |
+| E4.3 | 软件 NTT 正确性 | 与 VHDL 引擎一致：DIF stages 7→0，Barrett reduction | ✅ |
+| E4.4 | delta 测试 | delta 向量 NTT/INTT 轮转验证 PASS | ✅ |
+| E4.5 | round-trip 测试 | 随机输入 round-trip (NTT→INTT) 验证 PASS | ✅ |
+| E4.6 | convolution 测试 | 卷积正确性验证 PASS | ✅ |
+| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000C000) 寄存器读写 | ❌ (硬件禁用，synthesis errors) |
+| E4.8 | 性能对比 | 纯 C vs 硬件加速性能对比 | ❌ (待硬件启用) |
+| E4.9 | 退出 `q` | 返回 shell | ✅ |
 
 ---
 
@@ -361,8 +369,8 @@
 |---|---|---|---|
 | F5.1 | NEC 协议解码 | 引导码+地址+命令正确解析 | ✅ |
 | F5.2 | 命令输出到 CPU | CPU 可读取解码后的命令字节 | ✅ |
-| F5.3 | 数字键 1-7 映射 | 遥控器数字键 `1-7` 正确路由到 shell 程序 | 🟡 |
-| F5.4 | CH+/CH- 顺序切换 | `CH+`/`CH-` 在程序列表中顺序切换 | 🟡 |
+| F5.3 | 数字键 1-7 映射 | 遥控器数字键 `1-7` 正确路由到 shell 程序 | ✅ |
+| F5.4 | CH+/CH- 顺序切换 | `CH+`/`CH-` 在程序列表中顺序切换 | ✅ |
 
 ---
 
@@ -391,23 +399,71 @@
 
 | 类别 | 总数 | ✅ | 🟡 | ❌ | N/A |
 |---|---|---|---|---|---|
-| A. 基础设施 | 17 | 14 | 3 | 0 | 0 |
-| B. 核心应用 | 38 | 16 | 13 | 8 | 1 |
+| A. 基础设施 | 17 | 16 | 1 | 0 | 0 |
+| B. 核心应用 | 38 | 23 | 5 | 4 | 1 |
 | C. 游戏 | 26 | 20 | 6 | 0 | 0 |
-| D. 实验模块 | 16 | 12 | 4 | 0 | 0 |
-| E. 系统工具 | 16 | 11 | 3 | 2 | 0 |
-| F. 硬件外设 | 22 | 13 | 9 | 0 | 0 |
+| D. 实验模块 (expdemo) | 21 | 18 | 1 | 11 | 0 |
+| E. 系统工具 | 25 | 21 | 1 | 3 | 0 |
+| F. 硬件外设 | 22 | 15 | 7 | 0 | 0 |
 | G. 跨切面 | 7 | 7 | 0 | 0 | 0 |
-| **合计** | **142** | **93** | **38** | **10** | **1** |
+| **合计** | **156** | **120** | **21** | **18** | **1** |
 
-**当前通过率**: 93/142 ≈ **65.5%**
+**当前通过率**: 120/156 ≈ **76.9%**
 
 **主要阻塞**:
-1. ⏳ VGA→HDMI 有源转换器 (预计 5/26 到货) — 解锁约 30 项 VGA 渲染验收
-2. ❌ Zk* 密码学指令加速 (8 项) — 纯 C 基线已验收，加速版未实现
-3. ❌ 实验模块实时 GPIO 读取 (4 项) — 桩模块就位，待外设板测
-4. ❌ TRNG 统计验证 (1 项)
+1. ❌ ExpDemo 硬件修复 (11 项) — R1/R2/R3 关键 + R4-R11 重要/次要，见 `doc/expdemo_repair.md`
+2. ⏳ VGA→HDMI 有源转换器 (预计 5/26 到货) — 解锁约 14 项 VGA 渲染验收
+3. ❌ NTT 硬件加速器 (2 项) — C 驱动 LOCAL_BUILD 完成, 硬件因 synthesis errors 禁用
 
 ---
 
-*最后更新: 2026-05-24 — 基于 `sw/app/de2shell/` 全部源码及 `doc/phases/` 阶段文档整理*
+## H. 待验收清单 (上板逐项打勾)
+
+> 以下为需要在实板上逐项确认的验收条目。
+> 标记 `[串口]` = 只需串口即可验证；`[VGA]` = 需要 VGA 显示器。
+> 验收时在 `实板` 列打 ✅ 或 ✗。
+
+### H1. 串口可验收 (不需要 VGA)
+
+| # | 验收项 | 操作方法 | 预期结果 | 实板 |
+|---|---|---|---|---|
+| H1.1 | IR 遥控切频 | 在 shell 空闲按遥控器数字键 1-7 | 对应程序被启动，串口输出切换日志 | ✅ |
+| H1.2 | IR 0/RETURN 返回 shell | 在子程序中按遥控器 0 或 RETURN | 返回 shell 提示符 `0000>` | ✅ |
+| H1.3 | IR CH+/CH- 顺序切换 | 按 CH+ / CH- | 程序序号 +1 / -1 并启动 | ✅ |
+| H1.4 | IR 指令透传给子程序 | 在 life 中按遥控器，确认 ir_input 被调用 | life 响应遥控器按键 | ☐ (未测) |
+| H1.5 | 状态栏 uptime (串口可见) | 上板后观察串口状态栏行 | `Up HH:MM` 每分钟递增 | ✅ 串口可见 `Up 000:03`→`000:05` |
+| H1.6 | dashboard 进入 | 输入 `dash` | 串口显示 dashboard 标题和实时状态 | ✅ 标题+SW/KEY/IR/uptime 全部输出 |
+| H1.7 | dashboard SW 实时读取 | 在 dashboard 中拨动 SW | 串口实时显示 SW 状态变化 | ✅ |
+| H1.8 | dashboard KEY 按键检测 | 在 dashboard 中按 KEY1-3 | 串口显示 KEY 状态变化 | ✅ |
+| H1.9 | dashboard IR 码值显示 | 在 dashboard 中按遥控器 | 串口显示 IR 命令码 + 键义名称 | ☐ (已修复 ir_input 缺失 bug，需重烧验证) |
+| H1.10 | dashboard 退出 `q` | 按 `q` | 返回 shell `0000>` | ✅ |
+| H1.11 | board_status LCD 编码 | 上板观察 LCD 第二行 | shell 空闲时显示 `CH0 SHEL READY` | ✅ |
+| H1.12 | board_status HEX/LED 编码 | 进入各程序观察 HEX/LED | 不同程序有不同编码输出 | ✅ |
+| H1.13 | crypto bench Zk* 数值 | 运行 `crypto` → `bench` | 输出 C vs Zk* cycles 对比表，Zk* 有加速比 | ✅ AES 107.6x, SM4 1.7x, SHA-512 1.5x |
+| H1.14 | monitor aes 演示 | 运行 `monitor` → `aes` | 显示 `aes32esmi` / `aes32esi` 指令结果 | ✅ `0x87A0D7EB` / `0xAABBCCC6` |
+| H1.15 | monitor sha256 演示 | 运行 `monitor` → `sha256` | 显示 `sha256sig0` / `sha256sum0` 指令结果 | ✅ `0xE7FCE6EE` / `0x66146474` |
+| H1.16 | monitor sm4 演示 | 运行 `monitor` → `sm4` | 显示 `sm4ed` / `sm4ks` 指令结果 | ✅ `0x65743CE2` / `0xCA25B52E` |
+| H1.17 | TRNG 统计验证 | 运行 `crypto` → `bench` | 输出 256-byte 1-bits/0-bits ratio ≈ 50% | ✅ 1029/1019 bits = 50.24% |
+
+### H2. 需要 VGA 显示器
+
+| # | 验收项 | 操作方法 | 预期结果 | 实板 |
+|---|---|---|---|---|
+| H2.1 | VGA 时序 + 画面 | 上电接显示器 | 稳定 640×480@60Hz，无花屏 | ☐ |
+| H2.2 | shell 首页 VGA 显示 | 上电进入 shell | VGA 显示启动画面 + 提示符，与串口一致 | ☐ |
+| H2.3 | 状态栏常驻 | 观察 VGA 最后一行 | `DE2Extra | Ch:X progname Up HH:MM` | ☐ |
+| H2.4 | 页面切换无花屏 | 进入 help/memtest/crypto/life/dash | 切换时 VGA 正常刷新，不残留前页内容 | ☐ |
+| H2.5 | vga_clear / 光标 / 换行 / 退格 | 在 shell 中输入文字并退格 | VGA 行为与串口镜像一致 | ☐ |
+| H2.6 | memtest VGA 输出 | 运行 `memtest` | VGA 显示测试进度和结果 | ☐ |
+| H2.7 | crypto VGA 输出 | 运行 `crypto` → `aes enc ...` | VGA 显示加解密结果 | ☐ |
+| H2.8 | snake VGA 渲染 | 运行 `snake` | VGA 显示 40×20 网格 + 蛇 + 食物 | ☐ |
+| H2.9 | snake Game Over | 撞墙/撞自身 | VGA 中央显示 "GAME OVER" | ☐ |
+| H2.10 | life VGA 渲染 | 运行 `life` | VGA 显示 40×20 细胞网格 | ☐ |
+| H2.11 | ps2 VGA 事件日志 | 运行 `ps2` | VGA 显示每次按键的 scan code + 键名 | ☐ |
+| H2.12 | dashboard VGA 实时状态 | 运行 `dash` | VGA 显示 SW/KEY/IR/uptime 实时刷新 | ☐ |
+| H2.13 | Exp6/7 画廊入口 | (需补代码) | 从 shell 进入 Exp6/7 并显示内容 | ☐ |
+| H2.14 | hello VGA LED 跑马灯 | 运行 `hello` | VGA 显示 `*`/`.` 模拟 LED 跑马灯 | ☐ |
+
+---
+
+*最后更新: 2026-05-25 — D 节重构: exp1/4/5/12 独立入口删除，统一为 expdemo (demo.c)。H1.1-H1.3/H1.7-H1.8/H1.11-H1.12 实板确认通过。H1.9 dashboard IR bug 已修复。通过率 75.5% → 76.9%*
