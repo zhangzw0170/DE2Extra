@@ -51,6 +51,13 @@ generic map (
 )
 ```
 
+> 使用 `sw/app/de2os/switch_hw.sh` 自动切换，无需手动编辑 VHDL：
+> ```bash
+> cd sw/app/de2os
+> ./switch_hw.sh de2os    # 切换到 de2os 配置
+> ./switch_hw.sh de2shell # 恢复 de2shell 配置
+> ./switch_hw.sh status   # 查看当前配置
+> ```
 > 切换后需 Quartus 重新综合 (Ctrl+L)。
 
 ## 部署流程
@@ -72,9 +79,10 @@ MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd):/project" de2extra-builder \
 
 ### 2. Quartus 综合
 
-1. 确认 `de2_115_top.vhd` 使用 de2os 配置 (BOOT_MODE=0, ICACHE_EN=true)
+1. `cd sw/app/de2os && ./switch_hw.sh de2os` — 切换到 de2os 配置
 2. Quartus → Ctrl+L
 3. 生成 `par/de2extra.sof`
+4. 测试完成后 `./switch_hw.sh de2shell` — 恢复 de2shell 配置
 
 ### 3. 烧录 FPGA
 
@@ -149,6 +157,7 @@ sw/app/de2os/
 ├── makefile                  # SDRAM 链接 + FreeRTOS 源文件
 ├── FreeRTOSConfig.h          # NEORV32 @ 50MHz, CLINT 地址
 ├── de2os.ld                  # IRQ 栈符号 (FreeRTOS portASM.S 需要)
+├── switch_hw.sh              # 硬件配置切换脚本 (de2os ↔ de2shell)
 ├── main.c                    # 硬件初始化 + 任务创建 + 平台 hooks
 ├── t_gui.c / t_gui.h         # GUI 任务 (stub: UART heartbeat)
 ├── t_crypto.c / t_crypto.h   # Crypto 任务 (stub: 模乘 benchmark)

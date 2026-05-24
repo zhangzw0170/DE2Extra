@@ -120,8 +120,8 @@ architecture rtl of de2_115_top is
 
     -- VGA terminal register interface
     signal vga_reg_adr   : std_logic_vector(15 downto 0);
-    signal vga_reg_dat_o : std_logic_vector(15 downto 0);
-    signal vga_reg_dat_i : std_logic_vector(15 downto 0);
+    signal vga_reg_dat_o : std_logic_vector(31 downto 0);
+    signal vga_reg_dat_i : std_logic_vector(31 downto 0);
     signal vga_reg_we    : std_logic;
     signal vga_reg_stb   : std_logic;
     signal vga_reg_ack   : std_logic;
@@ -257,11 +257,8 @@ begin
         CLOCK_FREQUENCY => 50_000_000,
         IMEM_SIZE       => 64*1024,
         DMEM_SIZE       => 16*1024,
-        BOOT_MODE       => 0,
-        ICACHE_EN       => true,
-        ICACHE_BLOCKS   => 64,
-        ICACHE_BLOCK_SZ => 32,
-        ICACHE_BURSTS   => false
+        BOOT_MODE       => 2,
+        ICACHE_EN       => false
     )
     port map (
         clk_i       => clk_50m,

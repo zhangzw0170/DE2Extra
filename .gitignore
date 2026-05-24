@@ -29,6 +29,8 @@ sw/app/hello/neorv32_imem_image.vhd
 sw/app/de2os/build/
 sw/app/de2os/*.elf
 sw/app/de2os/elf.bin
+sw/app/de2os/neorv32_exe.bin
+sw/app/de2os/neorv32_raw_exe.*
 sw/app/de2os/neorv32_imem_image.vhd
 
 # Docker toolchain tarball
