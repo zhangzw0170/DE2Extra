@@ -6,7 +6,7 @@ English | [中文](README.md)
 
 ## AI Disclosure
 
-This project was developed with assistance from: [DeepSeek V4](https://chat.deepseek.com/), [GLM 5.1](https://chatglm.cn/), [GPT 5.4](https://chat.openai.com/). All AI-generated content has been manually reviewed and verified on hardware.
+This project was developed with assistance from: [DeepSeek V4](https://chat.deepseek.com/), [GLM 5.1](https://chatglm.cn/), [GPT 5.4](https://chat.openai.com/). All AI-generated content has been manually reviewed.
 
 ## References
 

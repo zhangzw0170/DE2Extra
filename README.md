@@ -6,7 +6,7 @@
 
 ## AI 使用声明
 
-本项目在开发过程中使用了以下大语言模型辅助：[DeepSeek V4](https://chat.deepseek.com/)、[GLM 5.1](https://chatglm.cn/)、[GPT 5.4](https://chat.openai.com/)。所有 AI 生成内容均经过人工审查和上板验证。
+本项目在开发过程中使用了以下大语言模型辅助：[DeepSeek V4](https://chat.deepseek.com/)、[GLM 5.1](https://chatglm.cn/)、[GPT 5.4](https://chat.openai.com/)。所有 AI 生成内容均经过人工审查。
 
 ## 参考资源
 
@@ -65,29 +65,29 @@ NEORV32 (v1.13.1) 作为 git submodule 引入。
 
 所有自定义外设使用通用寄存器接口设计，不绑定特定总线，换板只需改适配层。
 
-| 模块 | 地址 | 说明 | 状态 |
-|------|------|------|------|
-| `sdram_ctrl` | `0x01000000` | 128MB SDRAM 控制器, 支持 burst | ✅ |
-| `vga_text_terminal` | `0xF0000000` | 80×25 彩色文字终端, 640×480@60Hz | ✅ |
-| `ps2_controller` | `0xF0002000` | PS/2 键盘 + FIFO + 中断 | ✅ |
-| `ir_nec_wb` | `0xF0009000` | 红外 NEC 协议解码 | ✅ |
-| `lcd_status` / `lcd_wb` | `0xF0008000` | HD44780 16×2 LCD | ✅ |
-| `expdemo_wb` | `0xF000D000` | 11 个课程实验硬件多路复用 | ✅ |
-| `ntt_sdf` | `0xF000C000` | NTT 加速器 (q=3329, N=256) | 🟡 编译通过, 待上板 |
-| `timer_wb` | `0xF0004000` | 系统定时器 | 🟡 预留 |
-| `intc_wb` | `0xF0006000` | 中断控制器 | 🟡 预留 |
+| 模块                        | 地址           | 说明                               | 状态                |
+| --------------------------- | -------------- | ---------------------------------- | ------------------- |
+| `sdram_ctrl`              | `0x01000000` | 128MB SDRAM 控制器, 支持 burst     | ✅                  |
+| `vga_text_terminal`       | `0xF0000000` | 80×25 彩色文字终端, 640×480@60Hz | ✅                  |
+| `ps2_controller`          | `0xF0002000` | PS/2 键盘 + FIFO + 中断            | ✅                  |
+| `ir_nec_wb`               | `0xF0009000` | 红外 NEC 协议解码                  | ✅                  |
+| `lcd_status` / `lcd_wb` | `0xF0008000` | HD44780 16×2 LCD                  | ✅                  |
+| `expdemo_wb`              | `0xF000D000` | 11 个课程实验硬件多路复用          | ✅                  |
+| `ntt_sdf`                 | `0xF000C000` | NTT 加速器 (q=3329, N=256)         | 🟡 编译通过, 待上板 |
+| `timer_wb`                | `0xF0004000` | 系统定时器                         | 🟡 预留             |
+| `intc_wb`                 | `0xF0006000` | 中断控制器                         | 🟡 预留             |
 
 ## 软件应用
 
-| 应用 | 说明 |
-|------|------|
-| **de2shell** | 主固件: 命令行 shell, memtest, crypto (AES/SHA/SM4+Zk*加速), snake, life, dashboard, expdemo, monitor, PS/2 |
-| **de2os** | 实验性: FreeRTOS + SDRAM 执行 + ICACHE burst |
-| **crypto_cli** | 独立密码学 CLI |
-| **hello** | Phase 0 验证: LED 跑马灯 |
-| **sdram_test** | SDRAM 诊断工具 |
-| **ps2_test** | PS/2 扫描码测试 |
-| **ir_test** | 红外解码测试 |
+| 应用                 | 说明                                                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **de2shell**   | 主固件: 命令行 shell, memtest, crypto (AES/SHA/SM4+Zk*加速), snake, life, dashboard, expdemo, monitor, PS/2 |
+| **de2os**      | 实验性: FreeRTOS + SDRAM 执行 + ICACHE burst                                                                |
+| **crypto_cli** | 独立密码学 CLI                                                                                              |
+| **hello**      | Phase 0 验证: LED 跑马灯                                                                                    |
+| **sdram_test** | SDRAM 诊断工具                                                                                              |
+| **ps2_test**   | PS/2 扫描码测试                                                                                             |
+| **ir_test**    | 红外解码测试                                                                                                |
 
 ## 目录结构
 
