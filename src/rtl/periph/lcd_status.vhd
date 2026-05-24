@@ -198,17 +198,17 @@ architecture rtl of lcd_status is
                 end case;
             when "1001" =>
                 case idx is
-                    when 0 => return ch('E');
-                    when 1 => return ch('X');
-                    when 2 => return ch('P');
-                    when others => return ch('1');
+                    when 0 => return ch('M');
+                    when 1 => return ch('O');
+                    when 2 => return ch('N');
+                    when others => return ch('I');
                 end case;
             when "1010" =>
                 case idx is
-                    when 0 => return ch('E');
-                    when 1 => return ch('X');
-                    when 2 => return ch('P');
-                    when others => return ch('4');
+                    when 0 => return ch('D');
+                    when 1 => return ch('E');
+                    when 2 => return ch('M');
+                    when others => return ch('O');
                 end case;
             when "1011" =>
                 case idx is
@@ -349,7 +349,8 @@ architecture rtl of lcd_status is
                     when 0 => return ch('L');
                     when 1 => return ch('I');
                     when 2 => return ch('V');
-                    when others => return ch('E');
+                    when 3 => return ch('E');
+                    when others => return ch(' ');
                 end case;
             when "0010" =>
                 case idx is
@@ -363,35 +364,40 @@ architecture rtl of lcd_status is
                     when 0 => return ch('E');
                     when 1 => return ch('D');
                     when 2 => return ch('I');
-                    when others => return ch('T');
+                    when 3 => return ch('T');
+                    when others => return ch(' ');
                 end case;
             when "0100" =>
                 case idx is
                     when 0 => return ch('H');
                     when 1 => return ch('O');
                     when 2 => return ch('L');
-                    when others => return ch('D');
+                    when 3 => return ch('D');
+                    when others => return ch(' ');
                 end case;
             when "0101" =>
                 case idx is
                     when 0 => return ch('P');
                     when 1 => return ch('A');
                     when 2 => return ch('S');
-                    when others => return ch('S');
+                    when 3 => return ch('S');
+                    when others => return ch(' ');
                 end case;
             when "0110" =>
                 case idx is
                     when 0 => return ch('F');
                     when 1 => return ch('A');
                     when 2 => return ch('I');
-                    when others => return ch('L');
+                    when 3 => return ch('L');
+                    when others => return ch(' ');
                 end case;
             when "0111" =>
                 case idx is
                     when 0 => return ch('B');
                     when 1 => return ch('U');
                     when 2 => return ch('S');
-                    when others => return ch('Y');
+                    when 3 => return ch('Y');
+                    when others => return ch(' ');
                 end case;
             when others =>
                 case idx is

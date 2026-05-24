@@ -46,6 +46,8 @@ entity neorv32_wrapper is
         xbus_cyc_o  : out std_logic;
         xbus_ack_i  : in  std_logic;
         xbus_err_i  : in  std_logic;
+        xbus_cti_o  : out std_logic_vector(2 downto 0);
+        xbus_tag_o  : out std_logic_vector(2 downto 0);
         -- External interrupt (PS/2, etc.)
         irq_mei_i  : in  std_logic
     );
@@ -65,6 +67,8 @@ architecture rtl of neorv32_wrapper is
     signal gpio_suv       : std_ulogic_vector(31 downto 0);
     signal uart_txd_sul   : std_ulogic;
     signal jtag_tdo_sul   : std_ulogic;
+    signal xbus_cti_suv   : std_ulogic_vector(2 downto 0);
+    signal xbus_tag_suv   : std_ulogic_vector(2 downto 0);
 
 begin
 
@@ -78,6 +82,8 @@ begin
     gpio_o      <= std_logic_vector(gpio_suv);
     uart_txd_o  <= uart_txd_sul;
     jtag_tdo_o  <= jtag_tdo_sul;
+    xbus_cti_o  <= std_logic_vector(xbus_cti_suv);
+    xbus_tag_o  <= std_logic_vector(xbus_tag_suv);
 
     -- ================================================================
     -- NEORV32 实例化 — 所有 ISA 和外设配置集中在此
@@ -247,6 +253,8 @@ begin
         xbus_cyc_o     => xbus_cyc_sul,
         xbus_ack_i     => std_ulogic(xbus_ack_i),
         xbus_err_i     => std_ulogic(xbus_err_i),
+        xbus_cti_o     => xbus_cti_suv,
+        xbus_tag_o     => xbus_tag_suv,
 
         -- GPIO
         gpio_o         => gpio_suv,

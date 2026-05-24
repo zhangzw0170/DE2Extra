@@ -1,23 +1,21 @@
--- vga_text_terminal.vhd — VGA 80x25 文字终端 (640x480@60Hz)
+-- vga_text_terminal.vhd -- VGA 80x25 text terminal (640x480 @ 60Hz, RGB565)
 --
--- 复用 Exp6 VGA 时序 + 自建文本缓冲区 + 字库 ROM + 光标
--- 双页缓冲 (F1/F2)，寄存器接口可通过 Wishbone 访问
---
--- 字符格式: 每字符 16 位 = [7:0]=ASCII, [15:8]=前景色 RGB332
--- 背景色: 全局寄存器 bg_color (RGB332)
--- 时钟: 25MHz 像素时钟 (50MHz 二分频)
+-- 32-bit cell: [31:24]=ASCII, [23:16]=reserved, [15:0]=fg RGB565
+-- Background color from global bg_color register (not per-cell)
+-- Dual-port M9K BRAM (4096x32): Port A 50MHz CPU write, Port B 25MHz render read
+-- Font ROM: font_rom_pkg CP437, 128 chars x 16 rows, 8-bit wide
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.font_rom_pkg.all;
 
 entity vga_text_terminal is
     port (
-        -- 50MHz 系统时钟
         clk_50m_i   : in  std_logic;
         rst_n_i     : in  std_logic;
 
-        -- VGA 输出 (24-bit)
+        -- VGA output (24-bit, 8-8-8 from RGB565 expansion)
         vga_r_o     : out std_logic_vector(7 downto 0);
         vga_g_o     : out std_logic_vector(7 downto 0);
         vga_b_o     : out std_logic_vector(7 downto 0);
@@ -27,62 +25,88 @@ entity vga_text_terminal is
         vga_sync_o  : out std_logic;
         vga_clk_o   : out std_logic;
 
-        -- 寄存器接口 (简单地址/数据，可桥接 Wishbone)
-        reg_adr_i   : in  std_logic_vector(15 downto 0);  -- 字节偏移
-        reg_dat_i   : in  std_logic_vector(15 downto 0);
-        reg_dat_o   : out std_logic_vector(15 downto 0);
+        -- Register interface (Wishbone, 32-bit data)
+        reg_adr_i   : in  std_logic_vector(15 downto 0);
+        reg_dat_i   : in  std_logic_vector(31 downto 0);
+        reg_dat_o   : out std_logic_vector(31 downto 0);
         reg_we_i    : in  std_logic;
         reg_stb_i   : in  std_logic;
         reg_ack_o   : out std_logic
     );
-end vga_text_terminal;
+end entity vga_text_terminal;
 
 architecture rtl of vga_text_terminal is
 
+    -- VGA 640x480 @ 60Hz timing (800x525 total)
     constant H_TOTAL  : integer := 800;
     constant H_SYNC   : integer := 96;
     constant H_BP     : integer := 48;
     constant H_ACTIVE : integer := 640;
-
     constant V_TOTAL  : integer := 525;
     constant V_SYNC   : integer := 2;
     constant V_BP     : integer := 33;
     constant V_ACTIVE : integer := 480;
 
+    -- Text grid
     constant COLS     : integer := 80;
     constant ROWS     : integer := 25;
     constant CHAR_W   : integer := 8;
     constant CHAR_H   : integer := 16;
     constant BUF_SIZE : integer := 2000;
+    constant RAM_DEPTH : integer := 4096;  -- power-of-2
 
-    constant BLINK_MAX  : integer := 25_000_000;
+    constant BLINK_MAX : integer := 25_000_000;  -- 0.5s @ 50MHz
 
+    -- 25MHz pixel clock (toggle on 50MHz)
     signal clk_25m      : std_logic := '0';
+
+    -- VGA timing counters
     signal h_count      : integer range 0 to H_TOTAL - 1 := 0;
     signal v_count      : integer range 0 to V_TOTAL - 1 := 0;
-    signal hs_sig       : std_logic;
-    signal vs_sig       : std_logic;
     signal video_on     : std_logic;
     signal pixel_x      : integer range 0 to H_ACTIVE - 1 := 0;
     signal pixel_y      : integer range 0 to V_ACTIVE - 1 := 0;
-    signal blink_cnt    : integer range 0 to BLINK_MAX - 1 := 0;
-    signal blink_vis    : std_logic := '1';
+
+    -- Text buffer BRAM (dual-port, inferred M9K)
+    type ram_t is array (0 to RAM_DEPTH - 1) of std_logic_vector(31 downto 0);
+    signal char_ram     : ram_t := (others => x"00200000");
+    attribute ramstyle  : string;
+    attribute ramstyle of char_ram : signal is "M9K, no_rw_check";
+
+    -- BRAM port B read pipeline (25MHz domain)
+    signal bram_rd_addr : integer range 0 to RAM_DEPTH - 1 := 0;
+    signal bram_q       : std_logic_vector(31 downto 0) := (others => '0');
+    signal sub_row      : integer range 0 to CHAR_H - 1;
+
+    -- Registered pixel coordinates (aligned with bram_q, 1-cycle delayed)
+    signal px_d         : integer range 0 to H_ACTIVE - 1 := 0;
+    signal py_d         : integer range 0 to V_ACTIVE - 1 := 0;
+    signal sub_row_d    : integer range 0 to CHAR_H - 1 := 0;
+
+    -- Cursor / control registers (50MHz domain, read by 25MHz)
     signal cursor_x     : integer range 0 to COLS - 1 := 0;
     signal cursor_y     : integer range 0 to ROWS - 1 := 0;
     signal ctrl_enable  : std_logic := '1';
     signal ctrl_blink   : std_logic := '1';
     signal ctrl_page    : std_logic := '0';
-    signal bg_color     : std_logic_vector(7 downto 0) := x"00";
+    signal bg_color     : std_logic_vector(15 downto 0) := x"0000";  -- RGB565
+
+    -- Blink counter (25MHz)
+    signal blink_cnt    : integer range 0 to BLINK_MAX - 1 := 0;
+    signal blink_vis    : std_logic := '1';
+
+    -- Register interface (50MHz)
     signal reg_ack      : std_logic := '0';
-    signal cursor_box   : std_logic;
-    signal border_box   : std_logic;
+
+    -- Clear screen state machine
+    signal clr_active   : std_logic := '0';
+    signal clr_addr     : integer range 0 to BUF_SIZE - 1 := 0;
 
 begin
 
-    -- Bring-up VGA stub:
-    -- keep timing and register map stable, but avoid the dual-clock text RAM
-    -- implementation that exploded into >150k logic elements.
-
+    ----------------------------------------------------------------
+    -- 25MHz pixel clock
+    ----------------------------------------------------------------
     process(clk_50m_i)
     begin
         if rising_edge(clk_50m_i) then
@@ -91,46 +115,41 @@ begin
     end process;
     vga_clk_o <= clk_25m;
 
+    ----------------------------------------------------------------
+    -- VGA timing (25MHz)
+    ----------------------------------------------------------------
     process(clk_25m)
     begin
         if rising_edge(clk_25m) then
             if h_count = H_TOTAL - 1 then
                 h_count <= 0;
+                if v_count = V_TOTAL - 1 then
+                    v_count <= 0;
+                else
+                    v_count <= v_count + 1;
+                end if;
             else
                 h_count <= h_count + 1;
             end if;
         end if;
     end process;
 
-    process(clk_25m)
-    begin
-        if rising_edge(clk_25m) then
-            if h_count = H_TOTAL - 1 then
-                if v_count = V_TOTAL - 1 then
-                    v_count <= 0;
-                else
-                    v_count <= v_count + 1;
-                end if;
-            end if;
-        end if;
-    end process;
-
-    hs_sig <= '1' when h_count >= H_SYNC else '0';
-    vs_sig <= '1' when v_count >= V_SYNC else '0';
-
-    vga_hs_o   <= hs_sig;
-    vga_vs_o   <= vs_sig;
-    vga_sync_o <= not (hs_sig and vs_sig);
-
     video_on <= '1' when
         h_count >= (H_SYNC + H_BP) and h_count < (H_SYNC + H_BP + H_ACTIVE) and
         v_count >= (V_SYNC + V_BP) and v_count < (V_SYNC + V_BP + V_ACTIVE)
         else '0';
-    vga_blank_o <= video_on;
 
     pixel_x <= h_count - (H_SYNC + H_BP) when video_on = '1' else 0;
     pixel_y <= v_count - (V_SYNC + V_BP) when video_on = '1' else 0;
 
+    vga_hs_o   <= '1' when h_count >= H_SYNC else '0';
+    vga_vs_o   <= '1' when v_count >= V_SYNC else '0';
+    vga_blank_o <= video_on;
+    vga_sync_o <= '1' when (h_count >= H_SYNC and v_count >= V_SYNC) else '0';
+
+    ----------------------------------------------------------------
+    -- Blink counter (25MHz)
+    ----------------------------------------------------------------
     process(clk_25m)
     begin
         if rising_edge(clk_25m) then
@@ -143,103 +162,185 @@ begin
         end if;
     end process;
 
-    cursor_box <= '1' when
-        ctrl_enable = '1' and
-        pixel_x >= (cursor_x * CHAR_W) and pixel_x < ((cursor_x + 1) * CHAR_W) and
-        pixel_y >= (cursor_y * CHAR_H) and pixel_y < ((cursor_y + 1) * CHAR_H)
-        else '0';
+    ----------------------------------------------------------------
+    -- BRAM read address (25MHz, combinational)
+    ----------------------------------------------------------------
+    process(all)
+        variable char_col : integer range 0 to COLS - 1;
+        variable char_row : integer range 0 to ROWS - 1;
+        variable page_off : integer;
+    begin
+        char_col := pixel_x / CHAR_W;
+        if pixel_y / CHAR_H >= ROWS then
+            char_row := ROWS - 1;  -- clamp: bottom margin pixels
+        else
+            char_row := pixel_y / CHAR_H;
+        end if;
+        page_off := 0;
+        if ctrl_page = '1' then
+            page_off := BUF_SIZE;
+        end if;
+        bram_rd_addr <= char_row * COLS + char_col + page_off;
+        sub_row     <= pixel_y mod CHAR_H;
+    end process;
 
-    border_box <= '1' when
-        pixel_x < 8 or pixel_x >= (H_ACTIVE - 8) or
-        pixel_y < 8 or pixel_y >= (V_ACTIVE - 8)
-        else '0';
-
+    ----------------------------------------------------------------
+    -- BRAM read + coordinate register stage (25MHz)
+    -- Registers bram_q, px_d, py_d, sub_row_d all on the same edge
+    -- so they are aligned for the rendering stage.
+    ----------------------------------------------------------------
     process(clk_25m)
-        variable fg_r, fg_g, fg_b : std_logic_vector(7 downto 0);
-        variable bg_r, bg_g, bg_b : std_logic_vector(7 downto 0);
-        variable show_fg          : std_logic;
     begin
         if rising_edge(clk_25m) then
-            fg_r := x"FF";
-            if ctrl_page = '0' then
-                fg_g := x"FF";
-                fg_b := x"FF";
-            else
-                fg_g := x"80";
-                fg_b := x"00";
+            bram_q    <= char_ram(bram_rd_addr);
+            px_d      <= pixel_x;
+            py_d      <= pixel_y;
+            sub_row_d <= sub_row;
+        end if;
+    end process;
+
+    ----------------------------------------------------------------
+    -- Font ROM lookup + pixel rendering (25MHz, registered output)
+    -- All inputs (bram_q, px_d, py_d, sub_row_d) are aligned.
+    ----------------------------------------------------------------
+    process(clk_25m)
+        variable ascii_char : integer range 0 to 255;
+        variable font_byte  : std_logic_vector(7 downto 0);
+        variable pixel_bit  : std_logic;
+        variable fg_rgb     : std_logic_vector(15 downto 0);
+        variable bg_rgb     : std_logic_vector(15 downto 0);
+        variable color_rgb  : std_logic_vector(15 downto 0);
+        variable cursor_at  : std_logic;
+    begin
+        if rising_edge(clk_25m) then
+            -- Font ROM: use variable for immediate use in this process
+            ascii_char := to_integer(unsigned(bram_q(31 downto 24)));
+            if ascii_char > 127 then
+                ascii_char := 0;
+            end if;
+            font_byte := font_rom_data(ascii_char * 16 + sub_row_d);
+
+            -- Pixel on: select bit from font data (MSB = leftmost pixel)
+            pixel_bit := font_byte(7 - (px_d mod CHAR_W));
+
+            -- Cursor detection (full character cell)
+            cursor_at := '0';
+            if ctrl_enable = '1' then
+                if py_d >= (cursor_y * CHAR_H) and py_d < ((cursor_y + 1) * CHAR_H) then
+                    if px_d >= (cursor_x * CHAR_W) and px_d < ((cursor_x + 1) * CHAR_W) then
+                        cursor_at := '1';
+                    end if;
+                end if;
             end if;
 
-            bg_r := bg_color(7 downto 5) & "00000";
-            bg_g := bg_color(4 downto 2) & "00000";
-            bg_b := bg_color(1 downto 0) & "000000";
+            -- fg from per-cell, bg from global register
+            fg_rgb := bram_q(15 downto 0);
+            bg_rgb := bg_color;
 
+            -- Swap fg/bg at cursor (blinking)
+            if cursor_at = '1' and (ctrl_blink = '0' or blink_vis = '1') then
+                color_rgb := bg_rgb;
+            elsif pixel_bit = '1' then
+                color_rgb := fg_rgb;
+            else
+                color_rgb := bg_rgb;
+            end if;
+
+            -- RGB565 to 8-bit expansion
             if video_on = '0' then
                 vga_r_o <= x"00";
                 vga_g_o <= x"00";
                 vga_b_o <= x"00";
             else
-                show_fg := border_box;
-                if cursor_box = '1' and (ctrl_blink = '0' or blink_vis = '1') then
-                    show_fg := '1';
-                end if;
-
-                if show_fg = '1' then
-                    vga_r_o <= fg_r;
-                    vga_g_o <= fg_g;
-                    vga_b_o <= fg_b;
-                else
-                    vga_r_o <= bg_r;
-                    vga_g_o <= bg_g;
-                    vga_b_o <= bg_b;
-                end if;
+                vga_r_o <= color_rgb(15 downto 11) & "000";
+                vga_g_o <= color_rgb(10 downto 5)  & "00";
+                vga_b_o <= color_rgb(4 downto 0)   & "000";
             end if;
         end if;
     end process;
 
+    ----------------------------------------------------------------
+    -- Register interface + clear-screen FSM (50MHz)
+    ----------------------------------------------------------------
     process(clk_50m_i)
-        variable reg_addr_int : integer;
-        variable next_cursor_x : integer;
-        variable next_cursor_y : integer;
+        variable addr_int   : integer;
+        variable next_cx    : integer;
+        variable next_cy    : integer;
+        variable word_addr  : integer;
     begin
         if rising_edge(clk_50m_i) then
             reg_ack   <= '0';
             reg_dat_o <= (others => '0');
 
-            if reg_stb_i = '1' then
+            if clr_active = '1' then
+                char_ram(clr_addr) <= x"00200000";  -- space, black fg
+                if clr_addr = BUF_SIZE - 1 then
+                    clr_active <= '0';
+                else
+                    clr_addr <= clr_addr + 1;
+                end if;
+                -- Acknowledge reads during clear (avoid XBUS timeout)
+                if reg_stb_i = '1' and reg_we_i = '0' then
+                    reg_ack <= '1';
+                    addr_int := to_integer(unsigned(reg_adr_i));
+                    if addr_int = 16#1000# then
+                        reg_dat_o(6 downto 0) <= std_logic_vector(to_unsigned(cursor_x, 7));
+                    elsif addr_int = 16#1004# then
+                        reg_dat_o(4 downto 0) <= std_logic_vector(to_unsigned(cursor_y, 5));
+                    elsif addr_int = 16#1008# then
+                        reg_dat_o <= (0 => ctrl_enable, 1 => ctrl_blink, 2 => ctrl_page, others => '0');
+                    elsif addr_int = 16#1010# then
+                        reg_dat_o <= x"0000" & bg_color;
+                    end if;
+                end if;
+            elsif reg_stb_i = '1' then
                 reg_ack <= '1';
-                reg_addr_int := to_integer(unsigned(reg_adr_i));
+                addr_int := to_integer(unsigned(reg_adr_i));
 
                 if reg_we_i = '1' then
-                    if reg_addr_int = 16#1000# then
-                        next_cursor_x := to_integer(unsigned(reg_dat_i(6 downto 0)));
-                        if next_cursor_x < COLS then
-                            cursor_x <= next_cursor_x;
+                    if addr_int < (BUF_SIZE * 4) then
+                        word_addr := addr_int / 4;
+                        if word_addr < RAM_DEPTH then
+                            char_ram(word_addr) <= reg_dat_i;
                         end if;
-                    elsif reg_addr_int = 16#1004# then
-                        next_cursor_y := to_integer(unsigned(reg_dat_i(4 downto 0)));
-                        if next_cursor_y < ROWS then
-                            cursor_y <= next_cursor_y;
+                    elsif addr_int = 16#1000# then
+                        next_cx := to_integer(unsigned(reg_dat_i(6 downto 0)));
+                        if next_cx < COLS then
+                            cursor_x <= next_cx;
                         end if;
-                    elsif reg_addr_int = 16#1008# then
+                    elsif addr_int = 16#1004# then
+                        next_cy := to_integer(unsigned(reg_dat_i(4 downto 0)));
+                        if next_cy < ROWS then
+                            cursor_y <= next_cy;
+                        end if;
+                    elsif addr_int = 16#1008# then
                         ctrl_enable <= reg_dat_i(0);
                         ctrl_blink  <= reg_dat_i(1);
                         ctrl_page   <= reg_dat_i(2);
-                    elsif reg_addr_int = 16#1010# then
-                        bg_color <= reg_dat_i(7 downto 0);
+                    elsif addr_int = 16#1010# then
+                        bg_color <= reg_dat_i(15 downto 0);
+                    elsif addr_int = 16#1014# then
+                        if reg_dat_i(0) = '1' then
+                            clr_active <= '1';
+                            clr_addr <= 0;
+                        end if;
                     end if;
                 else
-                    if reg_addr_int < (BUF_SIZE * 2) then
-                        reg_dat_o <= (others => '0');
-                    elsif reg_addr_int = 16#1000# then
+                    if addr_int < (BUF_SIZE * 4) then
+                        word_addr := addr_int / 4;
+                        if word_addr < RAM_DEPTH then
+                            reg_dat_o <= char_ram(word_addr);
+                        end if;
+                    elsif addr_int = 16#1000# then
                         reg_dat_o(6 downto 0) <= std_logic_vector(to_unsigned(cursor_x, 7));
-                    elsif reg_addr_int = 16#1004# then
+                    elsif addr_int = 16#1004# then
                         reg_dat_o(4 downto 0) <= std_logic_vector(to_unsigned(cursor_y, 5));
-                    elsif reg_addr_int = 16#1008# then
+                    elsif addr_int = 16#1008# then
                         reg_dat_o <= (0 => ctrl_enable, 1 => ctrl_blink, 2 => ctrl_page, others => '0');
-                    elsif reg_addr_int = 16#100C# then
-                        reg_dat_o <= (0 => not video_on, others => '0');
-                    elsif reg_addr_int = 16#1010# then
-                        reg_dat_o <= x"00" & bg_color;
+                    elsif addr_int = 16#100C# then
+                        reg_dat_o(0) <= not video_on;
+                    elsif addr_int = 16#1010# then
+                        reg_dat_o <= x"0000" & bg_color;
                     end if;
                 end if;
             end if;
@@ -248,4 +349,4 @@ begin
 
     reg_ack_o <= reg_ack;
 
-end rtl;
+end architecture rtl;

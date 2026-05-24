@@ -23,6 +23,32 @@ package de2extra_pkg is
     constant ADDR_DDS_BASE     : std_logic_vector(31 downto 0) := x"F000A000"; -- 4KB
     constant ADDR_SD_BASE      : std_logic_vector(31 downto 0) := x"F000B000"; -- 4KB
     constant ADDR_NTT_BASE     : std_logic_vector(31 downto 0) := x"F000C000"; -- 4KB
+    constant ADDR_EXPDEMO_BASE : std_logic_vector(31 downto 0) := x"F000D000"; -- 4KB
+
+    -- ================================================================
+    -- ExpDemo: unified experiment output type
+    -- ================================================================
+    -- hex: 56 bits = 8×7-bit [HEX7..HEX0], active-low (1=off)
+    -- lcd_*: direct LCD control signals (exp12/exp13a only)
+    type exp_out_t is record
+        hex      : std_logic_vector(55 downto 0);
+        ledr     : std_logic_vector(17 downto 0);
+        ledg     : std_logic_vector(8 downto 0);
+        lcd_data : std_logic_vector(7 downto 0);
+        lcd_rs   : std_logic;
+        lcd_rw   : std_logic;
+        lcd_en   : std_logic;
+    end record;
+
+    constant EXP_OUT_ZERO : exp_out_t := (
+        hex      => (others => '1'),   -- all segments off
+        ledr     => (others => '0'),
+        ledg     => (others => '0'),
+        lcd_data => (others => '0'),
+        lcd_rs   => '0',
+        lcd_rw   => '0',
+        lcd_en   => '0'
+    );
     -- ================================================================
     -- Seven-segment display utility
     -- ================================================================

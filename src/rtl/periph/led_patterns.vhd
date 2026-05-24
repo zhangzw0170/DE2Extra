@@ -1,206 +1,184 @@
--- led_patterns.vhd — 彩灯显示引擎 (9种模式)
--- 来源: Exp2 (已验收)
---
--- 模式: 0=全灭, 1=左移单灯, 2=右移单灯, 3=中→外, 4=外→中,
---        5=左→右全亮/全灭, 6=中→外全亮/全灭, 7=外→中全亮/全灭, 8=全闪烁
---
--- 接口: mode_i 直接选择模式, en_i 总开关
+-- led_patterns.vhd — Exp2 18-bit LED pattern engine
+-- Rewritten for LEDR[17:0] so every mode occupies the full red LED bank.
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity led_patterns is
     port (
-        clk_i        : in  std_logic;      -- 50 MHz
+        clk_i        : in  std_logic;                     -- 50 MHz
         rst_n_i      : in  std_logic;
-        en_i         : in  std_logic;      -- 总开关
-        mode_i       : in  std_logic_vector(3 downto 0);  -- 模式 0-8
-        mode_next_i  : in  std_logic;      -- 切换到下一模式 (按键脉冲)
-        led_o        : out std_logic_vector(10 downto 0)  -- 彩灯输出
+        en_i         : in  std_logic;                     -- master enable
+        mode_next_i  : in  std_logic;                     -- active-high push
+        mode_o       : out std_logic_vector(3 downto 0);  -- current mode 0..8
+        led_o        : out std_logic_vector(17 downto 0)  -- LEDR[17:0]
     );
-end led_patterns;
+end entity led_patterns;
 
 architecture rtl of led_patterns is
+    constant LED_WIDTH : integer := 18;
+    constant STEP_MAX  : integer := 25000000 - 1; -- 2 Hz update
+    constant DB_MAX    : integer := 12207 - 1;    -- ~4 kHz sample tick
 
-    -- 50MHz → ~2Hz 彩灯时钟
-    constant LED_MAX  : integer := 12500000 - 1;
-    signal led_cnt    : integer range 0 to LED_MAX := 0;
-    signal led_clk    : std_logic := '0';
+    signal step_cnt      : integer range 0 to STEP_MAX := 0;
+    signal step_tick     : std_logic := '0';
+    signal db_cnt        : integer range 0 to DB_MAX := 0;
+    signal db_tick       : std_logic := '0';
+    signal btn_sync      : std_logic_vector(1 downto 0) := (others => '0');
+    signal btn_prev      : std_logic := '0';
+    signal mode_next_pulse : std_logic := '0';
 
-    -- 按键防抖 (~4kHz)
-    constant DB_MAX   : integer := 6103 - 1;
-    signal db_cnt     : integer range 0 to DB_MAX := 0;
-    signal db_clk     : std_logic := '0';
-    signal btn_sync   : std_logic_vector(1 downto 0) := "00";
-    signal btn_rise   : std_logic;
+    signal mode_r        : unsigned(3 downto 0) := (others => '0');
+    signal led_r         : std_logic_vector(17 downto 0) := (others => '0');
+    signal fill_phase    : std_logic := '0';
 
-    -- 模式与状态
-    signal mode       : std_logic_vector(3 downto 0) := "0000";
-    signal cled       : std_logic_vector(10 downto 0) := (others => '0');
-    signal flag       : std_logic := '0';  -- 方向标志
+    function all_zero(v : std_logic_vector) return boolean is
+    begin
+        return v = (v'range => '0');
+    end function;
 
+    function all_one(v : std_logic_vector) return boolean is
+    begin
+        return v = (v'range => '1');
+    end function;
 begin
-
-    -- ============================================================
-    -- 时钟分频
-    -- ============================================================
     process(clk_i)
     begin
         if rising_edge(clk_i) then
-            if led_cnt = LED_MAX then
-                led_cnt <= 0;
-                led_clk <= not led_clk;
-            else
-                led_cnt <= led_cnt + 1;
-            end if;
-
-            if db_cnt = DB_MAX then
+            if rst_n_i = '0' then
+                step_cnt <= 0;
+                step_tick <= '0';
                 db_cnt <= 0;
-                db_clk <= not db_clk;
+                db_tick <= '0';
+                btn_sync <= (others => '0');
+                btn_prev <= '0';
+                mode_next_pulse <= '0';
+                mode_r <= (others => '0');
+                led_r <= (others => '0');
+                fill_phase <= '0';
             else
-                db_cnt <= db_cnt + 1;
-            end if;
-        end if;
-    end process;
-
-    -- ============================================================
-    -- 模式切换按钮 (消抖后上升沿)
-    -- ============================================================
-    process(clk_i)
-    begin
-        if rising_edge(clk_i) then
-            if rst_n_i = '0' then
-                btn_sync <= "00";
-            else
-                btn_sync <= btn_sync(0) & mode_next_i;
-            end if;
-        end if;
-    end process;
-
-    process(db_clk)
-        variable btn_prev : std_logic := '0';
-    begin
-        if rising_edge(db_clk) then
-            if btn_sync(1) = '1' and btn_prev = '0' then
-                btn_rise <= '1';
-            else
-                btn_rise <= '0';
-            end if;
-            btn_prev := btn_sync(1);
-        end if;
-    end process;
-
-    process(clk_i)
-    begin
-        if rising_edge(clk_i) then
-            if rst_n_i = '0' then
-                mode <= "0000";
-            elsif btn_rise = '1' then
-                if mode = "1000" then
-                    mode <= "0000";
+                step_tick <= '0';
+                if step_cnt = STEP_MAX then
+                    step_cnt <= 0;
+                    step_tick <= '1';
                 else
-                    mode <= mode + 1;
+                    step_cnt <= step_cnt + 1;
                 end if;
-            elsif mode_i /= "0000" then
-                mode <= mode_i;  -- 外部设置优先
+
+                db_tick <= '0';
+                if db_cnt = DB_MAX then
+                    db_cnt <= 0;
+                    db_tick <= '1';
+                else
+                    db_cnt <= db_cnt + 1;
+                end if;
+
+                btn_sync <= btn_sync(0) & mode_next_i;
+                mode_next_pulse <= '0';
+                if db_tick = '1' then
+                    if (btn_sync(1) = '1') and (btn_prev = '0') then
+                        mode_next_pulse <= '1';
+                    end if;
+                    btn_prev <= btn_sync(1);
+                end if;
+
+                if mode_next_pulse = '1' then
+                    if mode_r = to_unsigned(8, 4) then
+                        mode_r <= (others => '0');
+                    else
+                        mode_r <= mode_r + 1;
+                    end if;
+                    led_r <= (others => '0');
+                    fill_phase <= '0';
+                elsif step_tick = '1' then
+                    if en_i = '0' then
+                        led_r <= (others => '0');
+                        fill_phase <= '0';
+                    else
+                        case to_integer(mode_r) is
+                            when 0 =>
+                                led_r <= (others => '0');
+                                fill_phase <= '0';
+
+                            when 1 => -- single light: LEDR17 -> LEDR0
+                                if all_zero(led_r) then
+                                    led_r <= (17 => '1', others => '0');
+                                else
+                                    led_r <= '0' & led_r(17 downto 1);
+                                end if;
+
+                            when 2 => -- single light: LEDR0 -> LEDR17
+                                if all_zero(led_r) then
+                                    led_r <= (0 => '1', others => '0');
+                                else
+                                    led_r <= led_r(16 downto 0) & '0';
+                                end if;
+
+                            when 3 => -- center pair -> outer edges
+                                if all_zero(led_r) then
+                                    led_r <= (9 => '1', 8 => '1', others => '0');
+                                else
+                                    led_r(17 downto 9) <= led_r(16 downto 9) & '0';
+                                    led_r(8 downto 0)  <= '0' & led_r(8 downto 1);
+                                end if;
+
+                            when 4 => -- outer edges -> center pair
+                                if all_zero(led_r) then
+                                    led_r <= (17 => '1', 0 => '1', others => '0');
+                                else
+                                    led_r(17 downto 9) <= '0' & led_r(17 downto 10);
+                                    led_r(8 downto 0)  <= led_r(7 downto 0) & '0';
+                                end if;
+
+                            when 5 => -- fill from LEDR17 toward LEDR0, then clear back
+                                if fill_phase = '0' then
+                                    led_r <= '1' & led_r(17 downto 1);
+                                else
+                                    led_r <= led_r(16 downto 0) & '0';
+                                end if;
+
+                            when 6 => -- fill from center pair to outer edges, then clear back
+                                if fill_phase = '0' then
+                                    led_r(17 downto 9) <= led_r(16 downto 9) & '1';
+                                    led_r(8 downto 0)  <= '1' & led_r(8 downto 1);
+                                else
+                                    led_r(17 downto 9) <= '0' & led_r(17 downto 10);
+                                    led_r(8 downto 0)  <= led_r(7 downto 0) & '0';
+                                end if;
+
+                            when 7 => -- fill from outer edges to center pair, then clear back
+                                if fill_phase = '0' then
+                                    led_r(17 downto 9) <= '1' & led_r(17 downto 10);
+                                    led_r(8 downto 0)  <= led_r(7 downto 0) & '1';
+                                else
+                                    led_r(17 downto 9) <= led_r(16 downto 9) & '0';
+                                    led_r(8 downto 0)  <= '0' & led_r(8 downto 1);
+                                end if;
+
+                            when 8 => -- full blink
+                                if fill_phase = '0' then
+                                    led_r <= (others => '1');
+                                else
+                                    led_r <= (others => '0');
+                                end if;
+
+                            when others =>
+                                led_r <= (others => '0');
+                                fill_phase <= '0';
+                        end case;
+
+                        if all_zero(led_r) then
+                            fill_phase <= '0';
+                        elsif all_one(led_r) then
+                            fill_phase <= '1';
+                        end if;
+                    end if;
+                end if;
             end if;
         end if;
     end process;
 
-    -- ============================================================
-    -- 彩灯控制 (~2Hz 时钟域)
-    -- ============================================================
-    process(led_clk, rst_n_i)
-    begin
-        if rst_n_i = '0' then
-            cled <= (others => '0');
-            flag <= '0';
-        elsif rising_edge(led_clk) then
-            if en_i = '0' then
-                cled <= (others => '0');
-            else
-                case mode is
-                    when "0000" =>  -- 全灭
-                        cled <= (others => '0');
-
-                    when "0001" =>  -- 左移单灯
-                        if cled = "00000000000" then
-                            cled(10) <= '1';
-                        else
-                            cled <= '0' & cled(10 downto 1);
-                        end if;
-
-                    when "0010" =>  -- 右移单灯
-                        if cled = "00000000000" then
-                            cled(0) <= '1';
-                        else
-                            cled <= cled(9 downto 0) & '0';
-                        end if;
-
-                    when "0011" =>  -- 中间→两边
-                        if cled = "00000000000" then
-                            cled(5) <= '1';
-                        else
-                            cled(10 downto 5) <= cled(9 downto 5) & '0';
-                            cled(5 downto 0)  <= '0' & cled(5 downto 1);
-                        end if;
-
-                    when "0100" =>  -- 两边→中间
-                        if cled = "00000000000" then
-                            cled(10) <= '1';
-                            cled(0)  <= '1';
-                        else
-                            cled(10 downto 5) <= '0' & cled(10 downto 6);
-                            cled(4 downto 0)  <= cled(3 downto 0) & '0';
-                        end if;
-
-                    when "0101" =>  -- 左→右全亮/全灭
-                        if flag = '0' then
-                            cled <= '1' & cled(10 downto 1);
-                        else
-                            cled <= cled(9 downto 0) & '0';
-                        end if;
-
-                    when "0110" =>  -- 中→外全亮/全灭
-                        if flag = '0' then
-                            cled(10 downto 5) <= cled(9 downto 5) & '1';
-                            cled(5 downto 0)  <= '1' & cled(5 downto 1);
-                        else
-                            cled(10 downto 5) <= '0' & cled(10 downto 6);
-                            cled(5 downto 0)  <= cled(4 downto 0) & '0';
-                        end if;
-
-                    when "0111" =>  -- 外→中全亮/全灭
-                        if flag = '0' then
-                            cled(10 downto 5) <= '1' & cled(10 downto 6);
-                            cled(5 downto 0)  <= cled(4 downto 0) & '1';
-                        else
-                            cled(10 downto 5) <= cled(9 downto 5) & '0';
-                            cled(5 downto 0)  <= '0' & cled(5 downto 1);
-                        end if;
-
-                    when "1000" =>  -- 全闪烁
-                        if flag = '0' then
-                            cled <= (others => '1');
-                        else
-                            cled <= (others => '0');
-                        end if;
-
-                    when others =>
-                        cled <= (others => '0');
-                end case;
-
-                -- 方向标志更新
-                if cled = "00000000000" then
-                    flag <= '0';
-                elsif cled = "11111111111" then
-                    flag <= '1';
-                end if;
-            end if;
-        end if;
-    end process;
-
-    led_o <= cled;
-
-end rtl;
+    mode_o <= std_logic_vector(mode_r);
+    led_o  <= led_r;
+end architecture rtl;

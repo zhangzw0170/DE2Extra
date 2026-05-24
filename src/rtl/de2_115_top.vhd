@@ -166,6 +166,8 @@ architecture rtl of de2_115_top is
     signal sw16_sel         : std_logic := '0';
     signal lcd_status_rst_n : std_logic;
     signal lcd_debug_rst_n  : std_logic;
+    signal expdemo_active_d : std_logic := '0';
+    signal lcd_shell_rst_cnt : integer range 0 to 50000 := 50000;
 
     -- IR receiver Wishbone
     signal ir_wb_adr   : std_logic_vector(2 downto 0);
@@ -313,7 +315,22 @@ begin
         end if;
     end process;
 
-    lcd_status_rst_n <= rst_n;
+    p_lcd_shell_reinit : process (clk_50m, rst_n)
+    begin
+        if rst_n = '0' then
+            expdemo_active_d <= '0';
+            lcd_shell_rst_cnt <= 50000;
+        elsif rising_edge(clk_50m) then
+            expdemo_active_d <= expdemo_active;
+            if (expdemo_active_d = '1') and (expdemo_active = '0') then
+                lcd_shell_rst_cnt <= 50000;
+            elsif lcd_shell_rst_cnt > 0 then
+                lcd_shell_rst_cnt <= lcd_shell_rst_cnt - 1;
+            end if;
+        end if;
+    end process;
+
+    lcd_status_rst_n <= '0' when (rst_n = '0') or (lcd_shell_rst_cnt > 0) else '1';
     lcd_debug_rst_n  <= '0';
 
     -- Exp8 and Exp10 own PS/2 / IR respectively while active.
@@ -356,6 +373,8 @@ begin
         xbus_cyc_o  => xbus_cyc,
         xbus_ack_i  => xbus_ack,
         xbus_err_i  => xbus_err,
+        xbus_cti_o  => open,
+        xbus_tag_o  => open,
         irq_mei_i   => intc_irq
     );
 
@@ -373,6 +392,7 @@ begin
         m_cyc_i  => xbus_cyc,
         m_ack_o  => xbus_ack,
         m_err_o  => xbus_err,
+        m_cti_i  => "000",
         s0_adr_o => sdram_wb_adr,
         s0_dat_i => sdram_wb_dat_i,
         s0_dat_o => sdram_wb_dat_o,
@@ -381,6 +401,7 @@ begin
         s0_stb_o => sdram_wb_stb,
         s0_cyc_o => sdram_wb_cyc,
         s0_ack_i => sdram_wb_ack,
+        s0_cti_o => open,
         s1_adr_o => vga_reg_adr,
         s1_dat_i => vga_reg_dat_i,
         s1_dat_o => vga_reg_dat_o,
@@ -447,6 +468,7 @@ begin
         wb_cyc_i    => sdram_wb_cyc,
         wb_ack_o    => sdram_wb_ack,
         wb_err_o    => open,
+        wb_cti_i    => "000",
         clk_sdram_i => clk_sdram,
         rst_sdram_n => rst_sdram_n,
         dram_addr   => DRAM_ADDR,
@@ -464,27 +486,19 @@ begin
     DRAM_CLK <= clk_sdram_shift;
 
     -- ================================================================
-    -- VGA Text Terminal (Phase 2b)
+    -- VGA Text Terminal (temporarily disabled to isolate non-VGA bring-up)
     -- ================================================================
-    u_vga : entity work.vga_text_terminal
-    port map (
-        clk_50m_i   => clk_50m,
-        rst_n_i     => rst_n,
-        vga_r_o     => vga_r_int,
-        vga_g_o     => vga_g_int,
-        vga_b_o     => vga_b_int,
-        vga_hs_o    => vga_hs_int,
-        vga_vs_o    => vga_vs_int,
-        vga_blank_o => vga_blank_int,
-        vga_sync_o  => vga_sync_int,
-        vga_clk_o   => vga_clk_int,
-        reg_adr_i   => vga_reg_adr,
-        reg_dat_i   => vga_reg_dat_o,
-        reg_dat_o   => vga_reg_dat_i,
-        reg_we_i    => vga_reg_we,
-        reg_stb_i   => vga_reg_stb,
-        reg_ack_o   => vga_reg_ack
-    );
+    vga_reg_dat_i <= (others => '0');
+    vga_reg_ack   <= vga_reg_stb;
+
+    vga_r_int     <= (others => '0');
+    vga_g_int     <= (others => '0');
+    vga_b_int     <= (others => '0');
+    vga_hs_int    <= '1';
+    vga_vs_int    <= '0';
+    vga_clk_int   <= '0';
+    vga_sync_int  <= '0';
+    vga_blank_int <= '0';
 
     VGA_R       <= vga_r_int;
     VGA_G       <= vga_g_int;
@@ -564,9 +578,19 @@ begin
     gpio_in(29 downto 22) <= dbg_ir_cmd;
 
     -- ================================================================
-    -- NTT Accelerator @ 0xF000C000 (disabled — ntt_sdf has synthesis errors)
-    ntt_wb_dat_i <= (others => '0');
-    ntt_wb_ack   <= '0';
+    -- NTT Accelerator @ 0xF000C000
+    -- ================================================================
+    u_ntt : entity work.ntt_sdf
+    port map (
+        clk_i    => clk_50m,
+        rst_n_i  => rst_n,
+        wb_adr_i => ntt_wb_adr,
+        wb_dat_i => ntt_wb_dat_o,
+        wb_dat_o => ntt_wb_dat_i,
+        wb_we_i  => ntt_wb_we,
+        wb_stb_i => ntt_wb_stb,
+        wb_ack_o => ntt_wb_ack
+    );
 
     -- LCD @ 0xF0008000 (stub — de2shell uses hardware lcd_status/lcd_debug)
     lcd_wb_dat_i <= (others => '0');

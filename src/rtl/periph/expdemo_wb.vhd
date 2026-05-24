@@ -3,6 +3,11 @@
 -- Register map (word-addressed, 4-byte aligned):
 --   0x00  CHANNEL (R/W)  — active experiment channel (0=shell, 1-13=exp, 6/7=reserved)
 --   0x04  STATUS  (R)    — [0]=active, [7:4]=channel id
+--   0x08  E12_SNAP0 (R)  — [7:0]=PC, [11:8]=FSM, [12]=AUTO, [13]=DETAIL
+--   0x0C  E12_AC    (R)  — [15:0]=AC
+--   0x10  E12_IR    (R)  — [15:0]=IR
+--   0x14  E12_STEP  (R)  — [7:0]=step counter
+--   0x18  E13_STATE (R)  — [1:0]=page, [7:2]=scroll offset
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -13,6 +18,16 @@ entity expdemo_wb is
         clk_i      : in  std_logic;
         rst_n_i    : in  std_logic;
         force_shell_i : in std_logic;
+
+        exp12_pc_i     : in std_logic_vector(7 downto 0);
+        exp12_fsm_i    : in std_logic_vector(3 downto 0);
+        exp12_auto_i   : in std_logic;
+        exp12_detail_i : in std_logic;
+        exp12_ac_i     : in std_logic_vector(15 downto 0);
+        exp12_ir_i     : in std_logic_vector(15 downto 0);
+        exp12_step_i   : in std_logic_vector(7 downto 0);
+        exp13_msg_sel_i : in std_logic_vector(1 downto 0);
+        exp13_scroll_i  : in std_logic_vector(5 downto 0);
 
         -- channel output (to expdemo_top mux)
         channel_o  : out integer range 0 to 13;
@@ -66,7 +81,7 @@ begin
     process(all)
     begin
         wb_dat_o <= (others => '0');
-        if wb_stb_i = '1' and wb_we_i = '0' then
+        if wb_we_i = '0' then
             case wb_adr_i is
                 when "000" =>   -- 0x00: CHANNEL
                     wb_dat_o(3 downto 0) <= std_logic_vector(to_unsigned(channel, 4));
@@ -75,6 +90,20 @@ begin
                         wb_dat_o(0) <= '1';
                     end if;
                     wb_dat_o(7 downto 4) <= std_logic_vector(to_unsigned(channel, 4));
+                when "010" =>   -- 0x08: E12_SNAP0
+                    wb_dat_o(7 downto 0)   <= exp12_pc_i;
+                    wb_dat_o(11 downto 8)  <= exp12_fsm_i;
+                    wb_dat_o(12)           <= exp12_auto_i;
+                    wb_dat_o(13)           <= exp12_detail_i;
+                when "011" =>   -- 0x0C: E12_AC
+                    wb_dat_o(15 downto 0) <= exp12_ac_i;
+                when "100" =>   -- 0x10: E12_IR
+                    wb_dat_o(15 downto 0) <= exp12_ir_i;
+                when "101" =>   -- 0x14: E12_STEP
+                    wb_dat_o(7 downto 0) <= exp12_step_i;
+                when "110" =>   -- 0x18: E13_STATE
+                    wb_dat_o(1 downto 0) <= exp13_msg_sel_i;
+                    wb_dat_o(7 downto 2) <= exp13_scroll_i;
                 when others =>
                     null;
             end case;

@@ -65,11 +65,23 @@ end entity expdemo_top;
 architecture rtl of expdemo_top is
     signal channel : integer range 0 to 13;
     signal active  : std_logic;
+    signal exp2_selected : std_logic;
+    signal exp12_selected : std_logic;
+    signal exp13_selected : std_logic;
 
     -- experiment outputs
     signal out_1, out_2, out_3, out_4, out_5   : exp_out_t;
     signal out_8, out_9, out_10, out_11         : exp_out_t;
     signal out_12, out_13a                      : exp_out_t;
+    signal exp12_pc    : std_logic_vector(7 downto 0);
+    signal exp12_ac    : std_logic_vector(15 downto 0);
+    signal exp12_ir    : std_logic_vector(15 downto 0);
+    signal exp12_step  : std_logic_vector(7 downto 0);
+    signal exp12_fsm   : std_logic_vector(3 downto 0);
+    signal exp12_auto  : std_logic;
+    signal exp12_detail : std_logic;
+    signal exp13_msg_sel : std_logic_vector(1 downto 0);
+    signal exp13_scroll  : std_logic_vector(5 downto 0);
 
     -- Exp9 UART TXD
     signal exp9_txd : std_logic;
@@ -94,6 +106,15 @@ begin
             clk_i     => clk_i,
             rst_n_i   => rst_n_i,
             force_shell_i => force_shell,
+            exp12_pc_i     => exp12_pc,
+            exp12_fsm_i    => exp12_fsm,
+            exp12_auto_i   => exp12_auto,
+            exp12_detail_i => exp12_detail,
+            exp12_ac_i     => exp12_ac,
+            exp12_ir_i     => exp12_ir,
+            exp12_step_i   => exp12_step,
+            exp13_msg_sel_i => exp13_msg_sel,
+            exp13_scroll_i  => exp13_scroll,
             channel_o => channel,
             active_o  => active,
             wb_adr_i  => wb_adr_i,
@@ -106,6 +127,9 @@ begin
 
     active_o <= active;
     channel_o <= channel;
+    exp2_selected <= '1' when channel = 2 else '0';
+    exp12_selected <= '1' when channel = 12 else '0';
+    exp13_selected <= '1' when channel = 13 else '0';
 
     -- Exp8 Del exit monitor
     u_ps2_mon_sync : entity work.exp8_ps2_sync
@@ -171,7 +195,8 @@ begin
 
     -- Exp2: LED patterns
     u_e2 : entity work.adapt_exp2
-        port map (clk_50 => clk_i, rst_n => rst_n_i, sw => sw, key_n => key_n, exp_out => out_2);
+        port map (clk_50 => clk_i, rst_n => rst_n_i, selected_i => exp2_selected,
+                  sw => sw, key_n => key_n, exp_out => out_2);
 
     -- Exp3: 7-seg display
     u_e3 : entity work.adapt_exp3
@@ -206,11 +231,34 @@ begin
 
     -- Exp12: Simple CPU
     u_e12 : entity work.adapt_exp12
-        port map (clk_50 => clk_i, rst_n => rst_n_i, sw => sw, key_n => key_n, exp_out => out_12);
+        port map (
+            clk_50     => clk_i,
+            rst_n      => rst_n_i,
+            selected_i => exp12_selected,
+            sw         => sw,
+            key_n      => key_n,
+            exp_out    => out_12,
+            pc_o       => exp12_pc,
+            ac_o       => exp12_ac,
+            ir_o       => exp12_ir,
+            step_o     => exp12_step,
+            auto_o     => exp12_auto,
+            detail_o   => exp12_detail,
+            fsm_o      => exp12_fsm
+        );
 
     -- Exp13a: LCD SOC
     u_e13a : entity work.adapt_exp13a
-        port map (clk_50 => clk_i, rst_n => rst_n_i, sw => sw, key_n => key_n, exp_out => out_13a);
+        port map (
+            clk_50     => clk_i,
+            rst_n      => rst_n_i,
+            selected_i => exp13_selected,
+            sw         => sw,
+            key_n      => key_n,
+            exp_out    => out_13a,
+            msg_sel_o  => exp13_msg_sel,
+            scroll_o   => exp13_scroll
+        );
 
     -- Exp9 UART TXD output (only when channel=9)
     uart_txd_o <= exp9_txd when channel = 9 else '1';
