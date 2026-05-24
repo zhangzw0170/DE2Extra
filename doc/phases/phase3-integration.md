@@ -136,10 +136,12 @@ sw/app/ (独立 C 程序, 待合并入 de2shell)
 - ~~VGA + PS/2 + IR 接入 `de2_115_top.vhd` / `wb_intercon` / QSF 引脚分配~~ ✅ (commit `07615ba`)
 - ~~PS/2 上板验证~~ ✅ (扫描码、扩展键、Lock 灯同步均通过)
 - ~~独立游戏合并入 de2shell~~ ✅ (snake.c / life.c 已合并)
-- ⏳ memtest 展示收敛: 保留 `memtest` 入口，逐项展示测试用例后汇总 `ALL PASS`
-- ⏳ life 手动模式: 当前 `life` 仍是自动版；方向键选格/空格置生灭要直接并到 `life.c`
+- ~~memtest 展示收敛~~ ✅ (5 项自检 + ALL PASS 汇总)
+- ~~life 手动模式~~ ✅ (WASD/方向键移动光标, 空格置生灭, 图案预设 G/N/R/C, 速度 +/-/P 暂停)
+- ~~NTT C 驱动~~ ✅ (`ntt.c`/`ntt.h`, SW reference + HW MMIO, round-trip 验证 PASS)
 - ⏳ dashboard/board_status 上板确认: 验证 `CHx TAG LIVE` 与 HEX/LED 映射
 - ⏳ **VGA→HDMI 有源转换器到货** (预计 5/26 周一) → 上板验证 VGA 终端渲染
 - ⏳ Exp6/7 画廊频道 (等 VGA 线后)
 - ⏳ RS-232 线到后: Exp9 UART 验证
 - ⏳ IR 遥控器频道切换 end-to-end (模块已就位，等 VGA 画面反馈)
+- ⬜ NTT 接入 de2shell `ntt` 命令 (驱动就绪，待接入)
