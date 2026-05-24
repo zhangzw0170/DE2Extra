@@ -23,6 +23,20 @@ static uint32_t fail_word, fail_test, fail_got, fail_expected;
 static int finished;
 static int done;
 
+static const char *test_names[4] = {
+    "Case 1  Walking-1 immediate",
+    "Case 2  Walking-1 bulk     ",
+    "Case 3  Checkerboard       ",
+    "Case 4  Address-as-data    "
+};
+
+static const char *test_descs[4] = {
+    "per-word write/read 1<<(i%32)",
+    "bulk write then bulk readback ",
+    "0x55555555 <-> 0xAAAAAAAA     ",
+    "write physical address value  "
+};
+
 static void lcd_status(uint32_t s) {
 #ifndef LOCAL_BUILD
     neorv32_gpio_port_set(s);
@@ -43,13 +57,7 @@ static void record_fail(uint32_t test_num, uint32_t word_idx,
 /* 每次调用 run_one_step() 执行一项测试并更新 VGA */
 static void run_test(int test_id) {
     if (test_id < 0 || test_id >= 4) return;
-    vga_goto(0, 3 + test_id);
-    const char *names[] = {
-        "Walking-1s immediate",
-        "Walking-1s bulk     ",
-        "Checkerboard        ",
-        "Address-as-data     "
-    };
+    vga_goto(0, 5 + test_id);
 
     int pass = 1;
     switch (test_id) {
@@ -98,8 +106,8 @@ static void run_test(int test_id) {
         break;
     }
 
-    vga_puts(names[test_id], VGA_WHITE);
-    vga_puts("  ", VGA_WHITE);
+    vga_puts(test_names[test_id], VGA_WHITE);
+    vga_puts(" : ", VGA_WHITE);
     if (pass) {
         vga_puts("PASS", VGA_GREEN);
     } else {
@@ -116,14 +124,23 @@ static void init(void) {
 
     vga_clear();
     vga_goto(0, 0);
-    vga_puts("SDRAM Self-Test\n", VGA_CYAN);
-    vga_puts("================\n", VGA_WHITE);
+    vga_puts("MemTest — SDRAM Self-Test\n", VGA_CYAN);
+    vga_puts("========================\n", VGA_WHITE);
+    vga_puts("Test cases:\n", VGA_GRAY);
+    for (int i = 0; i < 4; i++) {
+        vga_puts("  ", VGA_BLACK);
+        vga_puts(test_names[i], VGA_WHITE);
+        vga_puts("\n", VGA_WHITE);
+        vga_puts("     ", VGA_BLACK);
+        vga_puts(test_descs[i], VGA_GRAY);
+        vga_puts("\n", VGA_GRAY);
+    }
 
 #ifndef LOCAL_BUILD
-    vga_goto(0, 8);
+    vga_goto(0, 13);
     vga_puts("Waiting for SDRAM init...", VGA_GRAY);
     for (volatile int i = 0; i < 50000; i++) __asm__ volatile("nop");
-    vga_goto(0, 8);
+    vga_goto(0, 13);
     vga_puts("                          ", VGA_BLACK);
 #endif
 
@@ -145,9 +162,9 @@ static void update(void) {
 
     if (current_test >= 4 || !all_pass) {
         finished = 1;
-        vga_goto(0, 8);
+        vga_goto(0, 14);
         if (all_pass) {
-            vga_puts("[ALL PASS] SDRAM OK!", VGA_GREEN);
+            vga_puts("[ALL PASS] All 4 SDRAM cases passed.", VGA_GREEN);
             lcd_status(LCD_STATUS_PASS);
         } else {
             vga_puts("[FAIL] T", VGA_RED);
@@ -164,8 +181,13 @@ static void update(void) {
             lcd_status(LCD_FAIL_META |
                        ((fail_test & 0xF) << 24) |
                        ((fail_word & 0xFF) << 16));
+            vga_goto(0, 15);
+            vga_puts("EXP ", VGA_RED);
+            vga_puthex32(fail_expected);
+            vga_puts("  GOT ", VGA_RED);
+            vga_puthex32(fail_got);
         }
-        vga_goto(0, 10);
+        vga_goto(0, 17);
         vga_puts("Press 'q' to return, 'r' to retest\n", VGA_GRAY);
     }
 }

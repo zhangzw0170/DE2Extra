@@ -14,6 +14,13 @@
 - LCD 常驻状态: 第一行 `DE2Extra Shell`，第二行 `CH0 SHEL READY`
 - HEX/状态字: shell 空闲时可见心跳翻转，证明主循环仍在推进
 
+当前代码侧新增、但尚待下一次上板确认的行为：
+
+- shell 状态栏右侧改为显示 `uptime`，按分钟刷新
+- `board_status` 统一状态层已接入 `main.c`
+- `dashboard` 不再只是占位页，而是会主动接管 LCD/HEX/LED 的演示输出
+- `lcd_status.vhd` 的 shell 模式已支持 `READY/LIVE/RUN/EDIT/HOLD/PASS/FAIL/BUSY`
+
 本轮已通过串口 smoke test 的模块：
 
 | 模块 | 进入 | 退出 | 备注 |
@@ -61,23 +68,24 @@
 | A1.7 | 未知命令 | 输入未注册命令时输出 `? Unknown command. Type 'help'` | ✅ |
 | A1.8 | `cls` 命令 | 清屏并重绘 shell 启动画面 | ✅ |
 | A1.9 | `quit`/`exit` 命令 | 从子程序返回 shell 主界面 | ✅ |
-| A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名与 HEX 编号，切换程序后实时更新 | ✅ |
+| A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | 🟡 (代码完成，待上板确认) |
 | A1.11 | 程序注册表完整性 | 14 个 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
 | A1.12 | IR 遥控切频 | CH1-CH7 映射到 hello/memtest/crypto/snake/life/dash/info；CH+/CH- 顺序切换 | 🟡 |
 | A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | 🟡 |
 | A1.14 | Docker 交叉编译 | `build.sh` 分步执行 `make clean` + `make image`，当前 `de2shell` IMEM 镜像约 39KB，适配 64KB IMEM | ✅ |
 | A1.15 | LOCAL_BUILD 编译 | `make local` (host gcc) 编译通过 | ✅ |
+| A1.16 | 统一板级状态层 | `board_status.c/h` 负责 shell/子程序对 LCD/HEX/LED 的统一编码与接管 | 🟡 (代码完成，待上板确认) |
 
 ### A2. VGA HAL (vga_hal.c/h)
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| A2.1 | `vga_init()` | 清屏 + 隐藏光标 + 复位行列计数 | 🟡 (LOCAL_BUILD ANSI 模式通过；VGA 硬件待线) |
+| A2.1 | `vga_init()` | 清屏 + 显示静态光标 + 复位行列计数 | 🟡 (LOCAL_BUILD ANSI 模式通过；VGA 硬件待线) |
 | A2.2 | `vga_putc()` | 字符写入 VGA text buffer 对应行列，(NEORV32 模式) 同步输出到 UART | 🟡 |
 | A2.3 | `vga_puts()` | 连续写字符串 | 🟡 |
 | A2.4 | `vga_goto()` | 光标移动到分屏坐标 (0-79, 0-24) | 🟡 |
 | A2.5 | `vga_clear()` | 写 `VGA_CTRL_CLEAR` 寄存器清当前活动页 | 🟡 |
-| A2.6 | `vga_cursor_show()` | 设置/取消光标闪烁 (`VGA_CTRL_BLINK` bit) | 🟡 |
+| A2.6 | `vga_cursor_show()` | 设置/取消可见静态光标；显示时关闭 `VGA_CTRL_BLINK` | 🟡 |
 | A2.7 | `vga_col()` / `vga_row()` | 返回当前行列号 | 🟡 |
 | A2.8 | `vga_puthex32()` | 以固定宽度 (8 hex digits) 显示 32-bit 值 | 🟡 |
 | A2.9 | 换行处理 (`\n`) | `cur_col=0; cur_row++` 且 row 超出 VGA_ROWS 时自动折返 | 🟡 |
@@ -206,16 +214,19 @@
 
 ### C3. conway_ed — 康威编辑器 (conway_ed.c)
 
+> 注意：该文件当前仍是独立源码，**尚未注册进当前 `de2shell` 程序表，也未纳入 `make local` 构建入口**。
+> 当前 shell 中 `life` 命令实际运行的是 `life.c`，不是本文件。
+
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| C3.1 | 编辑模式 | 启动时进入编辑模式 (MODE=EDITING)，全网格 80×25 | 🟡 (VGA 硬件待线) |
-| C3.2 | 光标移动 | WASD 移动光标，边界回绕 | 🟡 |
-| C3.3 | 细胞切换 `SPACE` | 空格键翻转光标位置细胞状态 | 🟡 |
-| C3.4 | 运行 `ENTER` | 回车键开始模拟 (MODE=RUNNING) | 🟡 |
-| C3.5 | 暂停 `p` | 模拟过程中暂停/恢复 | 🟡 |
-| C3.6 | 清空 `c` | 清除全部细胞，回到编辑模式 | 🟡 |
-| C3.7 | 退出 `ESC` | ESC 返回 shell | 🟡 |
-| C3.8 | VGA 渲染 | 80×25 全屏 + HUD (代数和模式 + 光标坐标) | 🟡 |
+| C3.1 | 编辑模式 | 启动时进入编辑模式 (MODE=EDITING)，全网格 80×25 | ❌ (未接入当前 shell) |
+| C3.2 | 光标移动 | WASD 移动光标，边界回绕 | ❌ |
+| C3.3 | 细胞切换 `SPACE` | 空格键翻转光标位置细胞状态 | ❌ |
+| C3.4 | 运行 `ENTER` | 回车键开始模拟 (MODE=RUNNING) | ❌ |
+| C3.5 | 暂停 `p` | 模拟过程中暂停/恢复 | ❌ |
+| C3.6 | 清空 `c` | 清除全部细胞，回到编辑模式 | ❌ |
+| C3.7 | 退出 `ESC` | ESC 返回 shell | ❌ |
+| C3.8 | VGA 渲染 | 80×25 全屏 + HUD (代数和模式 + 光标坐标) | ❌ |
 
 ---
 
@@ -293,13 +304,13 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| E3.1 | 框架就位 | 显示 SW/LEDR/HEX/KEY/IR/CLOCK 占位符 | ✅ |
+| E3.1 | 页面框架 | 显示 dashboard 标题、说明、实时状态区 | 🟡 (代码完成，待上板确认) |
 | E3.2 | 退出 `q` | 返回 shell | ✅ |
-| E3.3 | SW 实时读取 (future) | 实时显示 18 个拨码开关状态 | ❌ (待 GPIO 接入) |
-| E3.4 | LED 实时显示 (future) | 实时显示 LEDR/LEDG 状态 | ❌ |
-| E3.5 | KEY 按键检测 (future) | 显示 4 个按键按下/释放状态 | ❌ |
+| E3.3 | SW 实时读取 | 实时显示 18 个拨码开关状态 | 🟡 (代码完成，待上板确认) |
+| E3.4 | 板级外设接管 | dashboard 通过 `board_status` 主动驱动 LCD/HEX/LED | 🟡 |
+| E3.5 | KEY 按键检测 | 显示 `KEY[3:1]` 当前状态，并映射到 flags/LEDG | 🟡 |
 | E3.6 | IR 码值显示 (future) | 显示最近收到的红外遥控码 (NEC 格式) | ❌ |
-| E3.7 | 系统时钟 (future) | 显示当前时间 (时:分:秒) | ❌ |
+| E3.7 | 系统时间栏 | 当前版本显示 uptime 秒数，不要求 RTC | 🟡 |
 
 ---
 

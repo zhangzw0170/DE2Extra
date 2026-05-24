@@ -15,7 +15,7 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
 set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
-set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED WITH WEAK PULL-UP"
 set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
@@ -32,6 +32,8 @@ set_global_assignment -name VHDL_FILE ../src/rtl/periph/lcd_status.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/ps2_sync.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/ps2_receiver.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/ps2_controller.vhd
+set_global_assignment -name VHDL_FILE ../src/rtl/periph/ir_nec_decoder.vhd
+set_global_assignment -name VHDL_FILE ../src/rtl/periph/ir_nec_wb.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/font_rom_pkg.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/vga_text_terminal.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/lcd_debug.vhd
@@ -122,6 +124,9 @@ set_location_assignment PIN_G12 -to UART_RXD
 # PS/2 keyboard
 set_location_assignment PIN_G6 -to PS2_CLK
 set_location_assignment PIN_H5 -to PS2_DAT
+
+# IR receiver
+set_location_assignment PIN_Y15 -to IRDA_RXD
 
 # Red LEDs
 set_location_assignment PIN_G19 -to LEDR[0]

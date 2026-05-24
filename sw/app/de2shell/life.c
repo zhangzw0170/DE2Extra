@@ -1,6 +1,7 @@
 /* life.c — Conway's Game of Life for de2shell
  * Adapted from sw/app/game_life/main.c
  */
+#include "board_status.h"
 #include "vga_hal.h"
 #include <stdint.h>
 
@@ -15,6 +16,10 @@ static int paused;
 static int initialized;
 static int frame_count;
 static int speed_ms = 150;
+static int edit_mode;
+static int cursor_x;
+static int cursor_y;
+static int esc_state;
 
 /* ── RNG ──────────────────────────────────────────────────────── */
 static unsigned rng = 0x12345678;
@@ -91,15 +96,73 @@ static void step(void) {
     gen++;
 }
 
+static void move_cursor(int dx, int dy) {
+    cursor_x = (cursor_x + dx + GRID_W) % GRID_W;
+    cursor_y = (cursor_y + dy + GRID_H) % GRID_H;
+}
+
+static void draw_grid(void) {
+    for (int y = 0; y < GRID_H; y++) {
+        vga_goto(1, y + 3);
+        for (int x = 0; x < GRID_W; x++) {
+            char ch = cur[y][x] ? '\xDB' : ' ';
+            uint8_t color = cur[y][x] ? VGA_GREEN : VGA_BLACK;
+
+            if (edit_mode && x == cursor_x && y == cursor_y) {
+                ch = cur[y][x] ? 'O' : '+';
+                color = VGA_YELLOW;
+            }
+            vga_putc(ch, color);
+        }
+    }
+}
+
+static void draw_hud(void) {
+    char buf[7];
+    int g = gen;
+    uint8_t state = BOARD_STATE_RUN;
+
+    for (int i = 5; i >= 0; i--) {
+        buf[i] = (char)('0' + (g % 10));
+        g /= 10;
+    }
+    buf[6] = 0;
+
+    if (edit_mode) {
+        state = BOARD_STATE_EDIT;
+    } else if (paused) {
+        state = BOARD_STATE_HOLD;
+    }
+    board_status_set_program(6u, state, (uint8_t)(cur[cursor_y][cursor_x] ? 1u : 0u),
+                             (uint16_t)(((cursor_y & 0xffu) << 8) | (cursor_x & 0xffu)));
+
+    vga_goto(0, 0);
+    vga_puts("Conway  Gen:", VGA_CYAN);
+    vga_puts(buf, VGA_YELLOW);
+    vga_puts(edit_mode ? "  EDIT " : (paused ? "  HOLD " : "  RUN  "), VGA_WHITE);
+    vga_puts("X:", VGA_WHITE);
+    vga_puthex32((uint32_t)cursor_x);
+    vga_puts(" Y:", VGA_WHITE);
+    vga_puthex32((uint32_t)cursor_y);
+
+    vga_goto(0, 1);
+    vga_puts("Arrows/WASD move  SPACE toggle/step  ENTER run  E edit  G/N/R/C pattern  Q quit",
+             VGA_GRAY);
+}
+
 /* ═══════════════════════════════════════════════════════════════
    Shell Callbacks
    ═══════════════════════════════════════════════════════════════ */
 
 static void init(void) {
     grid_glider();
-    paused = 0;
+    paused = 1;
     speed_ms = 150;
     frame_count = 0;
+    edit_mode = 1;
+    cursor_x = GRID_W / 2;
+    cursor_y = GRID_H / 2;
+    esc_state = 0;
 
     /* Draw border once */
     vga_clear();
@@ -117,6 +180,8 @@ static void init(void) {
     vga_putc('+', VGA_WHITE);
 
     initialized = 1;
+    draw_grid();
+    draw_hud();
 }
 
 static void update(void) {
@@ -124,43 +189,90 @@ static void update(void) {
     if (++frame_count < speed_ms / 10) return;
     frame_count = 0;
 
-    if (!paused) step();
-
-    /* Draw grid */
-    for (int y = 0; y < GRID_H; y++) {
-        vga_goto(1, y + 3);
-        for (int x = 0; x < GRID_W; x++)
-            vga_putc(cur[y][x] ? '\xDB' : ' ', cur[y][x] ? VGA_GREEN : VGA_BLACK);
+    if (!edit_mode && !paused) {
+        step();
+        draw_grid();
+        draw_hud();
     }
-
-    /* HUD */
-    vga_goto(0, 0);
-    vga_puts("Conway  Gen:", VGA_CYAN);
-    char buf[7]; int g = gen;
-    for (int i = 5; i >= 0; i--) { buf[i] = '0' + g % 10; g /= 10; }
-    buf[6] = 0; vga_puts(buf, VGA_YELLOW);
-
-    vga_puts(paused ? " PAUSED" : " RUN  ", VGA_WHITE);
-    vga_puts(" SP=step G=gun R=rand C=clear Q=quit", VGA_GRAY);
 }
 
 static void input(char c) {
+    if (esc_state == 1) {
+        esc_state = (c == '[') ? 2 : 0;
+        return;
+    }
+    if (esc_state == 2) {
+        if (c == 'A') move_cursor(0, -1);
+        else if (c == 'B') move_cursor(0, 1);
+        else if (c == 'C') move_cursor(1, 0);
+        else if (c == 'D') move_cursor(-1, 0);
+        esc_state = 0;
+        draw_grid();
+        draw_hud();
+        return;
+    }
+    if (c == 27) {
+        esc_state = 1;
+        return;
+    }
+
     switch (c) {
         case 'q': case 'Q': initialized = 0; return;
-        case ' ': step(); break;
-        case 'p': case 'P': paused = !paused; break;
-        case 'g': case 'G': grid_glider(); gen = 0; break;
-        case 'n': case 'N': grid_gun();     gen = 0; break;
-        case 'r': case 'R': grid_random();  gen = 0; break;
-        case 'c': case 'C': grid_clear();   gen = 0; break;
+        case '\r': case '\n':
+            edit_mode = 0;
+            paused = 0;
+            break;
+        case 'e': case 'E':
+            edit_mode = 1;
+            paused = 1;
+            break;
+        case ' ':
+            if (edit_mode) {
+                cur[cursor_y][cursor_x] = (cell_t)!cur[cursor_y][cursor_x];
+            } else if (paused) {
+                step();
+            }
+            break;
+        case 'p': case 'P':
+            if (!edit_mode) {
+                paused = !paused;
+            }
+            break;
+        case 'g': case 'G':
+            grid_glider();
+            edit_mode = 1;
+            paused = 1;
+            break;
+        case 'n': case 'N':
+            grid_gun();
+            edit_mode = 1;
+            paused = 1;
+            break;
+        case 'r': case 'R':
+            grid_random();
+            edit_mode = 1;
+            paused = 1;
+            break;
+        case 'c': case 'C':
+            grid_clear();
+            edit_mode = 1;
+            paused = 1;
+            break;
+        case 'w': case 'W': move_cursor(0, -1); break;
+        case 's': case 'S': move_cursor(0, 1); break;
+        case 'a': case 'A': move_cursor(-1, 0); break;
+        case 'd': case 'D': move_cursor(1, 0); break;
         case '+': case '=': if (speed_ms > 20) speed_ms -= 10; break;
         case '-': case '_': if (speed_ms < 500) speed_ms += 10; break;
+        default: return;
     }
+    draw_grid();
+    draw_hud();
 }
 
 static int finish(void) { return !initialized; }
 
 const program_t prog_life = {
-    "Life", "Conway Game of Life — B3/S23, SP=step",
+    "Life", "Conway Game of Life — edit/run modes",
     init, update, input, NULL, finish
 };

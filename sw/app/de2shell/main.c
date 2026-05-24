@@ -13,6 +13,7 @@
  */
 
 #include <stdint.h>
+#include "board_status.h"
 #include "vga_hal.h"
 #include "gpio_hal.h"
 
@@ -58,6 +59,15 @@
   static void uart_init(void) {
       neorv32_uart0_setup(BAUD_RATE, 0);
   }
+
+  typedef volatile struct {
+      uint32_t data;
+      uint32_t status;
+  } ir_regs_t;
+
+  #define IR_STATUS_VALID  0x00000001u
+  #define IR_STATUS_REPEAT 0x00000002u
+  #define IR ((ir_regs_t*)0xF0009000u)
 #endif
 
 /* ── Program IDs ────────────────────────────────────────────────── */
@@ -140,7 +150,7 @@ static prog_id_t ir_prog_map[16];   /* IR command → program mapping */
 static int status_dirty = 1;
 static uint8_t last_uart_char = 0;
 static uint8_t prev_key_bits = 0;
-static uint32_t shell_tick = 0;
+static uint8_t last_ir_cmd = 0;
 
 #define SHELL_LINE_SIZE 64
 #define SHELL_HISTORY_DEPTH 8
@@ -260,41 +270,31 @@ static prog_id_t shell_selected_prog(uint32_t gpio_in) {
     return (prog_id_t)sel;
 }
 
-static void board_status_push(uint32_t word) {
-    gpio_write_out(word);
-}
-
 static void board_status_refresh(void) {
     uint32_t gpio_in = gpio_read_in();
     uint32_t selected = (uint32_t)shell_selected_prog(gpio_in);
     uint32_t key_bits = (gpio_in >> 18) & 0x7u;
-    uint32_t out;
+    uint32_t heartbeat = board_status_uptime_seconds() & 0x01u;
+    uint8_t flags = (uint8_t)(((heartbeat & 0x01u) << 1) | (key_bits & 0x01u));
+    uint16_t data = (uint16_t)(((selected & 0x0fu) << 12) |
+                               ((key_bits & 0x07u) << 8) |
+                               (uint32_t)last_uart_char);
 
     if (active_prog == PROG_MEMTEST) {
         return; /* memtest owns the LCD/LED fail/pass protocol */
     }
 
     if (active_prog == PROG_SHELL) {
-        out = 0x40000000u;
-        out |= ((uint32_t)active_prog & 0x0fu) << 24;
-        out |= (selected & 0x0fu) << 20;
-        out |= (key_bits & 0x07u) << 17;
-        out |= ((shell_tick >> 8) & 0x01u) << 16;
-        out |= (gpio_in & 0x000000ffu) << 8;
-        out |= (uint32_t)last_uart_char;
-        board_status_push(out);
+        board_status_set_program((uint8_t)active_prog, BOARD_STATE_READY, flags, data);
     } else {
-        out = gpio_read_out();
-        out &= 0x00ffffffu;
-        out |= 0x40000000u;
-        out |= ((uint32_t)active_prog & 0x0fu) << 24;
-        board_status_push(out);
+        board_status_apply_fallback((uint8_t)active_prog, BOARD_STATE_LIVE);
     }
 }
 
 static void enter_program(prog_id_t prog_id) {
     active_prog = prog_id;
     status_dirty = 1;
+    board_status_release();
     if ((prog_id < PROG_COUNT) && programs[prog_id] && programs[prog_id]->init) {
         programs[prog_id]->init();
     }
@@ -303,6 +303,7 @@ static void enter_program(prog_id_t prog_id) {
 static void return_to_shell(void) {
     active_prog = PROG_SHELL;
     status_dirty = 1;
+    board_status_release();
     shell_init();
     board_status_refresh();
 }
@@ -319,6 +320,7 @@ static void shell_init(void) {
     shell_saved_line[0] = '\0';
     shell_history_nav = -1;
     shell_esc_state = 0;
+    board_status_release();
     shell_prompt();
 }
 
@@ -362,7 +364,7 @@ static void shell_input(char c) {
         if (shell_line_pos == 0) {
             /* empty line — show prompt again */
         } else if (strcmp(shell_line, "help") == 0) {
-            vga_puts("Commands: hello, memtest, sdram, crypto, ps2, snake, life, dash, info, monitor, exp1, exp4, exp5, exp12, cls, quit\n",
+            vga_puts("Commands: hello, memtest, crypto, ps2, snake, life, dash, info, monitor, exp1, exp4, exp5, exp12, cls, quit\n",
                      VGA_GREEN);
         } else if (strcmp(shell_line, "hello") == 0) {
             enter_program(PROG_HELLO);
@@ -425,8 +427,18 @@ static int shell_finish(void) { return 0; }
 
 static void draw_status_bar(void) {
     static const char hex[] = "0123456789ABCDEF";
+    static uint32_t last_minute = 0xffffffffu;
+    uint32_t uptime = board_status_uptime_seconds();
+    uint32_t total_minutes = uptime / 60u;
+    uint32_t hours = total_minutes / 60u;
+    uint32_t minutes = total_minutes % 60u;
     int saved_col;
     int saved_row;
+
+    if (total_minutes != last_minute) {
+        status_dirty = 1;
+        last_minute = total_minutes;
+    }
 
     if (!status_dirty) {
         return;
@@ -443,9 +455,19 @@ static void draw_status_bar(void) {
     } else {
         vga_puts(" Shell", VGA_GREEN);
     }
-    /* Pad to end of line */
-    for (int i = vga_col(); i < VGA_COLS; i++)
+    for (int i = vga_col(); i < VGA_COLS - 10; i++) {
         vga_putc(' ', VGA_BLACK);
+    }
+    vga_puts("Up ", VGA_GRAY);
+    vga_putc(hex[(hours / 100u) % 10u], VGA_YELLOW);
+    vga_putc(hex[(hours / 10u) % 10u], VGA_YELLOW);
+    vga_putc(hex[hours % 10u], VGA_YELLOW);
+    vga_putc(':', VGA_WHITE);
+    vga_putc(hex[(minutes / 10u) % 10u], VGA_YELLOW);
+    vga_putc(hex[minutes % 10u], VGA_YELLOW);
+    for (int i = vga_col(); i < VGA_COLS; i++) {
+        vga_putc(' ', VGA_BLACK);
+    }
     vga_goto(saved_col, saved_row);
     status_dirty = 0;
 }
@@ -523,6 +545,22 @@ static void handle_keys(void) {
     }
 }
 
+#ifndef LOCAL_BUILD
+static void handle_ir_events(void) {
+    uint32_t status = IR->status;
+
+    if ((status & IR_STATUS_VALID) != 0u) {
+        uint8_t cmd = (uint8_t)(IR->data & 0xffu);
+        last_ir_cmd = cmd;
+        IR->status = ~(IR_STATUS_VALID);
+        handle_ir(cmd);
+    } else if (((status & IR_STATUS_REPEAT) != 0u) && (last_ir_cmd != 0u)) {
+        IR->status = ~(IR_STATUS_REPEAT);
+        handle_ir(last_ir_cmd);
+    }
+}
+#endif
+
 /* ── Main ──────────────────────────────────────────────────────── */
 
 #ifndef LOCAL_BUILD
@@ -532,14 +570,17 @@ int main(void) {
 #else
 int main(void) {
 #endif
+    board_status_init();
     vga_init();
     shell_init();
     board_status_refresh();
     draw_status_bar();
 
     while (1) {
-        shell_tick++;
         handle_keys();
+#ifndef LOCAL_BUILD
+        handle_ir_events();
+#endif
 
         /* Process UART input */
         while (uart_kbhit()) {

@@ -158,10 +158,11 @@ CPU 执行的第一份程序，来自 [src/rtl/neorv32_imem_image.vhd](/src/rtl/
 
 1. `neorv32_rte_setup();`
 2. `uart_init();`
-3. `vga_init();`
-4. `shell_init();`
-5. `board_status_refresh();`
-6. `draw_status_bar();`
+3. `board_status_init();`
+4. `vga_init();`
+5. `shell_init();`
+6. `board_status_refresh();`
+7. `draw_status_bar();`
 
 见 [sw/app/de2shell/main.c](/sw/app/de2shell/main.c:267) 和 [sw/app/de2shell/main.c](/sw/app/de2shell/main.c:273)。
 
@@ -189,7 +190,7 @@ CPU 执行的第一份程序，来自 [src/rtl/neorv32_imem_image.vhd](/src/rtl/
 它会做：
 
 1. 向 VGA 清屏寄存器写 1
-2. 使能文本终端和光标闪烁
+2. 使能文本终端和静态光标
 3. 设置背景色
 4. 光标归零
 
@@ -207,19 +208,36 @@ CPU 执行的第一份程序，来自 [src/rtl/neorv32_imem_image.vhd](/src/rtl/
 
 #### `draw_status_bar()`
 
-它会在最后一行画状态栏，显示当前频道号和程序名。
+它会在最后一行画状态栏，显示当前频道号和程序名；右侧追加 `uptime`，按分钟刷新。
 
 初始时 `active_prog = PROG_SHELL`，所以状态栏应该显示 shell。
 
 #### `board_status_refresh()`
 
-它负责把 shell 当前状态编码到 GPIO 输出，交给 `lcd_status` 和 HEX/LED 侧做常驻显示。
+它负责把当前前台程序的板级状态编码到 GPIO 输出，交给 `lcd_status` 和 HEX/LED 侧做常驻显示。
+
+现在这层已经抽成统一的 `board_status`：
+
+- shell 空闲时写入 `PROG_SHELL + READY + payload`
+- 子程序如果不主动接管，主循环会补一个通用 `PROG_x + LIVE`
+- 子程序如果主动接管，就通过 `board_status_set_program()` 直接声明自己的板载显示内容
 
 当前 shell 空闲态约定为：
 
 - LCD 第一行：`DE2Extra Shell`
 - LCD 第二行：`CH0 SHEL READY`
 - HEX/状态字：带一个心跳位翻转，证明主循环没有卡死
+
+`lcd_status.vhd` 当前 shell 模式还能识别这些状态字后缀：
+
+- `READY`
+- `LIVE`
+- `RUN `
+- `EDIT`
+- `HOLD`
+- `PASS`
+- `FAIL`
+- `BUSY`
 
 此外，顶层已经把 `KEY1..KEY3` 接入 `gpio_in[20:18]`，所以 shell 启动后立刻具备下面这些板上快捷操作：
 
@@ -276,7 +294,7 @@ CPU 执行的第一份程序，来自 [src/rtl/neorv32_imem_image.vhd](/src/rtl/
 - LCD：当前仍由 `lcd_status` 常驻驱动，`de2shell` 没有接管 LCD
 - PS/2 输入到 shell：PS/2 控制器已经存在，但 `de2shell` 当前主输入源仍是 UART，不是键盘
 - IR：`handle_ir()` 已写，但主循环里还没有真实取 IR 事件的路径
-- 定时器：虽然地址空间预留了 `ADDR_TIMER_BASE`，当前 shell 没用它做调度
+- 定时器：虽然地址空间预留了 `ADDR_TIMER_BASE`，当前 shell 仍没用它做调度；但已经通过 CLINT `mtime` 读取 `uptime`
 - 中断控制器：地址预留了 `ADDR_INTC_BASE`，当前 shell 仍以轮询为主
 
 ---
@@ -353,6 +371,6 @@ CPU 执行的第一份程序，来自 [src/rtl/neorv32_imem_image.vhd](/src/rtl/
 2. FPGA 配置完成后，PLL 锁定并释放全局复位
 3. 顶层同时启动 CPU、XBUS、SDRAM、VGA、PS/2、LCD 状态显示等硬件
 4. CPU 从 IMEM `0x00000000` 直接执行当前 app
-5. 若该 app 是 `de2shell`，则按 `RTE -> UART -> VGA -> shell banner -> status bar -> polling loop` 进入 shell
+5. 若该 app 是 `de2shell`，则按 `RTE -> UART -> board_status -> VGA -> shell banner -> status bar(uptime) -> polling loop` 进入 shell
 
 这就是当前版本最真实的初始化顺序。

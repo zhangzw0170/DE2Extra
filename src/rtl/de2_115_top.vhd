@@ -67,6 +67,9 @@ entity de2_115_top is
         LCD_ON      : out std_logic;
         LCD_BLON    : out std_logic;
 
+        -- IR receiver (NEC protocol)
+        IRDA_RXD    : in  std_logic;
+
         -- VGA
         VGA_R       : out std_logic_vector(7 downto 0);
         VGA_G       : out std_logic_vector(7 downto 0);
@@ -162,6 +165,14 @@ architecture rtl of de2_115_top is
     signal sw16_sel         : std_logic := '0';
     signal lcd_status_rst_n : std_logic;
     signal lcd_debug_rst_n  : std_logic;
+
+    -- IR receiver Wishbone
+    signal ir_wb_adr   : std_logic_vector(2 downto 0);
+    signal ir_wb_dat_o : std_logic_vector(31 downto 0);
+    signal ir_wb_dat_i : std_logic_vector(31 downto 0);
+    signal ir_wb_we    : std_logic;
+    signal ir_wb_stb   : std_logic;
+    signal ir_wb_ack   : std_logic;
 
     -- JTAG UART Avalon bus
     signal jtag_av_cs       : std_logic;
@@ -296,7 +307,13 @@ begin
         s2_dat_o => ps2_reg_dat_o,
         s2_we_o  => ps2_reg_we,
         s2_stb_o => ps2_reg_stb,
-        s2_ack_i => ps2_reg_ack
+        s2_ack_i => ps2_reg_ack,
+        s3_adr_o => ir_wb_adr,
+        s3_dat_i => ir_wb_dat_i,
+        s3_dat_o => ir_wb_dat_o,
+        s3_we_o  => ir_wb_we,
+        s3_stb_o => ir_wb_stb,
+        s3_ack_i => ir_wb_ack
     );
 
     -- ================================================================
@@ -387,6 +404,22 @@ begin
 
     PS2_CLK <= '0' when ps2_clk_oe = '1' else 'Z';
     PS2_DAT <= '0' when ps2_dat_oe = '1' else 'Z';
+
+    -- ================================================================
+    -- IR NEC Receiver @ 0xF0009000
+    -- ================================================================
+    u_ir : entity work.ir_nec_wb
+    port map (
+        clk_i      => clk_50m,
+        rst_n_i    => rst_n,
+        irda_rxd_i => IRDA_RXD,
+        wb_adr_i   => ir_wb_adr,
+        wb_dat_i   => ir_wb_dat_o,
+        wb_dat_o   => ir_wb_dat_i,
+        wb_we_i    => ir_wb_we,
+        wb_stb_i   => ir_wb_stb,
+        wb_ack_o   => ir_wb_ack
+    );
 
     -- ================================================================
     -- GPIO -> LED 映射
