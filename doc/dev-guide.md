@@ -134,7 +134,7 @@ int main(void) {
 1. 在 `src/rtl/periph/` 写 VHDL 模块
 2. 在 `wb_intercon.vhd` 添加 slave 端口 + 地址解码 `cs`
 3. 在 `de2_115_top.vhd` 实例化，连接顶层信号
-4. 在 `par/de2extra.qsf` 分配引脚（必须查引脚表 `FPGA/DE2-115引脚表.xlsx`）
+4. 在 `par/de2extra.qsf` 分配引脚（优先查仓库内 `DE2-115_pin_table_backup.md`，原始来源是 `FPGA/DE2-115引脚表.xlsx`）
 5. 软件通过对应基地址访问，例如 `#define VGA_BASE ((volatile uint32_t *)0xF0000000u)`
 
 ## 调试手段
@@ -183,7 +183,7 @@ sw/app/hello/main.c          — Hello World
 
 ## 注意事项
 
-- **引脚表是唯一真理**: `FPGA/DE2-115引脚表.xlsx`，绝不能猜引脚
+- **引脚表是唯一真理**: 优先使用仓库内 [DE2-115_pin_table_backup.md](DE2-115_pin_table_backup.md) / [DE2-115_pin_table_backup.csv](DE2-115_pin_table_backup.csv)，其原始来源是仓库外 `FPGA/DE2-115引脚表.xlsx`；绝不能猜引脚
 - **IMEM 大小**: 64KB，固件不能超过这个限制（de2shell 当前 ~39KB，超过旧 32KB 配置）
 - **DMEM 大小**: 16KB，大数据放 SDRAM
 - **XBUS 超时**: 2048 周期 (~41us @50MHz)，SDRAM 访问要远快于这个

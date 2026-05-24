@@ -1,6 +1,11 @@
 # DE2-115 FPGA 开发板完整资源手册
 
 > 基于引脚表 + 官方规格书整理，Terasic DE2-115 (Cyclone IV E EP4CE115F29C7)
+>
+> 引脚核对建议：
+> - 优先查仓库内备份 [DE2-115_pin_table_backup.md](DE2-115_pin_table_backup.md)
+> - 脚本/批量检索可查 [DE2-115_pin_table_backup.csv](DE2-115_pin_table_backup.csv)
+> - 原始来源仍为仓库外 `E:\Main\JuniorII\NonExam\FPGA\DE2-115引脚表.xlsx`
 
 ---
 

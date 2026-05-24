@@ -58,7 +58,8 @@ VGA 路径一旦确认稳定，就要补齐至少一个正式展示入口：
 - `doc/phases/phase3-integration.md`
 - `doc/de2shell-module-acceptance.md`
 - `DE2-115_v.3.0.6_SystemCD/`
-- `E:\Main\JuniorII\NonExam\FPGA\DE2-115引脚表.xlsx`
+- 原始引脚表：`E:\Main\JuniorII\NonExam\FPGA\DE2-115引脚表.xlsx`
+- 仓库内备份：[DE2-115_pin_table_backup.md](DE2-115_pin_table_backup.md)
 
 ---
 
