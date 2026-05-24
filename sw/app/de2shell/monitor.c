@@ -78,20 +78,20 @@ static void demo_sha256(void) {
     r_sum0 = (rs1 >> 2 | rs1 << 30) ^ (rs1 >> 13 | rs1 << 19) ^ (rs1 >> 22 | rs1 << 10);
 #else
     register uint32_t a0 asm("a0") = rs1;
-    __asm__ volatile (".word 0x10251533" : "+r"(a0));
+    __asm__ volatile (".word 0x10251513" : "+r"(a0));
     r_sig0 = a0;
     a0 = rs1;
-    __asm__ volatile (".word 0x10051533" : "+r"(a0));
+    __asm__ volatile (".word 0x10051513" : "+r"(a0));
     r_sum0 = a0;
 #endif
 
     vga_puts("\n=== SHA-256 Demo ===\n", VGA_CYAN);
     vga_puts("Input word:   0x", VGA_WHITE); vga_puthex32(rs1);
     vga_puts("\n\nsha256sig0 (sigma0 function):\n", VGA_GREEN);
-    vga_puts("  Encoding: 0x10251533\n", VGA_GRAY);
+    vga_puts("  Encoding: 0x10251513\n", VGA_GRAY);
     vga_puts("  Result:   0x", VGA_YELLOW); vga_puthex32(r_sig0);
     vga_puts("\n\nsha256sum0 (Sigma0 function):\n", VGA_GREEN);
-    vga_puts("  Encoding: 0x10051533\n", VGA_GRAY);
+    vga_puts("  Encoding: 0x10051513\n", VGA_GRAY);
     vga_puts("  Result:   0x", VGA_YELLOW); vga_puthex32(r_sum0);
     vga_puts("\n", VGA_BLACK);
 }
