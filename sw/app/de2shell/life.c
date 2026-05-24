@@ -12,7 +12,6 @@ typedef unsigned char cell_t;
 static cell_t cur[GRID_H][GRID_W];
 static cell_t nxt[GRID_H][GRID_W];
 static int gen;
-static int paused;
 static int initialized;
 static int frame_count;
 static int speed_ms = 150;
@@ -106,7 +105,7 @@ static void draw_grid(void) {
         vga_goto(1, y + 3);
         for (int x = 0; x < GRID_W; x++) {
             char ch = cur[y][x] ? '\xDB' : ' ';
-            uint8_t color = cur[y][x] ? VGA_GREEN : VGA_BLACK;
+            uint16_t color = cur[y][x] ? VGA_GREEN : VGA_BLACK;
 
             if (edit_mode && x == cursor_x && y == cursor_y) {
                 ch = cur[y][x] ? 'O' : '+';
@@ -120,7 +119,8 @@ static void draw_grid(void) {
 static void draw_hud(void) {
     char buf[7];
     int g = gen;
-    uint8_t state = BOARD_STATE_RUN;
+    int speed = speed_ms;
+    uint8_t state = edit_mode ? BOARD_STATE_EDIT : BOARD_STATE_RUN;
 
     for (int i = 5; i >= 0; i--) {
         buf[i] = (char)('0' + (g % 10));
@@ -128,25 +128,29 @@ static void draw_hud(void) {
     }
     buf[6] = 0;
 
-    if (edit_mode) {
-        state = BOARD_STATE_EDIT;
-    } else if (paused) {
-        state = BOARD_STATE_HOLD;
-    }
     board_status_set_program(6u, state, (uint8_t)(cur[cursor_y][cursor_x] ? 1u : 0u),
                              (uint16_t)(((cursor_y & 0xffu) << 8) | (cursor_x & 0xffu)));
 
     vga_goto(0, 0);
     vga_puts("Conway  Gen:", VGA_CYAN);
     vga_puts(buf, VGA_YELLOW);
-    vga_puts(edit_mode ? "  EDIT " : (paused ? "  HOLD " : "  RUN  "), VGA_WHITE);
+    vga_puts(edit_mode ? "  STOP " : "  RUN  ", VGA_WHITE);
+    vga_puts("SPD:", VGA_WHITE);
+    if (speed >= 100) {
+        vga_putc((char)('0' + ((speed / 100) % 10)), VGA_YELLOW);
+    } else {
+        vga_putc(' ', VGA_YELLOW);
+    }
+    vga_putc((char)('0' + ((speed / 10) % 10)), VGA_YELLOW);
+    vga_putc((char)('0' + (speed % 10)), VGA_YELLOW);
+    vga_putc(' ', VGA_WHITE);
     vga_puts("X:", VGA_WHITE);
     vga_puthex32((uint32_t)cursor_x);
     vga_puts(" Y:", VGA_WHITE);
     vga_puthex32((uint32_t)cursor_y);
 
     vga_goto(0, 1);
-    vga_puts("Arrows/WASD move  SPACE toggle/step  ENTER run  E edit  G/N/R/C pattern  Q quit",
+    vga_puts("Arrows/WASD move  SPACE toggle  ENTER start/stop  [/ ] or +/- speed  G/N/R/C pattern  Q quit",
              VGA_GRAY);
 }
 
@@ -156,7 +160,6 @@ static void draw_hud(void) {
 
 static void init(void) {
     grid_glider();
-    paused = 1;
     speed_ms = 150;
     frame_count = 0;
     edit_mode = 1;
@@ -189,7 +192,7 @@ static void update(void) {
     if (++frame_count < speed_ms / 10) return;
     frame_count = 0;
 
-    if (!edit_mode && !paused) {
+    if (!edit_mode) {
         step();
         draw_grid();
         draw_hud();
@@ -219,51 +222,39 @@ static void input(char c) {
     switch (c) {
         case 'q': case 'Q': initialized = 0; return;
         case '\r': case '\n':
-            edit_mode = 0;
-            paused = 0;
-            break;
-        case 'e': case 'E':
-            edit_mode = 1;
-            paused = 1;
+            edit_mode = !edit_mode;
             break;
         case ' ':
             if (edit_mode) {
                 cur[cursor_y][cursor_x] = (cell_t)!cur[cursor_y][cursor_x];
-            } else if (paused) {
-                step();
-            }
-            break;
-        case 'p': case 'P':
-            if (!edit_mode) {
-                paused = !paused;
             }
             break;
         case 'g': case 'G':
             grid_glider();
             edit_mode = 1;
-            paused = 1;
             break;
         case 'n': case 'N':
             grid_gun();
             edit_mode = 1;
-            paused = 1;
             break;
         case 'r': case 'R':
             grid_random();
             edit_mode = 1;
-            paused = 1;
             break;
         case 'c': case 'C':
             grid_clear();
             edit_mode = 1;
-            paused = 1;
             break;
         case 'w': case 'W': move_cursor(0, -1); break;
         case 's': case 'S': move_cursor(0, 1); break;
         case 'a': case 'A': move_cursor(-1, 0); break;
         case 'd': case 'D': move_cursor(1, 0); break;
-        case '+': case '=': if (speed_ms > 20) speed_ms -= 10; break;
-        case '-': case '_': if (speed_ms < 500) speed_ms += 10; break;
+        case '+': case '=': case ']': case '.':
+            if (speed_ms < 500) speed_ms += 10;
+            break;
+        case '-': case '_': case '[': case ',':
+            if (speed_ms > 20) speed_ms -= 10;
+            break;
         default: return;
     }
     draw_grid();
@@ -273,6 +264,6 @@ static void input(char c) {
 static int finish(void) { return !initialized; }
 
 const program_t prog_life = {
-    "Life", "Conway Game of Life — edit/run modes",
+    "ConwayLife", "Conway Game of Life — edit/run modes",
     init, update, input, NULL, finish
 };

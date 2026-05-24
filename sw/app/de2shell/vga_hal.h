@@ -13,16 +13,16 @@
   #define NULL ((void*)0)
 #endif
 
-/* RGB332 color constants */
-#define VGA_BLACK   0x00
-#define VGA_RED     0xE0
-#define VGA_GREEN   0x1C
-#define VGA_BLUE    0x03
-#define VGA_YELLOW  0xFC
-#define VGA_CYAN    0x1F
-#define VGA_MAGENTA 0xE3
-#define VGA_WHITE   0xFF
-#define VGA_GRAY    0x92
+/* RGB565 color constants */
+#define VGA_BLACK   0x0000
+#define VGA_RED     0xF800
+#define VGA_GREEN   0x07E0
+#define VGA_BLUE    0x001F
+#define VGA_YELLOW  0xFFE0
+#define VGA_CYAN    0x07FF
+#define VGA_MAGENTA 0xF81F
+#define VGA_WHITE   0xFFFF
+#define VGA_GRAY    0x7BEF
 
 /* Terminal dimensions */
 #define VGA_COLS 80
@@ -32,10 +32,10 @@
 void vga_init(void);
 
 /* Write a character at current cursor position, advance cursor */
-void vga_putc(char c, uint8_t color);
+void vga_putc(char c, uint16_t color);
 
 /* Write a null-terminated string */
-void vga_puts(const char *s, uint8_t color);
+void vga_puts(const char *s, uint16_t color);
 
 /* Move cursor to (col, row) — 0-based */
 void vga_goto(int col, int row);

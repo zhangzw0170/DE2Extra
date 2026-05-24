@@ -5,6 +5,9 @@
  */
 #include "vga_hal.h"
 #include "gpio_hal.h"
+#include "board_status.h"
+
+#define HELLO_PROG_ID 1u
 
 static uint32_t led_idx;
 static uint32_t seconds;
@@ -37,9 +40,10 @@ static void update(void) {
     uint32_t led_pattern = 1u << led_idx;
 
 #ifndef LOCAL_BUILD
-    /* NEORV32: 驱动真实 GPIO */
-    uint32_t gpio_val = led_pattern | (seconds << 16);
-    neorv32_gpio_port_set(gpio_val);
+    /* Keep the shell-status protocol in the upper bits so LCD stays in host mode. */
+    board_status_set_program(HELLO_PROG_ID, BOARD_STATE_RUN,
+                             (uint8_t)(seconds & 0x0fu),
+                             (uint16_t)led_pattern);
 #endif
 
     /* VGA 上显示状态 */

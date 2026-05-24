@@ -29,7 +29,7 @@ static int cmd_history_count;
 static int cmd_history_nav;
 static int esc_state;
 
-static void put_dec(unsigned value, uint8_t color) {
+static void put_dec(unsigned value, uint16_t color) {
     char buf[10];
     int pos = 0;
 
@@ -48,14 +48,32 @@ static void put_dec(unsigned value, uint8_t color) {
     }
 }
 
-static void put_hex32(uint32_t val, uint8_t color) {
+static void put_dec_padded(unsigned value, unsigned width, uint16_t color) {
+    char buf[10];
+    unsigned pos = 0;
+
+    do {
+        buf[pos++] = (char)('0' + (value % 10u));
+        value /= 10u;
+    } while ((value != 0u) && (pos < (unsigned)sizeof(buf)));
+
+    while (pos < width && pos < (unsigned)sizeof(buf)) {
+        buf[pos++] = '0';
+    }
+
+    while (pos > 0u) {
+        vga_putc(buf[--pos], color);
+    }
+}
+
+static void put_hex32(uint32_t val, uint16_t color) {
     static const char hex[] = "0123456789abcdef";
     for (int i = 7; i >= 0; i--) {
         vga_putc(hex[(val >> (i * 4)) & 0x0f], color);
     }
 }
 
-static void put_hex_buf(const uint8_t *data, int len, uint8_t color) {
+static void put_hex_buf(const uint8_t *data, int len, uint16_t color) {
     static const char hex[] = "0123456789abcdef";
     for (int i = 0; i < len; i++) {
         vga_putc(hex[data[i] >> 4], color);
@@ -190,7 +208,7 @@ void trng_bytes(uint8_t *buf, int n) {
 #endif
 
 static void prompt(void) {
-    vga_puts("crypto> ", VGA_GREEN);
+    vga_puts("crypto > ", VGA_GREEN);
 }
 
 static void redraw_input_line(int old_len) {
@@ -285,15 +303,17 @@ static void redraw(void) {
     vga_clear();
     vga_goto(0, 0);
     vga_puts("DE2Extra Crypto CLI\n", VGA_CYAN);
-    vga_puts("Commands: help, info, aes, sha256, sha512, sm4, sm3, trng, bench, clear, quit\n\n",
-             VGA_GRAY);
+    vga_puts("Commands: help info aes sha256 sha512 sm4 sm3 trng\n", VGA_GRAY);
+    vga_puts("          bench clear quit\n", VGA_GRAY);
+    vga_puts("ISA: RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_GRAY);
+    vga_puts("     Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n\n", VGA_GRAY);
     prompt();
 }
 
 static void show_info(void) {
     vga_puts("Target: NEORV32 RISC-V @ 50 MHz\n", VGA_WHITE);
-    vga_puts("ISA:    RV32IMC + Zbkb + Zbkc + Zbkx\n", VGA_WHITE);
-    vga_puts("        Zkne + Zknd + Zknh + Zksed + Zksh\n", VGA_WHITE);
+    vga_puts("ISA:    RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_WHITE);
+    vga_puts("        Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n", VGA_WHITE);
     vga_puts("Memory: IMEM 64KB, DMEM 16KB\n", VGA_WHITE);
     vga_puts("Build:  " __DATE__ " " __TIME__ "\n", VGA_WHITE);
 #ifdef LOCAL_BUILD
@@ -313,7 +333,7 @@ static void show_help(void) {
     vga_puts("  sm4 enc <key> <pt>                SM4 encrypt\n", VGA_WHITE);
     vga_puts("  sm3 <hex-msg>                     SM3 hash\n", VGA_WHITE);
     vga_puts("  trng [n]                          Read n random bytes\n", VGA_WHITE);
-    vga_puts("  bench                             Run software / Zk* benchmark\n", VGA_WHITE);
+    vga_puts("  bench                             Run software / Zk* benchmark + TRNG stats\n", VGA_WHITE);
     vga_puts("  clear                             Clear this program screen\n", VGA_WHITE);
     vga_puts("  quit                              Return to shell\n", VGA_WHITE);
 }
@@ -479,6 +499,7 @@ static int cmd_trng_read(int argc, char *args[]) {
     return 0;
 }
 
+#ifndef LOCAL_BUILD
 static void bench_print_line(const char *label, uint32_t sw_cycles, uint32_t hw_cycles) {
     vga_puts(label, VGA_WHITE);
     while (vga_col() < 14) {
@@ -499,6 +520,7 @@ static void bench_print_line(const char *label, uint32_t sw_cycles, uint32_t hw_
     }
     vga_putc('\n', VGA_WHITE);
 }
+#endif
 
 static int cmd_bench(void) {
     uint8_t key[16];
@@ -506,6 +528,7 @@ static int cmd_bench(void) {
     uint8_t ct[16];
     uint8_t msg[64];
     uint8_t digest[64];
+    uint8_t trng_buf[256];
     uint32_t rk_aes[44];
     uint32_t rk_sm4[32];
     uint32_t t_aes;
@@ -513,6 +536,7 @@ static int cmd_bench(void) {
     uint32_t t_sha512;
     uint32_t t_sm4;
     uint32_t t_sm3;
+    uint32_t trng_ones = 0;
     int i;
 
 #ifdef LOCAL_BUILD
@@ -664,6 +688,31 @@ static int cmd_bench(void) {
         bench_print_line("SM3", t_sm3, t_zks_sm3);
     }
 #endif
+
+    vga_puts("\nTRNG statistics (256 bytes)\n", VGA_CYAN);
+    trng_bytes(trng_buf, (int)sizeof(trng_buf));
+    for (i = 0; i < (int)sizeof(trng_buf); i++) {
+        uint8_t b = trng_buf[i];
+        while (b != 0u) {
+            trng_ones += (uint32_t)(b & 1u);
+            b >>= 1;
+        }
+    }
+    vga_puts("Total bits : 2048\n", VGA_WHITE);
+    vga_puts("1-bits     : ", VGA_WHITE);
+    put_dec(trng_ones, VGA_YELLOW);
+    vga_putc('\n', VGA_WHITE);
+    vga_puts("0-bits     : ", VGA_WHITE);
+    put_dec(2048u - trng_ones, VGA_YELLOW);
+    vga_putc('\n', VGA_WHITE);
+    vga_puts("One ratio  : ", VGA_WHITE);
+    {
+        uint32_t ratio_bp = (trng_ones * 10000u) / 2048u;
+        put_dec(ratio_bp / 100u, VGA_YELLOW);
+        vga_putc('.', VGA_WHITE);
+        put_dec_padded(ratio_bp % 100u, 2u, VGA_YELLOW);
+    }
+    vga_puts("%\n", VGA_WHITE);
 
     return 0;
 }

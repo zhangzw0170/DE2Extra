@@ -38,6 +38,47 @@ static const char *reg_names[32] = {
     "s8","s9","s10","s11","t3","t4","t5","t6"
 };
 
+static void capture_regs_snapshot(void) {
+    snap_x[0] = 0;
+#ifdef LOCAL_BUILD
+    for (int i = 1; i < 32; i++) {
+        snap_x[i] = 0;
+    }
+#else
+    __asm__ volatile ("mv %0, ra"  : "=r"(snap_x[1]));
+    __asm__ volatile ("mv %0, sp"  : "=r"(snap_x[2]));
+    __asm__ volatile ("mv %0, gp"  : "=r"(snap_x[3]));
+    __asm__ volatile ("mv %0, tp"  : "=r"(snap_x[4]));
+    __asm__ volatile ("mv %0, t0"  : "=r"(snap_x[5]));
+    __asm__ volatile ("mv %0, t1"  : "=r"(snap_x[6]));
+    __asm__ volatile ("mv %0, t2"  : "=r"(snap_x[7]));
+    __asm__ volatile ("mv %0, s0"  : "=r"(snap_x[8]));
+    __asm__ volatile ("mv %0, s1"  : "=r"(snap_x[9]));
+    __asm__ volatile ("mv %0, a0"  : "=r"(snap_x[10]));
+    __asm__ volatile ("mv %0, a1"  : "=r"(snap_x[11]));
+    __asm__ volatile ("mv %0, a2"  : "=r"(snap_x[12]));
+    __asm__ volatile ("mv %0, a3"  : "=r"(snap_x[13]));
+    __asm__ volatile ("mv %0, a4"  : "=r"(snap_x[14]));
+    __asm__ volatile ("mv %0, a5"  : "=r"(snap_x[15]));
+    __asm__ volatile ("mv %0, a6"  : "=r"(snap_x[16]));
+    __asm__ volatile ("mv %0, a7"  : "=r"(snap_x[17]));
+    __asm__ volatile ("mv %0, s2"  : "=r"(snap_x[18]));
+    __asm__ volatile ("mv %0, s3"  : "=r"(snap_x[19]));
+    __asm__ volatile ("mv %0, s4"  : "=r"(snap_x[20]));
+    __asm__ volatile ("mv %0, s5"  : "=r"(snap_x[21]));
+    __asm__ volatile ("mv %0, s6"  : "=r"(snap_x[22]));
+    __asm__ volatile ("mv %0, s7"  : "=r"(snap_x[23]));
+    __asm__ volatile ("mv %0, s8"  : "=r"(snap_x[24]));
+    __asm__ volatile ("mv %0, s9"  : "=r"(snap_x[25]));
+    __asm__ volatile ("mv %0, s10" : "=r"(snap_x[26]));
+    __asm__ volatile ("mv %0, s11" : "=r"(snap_x[27]));
+    __asm__ volatile ("mv %0, t3"  : "=r"(snap_x[28]));
+    __asm__ volatile ("mv %0, t4"  : "=r"(snap_x[29]));
+    __asm__ volatile ("mv %0, t5"  : "=r"(snap_x[30]));
+    __asm__ volatile ("mv %0, t6"  : "=r"(snap_x[31]));
+#endif
+}
+
 /* ── Crypto Demo Helpers ───────────────────────────────────────── */
 
 static void demo_aes(void) {
@@ -128,6 +169,7 @@ static int hex4(char c) {
 
 static uint32_t parse_hex(const char *s) {
     uint32_t v = 0;
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
     while (*s) {
         int d = hex4(*s++);
         if (d < 0) break;
@@ -139,7 +181,7 @@ static uint32_t parse_hex(const char *s) {
 /* ── Memory Operations ─────────────────────────────────────────── */
 
 static void cmd_dump(uint32_t addr, int n) {
-    volatile uint32_t *p = (volatile uint32_t*)addr;
+    volatile uint32_t *p = (volatile uint32_t*)(uintptr_t)addr;
     for (int i = 0; i < n; i++) {
         vga_puthex32(addr + i*4); vga_puts(": 0x", VGA_WHITE);
         vga_puthex32(p[i]);
@@ -148,19 +190,20 @@ static void cmd_dump(uint32_t addr, int n) {
 }
 
 static void cmd_peek(uint32_t addr) {
-    volatile uint32_t *p = (volatile uint32_t*)addr;
+    volatile uint32_t *p = (volatile uint32_t*)(uintptr_t)addr;
     vga_puts("0x", VGA_WHITE); vga_puthex32(addr);
     vga_puts(" = 0x", VGA_WHITE); vga_puthex32(*p);
     vga_puts("\n", VGA_BLACK);
 }
 
 static void cmd_poke(uint32_t addr, uint32_t val) {
-    volatile uint32_t *p = (volatile uint32_t*)addr;
+    volatile uint32_t *p = (volatile uint32_t*)(uintptr_t)addr;
     *p = val;
     vga_puts("OK\n", VGA_GREEN);
 }
 
 static void cmd_regs(void) {
+    capture_regs_snapshot();
     vga_puts("Registers (snapshot):\n", VGA_CYAN);
     for (int i = 0; i < 32; i += 4) {
         for (int j = 0; j < 4 && i+j < 32; j++) {
@@ -185,7 +228,7 @@ static int history_nav = -1;
 static int esc_state = 0;
 
 static void prompt(void) {
-    vga_puts("rv32> ", VGA_GREEN);
+    vga_puts("riscvasm > ", VGA_GREEN);
 }
 
 static void redraw_input_line(int old_len) {
@@ -278,8 +321,10 @@ static void history_next(void) {
 
 static void init(void) {
     vga_clear();
-    vga_puts("RISC-V Assembly Monitor v0.1\n", VGA_CYAN);
-    vga_puts("Type 'help' for commands.\n\n", VGA_GRAY);
+    vga_puts("RISC-V Assembly Monitor v0.2\n", VGA_CYAN);
+    vga_puts("Commands: help regs peek poke dump aes sha256 sm4 q\n", VGA_GRAY);
+    vga_puts("ISA: RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_GRAY);
+    vga_puts("     Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n\n", VGA_GRAY);
     prompt();
     active = 1;
     pos = 0;
@@ -368,16 +413,25 @@ static void input(char c) {
         } else if (strncmp(cmd, "peek ", 5) == 0) {
             cmd_peek(parse_hex(cmd + 5));
         } else if (strncmp(cmd, "poke ", 5) == 0) {
-            char *a = cmd + 5; while (*a == ' ') a++;
+            char *a = cmd + 5;
+            while (*a == ' ') a++;
             uint32_t addr = parse_hex(a);
-            while (*a && *a != ' ') a++; while (*a == ' ') a++;
+            while (*a && *a != ' ') a++;
+            while (*a == ' ') a++;
             cmd_poke(addr, parse_hex(a));
         } else if (strncmp(cmd, "dump ", 5) == 0) {
-            char *a = cmd + 5; while (*a == ' ') a++;
+            char *a = cmd + 5;
+            while (*a == ' ') a++;
             uint32_t addr = parse_hex(a);
-            while (*a && *a != ' ') a++; while (*a == ' ') a++;
+            while (*a && *a != ' ') a++;
+            while (*a == ' ') a++;
             int n = (*a) ? (int)parse_hex(a) : 8;
-            if (n <= 0) n = 8; if (n > 64) n = 64;
+            if (n <= 0) {
+                n = 8;
+            }
+            if (n > 64) {
+                n = 64;
+            }
             cmd_dump(addr, n);
         } else {
             vga_puts("? Unknown. Type 'help'\n", VGA_RED);
@@ -402,6 +456,6 @@ static void update(void) {}
 static int finish(void) { return !active; }
 
 const program_t prog_monitor = {
-    "Monitor", "RV32 Monitor — regs/dump/peek/poke/aes/sha/sm4",
+    "RiscvAsm", "RISC-V monitor — regs/dump/peek/poke/aes/sha/sm4",
     init, update, input, NULL, finish
 };

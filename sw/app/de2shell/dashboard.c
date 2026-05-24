@@ -140,6 +140,7 @@ static void update(void) {
         put_hex8(last_ir_cmd, VGA_YELLOW);
         vga_puts("  ", VGA_WHITE);
         vga_puts(ir_label(last_ir_cmd), VGA_GREEN);
+        vga_puts("        ", VGA_GRAY);
     } else {
         vga_puts("-- (none)", VGA_GRAY);
     }
@@ -170,9 +171,16 @@ static void input(char c) {
     if (c == 'q' || c == 'Q') done = 1;
 }
 
+static void ir_input(uint8_t cmd) {
+    (void)cmd;
+    /* Dashboard's job is to display IR, not act on it.
+     * Absorb the command so handle_ir() does not switch programs.
+     * last_ir_cmd is already set by main.c before calling us. */
+}
+
 static int finish(void) { return done; }
 
 const program_t prog_dashboard = {
     "Dashboard", "System I/O monitor — SW/LED/HEX/KEY/IR",
-    init, update, input, NULL, finish
+    init, update, input, ir_input, finish
 };

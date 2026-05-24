@@ -113,7 +113,7 @@ static uint16_t ntt_b[NTT_N];
 #endif
 
 static void ntt_prompt(void) {
-    vga_puts("ntt> ", VGA_GREEN);
+    vga_puts("ntt > ", VGA_GREEN);
 }
 
 static void ntt_put_hex(uint16_t v) {

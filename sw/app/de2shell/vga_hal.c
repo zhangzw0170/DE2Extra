@@ -28,8 +28,8 @@
       cur_row = 0;
   }
 
-  void vga_putc(char c, uint8_t color) {
-      (void)color;  /* ANSI doesn't support per-char RGB332 without OSC codes */
+  void vga_putc(char c, uint16_t color) {
+      (void)color;  /* ANSI doesn't support per-char RGB565 without OSC codes */
       if (c == '\n') {
           putchar('\n');
           cur_col = 0;
@@ -53,7 +53,7 @@
       advance_cursor();
   }
 
-  void vga_puts(const char *s, uint8_t color) {
+  void vga_puts(const char *s, uint16_t color) {
       while (*s) vga_putc(*s++, color);
   }
 
@@ -84,10 +84,16 @@
 
   #include <neorv32.h>
 
+#ifdef DE2EXTRA_VGA_STUB
+  #define VGA_MMIO_ENABLED 0
+#else
+  #define VGA_MMIO_ENABLED 1
+#endif
+
   /* VGA text buffer base address (from de2extra_pkg.vhd ADDR_VGA_BASE) */
   #define VGA_BASE  0xF0000000
 
-  /* VGA control registers (offsets from VGA_BASE) */
+  /* VGA control registers (byte offsets from VGA_BASE) */
   #define VGA_CTRL_CURSOR_X  0x1000
   #define VGA_CTRL_CURSOR_Y  0x1004
   #define VGA_CTRL_CONTROL   0x1008
@@ -99,19 +105,29 @@
   #define VGA_CTRL_BLINK      0x02
   #define VGA_CTRL_PAGE       0x04
 
-  volatile uint16_t * const vga_buf = (volatile uint16_t *)VGA_BASE;
+  /* 32-bit buffer: [31:24]=ASCII, [23:16]=bg RGB565, [15:0]=fg RGB565 */
+  volatile uint32_t * const vga_buf = (volatile uint32_t *)VGA_BASE;
 
   static int cur_col = 0;
   static int cur_row = 0;
 
   static void hw_cursor_sync(void) {
-      vga_buf[VGA_CTRL_CURSOR_X / 2] = (uint16_t)cur_col;
-      vga_buf[VGA_CTRL_CURSOR_Y / 2] = (uint16_t)cur_row;
+#if VGA_MMIO_ENABLED
+      vga_buf[VGA_CTRL_CURSOR_X / 4] = (uint32_t)cur_col;
+      vga_buf[VGA_CTRL_CURSOR_Y / 4] = (uint32_t)cur_row;
+#endif
   }
 
-  static void hw_write_cell(int col, int row, char c, uint8_t color) {
+  static void hw_write_cell(int col, int row, char c, uint16_t color) {
+#if VGA_MMIO_ENABLED
       int addr = row * VGA_COLS + col;
-      vga_buf[addr] = ((uint16_t)color << 8) | ((uint8_t)c);
+      vga_buf[addr] = ((uint32_t)(uint8_t)c << 24) | ((uint32_t)color);
+#else
+      (void)col;
+      (void)row;
+      (void)c;
+      (void)color;
+#endif
   }
 
   static void serial_putc(char c) {
@@ -154,16 +170,18 @@
   }
 
   void vga_init(void) {
-      vga_buf[VGA_CTRL_CLEAR / 2] = 0x0001;        /* clear screen */
-      vga_buf[VGA_CTRL_CONTROL / 2] = VGA_CTRL_ENABLE; /* visible, non-blinking cursor */
-      vga_buf[VGA_CTRL_BGCOLOR / 2] = VGA_BLACK;
+#if VGA_MMIO_ENABLED
+      vga_buf[VGA_CTRL_CLEAR / 4] = 0x00000001;       /* clear screen */
+      vga_buf[VGA_CTRL_CONTROL / 4] = VGA_CTRL_ENABLE; /* visible, non-blinking cursor */
+      vga_buf[VGA_CTRL_BGCOLOR / 4] = VGA_BLACK;
+#endif
       cur_col = 0;
       cur_row = 0;
       hw_cursor_sync();
       neorv32_uart0_puts("\033[2J\033[H\033[?25h");
   }
 
-  void vga_putc(char c, uint8_t color) {
+  void vga_putc(char c, uint16_t color) {
       if (c == '\n') {
           neorv32_uart0_puts("\r\n");
           cur_col = 0;
@@ -193,7 +211,7 @@
       hw_cursor_sync();
   }
 
-  void vga_puts(const char *s, uint8_t color) {
+  void vga_puts(const char *s, uint16_t color) {
       while (*s) vga_putc(*s++, color);
   }
 
@@ -209,7 +227,9 @@
   }
 
   void vga_clear(void) {
-      vga_buf[VGA_CTRL_CLEAR / 2] = 0x0001;
+#if VGA_MMIO_ENABLED
+      vga_buf[VGA_CTRL_CLEAR / 4] = 0x00000001;
+#endif
       cur_col = 0;
       cur_row = 0;
       hw_cursor_sync();
@@ -217,14 +237,16 @@
   }
 
   void vga_cursor_show(int show) {
-      uint16_t ctrl = vga_buf[VGA_CTRL_CONTROL / 2];
+#if VGA_MMIO_ENABLED
+      uint32_t ctrl = vga_buf[VGA_CTRL_CONTROL / 4];
       if (show) {
           ctrl |= VGA_CTRL_ENABLE;
-          ctrl &= (uint16_t)~VGA_CTRL_BLINK;
+          ctrl &= ~(uint32_t)VGA_CTRL_BLINK;
       } else {
-          ctrl &= (uint16_t)~VGA_CTRL_ENABLE;
+          ctrl &= ~(uint32_t)VGA_CTRL_ENABLE;
       }
-      vga_buf[VGA_CTRL_CONTROL / 2] = ctrl;
+      vga_buf[VGA_CTRL_CONTROL / 4] = ctrl;
+#endif
       neorv32_uart0_puts(show ? "\033[?25h" : "\033[?25l");
   }
 

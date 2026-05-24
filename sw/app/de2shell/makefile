@@ -7,9 +7,12 @@ MABI  = ilp32
 EFFORT = -Os
 USER_FLAGS += -Wl,--defsym,__neorv32_rom_size=64k
 USER_FLAGS += -Wl,--defsym,__neorv32_ram_size=16k
-APP_SRC = $(filter-out ./fb_test.c,$(wildcard ./*.c)) $(wildcard ./*.s) $(wildcard ./*.cpp) $(wildcard ./*.S)
+APP_SRC = $(filter-out ./fb_test.c ./ntt.c,$(wildcard ./*.c)) $(wildcard ./*.s) $(wildcard ./*.cpp) $(wildcard ./*.S)
 APP_SRC += ../crypto_cli/crypto_aes.c ../crypto_cli/crypto_sha.c ../crypto_cli/crypto_sm.c
 APP_INC = -I . -I ../crypto_cli
+# Current reduced-fit hardware build stubs out the VGA block in RTL, so
+# firmware must not touch the legacy VGA MMIO window.
+APP_INC += -DDE2EXTRA_VGA_STUB
 NEORV32_HOME ?= ../../neorv32
 APP       ?= .
 ifneq ($(filter local clean-local,$(MAKECMDGOALS)),)
@@ -25,7 +28,7 @@ SDL2_LIB  ?= $(SDL2_ROOT)/lib
 .PHONY: local clean-local
 
 local:
-	gcc -DLOCAL_BUILD -Wall -O2 -I . -I ../crypto_cli -I "$(SDL2_INC)" -o de2shell main.c board_status.c vga_hal.c gpio_hal.c fb_hal.c hello.c memtest.c crypto.c ps2.c snake.c life.c dashboard.c info.c exp1.c exp4.c exp5.c exp12.c monitor.c ../crypto_cli/crypto_aes.c ../crypto_cli/crypto_sha.c ../crypto_cli/crypto_sm.c -L "$(SDL2_LIB)" -lmingw32 -lSDL2main -lSDL2
+	gcc -DLOCAL_BUILD -Wall -O2 -I . -I ../crypto_cli -I "$(SDL2_INC)" -o de2shell main.c board_status.c vga_hal.c gpio_hal.c fb_hal.c hello.c memtest.c crypto.c ps2.c snake.c life.c dashboard.c info.c monitor.c demo.c ../crypto_cli/crypto_aes.c ../crypto_cli/crypto_sha.c ../crypto_cli/crypto_sm.c -L "$(SDL2_LIB)" -lmingw32 -lSDL2main -lSDL2
 
 clean-local:
 	rm -f de2shell de2shell.exe

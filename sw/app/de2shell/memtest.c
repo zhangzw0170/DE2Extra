@@ -1,16 +1,18 @@
-/* memtest.c — SDRAM 读写自检 (Phase 1)
+/* memtest.c — SDRAM 读写自检
  *
- * 4 项测试: walking-ones immediate/bulk, checkerboard, address-as-data
+ * 5 项测试: walking-ones immediate/bulk, checkerboard, address-as-data, sparse boundary
  * 结果通过 VGA 显示，同时驱动 GPIO/LCD 调试协议
+ *
+ * 独立诊断程序: sw/app/sdram_test/ (4096 words, UART-only, "维修模式")
  */
 #include "vga_hal.h"
 #include "gpio_hal.h"
 #include <stddef.h>
 
 #define SDRAM_BASE  ((volatile uint32_t *)0x01000000)
-#define TEST_WORDS  256
+#define TEST_WORDS  1024
 #define CASE_LIST_ROW 3
-#define CASE_RESULT_ROW 11
+#define CASE_RESULT_ROW 10
 #define SUMMARY_ROW 16
 #define DETAIL_ROW 17
 #define PROMPT_ROW 19
@@ -28,24 +30,53 @@ static uint32_t fail_word, fail_test, fail_got, fail_expected;
 static int finished;
 static int done;
 
-static const char *test_names[4] = {
+static const char *test_names[5] = {
     "Case 1  Walking-1 immediate",
     "Case 2  Walking-1 bulk     ",
     "Case 3  Checkerboard       ",
-    "Case 4  Address-as-data    "
+    "Case 4  Address-as-data    ",
+    "Case 5  Sparse boundary   "
 };
 
-static const char *test_descs[4] = {
+static const char *test_descs[5] = {
     "per-word write/read 1<<(i%32)",
     "bulk write then bulk readback ",
     "0x55555555 <-> 0xAAAAAAAA     ",
-    "write physical address value  "
+    "write physical address value  ",
+    "31 sparse boundary probes     "
 };
+
+/* Sparse boundary probe offsets (from sdram_test) */
+static const uint32_t sparse_words[] = {
+    0x00000000u, 0x00000001u, 0x00000002u, 0x00000003u,
+    0x000000FFu, 0x00000100u, 0x00000101u,
+    0x000001FFu, 0x00000200u, 0x00000201u,
+    0x000003FFu, 0x00000400u, 0x00000401u,
+    0x000007FFu, 0x00000800u, 0x00000801u,
+    0x00000FFFu, 0x00001000u, 0x00001001u,
+    0x00001FFFu, 0x00002000u, 0x00002001u,
+    0x0000FFFFu, 0x00010000u, 0x00010001u,
+    0x000FFFFFu, 0x00100000u, 0x00100001u,
+    0x007FFFFFu, 0x00800000u, 0x00800001u
+};
+#define SPARSE_COUNT (sizeof(sparse_words) / sizeof(sparse_words[0]))
+
+static uint32_t sparse_pattern(uint32_t word_idx) {
+    return 0xA5A50000u ^ (word_idx * 0x1F123BB5u) ^ (word_idx >> 3);
+}
 
 static void lcd_status(uint32_t s) {
 #ifndef LOCAL_BUILD
     neorv32_gpio_port_set(s);
 #endif
+}
+
+static void put_hex32_color(uint32_t val, uint16_t color) {
+    static const char hex[] = "0123456789ABCDEF";
+
+    for (int i = 7; i >= 0; i--) {
+        vga_putc(hex[(val >> (i * 4)) & 0x0f], color);
+    }
 }
 
 static void record_fail(uint32_t test_num, uint32_t word_idx,
@@ -59,9 +90,8 @@ static void record_fail(uint32_t test_num, uint32_t word_idx,
     all_pass = 0;
 }
 
-/* 每次调用 run_one_step() 执行一项测试并更新 VGA */
 static void run_test(int test_id) {
-    if (test_id < 0 || test_id >= 4) return;
+    if (test_id < 0 || test_id >= 5) return;
     vga_goto(0, CASE_RESULT_ROW + test_id);
 
     int pass = 1;
@@ -114,6 +144,21 @@ static void run_test(int test_id) {
             }
         }
         break;
+    case 4: /* Sparse boundary probes */
+        for (uint32_t i = 0; i < SPARSE_COUNT; i++) {
+            uint32_t idx = sparse_words[i];
+            SDRAM_BASE[idx] = sparse_pattern(idx);
+        }
+        for (uint32_t i = 0; i < SPARSE_COUNT; i++) {
+            uint32_t idx = sparse_words[i];
+            uint32_t exp = sparse_pattern(idx);
+            uint32_t got = SDRAM_BASE[idx];
+            if (got != exp) {
+                record_fail(5, idx, exp, got);
+                pass = 0; break;
+            }
+        }
+        break;
     }
 
     vga_puts(test_names[test_id], VGA_WHITE);
@@ -137,7 +182,7 @@ static void init(void) {
     vga_puts("MemTest — SDRAM Self-Test\n", VGA_CYAN);
     vga_puts("========================\n", VGA_WHITE);
     vga_puts("Test cases:\n", VGA_GRAY);
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
         vga_puts("  ", VGA_BLACK);
         vga_puts(test_names[i], VGA_WHITE);
         vga_puts("\n", VGA_WHITE);
@@ -155,39 +200,31 @@ static void init(void) {
 #endif
 
     lcd_status(LCD_STATUS_TESTING);
-
-    /* LOCAL_BUILD: 标记所有测试通过 (模拟) */
-#ifdef LOCAL_BUILD
-    /* 模拟 SDRAM 测试全部通过 */
-#endif
 }
 
 static void update(void) {
     if (finished) return;
 
-    if (current_test < 4 && all_pass) {
+    if (current_test < 5 && all_pass) {
         run_test(current_test);
         current_test++;
     }
 
-    if (current_test >= 4 || !all_pass) {
+    if (current_test >= 5 || !all_pass) {
         finished = 1;
         vga_goto(0, SUMMARY_ROW);
         if (all_pass) {
-            vga_puts("[ALL PASS] All 4 SDRAM cases passed.", VGA_GREEN);
+            vga_puts("[ALL PASS] All 5 SDRAM cases passed.", VGA_GREEN);
             lcd_status(LCD_STATUS_PASS);
         } else {
-            vga_puts("[FAIL] T", VGA_RED);
-            const char hex[] = "0123456789ABCDEF";
-            vga_putc(hex[fail_test & 0xF], VGA_RED);
-            vga_puts(" W", VGA_RED);
-            /* 显示 word index (2 hex digits) */
-            vga_putc(hex[(fail_word >> 4) & 0xF], VGA_RED);
-            vga_putc(hex[fail_word & 0xF], VGA_RED);
-            vga_puts(" GOT ", VGA_RED);
-            /* 显示 got 值 (8 hex) */
-            for (int i = 7; i >= 0; i--)
-                vga_putc(hex[(fail_got >> (i*4)) & 0xF], VGA_RED);
+            uint32_t fail_addr = (uint32_t)(uintptr_t)(SDRAM_BASE + fail_word);
+
+            vga_puts("[FAIL] T=", VGA_RED);
+            put_hex32_color(fail_test, VGA_RED);
+            vga_puts(" W=", VGA_RED);
+            put_hex32_color(fail_word, VGA_RED);
+            vga_puts(" A=", VGA_RED);
+            put_hex32_color(fail_addr, VGA_RED);
             lcd_status(LCD_FAIL_META |
                        ((fail_test & 0xF) << 24) |
                        ((fail_word & 0xFF) << 16));
@@ -195,9 +232,9 @@ static void update(void) {
             lcd_status(LCD_FAIL_GOT_LO | (fail_got & 0xFFFFu));
             vga_goto(0, DETAIL_ROW);
             vga_puts("EXP ", VGA_RED);
-            vga_puthex32(fail_expected);
+            put_hex32_color(fail_expected, VGA_YELLOW);
             vga_puts("  GOT ", VGA_RED);
-            vga_puthex32(fail_got);
+            put_hex32_color(fail_got, VGA_YELLOW);
         }
         vga_goto(0, PROMPT_ROW);
         vga_puts("Press 'q' to return, 'r' to retest\n", VGA_GRAY);
@@ -217,6 +254,6 @@ static void input(char c) {
 static int finish(void) { return done; }
 
 const program_t prog_memtest = {
-    "MemTest", "SDRAM 4-test self-check",
+    "MemTest", "SDRAM 5-test self-check",
     init, update, input, NULL, finish
 };

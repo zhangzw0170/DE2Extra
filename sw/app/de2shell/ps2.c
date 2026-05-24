@@ -98,19 +98,19 @@ static void log_maybe_roll(void) {
              VGA_GRAY);
 }
 
-static void log_puts(const char *s, uint8_t color) {
+static void log_puts(const char *s, uint16_t color) {
     log_maybe_roll();
     vga_puts(s, color);
 }
 
-static void log_put_hex8(uint8_t val, uint8_t color) {
+static void log_put_hex8(uint8_t val, uint16_t color) {
     static const char hex[] = "0123456789ABCDEF";
     log_maybe_roll();
     vga_putc(hex[(val >> 4) & 0x0f], color);
     vga_putc(hex[val & 0x0f], color);
 }
 
-static void log_put_dec_u8(uint8_t val, uint8_t color) {
+static void log_put_dec_u8(uint8_t val, uint16_t color) {
     char buf[3];
     int pos = 0;
 

@@ -8,8 +8,7 @@
  *   crypto.c   — 密码学终端
  *   snake.c    — 贪吃蛇
  *   life.c     — 康威生命游戏
- *   dashboard.c — 系统仪表盘
- *   info.c     — 系统信息
+ *   info.c     — 系统信息 + 实时板级状态
  */
 
 #include <stdint.h>
@@ -82,11 +81,8 @@ typedef enum {
     PROG_LIFE,
     PROG_DASHBOARD,
     PROG_INFO,
-    PROG_EXP1,
-    PROG_EXP4,
-    PROG_EXP5,
-    PROG_EXP12,
     PROG_MONITOR,
+    PROG_DEMO,
     PROG_COUNT
 } prog_id_t;
 
@@ -102,13 +98,9 @@ extern const program_t prog_crypto;
 extern const program_t prog_ps2;
 extern const program_t prog_snake;
 extern const program_t prog_life;
-extern const program_t prog_dashboard;
 extern const program_t prog_info;
-extern const program_t prog_exp1;
-extern const program_t prog_exp4;
-extern const program_t prog_exp5;
-extern const program_t prog_exp12;
 extern const program_t prog_monitor;
+extern const program_t prog_demo;
 
 /* Dummy strcmp for NEORV32 target (no libc) */
 #ifndef LOCAL_BUILD
@@ -130,20 +122,19 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_PS2]       = &prog_ps2,
     [PROG_SNAKE]     = &prog_snake,
     [PROG_LIFE]      = &prog_life,
-    [PROG_DASHBOARD] = &prog_dashboard,
+    [PROG_DASHBOARD] = &prog_info,
     [PROG_INFO]      = &prog_info,
-    [PROG_EXP1]      = &prog_exp1,
-    [PROG_EXP4]      = &prog_exp4,
-    [PROG_EXP5]      = &prog_exp5,
-    [PROG_EXP12]     = &prog_exp12,
     [PROG_MONITOR]   = &prog_monitor,
+    [PROG_DEMO]      = &prog_demo,
 };
 
 static prog_id_t active_prog = PROG_SHELL;
 static int status_dirty = 1;
 static uint8_t last_uart_char = 0;
 static uint8_t prev_key_bits = 0;
+#ifndef LOCAL_BUILD
 static uint8_t prev_ir_toggle = 0;
+#endif
 uint8_t last_ir_cmd = 0;
 
 #define SHELL_LINE_SIZE 64
@@ -187,7 +178,7 @@ static int shell_esc_state = 0;
 #define IR_BTN_MUTE    0x0Cu
 
 static void shell_prompt(void) {
-    vga_puts("0000> ", VGA_GREEN);
+    vga_puts("0000 > ", VGA_GREEN);
 }
 
 static void shell_redraw_line(int old_len) {
@@ -291,10 +282,12 @@ static prog_id_t shell_selected_prog(uint32_t gpio_in) {
 }
 
 static int global_key_hotkeys_enabled(void) {
-    /* Dashboard is used as a raw input monitor, so global KEY shortcuts
-     * must stay out of the way there.
+    /* Info is used as a live raw input monitor, so global KEY shortcuts
+     * must stay out of the way there. ExpDemo also hands KEY[3:1] to the
+     * selected hardware experiment, so shell-level shortcuts must not steal
+     * those presses.
      */
-    return active_prog != PROG_DASHBOARD;
+    return (active_prog != PROG_DASHBOARD) && (active_prog != PROG_DEMO);
 }
 
 static void board_status_refresh(void) {
@@ -344,8 +337,10 @@ static void return_to_shell(void) {
 static void shell_init(void) {
     vga_clear();
     vga_goto(0, 0);
-    vga_puts("DE2Extra Shell v0.1\n", VGA_CYAN);
-    vga_puts("Type 'help' for commands.\n\n", VGA_GRAY);
+    vga_puts("DE2Extra Shell v0.2\n", VGA_CYAN);
+    vga_puts("Commands: help hello memtest crypto ps2 snake conwaylife info\n", VGA_GRAY);
+    vga_puts("          riscvasm expdemo cls quit\n", VGA_GRAY);
+    vga_puts("Repo: https://github.com/zhangzw0170/DE2Extra.git\n\n", VGA_GRAY);
     shell_line_pos = 0;
     shell_line[0] = '\0';
     shell_saved_line[0] = '\0';
@@ -395,7 +390,7 @@ static void shell_input(char c) {
         if (shell_line_pos == 0) {
             /* empty line — show prompt again */
         } else if (strcmp(shell_line, "help") == 0) {
-            vga_puts("Commands: hello, memtest, crypto, ps2, snake, life, dash, info, monitor, exp1, exp4, exp5, exp12, cls, quit\n",
+            vga_puts("Commands: hello, memtest, crypto, ps2, snake, conwaylife, info, riscvasm, expdemo, cls, quit\n",
                      VGA_GREEN);
         } else if (strcmp(shell_line, "hello") == 0) {
             enter_program(PROG_HELLO);
@@ -408,22 +403,16 @@ static void shell_input(char c) {
             enter_program(PROG_PS2);
         } else if (strcmp(shell_line, "snake") == 0) {
             enter_program(PROG_SNAKE);
-        } else if (strcmp(shell_line, "life") == 0) {
+        } else if (strcmp(shell_line, "conwaylife") == 0 || strcmp(shell_line, "life") == 0) {
             enter_program(PROG_LIFE);
-        } else if (strcmp(shell_line, "dash") == 0) {
-            enter_program(PROG_DASHBOARD);
-        } else if (strcmp(shell_line, "info") == 0) {
+        } else if (strcmp(shell_line, "info") == 0 || strcmp(shell_line, "dash") == 0) {
             enter_program(PROG_INFO);
-        } else if (strcmp(shell_line, "exp1") == 0) {
-            enter_program(PROG_EXP1);
-        } else if (strcmp(shell_line, "exp4") == 0) {
-            enter_program(PROG_EXP4);
-        } else if (strcmp(shell_line, "exp5") == 0) {
-            enter_program(PROG_EXP5);
-        } else if (strcmp(shell_line, "exp12") == 0) {
-            enter_program(PROG_EXP12);
-        } else if (strcmp(shell_line, "monitor") == 0 || strcmp(shell_line, "rv32") == 0) {
+        } else if (strcmp(shell_line, "riscvasm") == 0 ||
+                   strcmp(shell_line, "monitor") == 0 ||
+                   strcmp(shell_line, "rv32") == 0) {
             enter_program(PROG_MONITOR);
+        } else if (strcmp(shell_line, "expdemo") == 0) {
+            enter_program(PROG_DEMO);
         } else if (strcmp(shell_line, "cls") == 0) {
             shell_init();
             prompt_already_printed = 1;
@@ -512,8 +501,9 @@ static void handle_ir(uint8_t cmd) {
         return;
     }
 
-    /* Global IR commands: use the physical key labels on the Exp10 remote.
-     * Table 6-16 numbers the keys by position, not by the printed legends.
+    /* Global IR commands: digits follow the shell's internal channel IDs so
+     * the remote key, status bar channel, and LCD program ID stay aligned.
+     * A remains the dedicated shortcut for expdemo (program 0xA).
      */
     prog_id_t new_prog = PROG_SHELL;
     switch (cmd) {
@@ -524,10 +514,13 @@ static void handle_ir(uint8_t cmd) {
         case IR_BTN_1: new_prog = PROG_HELLO;     break;
         case IR_BTN_2: new_prog = PROG_MEMTEST;   break;
         case IR_BTN_3: new_prog = PROG_CRYPTO;    break;
-        case IR_BTN_4: new_prog = PROG_SNAKE;     break;
-        case IR_BTN_5: new_prog = PROG_LIFE;      break;
-        case IR_BTN_6: new_prog = PROG_DASHBOARD; break;
+        case IR_BTN_4: new_prog = PROG_PS2;       break;
+        case IR_BTN_5: new_prog = PROG_SNAKE;     break;
+        case IR_BTN_6: new_prog = PROG_LIFE;      break;
         case IR_BTN_7: new_prog = PROG_INFO;      break;
+        case IR_BTN_8: new_prog = PROG_INFO;      break;
+        case IR_BTN_9: new_prog = PROG_MONITOR;   break;
+        case IR_BTN_A: new_prog = PROG_DEMO;      break;
         case IR_BTN_CH_DN:
             if (active_prog > 0) {
                 new_prog = active_prog - 1;
