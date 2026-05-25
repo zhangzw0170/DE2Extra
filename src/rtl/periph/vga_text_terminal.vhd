@@ -1,4 +1,4 @@
--- vga_text_terminal.vhd -- VGA 80x25 text terminal (640x480 @ 60Hz, RGB565)
+-- vga_text_terminal.vhd -- VGA 80x30 text terminal (640x480 @ 60Hz, RGB565)
 --
 -- 32-bit cell: [31:24]=ASCII, [23:16]=reserved, [15:0]=fg RGB565
 -- Background color from global bg_color register (not per-cell)
@@ -49,17 +49,18 @@ architecture rtl of vga_text_terminal is
 
     -- Text grid
     constant COLS     : integer := 80;
-    constant ROWS     : integer := 25;
+    constant ROWS     : integer := 30;
     constant CHAR_W   : integer := 8;
     constant CHAR_H   : integer := 16;
-    constant BUF_SIZE : integer := 2000;
-    constant RAM_DEPTH : integer := 4096;  -- power-of-2
-    constant REG_CURSOR_X : integer := 16#1F40#;
-    constant REG_CURSOR_Y : integer := 16#1F44#;
-    constant REG_CONTROL  : integer := 16#1F48#;
-    constant REG_STATUS   : integer := 16#1F4C#;
-    constant REG_BGCOLOR  : integer := 16#1F50#;
-    constant REG_CLEAR    : integer := 16#1F54#;
+    constant BUF_SIZE : integer := 2400;
+    constant RAM_DEPTH : integer := 4096;  -- single visible page fits without growing BRAM
+    constant REG_BASE    : integer := BUF_SIZE * 4;
+    constant REG_CURSOR_X : integer := REG_BASE + 16#00#;
+    constant REG_CURSOR_Y : integer := REG_BASE + 16#04#;
+    constant REG_CONTROL  : integer := REG_BASE + 16#08#;
+    constant REG_STATUS   : integer := REG_BASE + 16#0C#;
+    constant REG_BGCOLOR  : integer := REG_BASE + 16#10#;
+    constant REG_CLEAR    : integer := REG_BASE + 16#14#;
 
     constant BLINK_MAX : integer := 25_000_000;  -- 0.5s @ 50MHz
 
@@ -176,7 +177,6 @@ begin
     process(all)
         variable char_col : integer range 0 to COLS - 1;
         variable char_row : integer range 0 to ROWS - 1;
-        variable page_off : integer;
     begin
         char_col := pixel_x / CHAR_W;
         if pixel_y / CHAR_H >= ROWS then
@@ -184,11 +184,7 @@ begin
         else
             char_row := pixel_y / CHAR_H;
         end if;
-        page_off := 0;
-        if ctrl_page = '1' then
-            page_off := BUF_SIZE;
-        end if;
-        bram_rd_addr <= char_row * COLS + char_col + page_off;
+        bram_rd_addr <= char_row * COLS + char_col;
         sub_row     <= pixel_y mod CHAR_H;
     end process;
 
@@ -223,9 +219,6 @@ begin
         if rising_edge(clk_25m) then
             -- Font ROM: use variable for immediate use in this process
             ascii_char := to_integer(unsigned(bram_q(31 downto 24)));
-            if ascii_char > 127 then
-                ascii_char := 0;
-            end if;
             font_byte := font_rom_data(ascii_char * 16 + sub_row_d);
 
             -- Pixel on: select bit from font data (MSB = leftmost pixel)
@@ -245,13 +238,15 @@ begin
             fg_rgb := bram_q(15 downto 0);
             bg_rgb := bg_color;
 
-            -- Swap fg/bg at cursor (blinking)
-            if cursor_at = '1' and (ctrl_blink = '0' or blink_vis = '1') then
-                color_rgb := bg_rgb;
-            elsif pixel_bit = '1' then
+            if pixel_bit = '1' then
                 color_rgb := fg_rgb;
             else
                 color_rgb := bg_rgb;
+            end if;
+
+            -- Cursor should remain visible even on a space glyph or black text cell.
+            if cursor_at = '1' and (ctrl_blink = '0' or blink_vis = '1') then
+                color_rgb := not color_rgb;
             end if;
 
             -- RGB565 to 8-bit expansion
@@ -259,11 +254,6 @@ begin
                 vga_r_o <= x"00";
                 vga_g_o <= x"00";
                 vga_b_o <= x"00";
-            elsif py_d >= ROWS * CHAR_H then
-                -- Bottom margin: show background color (no text repeat)
-                vga_r_o <= bg_color(15 downto 11) & "000";
-                vga_g_o <= bg_color(10 downto 5)  & "00";
-                vga_b_o <= bg_color(4 downto 0)   & "000";
             else
                 vga_r_o <= color_rgb(15 downto 11) & "000";
                 vga_g_o <= color_rgb(10 downto 5)  & "00";
