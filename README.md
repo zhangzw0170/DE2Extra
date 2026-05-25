@@ -28,7 +28,7 @@
 │     RV32IMC + Zicsr + Zicntr + Zk* 密码扩展      │
 ├──────────────────────────────────────────────────┤
 │  自定义 VHDL 外设 (通用寄存器接口, 平台无关)       │
-│  VGA | PS/2 | LCD | IR | NTT | ExpDemo | ...     │
+│  VGA | PS/2 | LCD | IR | ExpDemo | ...           │
 ├──────────────────────────────────────────────────┤
 │     DE2-115 FPGA (Cyclone IV E, 114K LEs)        │
 └──────────────────────────────────────────────────┘
@@ -40,7 +40,7 @@
 
 - **FPGA**: Cyclone IV E, 114,480 LEs, 266 硬件乘法器, 4 PLL
 - **存储**: 128MB SDRAM, 2MB SRAM, 8MB Flash, SD 卡槽
-- **显示**: 16×2 LCD, 8 个七段数码管, 27 个 LED (9G+18R), VGA (8-bit/通道 DAC, 当前用 RGB332)
+- **显示**: 16×2 LCD, 8 个七段数码管, 27 个 LED (9G+18R), VGA (8-bit/通道 DAC, RGB565)
 - **通信**: RS-232, PS/2 ×2, 红外接收, USB 2.0, 千兆以太网 ×2
 - **音频**: WM8731 24-bit CODEC
 - **输入**: 4 个按键, 18 个拨码开关
@@ -65,30 +65,30 @@ NEORV32 (v1.13.1) 作为 git submodule 引入。
 
 所有自定义外设使用通用寄存器接口设计，不绑定特定总线，换板只需改适配层。
 
-| 模块                        | 地址           | 说明                               | 状态                |
-| --------------------------- | -------------- | ---------------------------------- | ------------------- |
-| `sdram_ctrl`              | `0x01000000` | 128MB SDRAM 控制器, 支持 burst     | ✅                  |
-| `vga_text_terminal`       | `0xF0000000` | 80×25 彩色文字终端, 640×480@60Hz | ✅                  |
-| `ps2_controller`          | `0xF0002000` | PS/2 键盘 + FIFO + 中断            | ✅                  |
-| `ir_nec_wb`               | `0xF0009000` | 红外 NEC 协议解码                  | ✅                  |
-| `lcd_status` + `lcd_debug` | — (GPIO)     | HD44780 16×2 LCD, GPIO 直驱       | ✅                  |
-| `lcd_wb`                   | `0xF0008000` | LCD Wishbone 接口                  | ❌ 占位             |
-| `expdemo_wb`               | `0xF000D000` | 11 个课程实验硬件多路复用          | ✅                  |
-| `ntt_sdf`                  | `0xF000C000` | NTT 加速器 (q=3329, N=256)         | 🟡 编译通过, 待上板 |
-| `timer_wb`                 | `0xF0004000` | 系统定时器 (IR 脉宽捕获)           | ✅                  |
-| `intc_wb`                  | `0xF0006000` | 中断控制器 (IR/Timer/PS2)          | ✅                  |
+| 模块 | 地址 | 说明 | 状态 |
+|---|---|---|---|
+| `sdram_ctrl` | `0x01000000` | 128MB SDRAM 控制器, 支持 burst | ✅ 上板通过 |
+| `vga_text_terminal` | `0xF0000000` | 80×25 彩色文字终端, 640×480@60Hz, RGB565 | ✅ 上板通过 |
+| `ps2_controller` | `0xF0002000` | PS/2 键盘 + FIFO + 中断 | ✅ 上板通过 |
+| `ir_nec_wb` | `0xF0009000` | 红外 NEC 协议解码 | ✅ 上板通过 |
+| `lcd_wb` | `0xF0008000` | HD44780 16×2 LCD (Wishbone) | ✅ 上板通过 |
+| `expdemo_wb` | `0xF000D000` | 11 个课程实验硬件多路复用 | ✅ 上板通过 |
+| `timer_wb` | `0xF0004000` | 系统定时器 (IR 脉宽捕获) | ✅ |
+| `intc_wb` | `0xF0006000` | 中断控制器 (IR/Timer/PS2) | ✅ |
+
+> **V3 规划**: NTT 加速器、VGA 像素模式控制器、WM8731 音频、SD 卡 SPI。详见 [`doc/phases/phase5-sdram-gui.md`](doc/phases/phase5-sdram-gui.md)。
 
 ## 软件应用
 
-| 应用                 | 说明                                                                                                        |
-| -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **de2shell**   | 主固件: 命令行 shell, memtest, crypto (AES/SHA/SM4+Zk*加速), snake, life, dashboard, expdemo, monitor, PS/2 |
-| **de2os**      | 实验性: FreeRTOS + SDRAM 执行 + ICACHE burst                                                                |
-| **crypto_cli** | 密码学算法库 (源码被 de2shell 链接复用)                                                                                              |
-| **hello**      | Phase 0 验证: LED 跑马灯                                                                                    |
-| **sdram_test** | SDRAM 诊断工具                                                                                              |
-| **ps2_test**   | PS/2 扫描码测试                                                                                             |
-| **ir_test**    | 红外解码测试                                                                                                |
+| 应用 | 说明 |
+|---|---|
+| **de2shell** | 主固件: 命令行 shell, memtest, crypto (AES/SHA/SM4+Zk*加速), snake, life, dashboard, expdemo, monitor, PS/2 |
+| **de2os** | 实验性: FreeRTOS + SDRAM 执行 + ICACHE burst |
+| **crypto_cli** | 密码学算法库 (源码被 de2shell 链接复用) |
+| **hello** | LED 跑马灯 + VGA 显示 |
+| **sdram_test** | SDRAM 诊断工具 (5 项测试 + LCD 协议) |
+| **ps2_test** | PS/2 扫描码测试 |
+| **ir_test** | 红外解码测试 |
 
 ## 目录结构
 
@@ -136,10 +136,10 @@ DE2Extra/
 ./build.sh --flash app/de2shell
 ```
 
-或手动分步（当 `build.sh` 包装层出现偶发伪失败时使用）:
+或手动分步:
 
 ```bash
-# 1. 固件编译 (注意: clean 后需重建 build/ 目录)
+# 1. 固件编译
 docker run --rm -v "$(pwd):/project" de2extra-builder bash -lc \
   'export PATH=/opt/riscv/bin:$PATH; cd /project/sw/app/de2shell && make clean NEORV32_HOME=/project/neorv32 && mkdir -p build && make image NEORV32_HOME=/project/neorv32'
 
@@ -151,19 +151,26 @@ quartus_sh --flow compile par/de2extra -c de2extra
 ```
 
 > **重要**: NEORV32 使用 VHDL-2008。首次打开工程须在 Quartus 中设置: Assignments → Settings → VHDL Input → VHDL 2008。
->
-> `build.sh` 在当前 Windows 环境下偶有伪失败（Docker 链接错误等），属包装层稳定性问题而非代码问题。遇到时切换到上面的手动分步路径即可。详见 [`doc/编译烧录前必看.md`](doc/编译烧录前必看.md)。
 
 ### de2os (实验)
 
 ```bash
-# 独立工程, 详见 doc/phases/de2os-debug.md
 cd par/de2os && quartus_sh --flow compile de2os
 ```
 
-## 验收状态
+## V2 验收状态
 
-详见 [验收表](doc/de2shell-module-acceptance.md)
+**v0.1 (V2) 验收完成。** 详见 [验收表](doc/de2shell-module-acceptance.md)。
+
+- 192/213 项 ✅ 通过
+- VGA 文字终端上板验证通过 (640×480@60Hz)
+- SDRAM 5 项自检全部 PASS
+- 11 个课程实验通过 expdemo 多路复用
+- AES/SHA/SM4/SM3 + Zk* 硬件加速验证通过
+- IR 遥控切频 + 透传验证通过
+- LCD 16×2 显示修复验证通过
+
+移至 V3: NTT 硬件加速、VGA 像素模式 (Win 3.0 GUI)、Exp6/7 画廊、snake Game Over 显示、音频子系统。
 
 ## 许可
 
