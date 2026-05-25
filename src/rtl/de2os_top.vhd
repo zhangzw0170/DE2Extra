@@ -251,6 +251,9 @@ architecture rtl of de2os_top is
     signal exp_ledr         : std_logic_vector(17 downto 0);
     signal exp_ledg         : std_logic_vector(8 downto 0);
     signal exp_uart_txd     : std_logic;
+    signal expdemo_active_d : std_logic := '0';
+    signal lcd_shell_rst_cnt : integer range 0 to 50000 := 50000;
+    signal lcd_shell_rst_n   : std_logic;
     signal exp_lcd_data     : std_logic_vector(7 downto 0);
     signal exp_lcd_rs       : std_logic;
     signal exp_lcd_rw       : std_logic;
@@ -662,6 +665,26 @@ begin
     );
 
     -- ================================================================
+    -- LCD shell reinit: reset lcd_wb when expdemo exits
+    -- ================================================================
+    p_lcd_shell_reinit : process (clk_50m, rst_n)
+    begin
+        if rst_n = '0' then
+            expdemo_active_d <= '0';
+            lcd_shell_rst_cnt <= 50000;
+        elsif rising_edge(clk_50m) then
+            expdemo_active_d <= expdemo_active;
+            if (expdemo_active_d = '1') and (expdemo_active = '0') then
+                lcd_shell_rst_cnt <= 50000;
+            elsif lcd_shell_rst_cnt > 0 then
+                lcd_shell_rst_cnt <= lcd_shell_rst_cnt - 1;
+            end if;
+        end if;
+    end process;
+
+    lcd_shell_rst_n <= '0' when (rst_n = '0') or (lcd_shell_rst_cnt > 0) else '1';
+
+    -- ================================================================
     -- GPIO -> LED 映射
     -- ================================================================
     LEDR <= exp_ledr when expdemo_active = '1' else
@@ -767,7 +790,7 @@ begin
     u_lcd : entity work.lcd_wb
     port map (
         clk_i    => clk_50m,
-        rst_n_i  => rst_n,
+        rst_n_i  => lcd_shell_rst_n,
         wb_adr_i => lcd_wb_adr,
         wb_dat_i => lcd_wb_dat_o,
         wb_dat_o => lcd_wb_dat_i,
