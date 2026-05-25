@@ -585,20 +585,64 @@ CPU (NEORV32)                    DE2-115 板载
 
 ## 优先级与时间估算
 
-| 优先级 | 子任务 | 估算时间 | 依赖 |
-|--------|--------|----------|------|
-| **P0** | 1. SDRAM 执行 + bootloader | 4h | V2 完成 |
-| **P0** | 3. VGA HAL + SDL2 仿真 | 3h | 无（可立即开始） |
-| **P1** | 5. FreeRTOS 移植 | 4h | SDRAM 执行 |
-| **P1** | 2+4. 图元库 + VGA 像素模式 | 5h | SDL2 HAL |
-| **P2** | 6. 密码学可视化 (AES+SHA) | 6h | 图元库 + FreeRTOS |
-| **P2** | 7. Conway 硬件引擎 | 4h | 独立 |
-| **P2** | 10. ChromaShader 沙盒 | 6h | 独立 (需改造 VGA 数据源) |
-| **P2** | 8. PONG 硬件引擎 | 4h | 独立 |
-| **P3** | 9. NTT 加速器 | 8h | 复用 FFT 项目 |
-| **P3** | 11. 音频 I2C + I2S | 3h | 独立 |
-| **P4** | 12. 双核 SMP demo | 0.5-4h | V3 全部完成 + 有余力 |
-| **总计 (P0-P3)** | | **~47h** | |
+> 修订于 2026-05-25，基于 V2 实际进展重新评估。
+> V3 全部工作在 de2os 上进行（SDRAM exec + FreeRTOS），de2shell 冻结。
+> 已完成项标注 ☑，仅需上板验证项标注 🔌。
+
+| 优先级 | 子任务 | 估算时间 | 实际状态 | 依赖 |
+|--------|--------|----------|----------|------|
+| **P0** | 1. SDRAM 执行 + bootloader | ~~4h~~ → 1h | ☑ de2shell_rtos 已构建成功 (73KB @ SDRAM) | 🔌 上板 |
+| **P0** | 3. VGA HAL + SDL2 仿真 | ~~3h~~ → 0h | ☑ fb_hal/gfx/gui/gui_widgets/win30_desk 全部 LOCAL_BUILD 通过 | 🔌 上板 |
+| **P0** | 13. FreeRTOS+CLI 集成 | 2h | 🆕 替代手写 strcmp 解析，输入源无关 | 无 |
+| **P1** | 5. FreeRTOS 移植 | ~~4h~~ → 1h | ☑ 4 任务已注册 (uart_input/shell/active/status) | 🔌 上板 |
+| **P1** | 2+4. VGA 像素模式 + 图元库 | ~~5h~~ → 1h | ☑ vga_pixel_ctrl.vhd + fb_hal 完成 | 🔌 上板 |
+| **P1** | 14. FreeRTOS+IO 集成 | 3h | 🆕 统一 UART/PS/2 输入抽象 | FreeRTOS+CLI |
+| **P2** | 6. 密码学可视化 (AES+SHA) | ~~6h~~ → 4h | 需新写，但有 GUI 控件库基础 | 图元库 + FreeRTOS |
+| **P2** | 7. Conway 硬件引擎 | 4h | 新 VHDL | 独立 |
+| **P2** | 8. PONG 硬件引擎 | 4h | 新 VHDL | 独立 |
+| **P2** | 10. ChromaShader 沙盒 | 6h | 新 VHDL | 独立 (需改造 VGA 数据源) |
+| **P3** | 9. NTT 加速器 | ~~8h~~ → 2h | ☑ ntt_sdf.vhd 编译通过 + C 驱动 + Python 验证 | 🔌 上板 |
+| **P3** | 11. 音频 I2C + I2S | 3h | 新 VHDL | 独立 |
+| **P3** | Snake Game Over | 0.5h | 纯软件 bug | 无 |
+| **P3** | Exp6/7 画廊 | 1.5h | 纯软件 | 无 |
+| **P4** | 12. 双核 SMP demo | 0.5-4h | 最低优先级 | V3 全部完成 + 有余力 |
+| **总计 (P0-P3)** | | **~30h** (原 47h) | 已完成 ~17h，剩余 ~30h | |
+
+### 13. FreeRTOS+CLI 集成 (🆕)
+
+**来源**: `FreeRTOS-Plus/Source/FreeRTOS-Plus-CLI/` — 仅 2 文件 (`FreeRTOS_CLI.c`, `FreeRTOS_CLI.h`)
+**许可**: MIT (FreeRTOS)
+
+**替代内容**: 当前 `t_shell` 任务中手写的 `strcmp_local()` 命令解析
+
+**核心 API**:
+```c
+// 注册命令 (每个程序一个)
+FreeRTOS_CLIRegisterCommand(&xCommand);
+
+// 执行命令 (shell 主循环调用)
+BaseType_t more = FreeRTOS_CLIProcessCommand(input, output, len);
+
+// 提取参数
+const char *param = FreeRTOS_CLIGetParameter(cmd, index, &len);
+```
+
+**接入方式**:
+1. 添加 `FreeRTOS_CLI.c/h` 到 `sw/app/de2shell_rtos/`
+2. 每个程序 (crypto/snake/life/...) 注册自己的 CLI 命令
+3. `t_shell` 从 `xInputQueue` 读一行 → `FreeRTOS_CLIProcessCommand()` → 写 VGA
+4. 输入源无关 — UART 和 PS/2 都通过同一个 queue
+
+**优势**: 自带 help、参数解析、命令历史支持、输入源无关
+
+### 14. FreeRTOS+IO 集成 (🆕)
+
+**来源**: `FreeRTOS-Plus/Source/FreeRTOS-Plus-IO/`
+**许可**: MIT (FreeRTOS)
+
+**目的**: 统一 I/O 抽象层 — UART、PS/2 键盘、未来可能的其他输入设备都用统一 fd 接口
+
+**评估**: 需要验证在 RISC-V NEORV32 上的移植工作量。如果移植成本 > 自己写抽象层，则跳过。初步判断：对于当前只有 UART + PS/2 两个输入源的场景，可能不值得引入完整 IO 框架。**待评估，优先级低于 CLI**。
 
 ---
 
