@@ -1,6 +1,6 @@
 # de2os FreeRTOS 集成状态
 
-> 日期: 2026-05-25
+> 日期: 2026-05-26
 > 状态: 软件侧已收敛到可构建基线，待 Quartus 复编译和上板验证
 > 硬件工程: `par/de2os/` (top entity: `de2os_top`)
 > 目标固件: `sw/app/de2shell_rtos/`
@@ -34,6 +34,8 @@
 - `sw/app/de2shell_rtos/makefile` 已将 `__neorv32_rom_size` 提到 `128M`。
 
 ### 2. FreeRTOS heap 已移出 16KB DMEM
+
+FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/ext/`），FreeRTOS+CLI 作为本地源文件集成在 `sw/app/de2shell_rtos/FreeRTOS_CLI.c` / `FreeRTOS_CLI.h`，不使用子模块。
 
 原先的运行时炸弹是 `configTOTAL_HEAP_SIZE` 只能缩到 2KB 才能链接，但 4 个任务 + 队列运行时一定不够。
 
@@ -77,14 +79,14 @@
 - `sw/app/de2shell/fb_hal.c` 写 `0xF0000000 + 0x1F80/0x1F84`
 - `fb_shutdown()` 会关闭像素模式
 
-### 5. PS/2 已接入 RTOS 输入队列
+### 5. PS/2 已接入 RTOS 输入队列（主输入源）
 
 当前 `t_uart_input()` 已同时轮询：
 
 - UART 输入
-- PS/2 MMIO (`0xF0002000`)
+- PS/2 MMIO (`0xF0008000`)，优先级与 UART 相同
 
-并将可解码为 ASCII 的按键送入 `xInputQueue`。
+并将可解码为 ASCII 的按键送入 `xInputQueue`。PS/2 键盘现在是主要输入方式（板上无 UART 终端时唯一输入源）。
 
 这意味着：
 
@@ -99,17 +101,35 @@
 
 - 补入 `crypto.c`, `ps2.c`, `info.c`, `monitor.c`, `demo.c`
 - 补入 `crypto_cli/crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`
-- `de2shell_rtos/main.c` 已同步注册并暴露：
-  - `hello`
-  - `memtest`
-  - `crypto`
-  - `ps2`
-  - `snake`
-  - `life`
-  - `info`
-  - `monitor`
-  - `expdemo`
-  - `startui`
+- `de2shell_rtos/main.c` 已同步注册并暴露 12 个程序：
+  - `hello`, `memtest`, `crypto`, `ps2`, `snake`, `life`, `info`, `monitor`, `demo`, `win30`, `conway_hw`, `pong_hw`
+
+其中 `conway_hw` 和 `pong_hw` 为硬件加速程序（Conway 生命游戏硬件引擎、Pong 硬件引擎），尚未注册 CLI 命令，只能通过未来 CLI 命令扩展访问。
+
+CLI 命令共 16 条（15 条注册 + 1 条 FreeRTOS+CLI 内置 `help`）：
+
+| 主命令 | 功能 |
+|--------|------|
+| hello | LED chaser |
+| memtest | SDRAM diagnostics |
+| crypto | AES/SHA/SM4 CLI |
+| ps2 | PS/2 keyboard test |
+| snake | Snake game |
+| info | System dashboard |
+| expdemo | 11 course labs |
+| startui | Win 3.0 GUI |
+| stats | Task list + stack HWM |
+| heapstat | Heap usage |
+| cpustat | CPU usage per task |
+
+| 别名 | 等价于 |
+|------|--------|
+| kbd | ps2 |
+| conwaylife | life (程序存在，但无独立 CLI 命令) |
+| riscvasm | monitor (程序存在，但无独立 CLI 命令) |
+| gui | startui |
+
+注意：`life` 和 `monitor` 程序有回调（`cli_life`, `cli_monitor`），但只通过别名 `conwaylife` / `riscvasm` 注册，没有主命令名。`demo` 程序映射到 `expdemo` 主命令。
 
 ## 当前已验证事实
 
@@ -156,6 +176,29 @@ Executable (EXE): 73500 bytes @ 0x01000000
 因此 RISC-V port 现在使用 `port.c` 内部静态 `xISRStack[]`，而不是依赖“复用 main 启动栈”的旧路径。`de2shell_rtos.ld` 中保留的 `__freertos_irq_stack_top` 目前不再是主路径。
 
 ## 当前剩余问题
+
+### P0. 部署流程
+
+V3 使用 bootloader-first 上传流程，不再需要每次改动软件都重跑 Quartus。
+
+部署脚本 `run/deploy_de2shell_rtos.sh`：
+
+```bash
+./run/deploy_de2shell_rtos.sh inc        # 推荐: 增量 = 重编 app + 串口上传
+./run/deploy_de2shell_rtos.sh app        # 等价于 inc
+./run/deploy_de2shell_rtos.sh upload     # 仅上传当前 bin
+./run/deploy_de2shell_rtos.sh fpga       # 重编 bootloader + Quartus + 烧录
+./run/deploy_de2shell_rtos.sh full       # fpga + app upload
+```
+
+流程：
+1. Docker cross-compile `sw/app/de2shell_rtos/` -> `neorv32_exe.bin`
+2. `run/upload_de2os.py` 通过 UART 发送到 NEORV32 bootloader
+3. Bootloader 写入 SDRAM `0x01000000` 并跳转执行
+
+正常改 app 代码只需 `inc`。只有改 bootloader / CPU IMEM 配置 / 顶层 RTL 时才需要 `fpga` 或 `full`。
+
+注意：`run/deploy_de2os.sh` 是另一套脚本，目标固件为 `sw/app/de2os/`（较简单的 FreeRTOS 测试），不是 `de2shell_rtos`。
 
 ### P1. Quartus / RTL 还没对这批最终改动做闭环验证
 
@@ -204,14 +247,17 @@ Executable (EXE): 73500 bytes @ 0x01000000
 
 ## 下一步
 
-1. 等共享 RTL 不再被其他编译占用后，重新跑 `par/de2os/` Quartus 编译。
-2. 若 Quartus 通过，上板验证 `de2shell_rtos/neorv32_exe.bin`：
+1. 增量部署测试：`./run/deploy_de2shell_rtos.sh inc`，验证 bootloader 上传链路。
+2. 等共享 RTL 不再被其他编译占用后，重新跑 `par/de2os/` Quartus 编译（`./run/deploy_de2shell_rtos.sh fpga`）。
+3. 若 Quartus 通过，上板验证 `de2shell_rtos/neorv32_exe.bin`：
    - scheduler 是否正常启动
    - shell 是否可交互
    - `crypto/info/monitor/expdemo/startui` 是否能进入
    - Win30 是否真能切像素模式
    - PS/2 是否可用
-3. 根据板测结果再决定是否需要：
+4. 补 `conway_hw` / `pong_hw` 的 CLI 命令注册（当前只有程序回调，没有 CLI 入口）。
+5. 考虑为 `life` / `monitor` 添加独立主命令名（当前仅通过别名 `conwaylife` / `riscvasm` 访问）。
+6. 根据板测结果再决定是否需要：
    - 补 richer PS/2 事件通道
    - 做双缓冲
    - 继续收敛 ICACHE/SDRAM 稳定性

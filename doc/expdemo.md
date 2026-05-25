@@ -100,7 +100,7 @@
 
 ## Channel 映射
 
-Channel = 实验编号，写入 WB 寄存器 `0xF000D000`：
+Channel = 实验编号，写入 WB 寄存器 `0xF0010000`：
 
 | Channel | 实验 | HEX | LEDR | LEDG | LCD | 独占 |
 |---------|------|-----|------|------|-----|------|
@@ -125,7 +125,7 @@ Channel = 实验编号，写入 WB 寄存器 `0xF000D000`：
 de2_115_top.vhd
 ├── neorv32_wrapper (CPU — 仅用于导航/调试/monitor)
 ├── wb_intercon
-│   └── s8: expdemo_wb  ← 0xF000D000
+│   └── s8: expdemo_wb  ← 0xF0010000
 │
 ├── expdemo_top
 │   ├── channel_reg     — 当前通道

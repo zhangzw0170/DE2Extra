@@ -599,7 +599,7 @@ neorv32/sw/image_gen/
 src/rtl/
 ├── de2os_top.vhd             # 独立顶层 (BOOT_MODE=0, ICACHE 现阶段关闭)
 ├── neorv32_wrapper.vhd       # CPU 配置封装
-├── periph/lcd_wb.vhd         # LCD Wishbone 控制器 @ 0xF0008000
+├── periph/lcd_wb.vhd         # LCD Wishbone 控制器 @ 0xF000B000
 └── bus/wb_intercon.vhd       # s0-s5 (s5 LCD)
 
 par/de2os/

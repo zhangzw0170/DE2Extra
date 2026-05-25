@@ -167,13 +167,17 @@
 | 基址 | 大小 | 用途 |
 |------|------|------|
 | `0xF0000000` | 8 KB | VGA 文本终端 + 像素控制寄存器 |
-| `0xF0002000` | 4 KB | PS/2 控制器 |
-| `0xF0004000` | 4 KB | Timer |
-| `0xF0006000` | 4 KB | Interrupt Controller |
-| `0xF0008000` | 4 KB | LCD Wishbone |
-| `0xF0009000` | 4 KB | IR 接收器 |
-| `0xF000C000` | 4 KB | NTT 加速器 |
-| `0xF000D000` | 4 KB | ExpDemo |
+| `0xF0008000` | 4 KB | PS/2 控制器 |
+| `0xF0009000` | 4 KB | Timer |
+| `0xF000A000` | 4 KB | INTC |
+| `0xF000B000` | 4 KB | LCD Wishbone |
+| `0xF000C000` | 4 KB | IR 接收器 |
+| `0xF000D000` | 4 KB | DDS |
+| `0xF000E000` | 4 KB | SD card |
+| `0xF000F000` | 4 KB | NTT 加速器 |
+| `0xF0010000` | 4 KB | ExpDemo |
+| `0xF0011000` | 4 KB | PONG |
+| `0xF0012000` | 4 KB | Conway |
 
 ### VGA 子区
 

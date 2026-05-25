@@ -6,13 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NEORV32 (RISC-V) soft-core SoC on DE2-115 (Cyclone IV E EP4CE115F29C7), running bare-metal C firmware. Target: turn the DE2-115 into a complete computer with VGA terminal, PS/2 keyboard, SDRAM, crypto accelerators, and games.
 
-**V2 → V3 路线决策**: de2shell (bare-metal, IMEM 64KB) 冻结在 V2。V3 工作重心转到 **de2os** — SDRAM 执行 + FreeRTOS + PS/2 键盘主输入 + VGA 像素 GUI。不再更新 de2shell。
+**V2 → V3 路线决策**: de2shell (bare-metal, IMEM 64KB) 冻结在 V2。V3 工作重心转到 **de2os** — IMEM 仅存放 ~2KB bootloader，主应用通过 boot mode 0 从 SDRAM (0x01000000) 执行 + FreeRTOS + PS/2 键盘主输入 + VGA 像素 GUI。不再更新 de2shell。
 
 **NEORV32 version**: submodule pinned at release tag **v1.13.1** (2026-05-14). Do not track `main` branch — always use a release tag for stability.
 
 ## Build System
 
-### One-command build (Git Bash on Windows)
+### V3 incremental deployment (de2os -- bootloader-first, Git Bash on Windows)
+```bash
+./run/deploy_de2os.sh app          # compile app + UART upload (~48s)
+./run/deploy_de2os.sh upload       # upload existing bin only (fastest)
+./run/deploy_de2os.sh fpga         # re-flash de2os.sof only
+./run/deploy_de2os.sh full         # full rebuild + flash + upload (~4min)
+```
+
+Normal SW changes (firmware only) need no Quartus compile -- just `app` or `upload`. Only RTL/top/bootloader/address-map changes need `fpga` or `full`. See `doc/编译烧录前必看.md` for the full incremental deployment guide.
+
+### V2 one-command build (de2shell -- `build.sh`)
 ```bash
 ./build.sh app/de2shell            # firmware + Quartus compile
 ./build.sh --flash app/de2shell    # compile + JTAG program
@@ -49,16 +59,20 @@ de2_115_top.vhd (only entity that knows board pins)
 │       ├── DMEM         16KB
 │       ├── XBUS         Wishbone external bus master (timeout 2048 cycles), supports burst cti/tag signals
 │       └── Built-in     UART0 (115200), GPIO(32), TRNG, CLINT, OCD
-├── wb_intercon          1-master, 9-slave address decoder (combinational)
+├── wb_intercon          1-master, 13-slave address decoder (combinational)
 │   ├── s0: sdram_ctrl   0x01000000 (128MB, 100MHz state machine)
-│   ├── s1: vga_text_terminal  0xF0000000 (16-bit reg IF, 80×25 text mode + pixel mode via SDRAM FB)
-│   ├── s2: ps2_controller    0xF0002000 (scancode + IRQ)
-│   ├── s3: ir_nec_wb         0xF0009000 (NEC IR decoder)
-│   ├── s4: ntt_sdf           0xF000C000 (NTT accelerator — compiles clean, deferred to V3)
-│   ├── s5: lcd_wb            0xF0008000 (LCD Wishbone controller)
-│   ├── s6: timer_wb          0xF0004000 (Timer)
-│   ├── s7: intc_wb           0xF0006000 (Interrupt controller)
-│   └── s8: expdemo_wb        0xF000D000 (Hardware experiment multiplexer, 11 experiments, board verified ✅)
+│   ├── s1: vga_text_terminal  0xF0000000 (16-bit reg IF, 80×30 text mode + pixel mode via SDRAM FB)
+│   ├── s2: ps2_controller    0xF0008000 (scancode + IRQ)
+│   ├── s3: ir_nec_wb         0xF000C000 (NEC IR decoder)
+│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator)
+│   ├── s5: lcd_wb            0xF000B000 (LCD Wishbone controller)
+│   ├── s6: timer_wb          0xF0009000 (Timer)
+│   ├── s7: intc_wb           0xF000A000 (Interrupt controller)
+│   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 11 experiments, board verified)
+│   ├── s9: sd_card           0xF000E000 (SD card controller)
+│   ├── s10: dds              0xF000D000 (DDS synthesizer)
+│   ├── s11: pong_engine      0xF0011000 (PONG game hardware engine)
+│   └── s12: conway_engine    0xF0012000 (Conway's Game of Life hardware engine)
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
 ├── lcd_status / lcd_debug  HD44780 16×2 LCD (muxed by SW16)
 ├── uart_jtag_bridge     UART TX → JTAG UART IP (view output in Quartus System Console)
@@ -72,19 +86,21 @@ de2_115_top.vhd (only entity that knows board pins)
 | 0x80000000 | DMEM | 16KB | 32-bit |
 | 0x01000000 | SDRAM | 128MB | 32-bit |
 | 0xF0000000 | VGA text terminal + pixel mode | 8KB | 16-bit |
-| 0xF0002000 | PS/2 keyboard | 4KB | 32-bit |
-| 0xF0004000 | Timer (reserved) | 4KB | 32-bit |
-| 0xF0006000 | INTC (reserved) | 4KB | 32-bit |
-| 0xF0008000 | LCD | 4KB | 32-bit |
-| 0xF0009000 | IR receiver | 4KB | 32-bit |
-| 0xF000A000 | DDS (reserved) | 4KB | 32-bit |
-| 0xF000B000 | SD card (reserved) | 4KB | 32-bit |
-| 0xF000C000 | NTT accelerator | 4KB | 32-bit |
-| 0xF000D000 | ExpDemo | 4KB | 32-bit |
+| 0xF0008000 | PS/2 keyboard | 4KB | 32-bit |
+| 0xF0009000 | Timer (reserved) | 4KB | 32-bit |
+| 0xF000A000 | INTC (reserved) | 4KB | 32-bit |
+| 0xF000B000 | LCD | 4KB | 32-bit |
+| 0xF000C000 | IR receiver | 4KB | 32-bit |
+| 0xF000D000 | DDS (reserved) | 4KB | 32-bit |
+| 0xF000E000 | SD card (reserved) | 4KB | 32-bit |
+| 0xF000F000 | NTT accelerator | 4KB | 32-bit |
+| 0xF0010000 | ExpDemo | 4KB | 32-bit |
+| 0xF0011000 | PONG engine | 4KB | 32-bit |
+| 0xF0012000 | Conway engine | 4KB | 32-bit |
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
 
-Note: **NTT accelerator** (`ntt_sdf.vhd`) compiles clean and is instantiated in `wb_intercon` + both top entities. Deferred to V3 for board verification. The C driver (`sw/app/de2shell/ntt.c`) exists with dual-mode (LOCAL_BUILD SW reference / NEORV32 HW MMIO), verified in LOCAL_BUILD.
+Note: **NTT accelerator** (`ntt_sdf.vhd`) is instantiated in `wb_intercon` + both top entities, with pin assignments in both QSF files. The C driver (`sw/app/de2shell/ntt.c`) exists with dual-mode (LOCAL_BUILD SW reference / NEORV32 HW MMIO), verified in LOCAL_BUILD. Board verification pending in V3.
 
 Note: **ExpDemo** is instantiated in `de2_115_top.vhd` (not in de2os_top.vhd). It wraps 11 experiment adapters with output/peripheral multiplexing. Board verified in V2.
 
@@ -97,7 +113,7 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text
 | **de2shell_rtos** | `sw/app/de2shell_rtos/` | **V3 primary firmware**: FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI。4 任务 (uart_input/shell/active/status)，shell 从 PS/2 和 UART 双路接收输入 |
 | de2shell | `sw/app/de2shell/` | **V2 frozen**: bare-metal IMEM 64KB, 9 用户程序, 不再更新 |
 | crypto_cli | `sw/app/crypto_cli/` | Standalone AES/SHA/SM4 CLI (linked into de2shell and de2shell_rtos) |
-| de2os | `sw/app/de2os/` | Legacy FreeRTOS test (superseded by de2shell_rtos) |
+| de2os | `sw/app/de2os/` | **V3 active firmware**: FreeRTOS + SDRAM execution + PS/2 keyboard + VGA pixel GUI |
 | sdram_test | `sw/app/sdram_test/` | Independent SDRAM diagnostic (4096-word dense + 31 sparse boundary probes) |
 | hello | `sw/app/hello/` | Minimal UART test |
 | game_snake | `sw/app/game_snake/` | Standalone snake game |
@@ -117,9 +133,9 @@ Enabled in `neorv32_wrapper.vhd`: `IMC`, `Zicsr`, `Zicntr`, `Zbkb`, `Zbkc`, `Zbk
 
 The upstream release includes these features that our wrapper/intercon have not yet connected:
 
-- **Cache burst transfers** (`CACHE_BURSTS_EN`): ICACHE/DCACHE refill uses Wishbone incrementing bursts (`cti=010`) instead of N consecutive locked single-reads. **Enabled in de2os** (`ICACHE_BURSTS => true`) with async FIFO CDC path in `sdram_ctrl`. Not enabled in de2shell.
+- **Cache burst transfers** (`CACHE_BURSTS_EN`): ICACHE/DCACHE refill uses Wishbone incrementing bursts (`cti=010`) instead of N consecutive locked single-reads. Enabled in both top entities (`ICACHE_BURSTS => true`) with async FIFO CDC path in `sdram_ctrl`. Note: `de2os_top` has `ICACHE_EN => false` currently (ICACHE disabled, but burst flag pre-set for when it is enabled).
 - **D-cache write-back** (`DCACHE_EN` + write-back policy): replaces write-through, reduces bus traffic. Not enabled.
-- **XBUS `cti`/`tag` signals**: routed through `neorv32_wrapper` → `wb_intercon` → `sdram_ctrl` in de2os. de2shell ties them to `"000"` (backward compatible).
+- **XBUS `cti`/`tag` signals**: routed through `neorv32_wrapper` → `wb_intercon` → `sdram_ctrl` in both top entities.
 - **Bootloader flexible base address**: v1.12.8+ reworked the executable header format. Our build flow uses `image_gen` which handles this.
 
 **ICACHE burst implementation**: `neorv32_wrapper` exposes `xbus_cti_o`/`xbus_tag_o`; `wb_intercon` passes `m_cti_i` → `s0_cti_o`; `sdram_ctrl` detects `cti=010` and uses a burst FSM with `async_fifo` (8-deep × 32-bit, Gray code CDC) for return data. Single-word path unchanged. See `doc/phases/de2os-debug.md` for root cause analysis.
@@ -146,7 +162,8 @@ The upstream release includes these features that our wrapper/intercon have not 
 - **SDRAM phase shift**: DRAM_CLK requires `+1.56ns` phase shift for stable operation (empirically determined)
 - **XBUS timeout**: 2048 cycles (~41μs @50MHz)
 - **ICACHE + SDRAM CDC**: `sdram_ctrl` uses toggle handshake across 50MHz↔100MHz domains. Single accesses are stable; consecutive locked reads (ICACHE miss refill) can cause `req_shadow` overwrite. Fix options: (a) async FIFO in sdram_ctrl, (b) enable cache bursts. See `doc/phases/de2os-debug.md`.
-- **Boot mode 2**: direct IMEM image execution (no bootloader)
+- **Boot mode 2**: direct IMEM image execution (no bootloader). Used by `de2_115_top` (V2) and `de2os_imem_top` (V3 bring-up).
+- **Boot mode 0**: bootloader from IMEM (~2KB), loads main app from UART into SDRAM at `0x01000000`. Used by `de2os_top` (V3 primary). Incremental deployment via `run/deploy_de2os.sh`.
 - **Quartus parallelism**: `NUM_PARALLEL_PROCESSORS` is locked to `1` in QSF (was needed for OOM avoidance with old IMEM; may be safe to increase now)
 
 ## Toolchain
@@ -162,6 +179,6 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 **V2 (v0.1) is complete** — 192/213 acceptance items passed. de2shell is frozen. See `doc/de2shell-module-acceptance.md` for full results.
 
-**V3 is active** — all work on de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/phase5-sdram-gui.md` for plan.
+**V3 is active** — all work on de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/phase5-sdram-gui.md` for plan. See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-V3 scope: NTT board verification, VGA pixel mode board test, Win 3.0 GUI on SDRAM, Conway/PONG/ChromaShader hardware engines, audio, crypto visualization.
+V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 19 commands, VGA pixel mode wired (640x480 RGB565 framebuffer in SDRAM), Conway and PONG hardware engines (VHDL + C done), NTT accelerator in QSF and active, ExpDemo mostly wired. Next steps: board verification of VGA pixel mode / NTT / Conway / PONG, and source code prep for remaining phases (audio, crypto visualization, Win 3.0 GUI on SDRAM).

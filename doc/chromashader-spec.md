@@ -108,7 +108,7 @@ return h
 
 ## 5. 寄存器映射
 
-基地址 `0xF000E000`
+基地址 `0xF000E000` — NOTE: This address is now occupied by SD card SPI. ChromaShader needs a new address assignment when implemented.
 
 | 偏移 | R/W | 名称 | 位段 |
 |------|-----|------|------|
