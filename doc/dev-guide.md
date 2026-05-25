@@ -102,36 +102,32 @@ execvpe(/bin/bash) failed: No such file or directory
 正确做法是从 Git Bash 运行，或在 PowerShell 中显式调用:
 
 ```powershell
-& 'E:\Software\Scoop\apps\git\current\bin\bash.exe' run/deploy_de2os.sh app
+& 'E:\Software\Scoop\apps\git\current\bin\bash.exe' run/deploy_de2shell_rtos.sh app
 ```
 
 ### 增量部署 (bootloader-first 流程)
 
 日常开发中 90% 的情况只需要 `app` 档。完整指南见 `doc/编译烧录前必看.md`。
 
-#### de2os / de2shell_rtos 部署命令
+#### de2shell_rtos 部署命令
 
 ```bash
 # 第 1 档: 仅上传 (bin 已编好，不想重新编译)
-./run/deploy_de2os.sh upload          # de2os
-./run/deploy_de2shell_rtos.sh upload  # de2shell_rtos
+./run/deploy_de2shell_rtos.sh upload
 
 # 第 2 档: 编译 app + 上传 (最常用)
-./run/deploy_de2os.sh app             # de2os
-./run/deploy_de2shell_rtos.sh app     # de2shell_rtos
+./run/deploy_de2shell_rtos.sh app
 
 # 第 3 档: 仅重烧 .sof (不重新上传 app)
-./run/deploy_de2os.sh fpga
 ./run/deploy_de2shell_rtos.sh fpga
 
 # 第 4 档: 全量重编 (仅在 RTL 变更时)
-./run/deploy_de2os.sh full            # 编译 app + Quartus + 烧录 + 上传
-./run/deploy_de2shell_rtos.sh full
+./run/deploy_de2shell_rtos.sh full    # 编译 app + Quartus + 烧录 + 上传
 ```
 
 兼容旧命令: `all` 等价于 `full`，`flash` 等价于 `fpga` + `upload`，`inc` 等价于 `app`。
 
-#### deploy_de2os.sh / deploy_de2shell_rtos.sh 执行过程
+#### deploy_de2shell_rtos.sh 执行过程
 
 ```
 [app 档] (日常软件迭代):
@@ -304,12 +300,11 @@ sw/app/ir_test/              -- IR NEC 解码测试
 ### 部署脚本
 
 ```
-run/deploy_de2os.sh          -- V3 de2os 增量部署 (app/upload/fpga/full)
-run/deploy_de2shell_rtos.sh  -- V3 de2shell_rtos 增量部署
-run/deploy_de2os.py          -- 旧版脚本 (已被 .sh 替代)
-run/upload_de2os.py          -- UART 上传工具
-run/gen_hw_build_info.py     -- 生成构建版本信息
-build.sh                     -- V2 全量构建 (de2shell)
+run/deploy_de2shell_rtos.sh      -- V3 增量部署 (boot mode 0, app/upload/fpga/full)
+run/deploy_de2shell_rtos_imem.sh -- V3 IMEM 直接烧录 (boot mode 2, 调试用)
+run/upload_de2os.py              -- UART 上传工具
+run/gen_hw_build_info.py         -- 生成构建版本信息
+build.sh                         -- V2 全量构建 (de2shell, IMEM 固化)
 ```
 
 ## 注意事项

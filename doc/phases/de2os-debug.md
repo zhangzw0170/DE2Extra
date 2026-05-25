@@ -191,9 +191,9 @@ ls -la elf.bin
 # 应该是 ~7100 bytes; 如果 ~16MB, 说明 .text 在 0x0 而非 0x01000000
 ```
 
-**注意**: Docker 构建命令 (`deploy_de2os.sh` 第 26 行) 运行:
+**注意**: Docker 构建命令 (`deploy_de2shell_rtos.sh`) 运行:
 ```bash
-cd /project/sw/app/de2os && make clean NEORV32_HOME=/project/neorv32 && make exe NEORV32_HOME=/project/neorv32
+cd /project/sw/app/de2shell_rtos && make clean NEORV32_HOME=/project/neorv32 && make exe NEORV32_HOME=/project/neorv32
 ```
 USER_FLAGS 在 makefile 中定义, 不依赖命令行传递, 应该正确。但需要验证。
 
@@ -461,7 +461,7 @@ riscv-none-elf-objdump -d main.elf | head -80
 
 `build.sh` 第 52 行硬编码 `par/de2extra.qpf`, 如果误用 `./build.sh app/de2os`, 会编译 `de2_115_top` (BOOT_MODE=2, 无 ICACHE) 而非 `de2os_top` (BOOT_MODE=0, 有 ICACHE)。
 
-**当前状态**: de2os 使用独立的 `deploy_de2os.sh`, 直接调用 `par/de2os/de2os.qpf`, 应该不受此影响。但需要确认烧录的 .sof 是 `par/de2os/de2os.sof` 而非 `par/de2extra.sof`。
+**当前状态**: de2os 使用 `deploy_de2shell_rtos.sh`, 直接调用 `par/de2os/de2os.qpf`, 应该不受此影响。但需要确认烧录的 .sof 是 `par/de2os/de2os.sof` 而非 `par/de2extra.sof`。
 
 ## 关键源文件参考
 
@@ -607,7 +607,7 @@ par/de2os/
 └── de2os.sof                 # 烧录文件
 
 run/
-├── deploy_de2os.sh           # 自动化: 编译 + 烧录 + 上传
+├── deploy_de2shell_rtos.sh   # 自动化: 编译 + 烧录 + 上传
 └── upload_de2os.py           # UART 上传脚本
 ```
 

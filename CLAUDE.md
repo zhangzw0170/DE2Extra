@@ -12,13 +12,31 @@ NEORV32 (RISC-V) soft-core SoC on DE2-115 (Cyclone IV E EP4CE115F29C7), running 
 
 ## Build System
 
-### V3 incremental deployment (de2os -- bootloader-first, Git Bash on Windows)
+### V3 deployment (Git Bash on Windows)
+
+Two boot modes available for `de2os_top`:
+
+**Boot mode 0** (default — recommended):
+IMEM holds only a ~2KB bootloader. After FPGA config, use the deploy script to
+cross-compile firmware in Docker, upload via UART, and execute from SDRAM at `0x01000000`.
+Software updates need NO Quartus recompile — just `app` or `upload`.
 ```bash
-./run/deploy_de2os.sh app          # compile app + UART upload (~48s)
-./run/deploy_de2os.sh upload       # upload existing bin only (fastest)
-./run/deploy_de2os.sh fpga         # re-flash de2os.sof only
-./run/deploy_de2os.sh full         # full rebuild + flash + upload (~4min)
+./run/deploy_de2shell_rtos.sh app      # compile + UART upload (~48s)
+./run/deploy_de2shell_rtos.sh upload   # upload existing bin only (fastest)
+./run/deploy_de2shell_rtos.sh fpga     # rebuild bootloader + Quartus + flash
+./run/deploy_de2shell_rtos.sh full     # full rebuild + flash + upload (~4min)
 ```
+
+**Boot mode 2** (IMEM direct — for bring-up only):
+Bakes the entire program into the bitstream. No UART upload needed at power-on,
+but every code change requires a full Quartus rebuild. Used by `deploy_de2shell_rtos_imem.sh`.
+```bash
+./run/deploy_deshell_rtos_imem.sh build   # compile + generate IMEM image
+./run/deployde2shell_rtos_imem.sh flash   # Quartus compile + JTAG flash
+```
+
+Only RTL/top/bootloader/address-map changes need `fpga` or `full`. See `doc/编译烧录前必看.md`
+for the full deployment guide.
 
 Normal SW changes (firmware only) need no Quartus compile -- just `app` or `upload`. Only RTL/top/bootloader/address-map changes need `fpga` or `full`. See `doc/编译烧录前必看.md` for the full incremental deployment guide.
 
@@ -59,20 +77,20 @@ de2_115_top.vhd (only entity that knows board pins)
 │       ├── DMEM         16KB
 │       ├── XBUS         Wishbone external bus master (timeout 2048 cycles), supports burst cti/tag signals
 │       └── Built-in     UART0 (115200), GPIO(32), TRNG, CLINT, OCD
-├── wb_intercon          1-master, 13-slave address decoder (combinational)
+├── wb_intercon          1-master, 11-slave address decoder (combinational)
 │   ├── s0: sdram_ctrl   0x01000000 (128MB, 100MHz state machine)
-│   ├── s1: vga_text_terminal  0xF0000000 (16-bit reg IF, 80×30 text mode + pixel mode via SDRAM FB)
+│   ├── s1: vga_text_terminal  0xF0000000 (32KB, 80×30 text mode + pixel mode via SDRAM FB)
 │   ├── s2: ps2_controller    0xF0008000 (scancode + IRQ)
 │   ├── s3: ir_nec_wb         0xF000C000 (NEC IR decoder)
-│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator)
+│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator, stubbed)
 │   ├── s5: lcd_wb            0xF000B000 (LCD Wishbone controller)
-│   ├── s6: timer_wb          0xF0009000 (Timer)
-│   ├── s7: intc_wb           0xF000A000 (Interrupt controller)
-│   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 11 experiments, board verified)
-│   ├── s9: sd_card           0xF000E000 (SD card controller)
-│   ├── s10: dds              0xF000D000 (DDS synthesizer)
-│   ├── s11: pong_engine      0xF0011000 (PONG game hardware engine)
-│   └── s12: conway_engine    0xF0012000 (Conway's Game of Life hardware engine)
+│   ├── s6: build_info_wb      0xF0009000 (build info ROM; timer address reused)
+│   ├── s7: (unconnected)     0xF000A000 (INTC address reserved, tied off)
+│   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 11 experiments)
+│   ├── s9: pong_engine      0xF0011000 (PONG engine, stubbed)
+│   └── s10: conway_engine   0xF0012000 (Conway engine, stubbed)
+│   Note: DDS (0xF000D000) and SD card (0xF000E000) have address constants
+│         in de2extra_pkg.vhd but no slave ports in wb_intercon.
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
 ├── lcd_status / lcd_debug  HD44780 16×2 LCD (muxed by SW16)
 ├── uart_jtag_bridge     UART TX → JTAG UART IP (view output in Quartus System Console)
@@ -85,7 +103,7 @@ de2_115_top.vhd (only entity that knows board pins)
 | 0x00000000 | IMEM | 64KB | 32-bit |
 | 0x80000000 | DMEM | 16KB | 32-bit |
 | 0x01000000 | SDRAM | 128MB | 32-bit |
-| 0xF0000000 | VGA text terminal + pixel mode | 8KB | 16-bit |
+| 0xF0000000 | VGA text terminal + pixel mode | 32KB | 16-bit |
 | 0xF0008000 | PS/2 keyboard | 4KB | 32-bit |
 | 0xF0009000 | Timer (reserved) | 4KB | 32-bit |
 | 0xF000A000 | INTC (reserved) | 4KB | 32-bit |
@@ -162,8 +180,8 @@ The upstream release includes these features that our wrapper/intercon have not 
 - **SDRAM phase shift**: DRAM_CLK requires `+1.56ns` phase shift for stable operation (empirically determined)
 - **XBUS timeout**: 2048 cycles (~41μs @50MHz)
 - **ICACHE + SDRAM CDC**: `sdram_ctrl` uses toggle handshake across 50MHz↔100MHz domains. Single accesses are stable; consecutive locked reads (ICACHE miss refill) can cause `req_shadow` overwrite. Fix options: (a) async FIFO in sdram_ctrl, (b) enable cache bursts. See `doc/phases/de2os-debug.md`.
-- **Boot mode 2**: direct IMEM image execution (no bootloader). Used by `de2_115_top` (V2) and `de2os_imem_top` (V3 bring-up).
-- **Boot mode 0**: bootloader from IMEM (~2KB), loads main app from UART into SDRAM at `0x01000000`. Used by `de2os_top` (V3 primary). Incremental deployment via `run/deploy_de2os.sh`.
+- **Boot mode 0**: bootloader from IMEM (~2KB), loads main app from UART into SDRAM at `0x01000000`. Used by `de2os_top` (V3 primary, **recommended**). Incremental deployment via `run/deploy_de2shell_rtos.sh`.
+- **Boot mode 2**: direct IMEM image execution (no bootloader, no UART upload needed). Entire program baked into bitstream. Used by `de2shell_rtos_imem_top` (V3 bring-up only) via `run/deploy_de2shell_rtos_imem.sh`. Every code change requires full Quartus rebuild.
 - **Quartus parallelism**: `NUM_PARALLEL_PROCESSORS` is locked to `1` in QSF (was needed for OOM avoidance with old IMEM; may be safe to increase now)
 
 ## Toolchain
