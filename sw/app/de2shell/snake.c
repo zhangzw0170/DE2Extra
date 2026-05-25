@@ -14,7 +14,7 @@
 #define CH_BOX_BL  '\xC0'  /* └ */
 #define CH_BOX_BR  '\xD9'  /* ┘ */
 #define CH_BOX_HZ  '\xC4'  /* ─ */
-#define CH_BOX_VT  '\xBA'  /* │ */
+#define CH_BOX_VT  '\xB3'  /* │ */
 
 /* ── Game State ───────────────────────────────────────────────── */
 

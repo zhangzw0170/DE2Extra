@@ -7,9 +7,14 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.de2extra_pkg.all;
+use work.build_info_pkg.all;
 library jtag_uart_0;
 
 entity de2os_top is
+    generic (
+        CPU_IMEM_SIZE_G : natural := 16*1024;
+        CPU_BOOT_MODE_G : natural := 0
+    );
     port (
         -- 时钟
         CLOCK_50    : in  std_logic;
@@ -178,6 +183,12 @@ architecture rtl of de2os_top is
     signal lcd_wb_we    : std_logic;
     signal lcd_wb_stb   : std_logic;
     signal lcd_wb_ack   : std_logic;
+    signal lcd_shell_data : std_logic_vector(7 downto 0);
+    signal lcd_shell_rs   : std_logic;
+    signal lcd_shell_rw   : std_logic;
+    signal lcd_shell_en   : std_logic;
+    signal lcd_shell_on   : std_logic;
+    signal lcd_shell_blon : std_logic;
 
     -- IR receiver Wishbone
     signal ir_wb_adr   : std_logic_vector(2 downto 0);
@@ -194,6 +205,70 @@ architecture rtl of de2os_top is
     signal ntt_wb_we    : std_logic;
     signal ntt_wb_stb   : std_logic;
     signal ntt_wb_ack   : std_logic;
+
+    signal buildinfo_wb_adr   : std_logic_vector(2 downto 0);
+    signal buildinfo_wb_dat_i : std_logic_vector(31 downto 0);
+    signal buildinfo_wb_stb   : std_logic;
+    signal buildinfo_wb_ack   : std_logic;
+
+    -- PONG engine Wishbone
+    signal pong_wb_adr   : std_logic_vector(4 downto 0);
+    signal pong_wb_dat_o : std_logic_vector(31 downto 0);
+    signal pong_wb_dat_i : std_logic_vector(31 downto 0);
+    signal pong_wb_we    : std_logic;
+    signal pong_wb_stb   : std_logic;
+    signal pong_wb_ack   : std_logic;
+
+    -- PONG VGA outputs
+    signal pong_vga_r       : std_logic_vector(7 downto 0);
+    signal pong_vga_g       : std_logic_vector(7 downto 0);
+    signal pong_vga_b       : std_logic_vector(7 downto 0);
+    signal pong_vga_hs      : std_logic;
+    signal pong_vga_vs      : std_logic;
+    signal pong_vga_blank   : std_logic;
+    signal pong_vga_sync    : std_logic;
+    signal pong_vga_clk     : std_logic;
+    signal pong_vga_en      : std_logic;
+
+    -- Conway engine Wishbone
+    signal conway_wb_adr   : std_logic_vector(4 downto 0);
+    signal conway_wb_dat_o : std_logic_vector(31 downto 0);
+    signal conway_wb_dat_i : std_logic_vector(31 downto 0);
+    signal conway_wb_we    : std_logic;
+    signal conway_wb_stb   : std_logic;
+    signal conway_wb_ack   : std_logic;
+
+    -- ExpDemo Wishbone
+    signal expdemo_wb_adr   : std_logic_vector(2 downto 0);
+    signal expdemo_wb_dat_o : std_logic_vector(31 downto 0);
+    signal expdemo_wb_dat_i : std_logic_vector(31 downto 0);
+    signal expdemo_wb_we    : std_logic;
+    signal expdemo_wb_stb   : std_logic;
+    signal expdemo_wb_ack   : std_logic;
+    signal expdemo_active   : std_logic;
+    signal expdemo_channel  : integer range 0 to 13;
+    signal exp_hex          : std_logic_vector(55 downto 0);
+    signal exp_ledr         : std_logic_vector(17 downto 0);
+    signal exp_ledg         : std_logic_vector(8 downto 0);
+    signal exp_uart_txd     : std_logic;
+    signal exp_lcd_data     : std_logic_vector(7 downto 0);
+    signal exp_lcd_rs       : std_logic;
+    signal exp_lcd_rw       : std_logic;
+    signal exp_lcd_en       : std_logic;
+    signal ps2_clk_shell_in : std_logic;
+    signal ps2_dat_shell_in : std_logic;
+    signal ps2_clk_exp_in   : std_logic;
+    signal ps2_dat_exp_in   : std_logic;
+    signal irda_shell_in    : std_logic;
+    signal irda_exp_in      : std_logic;
+
+    -- Shell-mode HEX intermediate signals
+    signal hex0_shell : std_logic_vector(6 downto 0);
+    signal hex1_shell : std_logic_vector(6 downto 0);
+    signal hex2_shell : std_logic_vector(6 downto 0);
+    signal hex3_shell : std_logic_vector(6 downto 0);
+    signal hex4_shell : std_logic_vector(6 downto 0);
+    signal hex5_shell : std_logic_vector(6 downto 0);
 
     -- JTAG UART Avalon bus
     signal jtag_av_cs       : std_logic;
@@ -221,20 +296,13 @@ architecture rtl of de2os_top is
 
 begin
 
-    -- Bring-up build: disable VGA register space and SDRAM fetch path to reduce compile cost.
-    vga_txt_reg_stb   <= '0';
-    vga_txt_reg_dat_i <= (others => '0');
-    vga_txt_reg_ack   <= '0';
-    vga_px_reg_adr    <= (others => '0');
-    vga_px_reg_dat_i  <= (others => '0');
-    vga_px_reg_dat_o  <= (others => '0');
-    vga_px_reg_we     <= '0';
-    vga_px_reg_stb    <= '0';
-    vga_px_reg_ack    <= '0';
-    vga_reg_dat_i     <= (others => '0');
-    vga_reg_ack       <= vga_reg_stb;
-    vga_sdram_rd_adr  <= (others => '0');
-    vga_sdram_rd_req  <= '0';
+    vga_txt_reg_stb <= vga_reg_stb when unsigned(vga_reg_adr) < to_unsigned(16#7000#, 16) else '0';
+    vga_px_reg_stb  <= vga_reg_stb when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else '0';
+    vga_px_reg_adr  <= std_logic_vector(unsigned(vga_reg_adr) - to_unsigned(16#7000#, 16));
+    vga_px_reg_dat_o <= vga_reg_dat_o;
+    vga_px_reg_we    <= vga_reg_we;
+    vga_reg_dat_i    <= vga_px_reg_dat_i when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_dat_i;
+    vga_reg_ack      <= vga_px_reg_ack when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_ack;
 
     -- Bring-up build: disable NTT accelerator while preserving bus responsiveness.
     ntt_wb_dat_i <= (others => '0');
@@ -267,16 +335,24 @@ begin
 
     rst_sdram_n <= rst_sdram_sync(1);
 
+    -- Exp8 and Exp10 own PS/2 / IR while active. Otherwise shell-side logic keeps them.
+    ps2_clk_shell_in <= PS2_CLK when expdemo_channel /= 8 else '1';
+    ps2_dat_shell_in <= PS2_DAT when expdemo_channel /= 8 else '1';
+    ps2_clk_exp_in   <= PS2_CLK when expdemo_channel = 8 else '1';
+    ps2_dat_exp_in   <= PS2_DAT when expdemo_channel = 8 else '1';
+    irda_shell_in    <= IRDA_RXD when expdemo_channel /= 10 else '1';
+    irda_exp_in      <= IRDA_RXD when expdemo_channel = 10 else '1';
+
     -- ================================================================
     -- NEORV32 CPU
     -- ================================================================
     u_cpu : entity work.neorv32_wrapper
     generic map (
         CLOCK_FREQUENCY => 50_000_000,
-        IMEM_SIZE       => 64*1024,
+        IMEM_SIZE       => CPU_IMEM_SIZE_G,
         DMEM_SIZE       => 16*1024,
-        BOOT_MODE       => 0,
-        ICACHE_EN       => true,
+        BOOT_MODE       => CPU_BOOT_MODE_G,
+        ICACHE_EN       => false,
         ICACHE_BLOCKS   => 64,
         ICACHE_BLOCK_SZ => 32,
         ICACHE_BURSTS   => true,
@@ -304,7 +380,7 @@ begin
         xbus_err_i  => xbus_err,
         xbus_cti_o  => xbus_cti,
         xbus_tag_o  => xbus_tag,
-        irq_mei_i   => ps2_irq
+        irq_mei_i   => '0'
     );
 
     -- ================================================================
@@ -361,24 +437,36 @@ begin
         s5_we_o  => lcd_wb_we,
         s5_stb_o => lcd_wb_stb,
         s5_ack_i => lcd_wb_ack,
-        s6_adr_o => open,
-        s6_dat_i => (others => '0'),
+        s6_adr_o => buildinfo_wb_adr,
+        s6_dat_i => buildinfo_wb_dat_i,
         s6_dat_o => open,
         s6_we_o  => open,
-        s6_stb_o => open,
-        s6_ack_i => '0',
+        s6_stb_o => buildinfo_wb_stb,
+        s6_ack_i => buildinfo_wb_ack,
         s7_adr_o => open,
         s7_dat_i => (others => '0'),
         s7_dat_o => open,
         s7_we_o  => open,
         s7_stb_o => open,
         s7_ack_i => '0',
-        s8_adr_o => open,
-        s8_dat_i => (others => '0'),
-        s8_dat_o => open,
-        s8_we_o  => open,
-        s8_stb_o => open,
-        s8_ack_i => '0'
+        s8_adr_o => expdemo_wb_adr,
+        s8_dat_i => expdemo_wb_dat_i,
+        s8_dat_o => expdemo_wb_dat_o,
+        s8_we_o  => expdemo_wb_we,
+        s8_stb_o => expdemo_wb_stb,
+        s8_ack_i => expdemo_wb_ack,
+        s9_adr_o => pong_wb_adr,
+        s9_dat_i => pong_wb_dat_i,
+        s9_dat_o => pong_wb_dat_o,
+        s9_we_o  => pong_wb_we,
+        s9_stb_o => pong_wb_stb,
+        s9_ack_i => pong_wb_ack,
+        s10_adr_o => conway_wb_adr,
+        s10_dat_i => conway_wb_dat_i,
+        s10_dat_o => conway_wb_dat_o,
+        s10_we_o  => conway_wb_we,
+        s10_stb_o => conway_wb_stb,
+        s10_ack_i => conway_wb_ack
     );
 
     -- ================================================================
@@ -420,16 +508,78 @@ begin
     DRAM_CLK <= clk_sdram_shift;
 
     -- ================================================================
-    -- VGA disabled for bring-up build
+    -- VGA Text Terminal
     -- ================================================================
-    VGA_R       <= (others => '0');
-    VGA_G       <= (others => '0');
-    VGA_B       <= (others => '0');
-    VGA_HS      <= '1';
-    VGA_VS      <= '1';
-    VGA_CLK     <= '0';
-    VGA_SYNC_N  <= '1';
-    VGA_BLANK_N <= '0';
+    u_vga : entity work.vga_text_terminal
+    port map (
+        clk_50m_i   => clk_50m,
+        rst_n_i     => rst_n,
+        vga_r_o     => vga_r_int,
+        vga_g_o     => vga_g_int,
+        vga_b_o     => vga_b_int,
+        vga_hs_o    => vga_hs_int,
+        vga_vs_o    => vga_vs_int,
+        vga_blank_o => vga_blank_int,
+        vga_sync_o  => vga_sync_int,
+        vga_clk_o   => vga_clk_int,
+        reg_adr_i   => vga_reg_adr,
+        reg_dat_i   => vga_reg_dat_o,
+        reg_dat_o   => vga_txt_reg_dat_i,
+        reg_we_i    => vga_reg_we,
+        reg_stb_i   => vga_txt_reg_stb,
+        reg_ack_o   => vga_txt_reg_ack
+    );
+
+    u_vga_px : entity work.vga_pixel_ctrl
+    port map (
+        clk_50m_i    => clk_50m,
+        rst_n_i      => rst_n,
+        vga_r_o      => vga_pixel_r,
+        vga_g_o      => vga_pixel_g,
+        vga_b_o      => vga_pixel_b,
+        vga_hs_o     => vga_pixel_hs,
+        vga_vs_o     => vga_pixel_vs,
+        vga_blank_o  => vga_pixel_blank,
+        vga_sync_o   => vga_pixel_sync,
+        vga_clk_o    => vga_pixel_clk,
+        reg_adr_i    => vga_px_reg_adr,
+        reg_dat_i    => vga_px_reg_dat_o,
+        reg_dat_o    => vga_px_reg_dat_i,
+        reg_we_i     => vga_px_reg_we,
+        reg_stb_i    => vga_px_reg_stb,
+        reg_ack_o    => vga_px_reg_ack,
+        mode_en_o    => vga_pixel_mode,
+        vga_rd_adr_o => vga_sdram_rd_adr,
+        vga_rd_req_o => vga_sdram_rd_req,
+        vga_rd_data_i => vga_sdram_rd_data,
+        vga_rd_valid_i => vga_sdram_rd_valid,
+        vga_rd_done_i  => vga_sdram_rd_done
+    );
+
+    VGA_R       <= pong_vga_r     when pong_vga_en = '1' else
+                   vga_pixel_r    when vga_pixel_mode = '1' else
+                   vga_r_int;
+    VGA_G       <= pong_vga_g     when pong_vga_en = '1' else
+                   vga_pixel_g    when vga_pixel_mode = '1' else
+                   vga_g_int;
+    VGA_B       <= pong_vga_b     when pong_vga_en = '1' else
+                   vga_pixel_b    when vga_pixel_mode = '1' else
+                   vga_b_int;
+    VGA_HS      <= pong_vga_hs    when pong_vga_en = '1' else
+                   vga_pixel_hs   when vga_pixel_mode = '1' else
+                   vga_hs_int;
+    VGA_VS      <= pong_vga_vs    when pong_vga_en = '1' else
+                   vga_pixel_vs   when vga_pixel_mode = '1' else
+                   vga_vs_int;
+    VGA_CLK     <= pong_vga_clk   when pong_vga_en = '1' else
+                   vga_pixel_clk  when vga_pixel_mode = '1' else
+                   vga_clk_int;
+    VGA_SYNC_N  <= pong_vga_sync  when pong_vga_en = '1' else
+                   vga_pixel_sync when vga_pixel_mode = '1' else
+                   vga_sync_int;
+    VGA_BLANK_N <= pong_vga_blank when pong_vga_en = '1' else
+                   vga_pixel_blank when vga_pixel_mode = '1' else
+                   vga_blank_int;
 
     -- ================================================================
     -- PS/2 Keyboard Controller (Phase 2b)
@@ -438,8 +588,8 @@ begin
     port map (
         clk_50m_i   => clk_50m,
         rst_n_i     => rst_n,
-        ps2_clk_i   => PS2_CLK,
-        ps2_dat_i   => PS2_DAT,
+        ps2_clk_i   => ps2_clk_shell_in,
+        ps2_dat_i   => ps2_dat_shell_in,
         ps2_clk_oe_o => ps2_clk_oe,
         ps2_dat_oe_o => ps2_dat_oe,
         reg_adr_i   => ps2_reg_adr,
@@ -457,13 +607,13 @@ begin
     PS2_DAT <= '0' when ps2_dat_oe = '1' else 'Z';
 
     -- ================================================================
-    -- IR NEC Receiver @ 0xF0009000
+    -- IR NEC Receiver @ 0xF000C000
     -- ================================================================
     u_ir : entity work.ir_nec_wb
     port map (
         clk_i      => clk_50m,
         rst_n_i    => rst_n,
-        irda_rxd_i => IRDA_RXD,
+        irda_rxd_i => irda_shell_in,
         wb_adr_i   => ir_wb_adr,
         wb_dat_i   => ir_wb_dat_o,
         wb_dat_o   => ir_wb_dat_i,
@@ -472,18 +622,58 @@ begin
         wb_ack_o   => ir_wb_ack
     );
 
+    u_build_info : entity work.build_info_wb
+    port map (
+        wb_adr_i => buildinfo_wb_adr,
+        wb_dat_o => buildinfo_wb_dat_i,
+        wb_stb_i => buildinfo_wb_stb,
+        wb_ack_o => buildinfo_wb_ack
+    );
+
+    -- ================================================================
+    -- ExpDemo: hardware experiment multiplexer @ 0xF0010000
+    -- ================================================================
+    u_expdemo : entity work.expdemo_top
+    port map (
+        clk_i       => clk_50m,
+        rst_n_i     => rst_n,
+        sw          => SW,
+        key_n       => KEY,
+        ps2_clk_i   => ps2_clk_exp_in,
+        ps2_dat_i   => ps2_dat_exp_in,
+        uart_rxd_i  => UART_RXD,
+        uart_txd_o  => exp_uart_txd,
+        irda_rxd_i  => irda_exp_in,
+        hex_o       => exp_hex,
+        ledr_o      => exp_ledr,
+        ledg_o      => exp_ledg,
+        lcd_data_o  => exp_lcd_data,
+        lcd_rs_o    => exp_lcd_rs,
+        lcd_rw_o    => exp_lcd_rw,
+        lcd_en_o    => exp_lcd_en,
+        active_o    => expdemo_active,
+        channel_o   => expdemo_channel,
+        wb_adr_i    => expdemo_wb_adr,
+        wb_dat_i    => expdemo_wb_dat_o,
+        wb_dat_o    => expdemo_wb_dat_i,
+        wb_we_i     => expdemo_wb_we,
+        wb_stb_i    => expdemo_wb_stb,
+        wb_ack_o    => expdemo_wb_ack
+    );
+
     -- ================================================================
     -- GPIO -> LED 映射
     -- ================================================================
-    LEDR(15 downto 0) <= gpio_out(15 downto 0);
-    LEDR(17 downto 16) <= SW(17 downto 16);
+    LEDR <= exp_ledr when expdemo_active = '1' else
+            SW(17 downto 16) & gpio_out(15 downto 0);
 
-    LEDG(7 downto 0) <= gpio_out(23 downto 16);
-    LEDG(8) <= not rst_n;
+    LEDG <= exp_ledg when expdemo_active = '1' else
+            (not rst_n) & gpio_out(23 downto 16);
 
     gpio_in(17 downto 0)  <= SW;
     gpio_in(20 downto 18) <= not KEY(3 downto 1); -- pressed = '1'
-    gpio_in(31 downto 21) <= (others => '0');
+    gpio_in(21) <= IRDA_RXD;
+    gpio_in(31 downto 22) <= (others => '0');
 
     -- ================================================================
     -- GPIO -> 七段数码管映射
@@ -491,27 +681,34 @@ begin
     u_seg7_lo : entity work.seg7_mapper
     port map (
         hex_nibbles => gpio_out(15 downto 0),
-        seg0        => HEX0,
-        seg1        => HEX1,
-        seg2        => HEX2,
-        seg3        => HEX3
+        seg0        => hex0_shell,
+        seg1        => hex1_shell,
+        seg2        => hex2_shell,
+        seg3        => hex3_shell
     );
 
     u_seg7_hi : entity work.seg7_mapper
     port map (
         hex_nibbles => x"00" & gpio_out(23 downto 16),
-        seg0        => HEX4,
-        seg1        => HEX5,
+        seg0        => hex4_shell,
+        seg1        => hex5_shell,
         seg2        => open,
         seg3        => open
     );
-    HEX6 <= (others => '1');
-    HEX7 <= (others => '1');
+
+    HEX0 <= exp_hex(6 downto 0)   when expdemo_active = '1' else hex0_shell;
+    HEX1 <= exp_hex(13 downto 7)  when expdemo_active = '1' else hex1_shell;
+    HEX2 <= exp_hex(20 downto 14) when expdemo_active = '1' else hex2_shell;
+    HEX3 <= exp_hex(27 downto 21) when expdemo_active = '1' else hex3_shell;
+    HEX4 <= exp_hex(34 downto 28) when expdemo_active = '1' else hex4_shell;
+    HEX5 <= exp_hex(41 downto 35) when expdemo_active = '1' else hex5_shell;
+    HEX6 <= exp_hex(48 downto 42) when expdemo_active = '1' else (others => '1');
+    HEX7 <= exp_hex(55 downto 49) when expdemo_active = '1' else (others => '1');
 
     -- ================================================================
     -- JTAG UART -- CPU 输出通过 JTAG 在 PC 端查看
     -- ================================================================
-    UART_TXD <= uart_txd_int;
+    UART_TXD <= exp_uart_txd when expdemo_active = '1' else uart_txd_int;
 
     u_jtag_uart : component jtag_uart_0
     port map (
@@ -544,11 +741,28 @@ begin
         av_waitrequest => jtag_av_waitreq
     );
 
+    -- Bring-up build: park optional demo engines so shell/UI validation is isolated.
+    pong_wb_dat_i   <= (others => '0');
+    pong_wb_ack     <= pong_wb_stb;
+    pong_vga_r      <= (others => '0');
+    pong_vga_g      <= (others => '0');
+    pong_vga_b      <= (others => '0');
+    pong_vga_hs     <= '1';
+    pong_vga_vs     <= '1';
+    pong_vga_blank  <= '1';
+    pong_vga_sync   <= '1';
+    pong_vga_clk    <= '0';
+    pong_vga_en     <= '0';
+
+    conway_wb_dat_i <= (others => '0');
+    conway_wb_ack   <= conway_wb_stb;
+
     -- ================================================================
     -- LCD -- SW16=0 保持 Phase 1/2a 状态显示; SW16=1 切到 2b 调试显示
     -- ================================================================
     -- ================================================================
     -- LCD Controller (Wishbone-accessible HD44780)
+    -- ================================================================
     -- ================================================================
     u_lcd : entity work.lcd_wb
     port map (
@@ -560,12 +774,19 @@ begin
         wb_we_i  => lcd_wb_we,
         wb_stb_i => lcd_wb_stb,
         wb_ack_o => lcd_wb_ack,
-        lcd_data => LCD_DATA,
-        lcd_rs   => LCD_RS,
-        lcd_rw   => LCD_RW,
-        lcd_en   => LCD_EN,
-        lcd_on   => LCD_ON,
-        lcd_blon => LCD_BLON
+        lcd_data => lcd_shell_data,
+        lcd_rs   => lcd_shell_rs,
+        lcd_rw   => lcd_shell_rw,
+        lcd_en   => lcd_shell_en,
+        lcd_on   => lcd_shell_on,
+        lcd_blon => lcd_shell_blon
     );
+
+    LCD_DATA <= exp_lcd_data when expdemo_active = '1' else lcd_shell_data;
+    LCD_RS   <= exp_lcd_rs   when expdemo_active = '1' else lcd_shell_rs;
+    LCD_RW   <= exp_lcd_rw   when expdemo_active = '1' else lcd_shell_rw;
+    LCD_EN   <= exp_lcd_en   when expdemo_active = '1' else lcd_shell_en;
+    LCD_ON   <= lcd_shell_on;
+    LCD_BLON <= lcd_shell_blon;
 
 end architecture rtl;

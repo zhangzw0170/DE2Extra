@@ -23,6 +23,7 @@ set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS R
 
 # Our RTL
 set_global_assignment -name VHDL_FILE ../../src/rtl/lib/de2extra_pkg.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/lib/build_info_pkg.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/glue/clk_rst_gen.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/neorv32_wrapper.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/seg7_mapper.vhd
@@ -41,9 +42,53 @@ set_global_assignment -name VHDL_FILE ../../src/rtl/periph/font_rom_pkg.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/vga_text_terminal.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/lcd_debug.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/uart_jtag_bridge.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/build_info_wb.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/led_patterns.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/expdemo_wb.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/expdemo_top.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/de2os_top.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/de2os_imem_top.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/ntt_sdf.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/vga_pixel_ctrl.vhd
+
+# ExpDemo RTL
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp1.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp2.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp3.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp4.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp5.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp8.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp9.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp10.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp11.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp12.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp13a.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/dds.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/DDS_ROM.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/deco138_for.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/digital_clock.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/dpram.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/exp3_top.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/exp5_top.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/fsm_one.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/fsm_two.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/fsm_three.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/hello_display.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/hex_scan.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/irda.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/lcd_display.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/lcd_soc.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/led_display.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/ps2_keyboard.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/ps2_receiver.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/ps2_sync.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/ram_top.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/rom256x4.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/scan_code_buffer.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/seg_decoder.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/seg7_decoder.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/simple_cpu.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/uart.vhd
 
 # IP cores
 # JTAG UART (Platform Designer generated)
@@ -391,12 +436,30 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_SYNC_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_BLANK_N
 
 # Slide switches (Bank 5, 2.5V)
+set_location_assignment PIN_AB28 -to SW[0]
+set_location_assignment PIN_AC28 -to SW[1]
+set_location_assignment PIN_AC27 -to SW[2]
+set_location_assignment PIN_AD27 -to SW[3]
+set_location_assignment PIN_AB27 -to SW[4]
+set_location_assignment PIN_AC26 -to SW[5]
+set_location_assignment PIN_AD26 -to SW[6]
+set_location_assignment PIN_AB26 -to SW[7]
+set_location_assignment PIN_AC25 -to SW[8]
+set_location_assignment PIN_AB25 -to SW[9]
+set_location_assignment PIN_AC24 -to SW[10]
+set_location_assignment PIN_AB24 -to SW[11]
+set_location_assignment PIN_AB23 -to SW[12]
+set_location_assignment PIN_AA24 -to SW[13]
+set_location_assignment PIN_AA23 -to SW[14]
+set_location_assignment PIN_AA22 -to SW[15]
 set_location_assignment PIN_Y23 -to SW[17]
 set_location_assignment PIN_Y24 -to SW[16]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to SW[*]
 
 # Partition
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name MIF_FILE ../src/rtl/exp/sin_data.mif
+
+# Partition
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 

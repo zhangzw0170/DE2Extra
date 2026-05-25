@@ -7,124 +7,169 @@ Usage:  python upload_de2os.py [COM_PORT] [BIN_FILE] [--wait]
   default: assume bootloader just started after JTAG config, upload immediately
 
 Defaults: COM10, ../sw/app/de2os/neorv32_exe.bin
+Environment:
+  NEORV32_BOOT_BAUD / DE2OS_BOOT_BAUD : override bootloader baud (default 115200)
+  NEORV32_APP_BAUD  / DE2OS_APP_BAUD  : override app baud        (default 115200)
 """
-import serial, time, sys, os
+import os
+import sys
+import time
 
-PORT    = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'COM10'
+import serial
+
+PORT = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'COM10'
 BINFILE = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith('-') else os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '..', 'sw', 'app', 'de2os', 'neorv32_exe.bin')
-WAIT    = '--wait' in sys.argv
+WAIT = '--wait' in sys.argv
 
-BAUD_BOOT = 19200
-BAUD_APP  = 115200
+BAUD_BOOT = int(os.getenv('DE2OS_BOOT_BAUD', os.getenv('NEORV32_BOOT_BAUD', '115200')))
+BAUD_APP = int(os.getenv('DE2OS_APP_BAUD', os.getenv('NEORV32_APP_BAUD', '115200')))
+LEGACY_BOOT_BAUD = 19200
+PROMPT = b'CMD:> '
 
-def drain(ser, timeout=1):
-    buf = b''
+
+def log(msg):
+    print(msg, flush=True)
+
+
+def write_out(data):
+    if data:
+        sys.stdout.buffer.write(data)
+        sys.stdout.buffer.flush()
+
+
+def drain(ser, timeout=0.5):
+    buf = bytearray()
     end = time.time() + timeout
     while time.time() < end:
         n = ser.in_waiting
         if n:
-            buf += ser.read(n)
+            buf.extend(ser.read(n))
+            end = time.time() + timeout
         else:
-            time.sleep(0.05)
-    return buf
+            time.sleep(0.02)
+    return bytes(buf)
 
-ser = serial.Serial(PORT, BAUD_BOOT, timeout=1)
 
-if WAIT:
-    # Wait for user to press KEY0
-    print(f'Waiting for bootloader on {PORT} @ {BAUD_BOOT}...')
-    print('Press KEY0 now.')
-    banner = b''
-    t0 = time.time()
-    while time.time() - t0 < 20:
+def read_until(ser, patterns, timeout, echo=True):
+    buf = bytearray()
+    end = time.time() + timeout
+    while time.time() < end:
         n = ser.in_waiting
         if n:
             chunk = ser.read(n)
-            banner += chunk
-            sys.stdout.buffer.write(chunk)
-            sys.stdout.buffer.flush()
-            if b'CMD' in banner:
-                break
-        time.sleep(0.05)
-    # Abort auto-boot if needed
-    if b'Auto-boot' in banner:
-        time.sleep(0.2)
+            buf.extend(chunk)
+            if echo:
+                write_out(chunk)
+            for pattern in patterns:
+                if pattern in buf:
+                    return bytes(buf), pattern
+        else:
+            time.sleep(0.02)
+    return bytes(buf), None
+
+
+def open_serial(port, baud):
+    return serial.Serial(port, baud, timeout=0.05, write_timeout=2)
+
+
+def wait_for_prompt(ser, initial_timeout, prompt_timeout):
+    _, matched = read_until(ser, (PROMPT, b'Auto-boot'), initial_timeout)
+    if matched != PROMPT:
         ser.write(b' ')
-        time.sleep(0.5)
-        drain(ser, 1)
-else:
-    # JTAG just configured FPGA — bootloader is printing banner right now
-    # Drain the banner, then send a space to stop auto-boot
-    print(f'Connecting to {PORT} @ {BAUD_BOOT}...')
-    time.sleep(1)  # let bootloader start printing
-    banner = drain(ser, 3)
-    if banner:
-        sys.stdout.buffer.write(banner)
-        sys.stdout.buffer.flush()
+        ser.flush()
+        _, matched = read_until(ser, (PROMPT,), prompt_timeout)
+    return matched == PROMPT
 
-    # Stop auto-boot countdown
-    ser.write(b' ')
+
+def connect_bootloader(port, wait_mode):
+    tried = []
+    for baud in (BAUD_BOOT, LEGACY_BOOT_BAUD):
+        if baud in tried:
+            continue
+        tried.append(baud)
+
+        ser = open_serial(port, baud)
+        try:
+            ser.reset_input_buffer()
+            ser.reset_output_buffer()
+            if wait_mode:
+                log(f'Waiting for bootloader on {port} @ {baud}...')
+                log('Press KEY0 now.')
+                ready = wait_for_prompt(ser, initial_timeout=20.0, prompt_timeout=2.5)
+            else:
+                log(f'Connecting to {port} @ {baud}...')
+                time.sleep(0.25)
+                ready = wait_for_prompt(ser, initial_timeout=1.5, prompt_timeout=2.5)
+
+            if ready:
+                return ser, baud
+        except serial.SerialException:
+            ser.close()
+            raise
+
+        ser.close()
+
+    raise RuntimeError(
+        f'Bootloader prompt not detected on {port}. Tried {", ".join(str(b) for b in tried)} baud.')
+
+
+def upload_bytes(ser, data, baud):
+    # Keep writes below the Windows serial driver's buffering threshold.
+    chunk_size = 1024 if baud >= 115200 else 256
+    for i in range(0, len(data), chunk_size):
+        chunk = data[i:i + chunk_size]
+        ser.write(chunk)
+        ser.flush()
+        if baud < 115200:
+            time.sleep(len(chunk) * 10 / baud * 0.05)
+
+
+ser, active_boot_baud = connect_bootloader(PORT, WAIT)
+
+try:
+    ser.write(b'u')
+    ser.flush()
+    _, matched = read_until(ser, (b'Awaiting',), timeout=3.0)
+    if matched != b'Awaiting':
+        raise RuntimeError('Bootloader did not enter upload mode.')
+
+    with open(BINFILE, 'rb') as f:
+        data = f.read()
+    log(f'Uploading {len(data)} bytes @ {active_boot_baud}...')
+    upload_bytes(ser, data, active_boot_baud)
+
+    resp, _ = read_until(ser, (b'OK', b'ERROR', PROMPT), timeout=max(3.0, len(data) * 10 / active_boot_baud + 2.0))
+    if not resp:
+        resp = drain(ser, 1.0)
+        write_out(resp)
+
+    if b'OK' in resp:
+        log('Upload OK!')
+    else:
+        log('Upload status unclear...')
+        raise RuntimeError('Upload failed: bootloader did not respond with OK')
+
+    ser.write(b'e')
+    ser.flush()
+    time.sleep(0.2)
+    write_out(drain(ser, 0.8))
+
+    if ser.baudrate != BAUD_APP:
+        ser.baudrate = BAUD_APP
+    log(f'\n--- @ {BAUD_APP} ---')
     time.sleep(0.5)
-    resp = drain(ser, 1)
-    sys.stdout.buffer.write(resp)
-    sys.stdout.buffer.flush()
+    buf = drain(ser, 2.0)
+    if buf:
+        write_out(buf)
+    else:
+        log('(no output)')
 
-# Send 'u' and wait for prompt
-ser.write(b'u')
-t0 = time.time()
-while time.time() - t0 < 5:
-    n = ser.in_waiting
-    if n:
-        chunk = ser.read(n)
-        sys.stdout.buffer.write(chunk)
-        sys.stdout.buffer.flush()
-        if b'Awaiting' in chunk:
-            break
-    time.sleep(0.05)
-time.sleep(0.2)
+    for _ in range(60):
+        if ser.in_waiting:
+            write_out(ser.read(ser.in_waiting))
+        time.sleep(0.1)
+finally:
+    ser.close()
 
-# Send binary in chunks
-with open(BINFILE, 'rb') as f:
-    data = f.read()
-print(f'Uploading {len(data)} bytes...')
-CHUNK = 256
-for i in range(0, len(data), CHUNK):
-    ser.write(data[i:i+CHUNK])
-    time.sleep(CHUNK * 10 / BAUD_BOOT * 1.3)
-
-resp = drain(ser, 3)
-sys.stdout.buffer.write(resp)
-sys.stdout.buffer.flush()
-
-if b'OK' in resp:
-    print('Upload OK!')
-else:
-    print('Upload status unclear...')
-
-# Execute
-ser.write(b'e')
-time.sleep(1)
-resp = drain(ser, 2)
-sys.stdout.buffer.write(resp)
-sys.stdout.buffer.flush()
-
-# Read app output at 115200
-ser.baudrate = BAUD_APP
-print(f'\n--- @ {BAUD_APP} ---')
-time.sleep(2)
-buf = drain(ser, 5)
-if buf:
-    sys.stdout.buffer.write(buf)
-    sys.stdout.buffer.flush()
-else:
-    print('(no output)')
-
-for _ in range(60):
-    if ser.in_waiting:
-        sys.stdout.buffer.write(ser.read(ser.in_waiting))
-        sys.stdout.buffer.flush()
-    time.sleep(0.1)
-
-ser.close()
-print('\n--- End ---')
+log('\n--- End ---')
