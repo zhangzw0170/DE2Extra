@@ -1,14 +1,12 @@
 # V3: SDRAM 执行 + 图形化 + 硬件加速器 + 密码学可视化
 
-> 日期: 2026-05-24 | 状态: Planning
-> 前提: Phase 1-3 (V2) 已完成或接近完成
+> 日期: 2026-05-25 | 状态: Active (V2 complete, V3 started)
+> 前提: V2 (v0.1) 验收完成 — de2shell frozen
 > 合并: 原 Phase 4 (硬件加速器 + 音频) 并入 V3
 > 参考: 多核研究储备 -> `extra-multicore.md` (最低优先级，不纳入计划)
 > 归档: V1 -> `archive/implementation_plan-v1-sof-rtos-gui.md`, V2 -> `archive/implementation_plan-v2-vga-terminal.md`
 
-> **注意**: Phase 1-3 (V2) 仍在实现中，SDRAM 执行调试由另一实例负责。本文档为后续规划，不阻塞当前 V2 工作。
-
-> **V2 -> V3 切换流程**: 当 V2 完成并准备进入 V3 时，将当前 `doc/phases/phase1-3` 归档到 `doc/archived/v2_phase/`，然后在 `doc/phases/` 中给出 V3 的执行规划。当前阶段不要操作，等实际切换时再执行。
+> **关键设计决策**: de2shell (bare-metal, IMEM 64KB) 冻结在 V2。V3 所有工作在 **de2os** 上进行（`sw/app/de2shell_rtos/` + `par/de2os/`）。Shell 接收 PS/2 键盘输入作为主输入源（UART 辅助）。不再更新 de2shell。
 
 ---
 
@@ -30,7 +28,7 @@
 | **PC 仿真** | `make local` 只能跑逻辑 | **SDL2 帧缓冲仿真**，PC 上实时预览图形 |
 | **视觉风格** | 终端文字（绿底黑字 Norton Commander 风） | Win 3.0 色调 + Exp7 渐变壁纸 |
 | **密码学** | UART 文本输出 + de2shell 子命令 | **图形化可视化**：AES/SHA 框图 + 箭头 + 高亮 + 实时数据 |
-| **输入** | PS/2 键盘 + IR 遥控 | 同 V2 |
+| **输入** | PS/2 键盘 + IR 遥控 | **PS/2 键盘主输入** (UART 辅助) + IR 遥控 |
 | **硬件加速器** | 无 | **Conway** + **PONG** + **NTT 加速器** + **ChromaShader 沙盒** |
 | **音频** | 无 | **WM8731 I2C/I2S 音频输出** (正弦波测试) |
 | **双核** | 无 | **可选 demo**（最低优先级，V3 其余部分稳定后考虑） |
@@ -608,6 +606,7 @@ CPU (NEORV32)                    DE2-115 板载
 
 | 项目 | 原因 |
 |------|------|
+| de2shell 更新 | V2 frozen，所有新功能走 de2os (SDRAM + FreeRTOS) |
 | LVGL | 又一套新框架，自定义图元够用 |
 | 3D 加速 | 不是本项目核心 |
 | A7Pro 移植 | 6/15 后再说 |

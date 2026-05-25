@@ -170,7 +170,7 @@ cd par/de2os && quartus_sh --flow compile de2os
 - IR remote channel-switch + passthrough verified
 - LCD 16×2 display fix verified
 
-Deferred to V3: NTT hardware acceleration, VGA pixel mode (Win 3.0 GUI), Exp6/7 gallery, snake Game Over display, audio subsystem.
+Deferred to V3 (de2os): NTT hardware acceleration, VGA pixel mode (Win 3.0 GUI), Exp6/7 gallery, snake Game Over display, audio subsystem, Conway/PONG/ChromaShader hardware engines, crypto visualization. V3 does not update de2shell — all new work goes to de2os (SDRAM exec + FreeRTOS + PS/2 keyboard primary input).
 
 ## License
 

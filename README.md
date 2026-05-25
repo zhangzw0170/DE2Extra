@@ -82,9 +82,10 @@ NEORV32 (v1.13.1) 作为 git submodule 引入。
 
 | 应用 | 说明 |
 |---|---|
-| **de2shell** | 主固件: 命令行 shell, memtest, crypto (AES/SHA/SM4+Zk*加速), snake, life, dashboard, expdemo, monitor, PS/2 |
-| **de2os** | 实验性: FreeRTOS + SDRAM 执行 + ICACHE burst |
-| **crypto_cli** | 密码学算法库 (源码被 de2shell 链接复用) |
+| **de2shell** (V2 frozen) | 裸机 shell: memtest, crypto, snake, life, dashboard, expdemo, monitor, PS/2。IMEM 64KB，不再更新 |
+| **de2shell_rtos** (V3 主力) | FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI |
+| **de2os** | FreeRTOS 实验固件 (已被 de2shell_rtos 取代) |
+| **crypto_cli** | 密码学算法库 (源码被多个固件链接复用) |
 | **hello** | LED 跑马灯 + VGA 显示 |
 | **sdram_test** | SDRAM 诊断工具 (5 项测试 + LCD 协议) |
 | **ps2_test** | PS/2 扫描码测试 |
@@ -170,7 +171,7 @@ cd par/de2os && quartus_sh --flow compile de2os
 - IR 遥控切频 + 透传验证通过
 - LCD 16×2 显示修复验证通过
 
-移至 V3: NTT 硬件加速、VGA 像素模式 (Win 3.0 GUI)、Exp6/7 画廊、snake Game Over 显示、音频子系统。
+移至 V3 (de2os): NTT 硬件加速、VGA 像素模式 (Win 3.0 GUI)、Exp6/7 画廊、snake Game Over 显示、音频子系统、Conway/PONG/ChromaShader 硬件引擎、密码学可视化。V3 不再更新 de2shell。
 
 ## 许可
 

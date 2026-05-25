@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NEORV32 (RISC-V) soft-core SoC on DE2-115 (Cyclone IV E EP4CE115F29C7), running bare-metal C firmware. Target: turn the DE2-115 into a complete computer with VGA terminal, PS/2 keyboard, SDRAM, crypto accelerators, and games.
 
+**V2 → V3 路线决策**: de2shell (bare-metal, IMEM 64KB) 冻结在 V2。V3 工作重心转到 **de2os** — SDRAM 执行 + FreeRTOS + PS/2 键盘主输入 + VGA 像素 GUI。不再更新 de2shell。
+
 **NEORV32 version**: submodule pinned at release tag **v1.13.1** (2026-05-14). Do not track `main` branch — always use a release tag for stability.
 
 ## Build System
@@ -92,10 +94,10 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text
 
 | App | Location | Description |
 |-----|----------|-------------|
-| de2shell | `sw/app/de2shell/` | Main shell: command history, memtest, crypto, snake, life, pong, dashboard, VGA/PS2/IR HALs |
-| crypto_cli | `sw/app/crypto_cli/` | Standalone AES/SHA/SM4 CLI (linked into de2shell) |
-| de2shell_rtos | `sw/app/de2shell_rtos/` | Experimental: de2shell ported to FreeRTOS (WIP, not in main build) |
-| de2os | `sw/app/de2os/` | **Experimental**: FreeRTOS on NEORV32, SDRAM execution, ICACHE + burst enabled (async FIFO CDC), separate Quartus project `par/de2os/` |
+| **de2shell_rtos** | `sw/app/de2shell_rtos/` | **V3 primary firmware**: FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI。4 任务 (uart_input/shell/active/status)，shell 从 PS/2 和 UART 双路接收输入 |
+| de2shell | `sw/app/de2shell/` | **V2 frozen**: bare-metal IMEM 64KB, 9 用户程序, 不再更新 |
+| crypto_cli | `sw/app/crypto_cli/` | Standalone AES/SHA/SM4 CLI (linked into de2shell and de2shell_rtos) |
+| de2os | `sw/app/de2os/` | Legacy FreeRTOS test (superseded by de2shell_rtos) |
 | sdram_test | `sw/app/sdram_test/` | Independent SDRAM diagnostic (4096-word dense + 31 sparse boundary probes) |
 | hello | `sw/app/hello/` | Minimal UART test |
 | game_snake | `sw/app/game_snake/` | Standalone snake game |
@@ -103,9 +105,9 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text
 | ps2_test | `sw/app/ps2_test/` | Standalone PS/2 scancode dump |
 | ir_test | `sw/app/ir_test/` | Standalone IR NEC decoder test |
 
-`de2shell` is the primary firmware. Its `makefile` links crypto_cli sources directly (`crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`). GUI-related files (`gfx.c`, `gui.c`, `gui_widgets.c`, `win30_desk.c`, `fb_hal.c`, `screenshot_win30.c`) exist in the directory but are **excluded from the NEORV32 build** (filtered out in makefile line 13) — they only compile via `make local` (SDL2 host build). The `make local` target builds a host-native version with SDL2 for VGA frame buffer simulation.
+**de2shell (frozen)**: `makefile` links crypto_cli sources directly (`crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`). GUI-related files (`gfx.c`, `gui.c`, `gui_widgets.c`, `win30_desk.c`, `fb_hal.c`, `screenshot_win30.c`) exist but are **excluded from the NEORV32 build** (filtered out in makefile line 13) — they only compile via `make local` (SDL2 host build).
 
-`de2os` requires boot mode 0 + separate `par/de2os/` Quartus project. Current stable hardware baseline: `ICACHE_EN=false`. See `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC root cause analysis.
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE + burst enabled via async FIFO CDC. PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis.
 
 ### NEORV32 ISA Extensions
 
@@ -158,6 +160,8 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 ## Project Status
 
-**V2 (v0.1) is complete** — 192/213 acceptance items passed. See `doc/de2shell-module-acceptance.md` for full results.
+**V2 (v0.1) is complete** — 192/213 acceptance items passed. de2shell is frozen. See `doc/de2shell-module-acceptance.md` for full results.
 
-Deferred to V3: NTT board verification, VGA pixel mode cable test, Exp6/7 gallery, snake Game Over display, audio subsystem, de2shell_rtos.
+**V3 is active** — all work on de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/phase5-sdram-gui.md` for plan.
+
+V3 scope: NTT board verification, VGA pixel mode board test, Win 3.0 GUI on SDRAM, Conway/PONG/ChromaShader hardware engines, audio, crypto visualization.
