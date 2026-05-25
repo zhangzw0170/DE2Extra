@@ -49,14 +49,14 @@ de2_115_top.vhd (only entity that knows board pins)
 │       └── Built-in     UART0 (115200), GPIO(32), TRNG, CLINT, OCD
 ├── wb_intercon          1-master, 9-slave address decoder (combinational)
 │   ├── s0: sdram_ctrl   0x01000000 (128MB, 100MHz state machine)
-│   ├── s1: vga_text_terminal  0xF0000000 (16-bit reg IF, 80×25 text mode)
+│   ├── s1: vga_text_terminal  0xF0000000 (16-bit reg IF, 80×25 text mode + pixel mode via SDRAM FB)
 │   ├── s2: ps2_controller    0xF0002000 (scancode + IRQ)
 │   ├── s3: ir_nec_wb         0xF0009000 (NEC IR decoder)
-│   ├── s4: ntt_sdf           0xF000C000 (NTT accelerator, enabled — compiles clean, needs board verify)
+│   ├── s4: ntt_sdf           0xF000C000 (NTT accelerator — compiles clean, deferred to V3)
 │   ├── s5: lcd_wb            0xF0008000 (LCD Wishbone controller)
 │   ├── s6: timer_wb          0xF0004000 (Timer)
 │   ├── s7: intc_wb           0xF0006000 (Interrupt controller)
-│   └── s8: expdemo_wb        0xF000D000 (Hardware experiment multiplexer)
+│   └── s8: expdemo_wb        0xF000D000 (Hardware experiment multiplexer, 11 experiments, board verified ✅)
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
 ├── lcd_status / lcd_debug  HD44780 16×2 LCD (muxed by SW16)
 ├── uart_jtag_bridge     UART TX → JTAG UART IP (view output in Quartus System Console)
@@ -69,7 +69,7 @@ de2_115_top.vhd (only entity that knows board pins)
 | 0x00000000 | IMEM | 64KB | 32-bit |
 | 0x80000000 | DMEM | 16KB | 32-bit |
 | 0x01000000 | SDRAM | 128MB | 32-bit |
-| 0xF0000000 | VGA text terminal | 8KB | 16-bit |
+| 0xF0000000 | VGA text terminal + pixel mode | 8KB | 16-bit |
 | 0xF0002000 | PS/2 keyboard | 4KB | 32-bit |
 | 0xF0004000 | Timer (reserved) | 4KB | 32-bit |
 | 0xF0006000 | INTC (reserved) | 4KB | 32-bit |
@@ -82,9 +82,11 @@ de2_115_top.vhd (only entity that knows board pins)
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
 
-Note: **NTT accelerator** (`ntt_sdf.vhd`) compiles clean and is instantiated in `wb_intercon` + both top entities, but needs board verification. The C driver (`sw/app/de2shell/ntt.c`) exists with dual-mode (LOCAL_BUILD SW reference / NEORV32 HW MMIO), verified in LOCAL_BUILD.
+Note: **NTT accelerator** (`ntt_sdf.vhd`) compiles clean and is instantiated in `wb_intercon` + both top entities. Deferred to V3 for board verification. The C driver (`sw/app/de2shell/ntt.c`) exists with dual-mode (LOCAL_BUILD SW reference / NEORV32 HW MMIO), verified in LOCAL_BUILD.
 
-Note: **ExpDemo** is instantiated in `de2_115_top.vhd` (not in de2os_top.vhd). It wraps 11 experiment adapters with output/peripheral multiplexing.
+Note: **ExpDemo** is instantiated in `de2_115_top.vhd` (not in de2os_top.vhd). It wraps 11 experiment adapters with output/peripheral multiplexing. Board verified in V2.
+
+Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text_terminal`. It reads a framebuffer from SDRAM and displays 640×480@60Hz RGB565. Used by Win 3.0 GUI (`startui` command) and screenshot tools. SDL2-verified; deferred to V3 for VGA cable board test.
 
 ### Software Apps
 
@@ -92,6 +94,7 @@ Note: **ExpDemo** is instantiated in `de2_115_top.vhd` (not in de2os_top.vhd). I
 |-----|----------|-------------|
 | de2shell | `sw/app/de2shell/` | Main shell: command history, memtest, crypto, snake, life, pong, dashboard, VGA/PS2/IR HALs |
 | crypto_cli | `sw/app/crypto_cli/` | Standalone AES/SHA/SM4 CLI (linked into de2shell) |
+| de2shell_rtos | `sw/app/de2shell_rtos/` | Experimental: de2shell ported to FreeRTOS (WIP, not in main build) |
 | de2os | `sw/app/de2os/` | **Experimental**: FreeRTOS on NEORV32, SDRAM execution, ICACHE + burst enabled (async FIFO CDC), separate Quartus project `par/de2os/` |
 | sdram_test | `sw/app/sdram_test/` | Independent SDRAM diagnostic (4096-word dense + 31 sparse boundary probes) |
 | hello | `sw/app/hello/` | Minimal UART test |
@@ -100,7 +103,7 @@ Note: **ExpDemo** is instantiated in `de2_115_top.vhd` (not in de2os_top.vhd). I
 | ps2_test | `sw/app/ps2_test/` | Standalone PS/2 scancode dump |
 | ir_test | `sw/app/ir_test/` | Standalone IR NEC decoder test |
 
-`de2shell` is the primary firmware. Its `makefile` links crypto_cli sources directly (`crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`). The `make local` target builds a host-native version with SDL2 for VGA frame buffer simulation.
+`de2shell` is the primary firmware. Its `makefile` links crypto_cli sources directly (`crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`). GUI-related files (`gfx.c`, `gui.c`, `gui_widgets.c`, `win30_desk.c`, `fb_hal.c`, `screenshot_win30.c`) exist in the directory but are **excluded from the NEORV32 build** (filtered out in makefile line 13) — they only compile via `make local` (SDL2 host build). The `make local` target builds a host-native version with SDL2 for VGA frame buffer simulation.
 
 `de2os` requires boot mode 0 + separate `par/de2os/` Quartus project. Current stable hardware baseline: `ICACHE_EN=false`. See `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC root cause analysis.
 
@@ -153,6 +156,8 @@ The upstream release includes these features that our wrapper/intercon have not 
 | RISC-V GCC | Docker image `de2extra-builder` |
 | Serial monitor | `COM10`, `115200 8N1` |
 
-## Repair & Status
+## Project Status
 
-See `doc/next_repair.md` for the current list of open items and priority order. Key unverified items: VGA real-display validation, IR end-to-end acceptance, dashboard unification.
+**V2 (v0.1) is complete** — 192/213 acceptance items passed. See `doc/de2shell-module-acceptance.md` for full results.
+
+Deferred to V3: NTT board verification, VGA pixel mode cable test, Exp6/7 gallery, snake Game Over display, audio subsystem, de2shell_rtos.

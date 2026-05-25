@@ -22,18 +22,18 @@
 
 - VGA 像素模式控制器 (`vga_pixel_ctrl.vhd`) — 硬件完成，SDL2 验证通过
 - VGA 像素模式地址解码 — 写入 `de2_115_top.vhd` (0x1F80+ offset)
-- Win 3.0 GUI (`startui` 命令) — 软件+SDL2 验证通过，等 VGA 线上板
+- Win 3.0 GUI (`startui` 命令) — 仅 LOCAL_BUILD (SDL2) 验证通过，NEORV32 固件未编译 (makefile filter-out)，推迟到 V3
 - LCD HAL 修复 — 固定延时替代 busy-polling，解决只显示 "LDL" 问题
-- 绘图库 (`gfx.c/h`) — 填充、画线、字符渲染、3D 凹凸边框
-- GUI 控件库 (`gui.c/h`, `gui_widgets.c`) — 窗口、按钮、标签、文本框、任务栏
+- 绘图库 (`gfx.c/h`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
+- GUI 控件库 (`gui.c/h`, `gui_widgets.c`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
 - PS/2 解码器提取 (`ps2_decoder.c/h`) — 可复用模块
-- 帧缓冲 HAL (`fb_hal.c`) — NEORV32 后端写入 SDRAM + VGA 像素模式寄存器
+- 帧缓冲 HAL (`fb_hal.c`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
 
 已通过串口 smoke test 的模块：
 
 | 模块 | 进入 | 退出 | 备注 |
 |---|---|---|---|
-| `help` | ✅ | N/A | 列出全部命令 (含 startui) |
+| `help` | ✅ | N/A | 列出全部命令 (9 个用户程序) |
 | `lcdmon` | ✅ | N/A | 输出软件侧 LCD 16x2 阴影缓冲 |
 | `info` | ✅ | ✅ | `q` 返回 `0000>` |
 | `hello` | ✅ | ✅ | `q` 返回 `0000>` |
@@ -72,7 +72,7 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| A1.1 | 命令解析 | `help` 输出当前全部命令列表 (含 startui) | ✅ |
+| A1.1 | 命令解析 | `help` 输出当前全部命令列表 (9 个用户程序) | ✅ |
 | A1.2 | 程序调度 | 输入子命令名称后在 `active_prog` 间切换 | ✅ |
 | A1.3 | 程序 init/update/input/finish 回调 | 每个程序切换时调 `init()`，每帧调 `update()`，按键调 `input()`，返回 shell 时调 `finish()` | ✅ |
 | A1.4 | UART 输入 | `uart_kbhit()/uart_getc()` 正确读取 COM10 115200 8N1 | ✅ |
@@ -82,7 +82,7 @@
 | A1.8 | `cls` 命令 | 清屏并重绘 shell 启动画面 | ✅ |
 | A1.9 | `quit`/`exit` 命令 | 从子程序返回 shell 主界面 | ✅ |
 | A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | ✅ 串口实测可见 `Up HH:MM` 递增 |
-| A1.11 | 程序注册表完整性 | 12 个用户程序 (含 startui) + shell 的 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
+| A1.11 | 程序注册表完整性 | 9 个用户程序 + shell 的 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
 | A1.12 | IR 遥控切频 | 遥控器按内部频道号映射：`1-9` 对应 hello/memtest/crypto/ps2/snake/life/dash/info/monitor，`A` 进入 expdemo；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | ✅ |
 | A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | ✅ 已由 dashboard `ir_input` 吞掉全局切频验证 |
 | A1.14 | Docker 交叉编译 | 手动 Docker 构建链可稳定生成 `de2shell` IMEM 镜像；当前 `Executable (VHD)` 为 `62872 bytes` (95.9%)，适配 64KB IMEM | ✅ |
@@ -253,7 +253,7 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| B5.1 | 命令进入 | 输入 `startui` 或 `gui` 进入 Win 3.0 桌面 | ✅ 串口命令已注册 |
+| B5.1 | 命令进入 | 输入 `startui` 或 `gui` 进入 Win 3.0 桌面 | 🟡 仅 LOCAL_BUILD，NEORV32 固件未编译此模块 |
 | B5.2 | 桌面背景 | FB_CYAN (经典 Win 3.0 青色) 实色填充 | ✅ LOCAL_BUILD 通过 |
 | B5.3 | 桌面图标网格 | 3×3 图标网格 (Snake, Life, Crypto, Info, Dashboard, PS2, Demo, MemTest, Settings) | ✅ LOCAL_BUILD 通过 |
 | B5.4 | 任务栏 | 底部 24px, 显示 "DE2Extra" 标签 + 时钟 | ✅ LOCAL_BUILD 通过 |
@@ -587,7 +587,7 @@
 | H1.22 | expdemo `KEY0` 保留 | 进入任一实验后观察说明页并试用 `KEY1..KEY3` | 物理 `KEY0` 不再承担实验内功能，实验按键按新映射工作 | ✅ |
 | H1.23 | `lcdmon` 远程 LCD 阴影读取 | shell 输入 `lcdmon` | 串口输出 `L0/L1` 两行 16 字符阴影缓冲；当前 shell 空闲值为 `DE2Extra Shell` / `CH0 SHEL READY` | ✅ |
 | H1.24 | LCD 修复目视确认 | 上板后观察 LCD | 第一行 `DE2Extra Shell`，第二行 `CH0 SHEL READY`，不再只显示 "LDL" | ✅ 已确认 |
-| H1.25 | `startui` 命令注册 | 输入 `startui` | 串口确认程序入口识别 (VGA 像素模式需显示器才能看到 GUI) | ✅ 命令已注册 |
+| H1.25 | `startui` 命令注册 | 输入 `startui` | 当前 NEORV32 固件未编译 startui (makefile filter-out)，仅 LOCAL_BUILD 可用 | 🟡 推迟到 V3 |
 
 ### H2. 需要 VGA 显示器
 

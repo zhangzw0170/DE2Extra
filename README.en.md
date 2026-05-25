@@ -158,11 +158,19 @@ quartus_sh --flow compile par/de2extra -c de2extra
 cd par/de2os && quartus_sh --flow compile de2os
 ```
 
-## Acceptance Status
+## V2 Acceptance Status
 
-See [`doc/de2shell-module-acceptance.md`](doc/de2shell-module-acceptance.md).
+**v0.1 (V2) acceptance complete.** See [`doc/de2shell-module-acceptance.md`](doc/de2shell-module-acceptance.md).
 
-Current: **136/156 items passed** (17 awaiting VGA display, 3 awaiting NTT hardware restore)
+- 192/213 items passed ✅
+- VGA text terminal board-verified (640×480@60Hz)
+- SDRAM 5-test self-check all PASS
+- 11 course labs via expdemo multiplexer
+- AES/SHA/SM4/SM3 + Zk* hardware acceleration verified
+- IR remote channel-switch + passthrough verified
+- LCD 16×2 display fix verified
+
+Deferred to V3: NTT hardware acceleration, VGA pixel mode (Win 3.0 GUI), Exp6/7 gallery, snake Game Over display, audio subsystem.
 
 ## License
 
