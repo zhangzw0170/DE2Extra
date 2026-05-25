@@ -5,7 +5,11 @@
 
 /* ── Widget pool ────────────────────────────────────────────────── */
 
-static widget_t pool[GUI_MAX_WIDGETS];
+static widget_t pool[GUI_MAX_WIDGETS]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
 static widget_t *z_order;   /* linked list: bottom → top */
 static widget_t *focused;   /* currently focused widget */
 
