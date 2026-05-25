@@ -1,5 +1,6 @@
 # Phase 1: 总线 + SDRAM 可靠
 
+> **计划执行时间: 2026-05-23 14:12** | **归档: Phase 1 全部验收通过**
 > 总纲: `../implementation_plan.md`
 > 状态: 2026-05-23 — 已完成，`sdram_test` = `ALL PASS`
 

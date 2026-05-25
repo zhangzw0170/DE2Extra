@@ -5,6 +5,7 @@
 -- 代码从 SDRAM 执行，固件通过 UART 上传。
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use work.de2extra_pkg.all;
 library jtag_uart_0;
 
@@ -122,6 +123,15 @@ architecture rtl of de2os_top is
     signal vga_reg_we    : std_logic;
     signal vga_reg_stb   : std_logic;
     signal vga_reg_ack   : std_logic;
+    signal vga_txt_reg_dat_i : std_logic_vector(31 downto 0);
+    signal vga_txt_reg_stb   : std_logic;
+    signal vga_txt_reg_ack   : std_logic;
+    signal vga_px_reg_adr    : std_logic_vector(15 downto 0);
+    signal vga_px_reg_dat_i  : std_logic_vector(31 downto 0);
+    signal vga_px_reg_dat_o  : std_logic_vector(31 downto 0);
+    signal vga_px_reg_we     : std_logic;
+    signal vga_px_reg_stb    : std_logic;
+    signal vga_px_reg_ack    : std_logic;
 
     -- PS/2 controller register interface
     signal ps2_reg_adr   : std_logic_vector(3 downto 0);
@@ -144,6 +154,22 @@ architecture rtl of de2os_top is
     signal vga_clk_int   : std_logic;
     signal vga_sync_int  : std_logic;
     signal vga_blank_int : std_logic;
+
+    -- VGA pixel mode signals
+    signal vga_pixel_r      : std_logic_vector(7 downto 0);
+    signal vga_pixel_g      : std_logic_vector(7 downto 0);
+    signal vga_pixel_b      : std_logic_vector(7 downto 0);
+    signal vga_pixel_hs     : std_logic;
+    signal vga_pixel_vs     : std_logic;
+    signal vga_pixel_blank  : std_logic;
+    signal vga_pixel_sync   : std_logic;
+    signal vga_pixel_clk    : std_logic;
+    signal vga_pixel_mode   : std_logic;
+    signal vga_sdram_rd_adr : std_logic_vector(24 downto 0);
+    signal vga_sdram_rd_req : std_logic;
+    signal vga_sdram_rd_data: std_logic_vector(31 downto 0);
+    signal vga_sdram_rd_valid : std_logic;
+    signal vga_sdram_rd_done  : std_logic;
 
     -- LCD controller Wishbone
     signal lcd_wb_adr   : std_logic_vector(3 downto 0);
@@ -195,6 +221,25 @@ architecture rtl of de2os_top is
 
 begin
 
+    -- Bring-up build: disable VGA register space and SDRAM fetch path to reduce compile cost.
+    vga_txt_reg_stb   <= '0';
+    vga_txt_reg_dat_i <= (others => '0');
+    vga_txt_reg_ack   <= '0';
+    vga_px_reg_adr    <= (others => '0');
+    vga_px_reg_dat_i  <= (others => '0');
+    vga_px_reg_dat_o  <= (others => '0');
+    vga_px_reg_we     <= '0';
+    vga_px_reg_stb    <= '0';
+    vga_px_reg_ack    <= '0';
+    vga_reg_dat_i     <= (others => '0');
+    vga_reg_ack       <= vga_reg_stb;
+    vga_sdram_rd_adr  <= (others => '0');
+    vga_sdram_rd_req  <= '0';
+
+    -- Bring-up build: disable NTT accelerator while preserving bus responsiveness.
+    ntt_wb_dat_i <= (others => '0');
+    ntt_wb_ack   <= ntt_wb_stb;
+
     -- ================================================================
     -- Clock and Reset Generation
     -- ================================================================
@@ -234,7 +279,8 @@ begin
         ICACHE_EN       => true,
         ICACHE_BLOCKS   => 64,
         ICACHE_BLOCK_SZ => 32,
-        ICACHE_BURSTS   => true
+        ICACHE_BURSTS   => true,
+        TRNG_EN         => false
     )
     port map (
         clk_i       => clk_50m,
@@ -362,43 +408,28 @@ begin
         dram_dq     => DRAM_DQ,
         dram_dqm    => DRAM_DQM,
         dram_ras_n  => DRAM_RAS_N,
-        dram_we_n   => DRAM_WE_N
+        dram_we_n   => DRAM_WE_N,
+        vga_rd_adr_i  => vga_sdram_rd_adr,
+        vga_rd_req_i  => vga_sdram_rd_req,
+        vga_rd_data_o => vga_sdram_rd_data,
+        vga_rd_valid_o=> vga_sdram_rd_valid,
+        vga_rd_done_o => vga_sdram_rd_done
     );
 
     -- DRAM 时钟使用相移版 PLL 输出，给板级地址/命令/写数据留 setup 裕量
     DRAM_CLK <= clk_sdram_shift;
 
     -- ================================================================
-    -- VGA Text Terminal (Phase 2b)
+    -- VGA disabled for bring-up build
     -- ================================================================
-    u_vga : entity work.vga_text_terminal
-    port map (
-        clk_50m_i   => clk_50m,
-        rst_n_i     => rst_n,
-        vga_r_o     => vga_r_int,
-        vga_g_o     => vga_g_int,
-        vga_b_o     => vga_b_int,
-        vga_hs_o    => vga_hs_int,
-        vga_vs_o    => vga_vs_int,
-        vga_blank_o => vga_blank_int,
-        vga_sync_o  => vga_sync_int,
-        vga_clk_o   => vga_clk_int,
-        reg_adr_i   => vga_reg_adr,
-        reg_dat_i   => vga_reg_dat_o,
-        reg_dat_o   => vga_reg_dat_i,
-        reg_we_i    => vga_reg_we,
-        reg_stb_i   => vga_reg_stb,
-        reg_ack_o   => vga_reg_ack
-    );
-
-    VGA_R       <= vga_r_int;
-    VGA_G       <= vga_g_int;
-    VGA_B       <= vga_b_int;
-    VGA_HS      <= vga_hs_int;
-    VGA_VS      <= vga_vs_int;
-    VGA_CLK     <= vga_clk_int;
-    VGA_SYNC_N  <= vga_sync_int;
-    VGA_BLANK_N <= vga_blank_int;
+    VGA_R       <= (others => '0');
+    VGA_G       <= (others => '0');
+    VGA_B       <= (others => '0');
+    VGA_HS      <= '1';
+    VGA_VS      <= '1';
+    VGA_CLK     <= '0';
+    VGA_SYNC_N  <= '1';
+    VGA_BLANK_N <= '0';
 
     -- ================================================================
     -- PS/2 Keyboard Controller (Phase 2b)
@@ -439,20 +470,6 @@ begin
         wb_we_i    => ir_wb_we,
         wb_stb_i   => ir_wb_stb,
         wb_ack_o   => ir_wb_ack
-    );
-
-    -- ================================================================
-    -- NTT Accelerator @ 0xF000C000
-    u_ntt : entity work.ntt_sdf
-    port map (
-        clk_i    => clk_50m,
-        rst_n_i  => rst_n,
-        wb_adr_i => ntt_wb_adr,
-        wb_dat_i => ntt_wb_dat_o,
-        wb_dat_o => ntt_wb_dat_i,
-        wb_we_i  => ntt_wb_we,
-        wb_stb_i => ntt_wb_stb,
-        wb_ack_o => ntt_wb_ack
     );
 
     -- ================================================================

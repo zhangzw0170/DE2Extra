@@ -15,7 +15,7 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
 set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
-set_global_assignment -name NUM_PARALLEL_PROCESSORS 8
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 14
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED WITH WEAK PULL-UP"
 set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
 
@@ -38,7 +38,6 @@ set_global_assignment -name VHDL_FILE ../src/rtl/periph/ir_nec_wb.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/ir_dbg_exp10.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/timer_wb.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/intc_wb.vhd
-set_global_assignment -name VHDL_FILE ../src/rtl/periph/ntt_sdf.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/led_patterns.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/expdemo_wb.vhd
 set_global_assignment -name VHDL_FILE ../src/rtl/periph/expdemo_top.vhd

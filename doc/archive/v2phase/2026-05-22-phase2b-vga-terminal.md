@@ -1,5 +1,6 @@
 # Phase 2b: VGA Terminal + PS/2 + Conway — Implementation Plan
 
+> **计划执行时间: 2026-05-23 14:12** | **归档: VGA 文字终端 + PS/2 已验证上板**
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement 80x25 hardware VGA text terminal with PS/2 keyboard input and Conway's Game of Life demo, all in VHDL.

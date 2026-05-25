@@ -88,7 +88,7 @@ static void init(void) {
     vga_puts("Input:   UART + PS/2 + IR Remote\n", VGA_GREEN);
     vga_puts("Crypto:  AES-128 SHA-256 SHA-512 SM4 SM3\n", VGA_GREEN);
     vga_puts("Live:    SW / KEY / IR / GPIO / uptime\n", VGA_GREEN);
-    vga_puts("\nPress 'q' to return. KEY0 stays hardware reset.\n", VGA_GRAY);
+    vga_puts("\nPress 'q' to return. KEY0 = board reset.                \n", VGA_GRAY);
 }
 
 static void update(void) {
@@ -121,8 +121,8 @@ static void update(void) {
                              (uint16_t)((last_ir_cmd << 8) | key_bits));
 
     vga_goto(0, 11);
-    vga_puts("Live Board State\n", VGA_CYAN);
-    vga_puts("----------------\n", VGA_WHITE);
+    vga_puts("Live Board State                                  \n", VGA_CYAN);
+    vga_puts("--------------------------------------------------\n", VGA_WHITE);
 
     vga_goto(0, 13);
     vga_puts("SW[17:0] : ", VGA_WHITE);

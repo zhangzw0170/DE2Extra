@@ -1,5 +1,6 @@
 # Phase 2a: 密码学终端 — C 软件
 
+> **计划执行时间: 2026-05-23 11:45** | **归档: AES/SHA/SM4/SM3 全部标准测试向量通过**
 > 总纲: `../implementation_plan.md` | 并行: Phase 2b (`phase2b-vga-terminal.md`)
 > 工作目录: `sw/app/crypto_cli/`
 

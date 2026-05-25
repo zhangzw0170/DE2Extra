@@ -77,6 +77,10 @@ static void init(void) {
     for (int x = 0; x < GRID_W; x++) vga_putc('-', VGA_WHITE);
     vga_putc('+', VGA_WHITE);
 
+    /* Draw initial food */
+    vga_goto(food_x + 1, food_y + 3);
+    vga_putc('@', VGA_RED);
+
     initialized = 1;
 }
 
@@ -98,36 +102,42 @@ static void update(void) {
         }
     }
 
+    /* Save old tail before shift */
+    int old_tail_x = snake_x[snake_len - 1];
+    int old_tail_y = snake_y[snake_len - 1];
+
     /* Shift body */
     for (int i = snake_len; i > 0; i--) {
         snake_x[i] = snake_x[i - 1]; snake_y[i] = snake_y[i - 1];
     }
     snake_x[0] = nx; snake_y[0] = ny;
 
-    /* Eat */
-    if (nx == food_x && ny == food_y) {
+    int ate = (nx == food_x && ny == food_y);
+    if (ate) {
         snake_len++;
         score += 10;
         if (speed_ms > 30) speed_ms -= 5;
         place_food();
     }
 
-    /* Clear grid area */
-    for (int y = 0; y < GRID_H; y++) {
-        vga_goto(1, y + 3);
-        for (int x = 0; x < GRID_W; x++) vga_putc(' ', VGA_BLACK);
+    /* Incremental VGA redraw — no full clear */
+    if (!ate) {
+        /* Erase old tail cell */
+        vga_goto(old_tail_x + 1, old_tail_y + 3);
+        vga_putc(' ', VGA_BLACK);
     }
-
-    /* Draw food */
-    vga_goto(food_x + 1, food_y + 3);
-    vga_putc('@', VGA_RED);
-
-    /* Draw snake */
+    /* Old head becomes body segment */
+    if (snake_len > 1) {
+        vga_goto(snake_x[1] + 1, snake_y[1] + 3);
+        vga_putc('o', VGA_GREEN);
+    }
+    /* Draw new head */
     vga_goto(snake_x[0] + 1, snake_y[0] + 3);
     vga_putc('O', VGA_YELLOW);
-    for (int i = 1; i < snake_len; i++) {
-        vga_goto(snake_x[i] + 1, snake_y[i] + 3);
-        vga_putc('o', VGA_GREEN);
+    /* Draw new food if old one was eaten */
+    if (ate) {
+        vga_goto(food_x + 1, food_y + 3);
+        vga_putc('@', VGA_RED);
     }
 
     /* HUD */

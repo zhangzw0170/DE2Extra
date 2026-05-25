@@ -104,8 +104,8 @@ static void draw_grid(void) {
     for (int y = 0; y < GRID_H; y++) {
         vga_goto(1, y + 3);
         for (int x = 0; x < GRID_W; x++) {
-            char ch = cur[y][x] ? '\xDB' : ' ';
-            uint16_t color = cur[y][x] ? VGA_GREEN : VGA_BLACK;
+            char ch = cur[y][x] ? '#' : '.';
+            uint16_t color = cur[y][x] ? VGA_WHITE : VGA_DKGRAY;
 
             if (edit_mode && x == cursor_x && y == cursor_y) {
                 ch = cur[y][x] ? 'O' : '+';

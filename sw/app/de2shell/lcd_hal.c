@@ -43,25 +43,14 @@ static void lcd_delay_ms(uint32_t time_ms) {
     neorv32_aux_delay_ms(neorv32_sysinfo_get_clk(), time_ms);
 }
 
-static void lcd_wait_ready(void) {
-    uint32_t timeout = 500000u;
-
-    while (timeout != 0u) {
-        if ((LCD->dr & 1u) == 0u) {
-            return;
-        }
-        timeout--;
-    }
-}
-
 static void lcd_write_cmd(uint8_t cmd) {
-    lcd_wait_ready();
     LCD->cr = (uint32_t)cmd;
+    lcd_delay_ms(2u);  /* 2ms covers all HD44780 commands including clear/home */
 }
 
 static void lcd_write_data(uint8_t data) {
-    lcd_wait_ready();
     LCD->dr = (uint32_t)data;
+    lcd_delay_ms(1u);  /* 1ms per character (HD44780 needs ~40us, generous margin) */
 }
 #endif
 
@@ -69,16 +58,18 @@ void lcd_init(void) {
     lcd_shadow_store(0, "");
     lcd_shadow_store(1, "");
 #ifndef LOCAL_BUILD
-    lcd_delay_ms(50u);
-    lcd_write_cmd(0x38u);
+    /* HD44780 reset sequence: wait >40ms after power-on, then 3x Function Set */
+    lcd_delay_ms(60u);
+    lcd_write_cmd(0x38u);  /* 8-bit, 2-line, 5x8 */
     lcd_delay_ms(10u);
     lcd_write_cmd(0x38u);
-    lcd_delay_ms(1u);
+    lcd_delay_ms(5u);
     lcd_write_cmd(0x38u);
-    lcd_write_cmd(0x0Cu);
-    lcd_write_cmd(0x06u);
-    lcd_write_cmd(0x01u);
-    lcd_write_cmd(0x80u);
+    lcd_write_cmd(0x0Cu);  /* Display ON, cursor OFF, blink OFF */
+    lcd_write_cmd(0x06u);  /* Entry mode: increment, no shift */
+    lcd_write_cmd(0x01u);  /* Clear display */
+    lcd_delay_ms(5u);      /* Clear needs ~1.6ms */
+    lcd_write_cmd(0x80u);  /* DDRAM address 0 */
 #endif
 }
 

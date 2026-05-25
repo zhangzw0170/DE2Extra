@@ -11,6 +11,7 @@
 -- 新外设: 在 wb_intercon 中添加 slave 端口 + 地址解码。
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
 use work.de2extra_pkg.all;
 library jtag_uart_0;
@@ -108,6 +109,7 @@ architecture rtl of de2_115_top is
     signal xbus_dat_i  : std_logic_vector(31 downto 0);
     signal xbus_ack    : std_logic;
     signal xbus_err    : std_logic;
+    signal xbus_cti    : std_logic_vector(2 downto 0);
 
     -- SDRAM Wishbone
     signal sdram_wb_adr  : std_logic_vector(24 downto 0);
@@ -118,6 +120,7 @@ architecture rtl of de2_115_top is
     signal sdram_wb_stb  : std_logic;
     signal sdram_wb_cyc  : std_logic;
     signal sdram_wb_ack  : std_logic;
+    signal sdram_wb_cti  : std_logic_vector(2 downto 0);
 
     -- VGA terminal register interface
     signal vga_reg_adr   : std_logic_vector(15 downto 0);
@@ -126,6 +129,9 @@ architecture rtl of de2_115_top is
     signal vga_reg_we    : std_logic;
     signal vga_reg_stb   : std_logic;
     signal vga_reg_ack   : std_logic;
+    signal vga_txt_reg_dat_i : std_logic_vector(31 downto 0);
+    signal vga_txt_reg_stb   : std_logic;
+    signal vga_txt_reg_ack   : std_logic;
 
     -- PS/2 controller register interface
     signal ps2_reg_adr   : std_logic_vector(3 downto 0);
@@ -148,6 +154,28 @@ architecture rtl of de2_115_top is
     signal vga_clk_int   : std_logic;
     signal vga_sync_int  : std_logic;
     signal vga_blank_int : std_logic;
+
+    -- VGA pixel mode signals
+    signal vga_pixel_r      : std_logic_vector(7 downto 0);
+    signal vga_pixel_g      : std_logic_vector(7 downto 0);
+    signal vga_pixel_b      : std_logic_vector(7 downto 0);
+    signal vga_pixel_hs     : std_logic;
+    signal vga_pixel_vs     : std_logic;
+    signal vga_pixel_blank  : std_logic;
+    signal vga_pixel_sync   : std_logic;
+    signal vga_pixel_clk    : std_logic;
+    signal vga_pixel_mode   : std_logic;  -- '0'=text, '1'=pixel
+    signal vga_px_reg_adr   : std_logic_vector(15 downto 0);
+    signal vga_px_reg_dat_o : std_logic_vector(31 downto 0);
+    signal vga_px_reg_dat_i : std_logic_vector(31 downto 0);
+    signal vga_px_reg_we    : std_logic;
+    signal vga_px_reg_stb   : std_logic;
+    signal vga_px_reg_ack   : std_logic;
+    signal vga_sdram_rd_adr : std_logic_vector(24 downto 0);
+    signal vga_sdram_rd_req : std_logic;
+    signal vga_sdram_rd_data: std_logic_vector(31 downto 0);
+    signal vga_sdram_rd_valid : std_logic;
+    signal vga_sdram_rd_done  : std_logic;
 
     -- LCD mux (SW16=0: status, SW16=1: 2b debug)
     signal lcd_status_data  : std_logic_vector(7 downto 0);
@@ -277,6 +305,33 @@ architecture rtl of de2_115_top is
 
 begin
 
+    vga_txt_reg_stb <= vga_reg_stb when unsigned(vga_reg_adr) < to_unsigned(16#1F80#, 16) else '0';
+    -- Bring-up build: keep the text terminal active, but stub out the pixel-mode
+    -- register window so UI/framebuffer logic stays out of Quartus elaboration.
+    vga_px_reg_stb   <= '0';
+    vga_px_reg_adr   <= (others => '0');
+    vga_px_reg_dat_o <= (others => '0');
+    vga_px_reg_we    <= '0';
+    vga_px_reg_dat_i <= (others => '0');
+    vga_px_reg_ack   <= '0';
+    vga_reg_dat_i    <= (others => '0') when unsigned(vga_reg_adr) >= to_unsigned(16#1F80#, 16) else vga_txt_reg_dat_i;
+    vga_reg_ack      <= vga_reg_stb when unsigned(vga_reg_adr) >= to_unsigned(16#1F80#, 16) else vga_txt_reg_ack;
+    vga_pixel_mode   <= '0';
+    vga_pixel_r      <= (others => '0');
+    vga_pixel_g      <= (others => '0');
+    vga_pixel_b      <= (others => '0');
+    vga_pixel_hs     <= '1';
+    vga_pixel_vs     <= '1';
+    vga_pixel_blank  <= '0';
+    vga_pixel_sync   <= '1';
+    vga_pixel_clk    <= '0';
+    vga_sdram_rd_adr <= (others => '0');
+    vga_sdram_rd_req <= '0';
+
+    -- Bring-up build: disable NTT accelerator while preserving bus responsiveness.
+    ntt_wb_dat_i <= (others => '0');
+    ntt_wb_ack   <= ntt_wb_stb;
+
     -- ================================================================
     -- Clock and Reset Generation
     -- ================================================================
@@ -351,7 +406,8 @@ begin
         IMEM_SIZE       => 64*1024,
         DMEM_SIZE       => 16*1024,
         BOOT_MODE       => 2,
-        ICACHE_EN       => false
+        ICACHE_EN       => true,
+        ICACHE_BURSTS   => true
     )
     port map (
         clk_i       => clk_50m,
@@ -373,7 +429,7 @@ begin
         xbus_cyc_o  => xbus_cyc,
         xbus_ack_i  => xbus_ack,
         xbus_err_i  => xbus_err,
-        xbus_cti_o  => open,
+        xbus_cti_o  => xbus_cti,
         xbus_tag_o  => open,
         irq_mei_i   => intc_irq
     );
@@ -392,7 +448,7 @@ begin
         m_cyc_i  => xbus_cyc,
         m_ack_o  => xbus_ack,
         m_err_o  => xbus_err,
-        m_cti_i  => "000",
+        m_cti_i  => xbus_cti,
         s0_adr_o => sdram_wb_adr,
         s0_dat_i => sdram_wb_dat_i,
         s0_dat_o => sdram_wb_dat_o,
@@ -401,7 +457,7 @@ begin
         s0_stb_o => sdram_wb_stb,
         s0_cyc_o => sdram_wb_cyc,
         s0_ack_i => sdram_wb_ack,
-        s0_cti_o => open,
+        s0_cti_o => sdram_wb_cti,
         s1_adr_o => vga_reg_adr,
         s1_dat_i => vga_reg_dat_i,
         s1_dat_o => vga_reg_dat_o,
@@ -468,7 +524,7 @@ begin
         wb_cyc_i    => sdram_wb_cyc,
         wb_ack_o    => sdram_wb_ack,
         wb_err_o    => open,
-        wb_cti_i    => "000",
+        wb_cti_i    => sdram_wb_cti,
         clk_sdram_i => clk_sdram,
         rst_sdram_n => rst_sdram_n,
         dram_addr   => DRAM_ADDR,
@@ -479,7 +535,12 @@ begin
         dram_dq     => DRAM_DQ,
         dram_dqm    => DRAM_DQM,
         dram_ras_n  => DRAM_RAS_N,
-        dram_we_n   => DRAM_WE_N
+        dram_we_n   => DRAM_WE_N,
+        vga_rd_adr_i  => vga_sdram_rd_adr,
+        vga_rd_req_i  => vga_sdram_rd_req,
+        vga_rd_data_o => vga_sdram_rd_data,
+        vga_rd_valid_o=> vga_sdram_rd_valid,
+        vga_rd_done_o => vga_sdram_rd_done
     );
 
     -- DRAM 时钟使用相移版 PLL 输出，给板级地址/命令/写数据留 setup 裕量
@@ -502,12 +563,13 @@ begin
         vga_clk_o   => vga_clk_int,
         reg_adr_i   => vga_reg_adr,
         reg_dat_i   => vga_reg_dat_o,
-        reg_dat_o   => vga_reg_dat_i,
+        reg_dat_o   => vga_txt_reg_dat_i,
         reg_we_i    => vga_reg_we,
-        reg_stb_i   => vga_reg_stb,
-        reg_ack_o   => vga_reg_ack
+        reg_stb_i   => vga_txt_reg_stb,
+        reg_ack_o   => vga_txt_reg_ack
     );
 
+    -- Text-only bring-up build: route VGA directly from the text terminal.
     VGA_R       <= vga_r_int;
     VGA_G       <= vga_g_int;
     VGA_B       <= vga_b_int;
@@ -584,12 +646,6 @@ begin
 
     gpio_in(30) <= dbg_ir_valid;
     gpio_in(29 downto 22) <= dbg_ir_cmd;
-
-    -- ================================================================
-    -- NTT Accelerator @ 0xF000C000 (stubbed out in reduced-fit build)
-    -- ================================================================
-    ntt_wb_dat_i <= (others => '0');
-    ntt_wb_ack   <= ntt_wb_stb;
 
     -- LCD @ 0xF0008000 — shell/de2os-style Wishbone LCD controller
     u_lcd_shell : entity work.lcd_wb

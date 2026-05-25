@@ -36,7 +36,7 @@ static const char *test_names[5] = {
     "Case 2  Walking-1 bulk     ",
     "Case 3  Checkerboard       ",
     "Case 4  Address-as-data    ",
-    "Case 5  Sparse boundary   "
+    "Case 5  Sparse boundary    "
 };
 
 static const char *test_descs[5] = {

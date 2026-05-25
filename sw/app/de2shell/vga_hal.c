@@ -97,12 +97,12 @@
   #define VGA_BASE  0xF0000000
 
   /* VGA control registers (byte offsets from VGA_BASE) */
-  #define VGA_CTRL_CURSOR_X  0x1000
-  #define VGA_CTRL_CURSOR_Y  0x1004
-  #define VGA_CTRL_CONTROL   0x1008
-  #define VGA_CTRL_STATUS    0x100C
-  #define VGA_CTRL_BGCOLOR   0x1010
-  #define VGA_CTRL_CLEAR     0x1014
+  #define VGA_CTRL_CURSOR_X  0x1F40
+  #define VGA_CTRL_CURSOR_Y  0x1F44
+  #define VGA_CTRL_CONTROL   0x1F48
+  #define VGA_CTRL_STATUS    0x1F4C
+  #define VGA_CTRL_BGCOLOR   0x1F50
+  #define VGA_CTRL_CLEAR     0x1F54
 
   #define VGA_CTRL_ENABLE     0x01
   #define VGA_CTRL_BLINK      0x02

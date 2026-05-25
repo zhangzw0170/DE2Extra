@@ -19,7 +19,8 @@ entity neorv32_wrapper is
         ICACHE_EN       : boolean := false;     -- enable instruction cache for SDRAM exec
         ICACHE_BLOCKS   : natural := 64;        -- i-cache number of blocks (power of 2)
         ICACHE_BLOCK_SZ : natural := 32;        -- i-cache block size in bytes (power of 2)
-        ICACHE_BURSTS   : boolean := false      -- i-cache burst reads (needs burst-capable bus)
+        ICACHE_BURSTS   : boolean := false;     -- i-cache burst reads (needs burst-capable bus)
+        TRNG_EN         : boolean := true       -- enable neoTRNG; disable for faster bring-up builds
     );
     port (
         -- Clock and reset
@@ -203,7 +204,7 @@ begin
         IO_WDT_EN            => false,
 
         -- TRNG --
-        IO_TRNG_EN           => true,
+        IO_TRNG_EN           => TRNG_EN,
         IO_TRNG_FIFO         => 4,
         IO_TRNG_NUM_RO       => 3,
         IO_TRNG_NUM_INV      => 5,

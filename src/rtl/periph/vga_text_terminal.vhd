@@ -54,6 +54,12 @@ architecture rtl of vga_text_terminal is
     constant CHAR_H   : integer := 16;
     constant BUF_SIZE : integer := 2000;
     constant RAM_DEPTH : integer := 4096;  -- power-of-2
+    constant REG_CURSOR_X : integer := 16#1F40#;
+    constant REG_CURSOR_Y : integer := 16#1F44#;
+    constant REG_CONTROL  : integer := 16#1F48#;
+    constant REG_STATUS   : integer := 16#1F4C#;
+    constant REG_BGCOLOR  : integer := 16#1F50#;
+    constant REG_CLEAR    : integer := 16#1F54#;
 
     constant BLINK_MAX : integer := 25_000_000;  -- 0.5s @ 50MHz
 
@@ -145,7 +151,9 @@ begin
     vga_hs_o   <= '1' when h_count >= H_SYNC else '0';
     vga_vs_o   <= '1' when v_count >= V_SYNC else '0';
     vga_blank_o <= video_on;
-    vga_sync_o <= '1' when (h_count >= H_SYNC and v_count >= V_SYNC) else '0';
+    -- Match the known-good Exp6/Exp7 behaviour on DE2-115:
+    -- keep composite sync inactive during active video to avoid sync-on-green bias.
+    vga_sync_o <= '0' when (h_count >= H_SYNC and v_count >= V_SYNC) else '1';
 
     ----------------------------------------------------------------
     -- Blink counter (25MHz)
@@ -251,6 +259,11 @@ begin
                 vga_r_o <= x"00";
                 vga_g_o <= x"00";
                 vga_b_o <= x"00";
+            elsif py_d >= ROWS * CHAR_H then
+                -- Bottom margin: show background color (no text repeat)
+                vga_r_o <= bg_color(15 downto 11) & "000";
+                vga_g_o <= bg_color(10 downto 5)  & "00";
+                vga_b_o <= bg_color(4 downto 0)   & "000";
             else
                 vga_r_o <= color_rgb(15 downto 11) & "000";
                 vga_g_o <= color_rgb(10 downto 5)  & "00";
@@ -283,13 +296,13 @@ begin
                 if reg_stb_i = '1' and reg_we_i = '0' then
                     reg_ack <= '1';
                     addr_int := to_integer(unsigned(reg_adr_i));
-                    if addr_int = 16#1000# then
+                    if addr_int = REG_CURSOR_X then
                         reg_dat_o(6 downto 0) <= std_logic_vector(to_unsigned(cursor_x, 7));
-                    elsif addr_int = 16#1004# then
+                    elsif addr_int = REG_CURSOR_Y then
                         reg_dat_o(4 downto 0) <= std_logic_vector(to_unsigned(cursor_y, 5));
-                    elsif addr_int = 16#1008# then
+                    elsif addr_int = REG_CONTROL then
                         reg_dat_o <= (0 => ctrl_enable, 1 => ctrl_blink, 2 => ctrl_page, others => '0');
-                    elsif addr_int = 16#1010# then
+                    elsif addr_int = REG_BGCOLOR then
                         reg_dat_o <= x"0000" & bg_color;
                     end if;
                 end if;
@@ -303,23 +316,23 @@ begin
                         if word_addr < RAM_DEPTH then
                             char_ram(word_addr) <= reg_dat_i;
                         end if;
-                    elsif addr_int = 16#1000# then
+                    elsif addr_int = REG_CURSOR_X then
                         next_cx := to_integer(unsigned(reg_dat_i(6 downto 0)));
                         if next_cx < COLS then
                             cursor_x <= next_cx;
                         end if;
-                    elsif addr_int = 16#1004# then
+                    elsif addr_int = REG_CURSOR_Y then
                         next_cy := to_integer(unsigned(reg_dat_i(4 downto 0)));
                         if next_cy < ROWS then
                             cursor_y <= next_cy;
                         end if;
-                    elsif addr_int = 16#1008# then
+                    elsif addr_int = REG_CONTROL then
                         ctrl_enable <= reg_dat_i(0);
                         ctrl_blink  <= reg_dat_i(1);
                         ctrl_page   <= reg_dat_i(2);
-                    elsif addr_int = 16#1010# then
+                    elsif addr_int = REG_BGCOLOR then
                         bg_color <= reg_dat_i(15 downto 0);
-                    elsif addr_int = 16#1014# then
+                    elsif addr_int = REG_CLEAR then
                         if reg_dat_i(0) = '1' then
                             clr_active <= '1';
                             clr_addr <= 0;
@@ -331,15 +344,15 @@ begin
                         if word_addr < RAM_DEPTH then
                             reg_dat_o <= char_ram(word_addr);
                         end if;
-                    elsif addr_int = 16#1000# then
+                    elsif addr_int = REG_CURSOR_X then
                         reg_dat_o(6 downto 0) <= std_logic_vector(to_unsigned(cursor_x, 7));
-                    elsif addr_int = 16#1004# then
+                    elsif addr_int = REG_CURSOR_Y then
                         reg_dat_o(4 downto 0) <= std_logic_vector(to_unsigned(cursor_y, 5));
-                    elsif addr_int = 16#1008# then
+                    elsif addr_int = REG_CONTROL then
                         reg_dat_o <= (0 => ctrl_enable, 1 => ctrl_blink, 2 => ctrl_page, others => '0');
-                    elsif addr_int = 16#100C# then
+                    elsif addr_int = REG_STATUS then
                         reg_dat_o(0) <= not video_on;
-                    elsif addr_int = 16#1010# then
+                    elsif addr_int = REG_BGCOLOR then
                         reg_dat_o <= x"0000" & bg_color;
                     end if;
                 end if;

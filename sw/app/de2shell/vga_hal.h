@@ -23,6 +23,7 @@
 #define VGA_MAGENTA 0xF81F
 #define VGA_WHITE   0xFFFF
 #define VGA_GRAY    0x7BEF
+#define VGA_DKGRAY  0x4208
 
 /* Terminal dimensions */
 #define VGA_COLS 80

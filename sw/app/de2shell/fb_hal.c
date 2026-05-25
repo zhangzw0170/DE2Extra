@@ -61,6 +61,14 @@
       return 0;
   }
 
+  int fb_poll_events(void) {
+      SDL_Event e;
+      while (SDL_PollEvent(&e)) {
+          if (e.type == SDL_QUIT) return 0;
+      }
+      return 1;
+  }
+
   void fb_present(void) {
       uint8_t *pixels;
       int pitch;
@@ -71,6 +79,7 @@
       SDL_UnlockTexture(texture);
       SDL_RenderCopy(renderer, texture, NULL, NULL);
       SDL_RenderPresent(renderer);
+      fb_poll_events();
   }
 
   void fb_clear(uint8_t color) {
@@ -88,14 +97,24 @@
   /* ── NEORV32 SDRAM backend ─────────────────────────────────── */
   #include <neorv32.h>
 
-  /* Framebuffer base in SDRAM — must match VGA pixel mode config */
-  #define FRAMEBUFFER_BASE 0x01000000
+  #define SDRAM_BASE       0x01000000u
+  #define FRAMEBUFFER_BASE 0x01800000u
+  #define VGA_BASE         0xF0000000u
+  #define VGA_PX_MODE      0x1F80u
+  #define VGA_PX_FB_BASE   0x1F84u
 
   static volatile uint8_t * const fb = (volatile uint8_t *)FRAMEBUFFER_BASE;
+  static volatile uint32_t * const vga_regs = (volatile uint32_t *)VGA_BASE;
+
+  static void fb_hw_mode_set(uint32_t enable) {
+      vga_regs[VGA_PX_FB_BASE / 4u] = (FRAMEBUFFER_BASE - SDRAM_BASE) >> 2;
+      vga_regs[VGA_PX_MODE / 4u] = enable;
+  }
 
   void fb_init(void) {
       /* SDRAM should already be initialized by bootloader.
        * Just clear the framebuffer. */
+      fb_hw_mode_set(1u);
       fb_clear(FB_BLACK);
   }
 
@@ -120,7 +139,7 @@
   }
 
   void fb_shutdown(void) {
-      /* No-op */
+      fb_hw_mode_set(0u);
   }
 
 #endif

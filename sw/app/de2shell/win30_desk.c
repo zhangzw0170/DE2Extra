@@ -16,7 +16,7 @@
 
 #ifdef LOCAL_BUILD
   #include <stdio.h>
-  #include <conio.h>
+  #include <SDL.h>
 #else
   #include <neorv32.h>
 #endif
@@ -120,49 +120,36 @@ static void process_key(const gui_event_t *ev) {
 static void win30_update(void) {
     /* Poll for keyboard input */
 #ifdef LOCAL_BUILD
-    while (_kbhit()) {
-        int raw = _getch();
-        /* LOCAL_BUILD: raw is already ASCII, synthesize a key event */
-        gui_event_t ev;
-        ev.ascii = (uint8_t)raw;
-        ev.scancode = 0;
-        ev.is_press = 1;
-        ev.is_extended = 0;
-
-        /* Handle special keys from _getch */
-        if (raw == 0 || raw == 0xe0) {
-            /* Extended key — read the actual code */
-            raw = _getch();
-            ev.ascii = 0;
-            ev.is_extended = 1;
-            if (raw == 'H') ev.scancode = 0x75;      /* Up */
-            else if (raw == 'P') ev.scancode = 0x72;  /* Down */
-            else if (raw == 'K') ev.scancode = 0x6b;  /* Left */
-            else if (raw == 'M') ev.scancode = 0x74;  /* Right */
-            else if (raw == 'I') ev.scancode = 0x69;  /* End-ish (PageUp) */
-            else if (raw == 'G') ev.scancode = 0x6c;  /* Home-ish */
-            else if (raw == 'S') ev.scancode = 0x71;  /* Delete */
-            else { ev.scancode = (uint8_t)raw; }
-        }
-
-        process_key(&ev);
-    }
-#else
-    /* NEORV32: poll PS/2 hardware */
-    volatile uint32_t *ps2_base = (volatile uint32_t *)0xF0002000u;
-    uint32_t status = ps2_base[1];
-    while (status & 0x01u) {
-        uint8_t scancode = (uint8_t)ps2_base[0];
-        ps2_key_t key;
-        if (ps2_dec_feed(scancode, &key)) {
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) { desk_running = 0; return; }
+        if (e.type == SDL_KEYDOWN) {
             gui_event_t ev;
-            ev.ascii = key.ascii;
-            ev.scancode = key.scancode;
-            ev.is_press = key.is_press;
-            ev.is_extended = key.is_extended;
+            ev.ascii = 0;
+            ev.scancode = 0;
+            ev.is_press = 1;
+            ev.is_extended = 0;
+
+            SDL_Keymod mod = SDL_GetModState();
+            SDL_Keycode sym = e.key.keysym.sym;
+
+            if (sym == SDLK_ESCAPE)     { ev.ascii = 0x1b; }
+            else if (sym == SDLK_TAB)   { ev.ascii = 0x09; }
+            else if (sym == SDLK_RETURN){ ev.ascii = '\r'; }
+            else if (sym == SDLK_SPACE) { ev.ascii = ' '; }
+            else if (sym == SDLK_UP)    { ev.scancode = 0x75; ev.is_extended = 1; }
+            else if (sym == SDLK_DOWN)  { ev.scancode = 0x72; ev.is_extended = 1; }
+            else if (sym == SDLK_LEFT)  { ev.scancode = 0x6b; ev.is_extended = 1; }
+            else if (sym == SDLK_RIGHT) { ev.scancode = 0x74; ev.is_extended = 1; }
+            else if (sym == SDLK_F10)   { ev.ascii = 0; ev.scancode = 0x06; }
+            else if (sym >= ' ' && sym < 127) {
+                ev.ascii = (uint8_t)sym;
+                if (mod & (KMOD_LSHIFT | KMOD_RSHIFT)) {
+                    if (ev.ascii >= 'a' && ev.ascii <= 'z') ev.ascii -= 32;
+                }
+            }
             process_key(&ev);
         }
-        status = ps2_base[1];
     }
 #endif
 
@@ -173,7 +160,13 @@ static void win30_update(void) {
 }
 
 static void win30_input(char c) {
-    (void)c; /* all input handled in update() via PS/2 poll */
+    gui_event_t ev;
+
+    ev.ascii = (uint8_t)c;
+    ev.scancode = 0;
+    ev.is_press = 1;
+    ev.is_extended = 0;
+    process_key(&ev);
 }
 
 static int win30_finish(void) {

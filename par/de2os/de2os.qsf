@@ -42,6 +42,8 @@ set_global_assignment -name VHDL_FILE ../../src/rtl/periph/vga_text_terminal.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/lcd_debug.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/uart_jtag_bridge.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/de2os_top.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/ntt_sdf.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/vga_pixel_ctrl.vhd
 
 # IP cores
 # JTAG UART (Platform Designer generated)

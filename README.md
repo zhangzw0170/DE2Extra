@@ -40,7 +40,7 @@
 
 - **FPGA**: Cyclone IV E, 114,480 LEs, 266 硬件乘法器, 4 PLL
 - **存储**: 128MB SDRAM, 2MB SRAM, 8MB Flash, SD 卡槽
-- **显示**: 16×2 LCD, 8 个七段数码管, 27 个 LED (9G+18R), VGA (24-bit)
+- **显示**: 16×2 LCD, 8 个七段数码管, 27 个 LED (9G+18R), VGA (8-bit/通道 DAC, 当前用 RGB332)
 - **通信**: RS-232, PS/2 ×2, 红外接收, USB 2.0, 千兆以太网 ×2
 - **音频**: WM8731 24-bit CODEC
 - **输入**: 4 个按键, 18 个拨码开关
@@ -71,11 +71,12 @@ NEORV32 (v1.13.1) 作为 git submodule 引入。
 | `vga_text_terminal`       | `0xF0000000` | 80×25 彩色文字终端, 640×480@60Hz | ✅                  |
 | `ps2_controller`          | `0xF0002000` | PS/2 键盘 + FIFO + 中断            | ✅                  |
 | `ir_nec_wb`               | `0xF0009000` | 红外 NEC 协议解码                  | ✅                  |
-| `lcd_status` / `lcd_wb` | `0xF0008000` | HD44780 16×2 LCD                  | ✅                  |
-| `expdemo_wb`              | `0xF000D000` | 11 个课程实验硬件多路复用          | ✅                  |
-| `ntt_sdf`                 | `0xF000C000` | NTT 加速器 (q=3329, N=256)         | 🟡 编译通过, 待上板 |
-| `timer_wb`                | `0xF0004000` | 系统定时器                         | 🟡 预留             |
-| `intc_wb`                 | `0xF0006000` | 中断控制器                         | 🟡 预留             |
+| `lcd_status` + `lcd_debug` | — (GPIO)     | HD44780 16×2 LCD, GPIO 直驱       | ✅                  |
+| `lcd_wb`                   | `0xF0008000` | LCD Wishbone 接口                  | ❌ 占位             |
+| `expdemo_wb`               | `0xF000D000` | 11 个课程实验硬件多路复用          | ✅                  |
+| `ntt_sdf`                  | `0xF000C000` | NTT 加速器 (q=3329, N=256)         | 🟡 编译通过, 待上板 |
+| `timer_wb`                 | `0xF0004000` | 系统定时器 (IR 脉宽捕获)           | ✅                  |
+| `intc_wb`                  | `0xF0006000` | 中断控制器 (IR/Timer/PS2)          | ✅                  |
 
 ## 软件应用
 
@@ -83,7 +84,7 @@ NEORV32 (v1.13.1) 作为 git submodule 引入。
 | -------------------- | ----------------------------------------------------------------------------------------------------------- |
 | **de2shell**   | 主固件: 命令行 shell, memtest, crypto (AES/SHA/SM4+Zk*加速), snake, life, dashboard, expdemo, monitor, PS/2 |
 | **de2os**      | 实验性: FreeRTOS + SDRAM 执行 + ICACHE burst                                                                |
-| **crypto_cli** | 独立密码学 CLI                                                                                              |
+| **crypto_cli** | 密码学算法库 (源码被 de2shell 链接复用)                                                                                              |
 | **hello**      | Phase 0 验证: LED 跑马灯                                                                                    |
 | **sdram_test** | SDRAM 诊断工具                                                                                              |
 | **ps2_test**   | PS/2 扫描码测试                                                                                             |
@@ -135,12 +136,12 @@ DE2Extra/
 ./build.sh --flash app/de2shell
 ```
 
-或手动分步:
+或手动分步（当 `build.sh` 包装层出现偶发伪失败时使用）:
 
 ```bash
-# 1. 固件编译
+# 1. 固件编译 (注意: clean 后需重建 build/ 目录)
 docker run --rm -v "$(pwd):/project" de2extra-builder bash -lc \
-  'export PATH=/opt/riscv/bin:$PATH; cd /project/sw/app/de2shell && make clean && make image NEORV32_HOME=/project/neorv32'
+  'export PATH=/opt/riscv/bin:$PATH; cd /project/sw/app/de2shell && make clean NEORV32_HOME=/project/neorv32 && mkdir -p build && make image NEORV32_HOME=/project/neorv32'
 
 # 2. 复制 IMEM 镜像
 cp sw/app/de2shell/neorv32_imem_image.vhd src/rtl/
@@ -150,6 +151,8 @@ quartus_sh --flow compile par/de2extra -c de2extra
 ```
 
 > **重要**: NEORV32 使用 VHDL-2008。首次打开工程须在 Quartus 中设置: Assignments → Settings → VHDL Input → VHDL 2008。
+>
+> `build.sh` 在当前 Windows 环境下偶有伪失败（Docker 链接错误等），属包装层稳定性问题而非代码问题。遇到时切换到上面的手动分步路径即可。详见 [`doc/编译烧录前必看.md`](doc/编译烧录前必看.md)。
 
 ### de2os (实验)
 
@@ -160,9 +163,7 @@ cd par/de2os && quartus_sh --flow compile de2os
 
 ## 验收状态
 
-详见 [`doc/de2shell-module-acceptance.md`](doc/de2shell-module-acceptance.md)。
-
-当前: **136/156 项通过** (17 项待 VGA 显示器, 3 项待 NTT 硬件恢复)
+详见 [验收表](doc/de2shell-module-acceptance.md)
 
 ## 许可
 

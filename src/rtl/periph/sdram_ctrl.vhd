@@ -48,7 +48,14 @@ entity sdram_ctrl is
         dram_dq     : inout std_logic_vector(31 downto 0);
         dram_dqm    : out std_logic_vector(3 downto 0);
         dram_ras_n  : out std_logic;
-        dram_we_n   : out std_logic
+        dram_we_n   : out std_logic;
+
+        -- VGA burst read port (50 MHz domain)
+        vga_rd_adr_i  : in  std_logic_vector(24 downto 0);
+        vga_rd_req_i  : in  std_logic;
+        vga_rd_data_o : out std_logic_vector(31 downto 0);
+        vga_rd_valid_o: out std_logic;
+        vga_rd_done_o : out std_logic
     );
 end entity sdram_ctrl;
 
@@ -76,9 +83,12 @@ architecture rtl of sdram_ctrl is
         S_WRITE_SETUP, S_WRITE_CMD, S_WRITE_WAIT, S_WRITE_RECOVERY,
         S_PRECHARGE, S_TRP_WAIT,
         S_PRECHG_WAIT, S_REF_WAIT, S_MODE_WAIT,
-        -- Burst read states
+        -- CPU burst read states
         S_BURST_TRCD_WAIT, S_BURST_READ, S_BURST_CAS_WAIT,
-        S_BURST_CAPTURE, S_BURST_PRECHARGE, S_BURST_TRP_WAIT
+        S_BURST_CAPTURE, S_BURST_PRECHARGE, S_BURST_TRP_WAIT,
+        -- VGA burst read states
+        S_VGA_TRCD_WAIT, S_VGA_READ,
+        S_VGA_CAPTURE, S_VGA_PRECHARGE, S_VGA_TRP_WAIT
     );
 
     signal state       : state_t;
@@ -157,10 +167,29 @@ architecture rtl of sdram_ctrl is
     signal burst_pop_cnt : unsigned(2 downto 0);
     signal burst_active  : std_logic;
 
+    -- VGA burst read port signals
+    signal vga_toggle_cpu    : std_logic;
+    signal vga_toggle_sync   : std_logic_vector(2 downto 0);
+    signal vga_seen_100m     : std_logic;
+    signal vga_fire_100m     : std_logic;
+    signal vga_valid         : std_logic;
+    signal vga_adr           : std_logic_vector(24 downto 0);
+    signal vga_col_cnt       : unsigned(2 downto 0);
+
+    -- VGA async FIFO
+    signal vga_fifo_wr_en    : std_logic;
+    signal vga_fifo_wr_data  : std_logic_vector(31 downto 0);
+    signal vga_fifo_wr_full  : std_logic;
+    signal vga_fifo_rd_en    : std_logic;
+    signal vga_fifo_rd_data  : std_logic_vector(31 downto 0);
+    signal vga_fifo_rd_empty : std_logic;
+    signal vga_fifo_pop_cnt  : unsigned(2 downto 0);
+    signal vga_burst_active  : std_logic;
+
 begin
 
     -- ================================================================
-    -- Async FIFO instantiation
+    -- Async FIFO instantiation (CPU burst)
     -- ================================================================
     u_fifo : entity work.async_fifo
     generic map (
@@ -178,6 +207,27 @@ begin
         rd_en_i    => fifo_rd_en,
         rd_data_o  => fifo_rd_data,
         rd_empty_o => fifo_rd_empty
+    );
+
+    -- ================================================================
+    -- VGA async FIFO instantiation
+    -- ================================================================
+    u_vga_fifo : entity work.async_fifo
+    generic map (
+        DWIDTH => 32,
+        DEPTH  => 8
+    )
+    port map (
+        wr_clk_i   => clk_sdram_i,
+        wr_rst_n_i => rst_sdram_n,
+        wr_en_i    => vga_fifo_wr_en,
+        wr_data_i  => vga_fifo_wr_data,
+        wr_full_o  => vga_fifo_wr_full,
+        rd_clk_i   => clk_cpu_i,
+        rd_rst_n_i => rst_n_i,
+        rd_en_i    => vga_fifo_rd_en,
+        rd_data_o  => vga_fifo_rd_data,
+        rd_empty_o => vga_fifo_rd_empty
     );
 
     -- ================================================================
@@ -362,6 +412,58 @@ begin
     wb_err_o <= '0';
 
     -- ================================================================
+    -- VGA burst read: CDC + toggle detect (50MHz → 100MHz)
+    -- ================================================================
+    p_sync_vga : process (clk_sdram_i, rst_sdram_n)
+    begin
+        if rst_sdram_n = '0' then
+            vga_toggle_sync <= (others => '0');
+            vga_seen_100m   <= '0';
+        elsif rising_edge(clk_sdram_i) then
+            vga_toggle_sync <= vga_toggle_sync(1 downto 0) & vga_toggle_cpu;
+            vga_seen_100m   <= vga_toggle_sync(2);
+        end if;
+    end process;
+
+    vga_fire_100m <= vga_toggle_sync(2) xor vga_seen_100m;
+
+    -- VGA toggle: latch request address on vga_rd_req_i rising edge
+    p_vga_req : process (clk_cpu_i, rst_n_i)
+    begin
+        if rst_n_i = '0' then
+            vga_toggle_cpu <= '0';
+        elsif rising_edge(clk_cpu_i) then
+            if vga_rd_req_i = '1' then
+                vga_toggle_cpu <= not vga_toggle_cpu;
+            end if;
+        end if;
+    end process;
+
+    -- ================================================================
+    -- VGA burst pop side (50 MHz domain)
+    -- ================================================================
+    vga_burst_active <= vga_fire_100m or vga_valid;  -- simplified
+
+    vga_fifo_rd_en <= '1' when vga_fifo_rd_empty = '0' and
+                              (vga_rd_req_i = '1' or vga_fifo_pop_cnt /= 0)
+                       else '0';
+
+    p_vga_pop : process (clk_cpu_i, rst_n_i)
+    begin
+        if rst_n_i = '0' then
+            vga_fifo_pop_cnt <= (others => '0');
+        elsif rising_edge(clk_cpu_i) then
+            if vga_fifo_rd_en = '1' then
+                vga_fifo_pop_cnt <= vga_fifo_pop_cnt + 1;
+            end if;
+        end if;
+    end process;
+
+    vga_rd_data_o  <= vga_fifo_rd_data;
+    vga_rd_valid_o <= vga_fifo_rd_en;
+    vga_rd_done_o  <= '1' when vga_fifo_pop_cnt = 7 and vga_fifo_rd_en = '1' else '0';
+
+    -- ================================================================
     -- SDRAM 状态机 (100MHz, with burst support)
     -- ================================================================
     p_sdram : process (clk_sdram_i, rst_sdram_n)
@@ -396,12 +498,18 @@ begin
             burst_col_cnt <= (others => '0');
             fifo_wr_en   <= '0';
             fifo_wr_data <= (others => '0');
+            vga_valid    <= '0';
+            vga_adr      <= (others => '0');
+            vga_col_cnt  <= (others => '0');
+            vga_fifo_wr_en <= '0';
+            vga_fifo_wr_data <= (others => '0');
         elsif rising_edge(clk_sdram_i) then
             dram_cke <= '1';
             dq_oe    <= '0';
             cmd_v    := CMD_NOP;
             dram_dqm <= (others => '0');
             fifo_wr_en <= '0';
+            vga_fifo_wr_en <= '0';
 
             case state is
 
@@ -464,7 +572,7 @@ begin
                     if ref_cnt = 0 then
                         state <= S_AUTO_REFRESH;
                     else
-                        -- Priority: burst > single-word
+                        -- Priority: burst > VGA > single-word
                         if burst_fire_100m = '1' then
                             burst_valid <= '1';
                             burst_adr   <= burst_req_shadow_adr;
@@ -476,6 +584,17 @@ begin
                             row_r   <= burst_adr(23 downto 11);
                             col_r   <= burst_adr(9 downto 0);
                             burst_col_cnt <= (others => '0');
+                            state   <= S_ACTIVATE;
+                        elsif vga_fire_100m = '1' then
+                            vga_valid <= '1';
+                            vga_adr   <= vga_rd_adr_i;
+                        elsif vga_valid = '1' then
+                            addr_r  <= vga_adr;
+                            we_r    <= '0';
+                            ba_r    <= vga_adr(24) & vga_adr(10);
+                            row_r   <= vga_adr(23 downto 11);
+                            col_r   <= vga_adr(9 downto 0);
+                            vga_col_cnt <= (others => '0');
                             state   <= S_ACTIVATE;
                         elsif req_valid = '1' then
                             addr_r    <= req_adr;
@@ -502,9 +621,11 @@ begin
                     dram_ba  <= ba_r;
                     dram_addr <= row_r;
                     trcd_cnt <= (others => '0');
-                    -- Route to burst or single-word path after tRCD
+                    -- Route to burst, VGA, or single-word path after tRCD
                     if burst_valid = '1' then
                         state <= S_BURST_TRCD_WAIT;
+                    elsif vga_valid = '1' then
+                        state <= S_VGA_TRCD_WAIT;
                     else
                         state <= S_TRCD_WAIT;
                     end if;
@@ -616,6 +737,52 @@ begin
                     trcd_cnt <= trcd_cnt + 1;
                     if trcd_cnt = 1 then
                         burst_valid <= '0';
+                        state <= S_IDLE;
+                    end if;
+
+                -- ── VGA burst read path ──
+                when S_VGA_TRCD_WAIT =>
+                    trcd_cnt <= trcd_cnt + 1;
+                    if trcd_cnt = 1 then
+                        state   <= S_VGA_READ;
+                        cas_cnt <= (others => '0');
+                    end if;
+
+                when S_VGA_READ =>
+                    if cas_cnt = 0 then
+                        vga_col_cnt <= vga_col_cnt;  -- latch for address calc
+                        cmd_v := CMD_READ;
+                        dram_addr <= "000" & std_logic_vector(unsigned(col_r) + resize(vga_col_cnt, 10));
+                        dram_ba   <= ba_r;
+                        dram_dqm  <= (others => '0');
+                    end if;
+                    if cas_cnt = 4 then
+                        state <= S_VGA_CAPTURE;
+                    end if;
+                    cas_cnt <= cas_cnt + 1;
+
+                when S_VGA_CAPTURE =>
+                    vga_fifo_wr_en   <= '1';
+                    vga_fifo_wr_data <= dram_dq;
+                    if vga_col_cnt = BURST_WORDS - 1 then
+                        state <= S_VGA_PRECHARGE;
+                    else
+                        vga_col_cnt <= vga_col_cnt + 1;
+                        state <= S_VGA_READ;
+                        cas_cnt <= (others => '0');
+                    end if;
+
+                when S_VGA_PRECHARGE =>
+                    cmd_v     := CMD_PRECHG;
+                    dram_ba   <= ba_r;
+                    dram_addr <= (others => '0');
+                    trcd_cnt  <= (others => '0');
+                    state     <= S_VGA_TRP_WAIT;
+
+                when S_VGA_TRP_WAIT =>
+                    trcd_cnt <= trcd_cnt + 1;
+                    if trcd_cnt = 1 then
+                        vga_valid <= '0';
                         state <= S_IDLE;
                     end if;
 

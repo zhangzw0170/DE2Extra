@@ -84,7 +84,6 @@ typedef enum {
     PROG_INFO,
     PROG_MONITOR,
     PROG_DEMO,
-    PROG_WIN30,
     PROG_COUNT
 } prog_id_t;
 
@@ -103,7 +102,6 @@ extern const program_t prog_life;
 extern const program_t prog_info;
 extern const program_t prog_monitor;
 extern const program_t prog_demo;
-extern const program_t prog_win30;
 
 /* Dummy strcmp for NEORV32 target (no libc) */
 #ifndef LOCAL_BUILD
@@ -129,7 +127,6 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_INFO]      = &prog_info,
     [PROG_MONITOR]   = &prog_monitor,
     [PROG_DEMO]      = &prog_demo,
-    [PROG_WIN30]     = &prog_win30,
 };
 
 static prog_id_t active_prog = PROG_SHELL;
@@ -343,7 +340,7 @@ static void shell_init(void) {
     vga_goto(0, 0);
     vga_puts("DE2Extra Shell v0.2\n", VGA_CYAN);
     vga_puts("Commands: help hello memtest crypto ps2 snake conwaylife info\n", VGA_GRAY);
-    vga_puts("          riscvasm expdemo lcdmon win30 cls quit\n", VGA_GRAY);
+    vga_puts("          riscvasm expdemo lcdmon cls quit\n", VGA_GRAY);
     vga_puts("Repo: https://github.com/zhangzw0170/DE2Extra.git\n", VGA_GRAY);
     vga_puts("KEY0 reset  KEY1 run SW[3:0] channel  KEY2 shell/home  KEY3 clear/reinit\n\n",
              VGA_GRAY);
@@ -416,7 +413,7 @@ static void shell_input(char c) {
         if (shell_line_pos == 0) {
             /* empty line — show prompt again */
         } else if (strcmp(shell_line, "help") == 0) {
-            vga_puts("Commands: hello, memtest, crypto, ps2, snake, conwaylife, info, riscvasm, expdemo, lcdmon, win30, cls, quit\n",
+            vga_puts("Commands: hello, memtest, crypto, ps2, snake, conwaylife, info, riscvasm, expdemo, lcdmon, cls, quit\n",
                      VGA_GREEN);
         } else if (strcmp(shell_line, "hello") == 0) {
             enter_program(PROG_HELLO);
@@ -441,8 +438,6 @@ static void shell_input(char c) {
             enter_program(PROG_DEMO);
         } else if (strcmp(shell_line, "lcdmon") == 0) {
             shell_show_lcd_shadow();
-        } else if (strcmp(shell_line, "win30") == 0 || strcmp(shell_line, "gui") == 0) {
-            enter_program(PROG_WIN30);
         } else if (strcmp(shell_line, "cls") == 0) {
             shell_init();
             prompt_already_printed = 1;

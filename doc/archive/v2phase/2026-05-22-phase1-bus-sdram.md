@@ -1,5 +1,6 @@
 # Phase 1: Bus + SDRAM — Implementation Plan
 
+> **计划执行时间: 2026-05-23 14:12** | **归档: Phase 1 全部验收通过**
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix SDRAM hold timing violation and implement a generic Wishbone interconnect so all future peripherals can be added by just editing an address table.

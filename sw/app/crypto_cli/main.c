@@ -32,11 +32,11 @@
 
   /* ── VGA text terminal (0xF0000000) ── */
   #define VGA_BASE            0xF0000000u
-  #define VGA_CTRL_CURSOR_X   0x1000
-  #define VGA_CTRL_CURSOR_Y   0x1004
-  #define VGA_CTRL_CONTROL    0x1008
-  #define VGA_CTRL_BGCOLOR    0x1010
-  #define VGA_CTRL_CLEAR      0x1014
+  #define VGA_CTRL_CURSOR_X   0x1F40
+  #define VGA_CTRL_CURSOR_Y   0x1F44
+  #define VGA_CTRL_CONTROL    0x1F48
+  #define VGA_CTRL_BGCOLOR    0x1F50
+  #define VGA_CTRL_CLEAR      0x1F54
   #define VGA_COLS            80
   #define VGA_ROWS            25
   #define VGA_WHITE           0xFF   /* RGB332 */
