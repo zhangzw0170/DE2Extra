@@ -27,7 +27,7 @@
 
 /* Terminal dimensions */
 #define VGA_COLS 80
-#define VGA_ROWS 25
+#define VGA_ROWS 30
 
 /* Initialize VGA (clear screen, show static cursor, home) */
 void vga_init(void);
@@ -44,6 +44,9 @@ void vga_goto(int col, int row);
 /* Clear entire screen */
 void vga_clear(void);
 
+/* Clear one text row using the given foreground color */
+void vga_clear_line(int row, uint16_t color);
+
 /* Monotonic counter incremented by every vga_clear() */
 uint32_t vga_clear_epoch(void);
 
@@ -55,6 +58,16 @@ int vga_col(void);
 
 /* Get current cursor row */
 int vga_row(void);
+
+/* Restrict automatic scrolling/wrapping to a text window [top, bottom]. */
+void vga_set_scroll_region(int top, int bottom);
+
+/* Restore the text window to the full screen. */
+void vga_reset_scroll_region(void);
+
+/* Wait for VGA vertical blank (polls REG_STATUS bit 0).
+ * All subsequent writes land in one blanking interval. */
+void vga_wait_vblank(void);
 
 /* Print 32-bit hex value */
 void vga_puthex32(uint32_t val);

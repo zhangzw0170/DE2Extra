@@ -4,14 +4,30 @@
 #include "vga_hal.h"
 #include <stdint.h>
 
-#define GRID_W 40
-#define GRID_H 20
+#define GRID_W 78
+#define GRID_H 27
 #define MAX_SNAKE (GRID_W * GRID_H)
+
+/* CP437 box-drawing characters */
+#define CH_BOX_TL  '\xDA'  /* ┌ */
+#define CH_BOX_TR  '\xBF'  /* ┐ */
+#define CH_BOX_BL  '\xC0'  /* └ */
+#define CH_BOX_BR  '\xD9'  /* ┘ */
+#define CH_BOX_HZ  '\xC4'  /* ─ */
+#define CH_BOX_VT  '\xBA'  /* │ */
 
 /* ── Game State ───────────────────────────────────────────────── */
 
-static int snake_x[MAX_SNAKE];
-static int snake_y[MAX_SNAKE];
+static int snake_x[MAX_SNAKE]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
+static int snake_y[MAX_SNAKE]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
 static int snake_len;
 static int dir_x, dir_y;
 static int food_x, food_y;
@@ -63,22 +79,29 @@ static void init(void) {
     place_food();
 
     vga_clear();
-    /* draw border */
-    vga_goto(0, 2);
-    vga_putc('+', VGA_WHITE);
-    for (int x = 0; x < GRID_W; x++) vga_putc('-', VGA_WHITE);
-    vga_putc('+', VGA_WHITE);
+
+    /* HUD: top row */
+    vga_goto(1, 0);
+    vga_puts("SNAKE  Score:    0", VGA_CYAN);
+
+    /* CP437 box-drawing border — occupies rows 1..GRID_H+2, cols 0..GRID_W+1 */
+    vga_goto(0, 1);
+    vga_putc(CH_BOX_TL, VGA_WHITE);
+    for (int x = 0; x < GRID_W; x++) vga_putc(CH_BOX_HZ, VGA_WHITE);
+    vga_putc(CH_BOX_TR, VGA_WHITE);
     for (int y = 0; y < GRID_H; y++) {
-        vga_goto(0, y + 3); vga_putc('|', VGA_WHITE);
-        vga_goto(GRID_W + 1, y + 3); vga_putc('|', VGA_WHITE);
+        vga_goto(0, y + 2);
+        vga_putc(CH_BOX_VT, VGA_WHITE);
+        vga_goto(GRID_W + 1, y + 2);
+        vga_putc(CH_BOX_VT, VGA_WHITE);
     }
-    vga_goto(0, GRID_H + 3);
-    vga_putc('+', VGA_WHITE);
-    for (int x = 0; x < GRID_W; x++) vga_putc('-', VGA_WHITE);
-    vga_putc('+', VGA_WHITE);
+    vga_goto(0, GRID_H + 2);
+    vga_putc(CH_BOX_BL, VGA_WHITE);
+    for (int x = 0; x < GRID_W; x++) vga_putc(CH_BOX_HZ, VGA_WHITE);
+    vga_putc(CH_BOX_BR, VGA_WHITE);
 
     /* Draw initial food */
-    vga_goto(food_x + 1, food_y + 3);
+    vga_goto(food_x + 1, food_y + 2);
     vga_putc('@', VGA_RED);
 
     initialized = 1;
@@ -120,28 +143,27 @@ static void update(void) {
         place_food();
     }
 
+    /* Wait for vblank before drawing to avoid tearing artifacts */
+    vga_wait_vblank();
+
     /* Incremental VGA redraw — no full clear */
     if (!ate) {
-        /* Erase old tail cell */
-        vga_goto(old_tail_x + 1, old_tail_y + 3);
+        vga_goto(old_tail_x + 1, old_tail_y + 2);
         vga_putc(' ', VGA_BLACK);
     }
-    /* Old head becomes body segment */
     if (snake_len > 1) {
-        vga_goto(snake_x[1] + 1, snake_y[1] + 3);
+        vga_goto(snake_x[1] + 1, snake_y[1] + 2);
         vga_putc('o', VGA_GREEN);
     }
-    /* Draw new head */
-    vga_goto(snake_x[0] + 1, snake_y[0] + 3);
+    vga_goto(snake_x[0] + 1, snake_y[0] + 2);
     vga_putc('O', VGA_YELLOW);
-    /* Draw new food if old one was eaten */
     if (ate) {
-        vga_goto(food_x + 1, food_y + 3);
+        vga_goto(food_x + 1, food_y + 2);
         vga_putc('@', VGA_RED);
     }
 
     /* HUD */
-    vga_goto(0, 0);
+    vga_goto(1, 0);
     vga_puts("SNAKE  Score:", VGA_CYAN);
     char buf[5];
     int s = score;
@@ -151,7 +173,7 @@ static void update(void) {
     vga_puts("  ", VGA_BLACK);
 
     if (game_over) {
-        vga_goto(GRID_W/2 - 4, GRID_H/2 + 3);
+        vga_goto(GRID_W / 2 - 4, GRID_H / 2 + 2);
         vga_puts("GAME OVER", VGA_RED);
     }
 }

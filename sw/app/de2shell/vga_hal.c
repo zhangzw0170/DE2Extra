@@ -14,12 +14,21 @@
   static int cur_col = 0;
   static int cur_row = 0;
   static uint32_t clear_epoch = 0;
+  static int scroll_top = 0;
+  static int scroll_bottom = VGA_ROWS - 1;
+
+  static void scroll_if_needed(void) {
+      if (cur_row > scroll_bottom) {
+          cur_row = scroll_bottom;
+      }
+  }
 
   static void advance_cursor(void) {
       cur_col++;
       if (cur_col >= VGA_COLS) {
           cur_col = 0;
-          cur_row = (cur_row + 1) % VGA_ROWS;
+          cur_row++;
+          scroll_if_needed();
       }
   }
 
@@ -27,6 +36,8 @@
       printf("\033[2J\033[H\033[?25h");  /* clear, home, show cursor */
       cur_col = 0;
       cur_row = 0;
+      scroll_top = 0;
+      scroll_bottom = VGA_ROWS - 1;
   }
 
   void vga_putc(char c, uint16_t color) {
@@ -34,7 +45,8 @@
       if (c == '\n') {
           putchar('\n');
           cur_col = 0;
-          cur_row = (cur_row + 1) % VGA_ROWS;
+          cur_row++;
+          scroll_if_needed();
           return;
       }
       if (c == '\r') {
@@ -67,8 +79,17 @@
   void vga_clear(void) {
       printf("\033[2J\033[H");
       cur_col = 0;
-      cur_row = 0;
+      cur_row = scroll_top;
       clear_epoch++;
+  }
+
+  void vga_clear_line(int row, uint16_t color) {
+      (void)color;
+      vga_goto(0, row);
+      for (int i = 0; i < VGA_COLS; i++) {
+          putchar(' ');
+      }
+      vga_goto(0, row);
   }
 
   void vga_cursor_show(int show) {
@@ -78,6 +99,26 @@
   int vga_col(void) { return cur_col; }
   int vga_row(void) { return cur_row; }
   uint32_t vga_clear_epoch(void) { return clear_epoch; }
+
+  void vga_set_scroll_region(int top, int bottom) {
+      if (top < 0) top = 0;
+      if (bottom >= VGA_ROWS) bottom = VGA_ROWS - 1;
+      if (bottom < top) bottom = top;
+      scroll_top = top;
+      scroll_bottom = bottom;
+      if (cur_row < scroll_top || cur_row > scroll_bottom) {
+          cur_col = 0;
+          cur_row = scroll_top;
+      }
+  }
+
+  void vga_reset_scroll_region(void) {
+      vga_set_scroll_region(0, VGA_ROWS - 1);
+  }
+
+  void vga_wait_vblank(void) {
+      /* No-op in SDL2 local build */
+  }
 
   void vga_puthex32(uint32_t val) {
       printf("%08X", (unsigned)val);
@@ -96,13 +137,16 @@
   /* VGA text buffer base address (from de2extra_pkg.vhd ADDR_VGA_BASE) */
   #define VGA_BASE  0xF0000000
 
-  /* VGA control registers (byte offsets from VGA_BASE) */
-  #define VGA_CTRL_CURSOR_X  0x1F40
-  #define VGA_CTRL_CURSOR_Y  0x1F44
-  #define VGA_CTRL_CONTROL   0x1F48
-  #define VGA_CTRL_STATUS    0x1F4C
-  #define VGA_CTRL_BGCOLOR   0x1F50
-  #define VGA_CTRL_CLEAR     0x1F54
+  #define VGA_TEXT_WORDS     (VGA_COLS * VGA_ROWS)
+  #define VGA_TEXT_BYTES     (VGA_TEXT_WORDS * 4)
+
+  /* VGA text control registers live immediately after the visible text buffer. */
+  #define VGA_CTRL_CURSOR_X  (VGA_TEXT_BYTES + 0x00)
+  #define VGA_CTRL_CURSOR_Y  (VGA_TEXT_BYTES + 0x04)
+  #define VGA_CTRL_CONTROL   (VGA_TEXT_BYTES + 0x08)
+  #define VGA_CTRL_STATUS    (VGA_TEXT_BYTES + 0x0C)
+  #define VGA_CTRL_BGCOLOR   (VGA_TEXT_BYTES + 0x10)
+  #define VGA_CTRL_CLEAR     (VGA_TEXT_BYTES + 0x14)
 
   #define VGA_CTRL_ENABLE     0x01
   #define VGA_CTRL_BLINK      0x02
@@ -114,6 +158,44 @@
   static int cur_col = 0;
   static int cur_row = 0;
   static uint32_t clear_epoch = 0;
+  static int scroll_top = 0;
+  static int scroll_bottom = VGA_ROWS - 1;
+
+  static void hw_write_cell(int col, int row, char c, uint16_t color);
+
+  static void hw_fill_screen(uint16_t color) {
+#if VGA_MMIO_ENABLED
+      for (int i = 0; i < VGA_COLS * VGA_ROWS; i++) {
+          vga_buf[i] = ((uint32_t)' ' << 24) | (uint32_t)color;
+      }
+#else
+      (void)color;
+#endif
+  }
+
+  static void hw_clear_row(int row, uint16_t color) {
+#if VGA_MMIO_ENABLED
+      for (int col = 0; col < VGA_COLS; col++) {
+          hw_write_cell(col, row, ' ', color);
+      }
+#else
+      (void)row;
+      (void)color;
+#endif
+  }
+
+  static void hw_scroll_up_region(uint16_t color) {
+#if VGA_MMIO_ENABLED
+      for (int row = scroll_top; row < scroll_bottom; row++) {
+          for (int col = 0; col < VGA_COLS; col++) {
+              vga_buf[row * VGA_COLS + col] = vga_buf[(row + 1) * VGA_COLS + col];
+          }
+      }
+      hw_clear_row(scroll_bottom, color);
+#else
+      (void)color;
+#endif
+  }
 
   static void hw_cursor_sync(void) {
 #if VGA_MMIO_ENABLED
@@ -169,18 +251,24 @@
       cur_col++;
       if (cur_col >= VGA_COLS) {
           cur_col = 0;
-          cur_row = (cur_row + 1) % VGA_ROWS;
+          cur_row++;
+          if (cur_row > scroll_bottom) {
+              hw_scroll_up_region(VGA_BLACK);
+              cur_row = scroll_bottom;
+          }
       }
   }
 
   void vga_init(void) {
 #if VGA_MMIO_ENABLED
-      vga_buf[VGA_CTRL_CLEAR / 4] = 0x00000001;       /* clear screen */
-      vga_buf[VGA_CTRL_CONTROL / 4] = VGA_CTRL_ENABLE; /* visible, non-blinking cursor */
+      vga_buf[VGA_CTRL_CONTROL / 4] = VGA_CTRL_ENABLE | VGA_CTRL_BLINK;
       vga_buf[VGA_CTRL_BGCOLOR / 4] = VGA_BLACK;
+      hw_fill_screen(VGA_BLACK);
 #endif
       cur_col = 0;
       cur_row = 0;
+      scroll_top = 0;
+      scroll_bottom = VGA_ROWS - 1;
       hw_cursor_sync();
       neorv32_uart0_puts("\033[2J\033[H\033[?25h");
   }
@@ -189,7 +277,11 @@
       if (c == '\n') {
           neorv32_uart0_puts("\r\n");
           cur_col = 0;
-          cur_row = (cur_row + 1) % VGA_ROWS;
+          cur_row++;
+          if (cur_row > scroll_bottom) {
+              hw_scroll_up_region(VGA_BLACK);
+              cur_row = scroll_bottom;
+          }
           hw_cursor_sync();
           return;
       }
@@ -232,13 +324,23 @@
 
   void vga_clear(void) {
 #if VGA_MMIO_ENABLED
-      vga_buf[VGA_CTRL_CLEAR / 4] = 0x00000001;
+      hw_fill_screen(VGA_BLACK);
 #endif
       cur_col = 0;
-      cur_row = 0;
+      cur_row = scroll_top;
       clear_epoch++;
       hw_cursor_sync();
       neorv32_uart0_puts("\033[2J\033[H");
+  }
+
+  void vga_clear_line(int row, uint16_t color) {
+      if (row < 0 || row >= VGA_ROWS) {
+          return;
+      }
+      hw_clear_row(row, color);
+      if (cur_row == row) {
+          hw_cursor_sync();
+      }
   }
 
   void vga_cursor_show(int show) {
@@ -246,7 +348,7 @@
       uint32_t ctrl = vga_buf[VGA_CTRL_CONTROL / 4];
       if (show) {
           ctrl |= VGA_CTRL_ENABLE;
-          ctrl &= ~(uint32_t)VGA_CTRL_BLINK;
+          ctrl |= VGA_CTRL_BLINK;
       } else {
           ctrl &= ~(uint32_t)VGA_CTRL_ENABLE;
       }
@@ -258,6 +360,30 @@
   int vga_col(void) { return cur_col; }
   int vga_row(void) { return cur_row; }
   uint32_t vga_clear_epoch(void) { return clear_epoch; }
+
+  void vga_set_scroll_region(int top, int bottom) {
+      if (top < 0) top = 0;
+      if (bottom >= VGA_ROWS) bottom = VGA_ROWS - 1;
+      if (bottom < top) bottom = top;
+      scroll_top = top;
+      scroll_bottom = bottom;
+      if (cur_row < scroll_top || cur_row > scroll_bottom) {
+          cur_col = 0;
+          cur_row = scroll_top;
+          hw_cursor_sync();
+      }
+  }
+
+  void vga_reset_scroll_region(void) {
+      vga_set_scroll_region(0, VGA_ROWS - 1);
+  }
+
+  void vga_wait_vblank(void) {
+      volatile uint32_t *status = (volatile uint32_t *)(VGA_BASE + VGA_CTRL_STATUS);
+      /* REG_STATUS bit 0 = not video_on (1 during vblank) */
+      while (!((*status) & 1u))
+          ;
+  }
 
   void vga_puthex32(uint32_t val) {
       static const char h[] = "0123456789ABCDEF";
