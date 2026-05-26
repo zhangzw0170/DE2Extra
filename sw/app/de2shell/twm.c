@@ -28,6 +28,18 @@
   #define PS2_REG_DATA  0u
   #define PS2_REG_STAT  1u
   #define PS2_STAT_READY 0x01u
+  #define VGA_MMIO_BASE ((volatile uint32_t *)0xF0000000u)
+  #define VGA_PX_MODE_REG     (0x7000u / 4u)
+  #define VGA_PX_FB_BASE_REG  (0x7004u / 4u)
+  #define VGA_PX_STATUS_REG   (0x7008u / 4u)
+  #define VGA_PX_DEBUG0_REG   (0x700Cu / 4u)
+  #define VGA_PX_DEBUG1_REG   (0x7010u / 4u)
+  #define VGA_PX_DEBUG2_REG   (0x7014u / 4u)
+  #define VGA_PX_DEBUG3_REG   (0x7018u / 4u)
+  #define VGA_PX_SAMPLE0_REG  (0x701Cu / 4u)
+  #define VGA_PX_SAMPLE1_REG  (0x7020u / 4u)
+  #define VGA_PX_SAMPLE2_REG  (0x7024u / 4u)
+  #define VGA_PX_SAMPLE3_REG  (0x7028u / 4u)
 #endif
 
 /* PS/2 scancodes (set 2) */
@@ -45,6 +57,52 @@ static uint32_t frame_count;
 static int splash_hold_active;
 
 /* Helpers */
+
+#ifndef LOCAL_BUILD
+static void uart_hex8(uint8_t value) {
+    static const char hex[] = "0123456789ABCDEF";
+    neorv32_uart0_putc(hex[(value >> 4) & 0x0f]);
+    neorv32_uart0_putc(hex[value & 0x0f]);
+}
+
+static void uart_hex32(uint32_t value) {
+    static const char hex[] = "0123456789ABCDEF";
+    int shift;
+    for (shift = 28; shift >= 0; shift -= 4) {
+        neorv32_uart0_putc(hex[(value >> shift) & 0x0f]);
+    }
+}
+
+static void twm_dump_px_regs(void) {
+    neorv32_uart0_puts("TWM: px regs ");
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_MODE_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_FB_BASE_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_STATUS_REG]);
+    neorv32_uart0_putc('\n');
+
+    neorv32_uart0_puts("TWM: px dbg  ");
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG0_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG1_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG2_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG3_REG]);
+    neorv32_uart0_putc('\n');
+
+    neorv32_uart0_puts("TWM: px samp ");
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE0_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE1_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE2_REG]);
+    neorv32_uart0_putc(' ');
+    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE3_REG]);
+    neorv32_uart0_putc('\n');
+}
+#endif
 
 static int is_alt(uint8_t sc) {
     return sc == SC_ALT || sc == SC_ALT_BRK;
@@ -163,6 +221,16 @@ static void tiling_init(void) {
     draw_debug_splash();
 #ifndef LOCAL_BUILD
     neorv32_uart0_puts("TWM: splash drawn\n");
+    neorv32_uart0_puts("TWM: fb sample ");
+    uart_hex8(fb_get_pixel(0, 0));
+    neorv32_uart0_putc(' ');
+    uart_hex8(fb_get_pixel(40, 40));
+    neorv32_uart0_putc(' ');
+    uart_hex8(fb_get_pixel(120, 120));
+    neorv32_uart0_putc(' ');
+    uart_hex8(fb_get_pixel(320, 200));
+    neorv32_uart0_putc('\n');
+    twm_dump_px_regs();
 #endif
     ps2_dec_init();
     tile_init();
@@ -224,17 +292,19 @@ static void tiling_update(void) {
 #endif
 
     frame_count++;
-    if (frame_count == 200u) {
+    if (frame_count == 5u) {
         fb_set_debug_pattern(0);
 #ifndef LOCAL_BUILD
         neorv32_uart0_puts("TWM: test pattern disabled\n");
+        twm_dump_px_regs();
 #endif
     }
     if (splash_hold_active != 0) {
-        if (frame_count >= 260u) {
+        if (frame_count >= 6u) {
             splash_hold_active = 0;
 #ifndef LOCAL_BUILD
             neorv32_uart0_puts("TWM: entering tiled render\n");
+            twm_dump_px_regs();
 #endif
         } else {
             return;

@@ -10,7 +10,13 @@
 
 > **关键设计决策**: de2shell (bare-metal, IMEM 64KB) 冻结在 V2。V3 所有工作在 **de2os** 上进行（`sw/app/de2shell_rtos/` + `par/de2os/`）。Shell 接收 PS/2 键盘输入作为主输入源（UART 辅助）。不再更新 de2shell。
 >
-> **Conway/PONG 接入策略**: VHDL 和 C 驱动已完成，但暂不接入 de2os_top/QSF — 等 VGA + RTOS 稳定后再集成。当前 de2os_top 中 s9/s10 信号 stub (immediate ACK, zero data)。
+> **Conway/PONG 接入策略**: VHDL 和 C 驱动已完成，但暂不接入 de2os_top/QSF — 等 VGA + RTOS 稳定后再集成。当前 de2os_top 中 s9/s10 信号 stub (L769-782, immediate ACK, zero data)。C 驱动已编译但未注册 CLI 命令。
+>
+> **Audio synth**: 6 个 RTL 步骤全部完成, 仿真 7/7 PASS (DDS + FM)。未接入 QSF/wb_intercon/de2os_top。需要 s11 端口。
+>
+> **NTT**: VHDL + C 完成, Python PASS。ntt.c 未加入 RTOS makefile, 未注册 CLI。
+>
+> **TWM**: twm.c 已替代 win30_desk.c, `make local` 和 RTOS makefile 均已包含。
 
 ---
 

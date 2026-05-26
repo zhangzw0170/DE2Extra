@@ -104,6 +104,7 @@ de2_115_top.vhd (only entity that knows board pins)
 | 0x80000000 | DMEM | 16KB | 32-bit |
 | 0x01000000 | SDRAM | 128MB | 32-bit |
 | 0xF0000000 | VGA text terminal + pixel mode | 32KB | 16-bit |
+| 0xF0013000 | Audio synth (reserved) | 4KB | 32-bit |
 | 0xF0008000 | PS/2 keyboard | 4KB | 32-bit |
 | 0xF0009000 | Timer (reserved) | 4KB | 32-bit |
 | 0xF000A000 | INTC (reserved) | 4KB | 32-bit |
@@ -122,7 +123,7 @@ Note: **NTT accelerator** (`ntt_sdf.vhd`) is instantiated in `wb_intercon` + bot
 
 Note: **ExpDemo** is instantiated in `de2_115_top.vhd` (not in de2os_top.vhd). It wraps 11 experiment adapters with output/peripheral multiplexing. Board verified in V2.
 
-Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text_terminal`. It reads a framebuffer from SDRAM and displays 640×480@60Hz RGB565. Used by Win 3.0 GUI (`startui` command) and screenshot tools. SDL2-verified; deferred to V3 for VGA cable board test.
+Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text_terminal`. It reads a framebuffer from SDRAM and displays 640×480@60Hz RGB332. Used by TWM (`twm` command) and screenshot tools. SDL2-verified; deferred to V3 for VGA cable board test.
 
 ### Software Apps
 
@@ -139,7 +140,9 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text
 | ps2_test | `sw/app/ps2_test/` | Standalone PS/2 scancode dump |
 | ir_test | `sw/app/ir_test/` | Standalone IR NEC decoder test |
 
-**de2shell (frozen)**: `makefile` links crypto_cli sources directly (`crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`). GUI-related files (`gfx.c`, `gui.c`, `gui_widgets.c`, `win30_desk.c`, `fb_hal.c`, `screenshot_win30.c`) exist but are **excluded from the NEORV32 build** (filtered out in makefile line 13) — they only compile via `make local` (SDL2 host build).
+**de2shell (frozen)**: `makefile` links crypto_cli sources directly (`crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`). GUI-related files (`gfx.c`, `gui.c`, `gui_widgets.c`, `twm.c`, `fb_hal.c`) exist — they compile via `make local` (SDL2 host build) and are also included in the RTOS build.
+
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis. CLI commands: hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, vgadump, vgam, stats, heapstat, cpustat. Not yet registered: conway_hw, pong_hw, ntt.
 
 **de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE + burst enabled via async FIFO CDC. PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis.
 
@@ -199,4 +202,4 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 **V3 is active** — all work on de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/phase5-sdram-gui.md` for plan. See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 19 commands, VGA pixel mode wired (640x480 RGB565 framebuffer in SDRAM), Conway and PONG hardware engines (VHDL + C done), NTT accelerator in QSF and active, ExpDemo mostly wired. Next steps: board verification of VGA pixel mode / NTT / Conway / PONG, and source code prep for remaining phases (audio, crypto visualization, Win 3.0 GUI on SDRAM).
+V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 16+ commands, VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode wired (640x480 RGB332 framebuffer in SDRAM), TWM (tiling window manager replacing Win 3.0), Snake full-screen with CP437 border + vblank sync, ExpDemo fully integrated (CLI registered), Conway/PONG/NTT VHDL + C done but **not integrated** (QSF missing, de2os_top stubbed, NTT not in RTOS makefile), Audio synth RTL complete (DDS + FM, simulation 7/7 PASS) but not integrated (needs s11 wb_intercon port). See `doc/phases/v3p*.md` for per-phase acceptance tables.

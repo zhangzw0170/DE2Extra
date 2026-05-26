@@ -2,6 +2,7 @@
 
 > 日期: 2026-05-26
 > 状态: 软件侧已收敛到可构建基线，待 Quartus 复编译和上板验证
+> 更新: 2026-05-26 — TWM 替代 win30, Snake 全屏+vblank, ntt CLI 待接入
 > 硬件工程: `par/de2os/` (top entity: `de2os_top`)
 > 目标固件: `sw/app/de2shell_rtos/`
 
@@ -102,9 +103,13 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 - 补入 `crypto.c`, `ps2.c`, `info.c`, `monitor.c`, `demo.c`
 - 补入 `crypto_cli/crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`
 - `de2shell_rtos/main.c` 已同步注册并暴露 12 个程序：
-  - `hello`, `memtest`, `crypto`, `ps2`, `snake`, `life`, `info`, `monitor`, `demo`, `win30`, `conway_hw`, `pong_hw`
+  - `hello`, `memtest`, `crypto`, `ps2`, `snake`, `life`, `info`, `monitor`, `demo`, `twm`, `conway_hw`, `pong_hw`
 
 其中 `conway_hw` 和 `pong_hw` 为硬件加速程序（Conway 生命游戏硬件引擎、Pong 硬件引擎），尚未注册 CLI 命令，只能通过未来 CLI 命令扩展访问。
+
+注意: `ntt.c` (NTT 加速器驱动) 尚未加入 makefile 和 CLI 注册。
+
+`win30` / `startui` / `gui` 已被 `twm` (tiling window manager) 替代。
 
 CLI 命令共 16 条（15 条注册 + 1 条 FreeRTOS+CLI 内置 `help`）：
 
@@ -114,10 +119,12 @@ CLI 命令共 16 条（15 条注册 + 1 条 FreeRTOS+CLI 内置 `help`）：
 | memtest | SDRAM diagnostics |
 | crypto | AES/SHA/SM4 CLI |
 | ps2 | PS/2 keyboard test |
-| snake | Snake game |
+| snake | Snake game (全屏 78x27 + CP437 边框 + vblank 同步) |
 | info | System dashboard |
 | expdemo | 11 course labs |
-| startui | Win 3.0 GUI |
+| twm | Tiling window manager (像素模式 GUI, 替代 win30) |
+| vgadump | VGA framebuffer diagnostics |
+| vgam | VGA mode query |
 | stats | Task list + stack HWM |
 | heapstat | Heap usage |
 | cpustat | CPU usage per task |
@@ -127,7 +134,6 @@ CLI 命令共 16 条（15 条注册 + 1 条 FreeRTOS+CLI 内置 `help`）：
 | kbd | ps2 |
 | conwaylife | life (程序存在，但无独立 CLI 命令) |
 | riscvasm | monitor (程序存在，但无独立 CLI 命令) |
-| gui | startui |
 
 注意：`life` 和 `monitor` 程序有回调（`cli_life`, `cli_monitor`），但只通过别名 `conwaylife` / `riscvasm` 注册，没有主命令名。`demo` 程序映射到 `expdemo` 主命令。
 

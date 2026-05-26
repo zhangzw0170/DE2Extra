@@ -101,7 +101,6 @@
   /* ── NEORV32 SDRAM backend ─────────────────────────────────── */
   #include <neorv32.h>
 
-  #define SDRAM_BASE       0x01000000u
   #define FRAMEBUFFER_BASE 0x01800000u
   #define VGA_BASE         0xF0000000u
   #define VGA_PX_MODE      0x7000u
@@ -113,7 +112,9 @@
   static uint32_t fb_mode_flags = 1u;
 
   static void fb_hw_mode_set(uint32_t enable) {
-      vga_regs[VGA_PX_FB_BASE / 4u] = (FRAMEBUFFER_BASE - SDRAM_BASE) >> 2;
+      /* vga_pixel_ctrl expects the same absolute SDRAM word address [26:2]
+       * that the CPU/XBUS uses, not an offset from ADDR_SDRAM_BASE. */
+      vga_regs[VGA_PX_FB_BASE / 4u] = FRAMEBUFFER_BASE >> 2;
       vga_regs[VGA_PX_MODE / 4u] = enable ? fb_mode_flags : 0u;
   }
 

@@ -16,7 +16,7 @@ Info: Running Quartus Prime Shell
     Info: Intel and sold by Intel or its authorized distributors.  Please
     Info: refer to the applicable agreement for further details, at
     Info: https://fpgasoftware.intel.com/eula.
-    Info: Processing started: Tue May 26 13:00:03 2026
+    Info: Processing started: Tue May 26 19:05:51 2026
 Info: Command: quartus_sh --flow compile E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os.qpf -c de2os
 Info: Quartus(args): compile E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os.qpf -c de2os
 Info: Project Name = E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os
@@ -24,7 +24,7 @@ Info: Revision Name = de2os
 Info: *******************************************************************
 Info: Running Quartus Prime Analysis & Synthesis
     Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
-    Info: Processing started: Tue May 26 13:00:05 2026
+    Info: Processing started: Tue May 26 19:05:55 2026
 Info: Command: quartus_map --read_settings_files=on --write_settings_files=off de2os -c de2os
 Info (20032): Parallel compilation is enabled and will use up to 8 processors
 Info (12021): Found 2 design units, including 0 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/lib/de2extra_pkg.vhd
@@ -45,8 +45,8 @@ Info (12021): Found 2 design units, including 1 entities, in source file /main/j
     Info (12022): Found design unit 1: sdram_ctrl-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 62
     Info (12023): Found entity 1: sdram_ctrl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 20
 Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/async_fifo.vhd
-    Info (12022): Found design unit 1: async_fifo-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 34
-    Info (12023): Found entity 1: async_fifo File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 12
+    Info (12022): Found design unit 1: async_fifo-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 33
+    Info (12023): Found entity 1: async_fifo File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 11
 Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/bus/wb_intercon.vhd
     Info (12022): Found design unit 1: wb_intercon-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/bus/wb_intercon.vhd Line: 115
     Info (12023): Found entity 1: wb_intercon File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/bus/wb_intercon.vhd Line: 8
@@ -107,8 +107,8 @@ Info (12021): Found 2 design units, including 1 entities, in source file /main/j
     Info (12022): Found design unit 1: ntt_sdf-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ntt_sdf.vhd Line: 39
     Info (12023): Found entity 1: ntt_sdf File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ntt_sdf.vhd Line: 24
 Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/vga_pixel_ctrl.vhd
-    Info (12022): Found design unit 1: vga_pixel_ctrl-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 54
-    Info (12023): Found entity 1: vga_pixel_ctrl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 21
+    Info (12022): Found design unit 1: vga_pixel_ctrl-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 64
+    Info (12023): Found entity 1: vga_pixel_ctrl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 31
 Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/exp/adapt_exp1.vhd
     Info (12022): Found design unit 1: adapt_exp1-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/exp/adapt_exp1.vhd Line: 16
     Info (12023): Found entity 1: adapt_exp1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/exp/adapt_exp1.vhd Line: 6
@@ -606,11 +606,123 @@ Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(107): object "rd_
 Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(111): object "addr_r" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 111
 Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(146): object "burst_req_cpu" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 146
 Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(161): object "fifo_wr_full" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 161
-Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(182): object "vga_fifo_wr_full" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 182
-Info (12128): Elaborating entity "async_fifo" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 194
+Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(183): object "vga_fifo_wr_full" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 183
+Info (12128): Elaborating entity "async_fifo" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 195
+Warning (10036): Verilog HDL or VHDL warning at async_fifo.vhd(35): object "eccstatus_s" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 35
+Warning (10036): Verilog HDL or VHDL warning at async_fifo.vhd(36): object "rdusedw_s" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 36
+Warning (10036): Verilog HDL or VHDL warning at async_fifo.vhd(37): object "wrusedw_s" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 37
+Warning (10036): Verilog HDL or VHDL warning at async_fifo.vhd(38): object "rdfull_s" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 38
+Warning (10036): Verilog HDL or VHDL warning at async_fifo.vhd(39): object "wrempty_s" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
+Info (12128): Elaborating entity "dcfifo" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 42
+Info (12130): Elaborated megafunction instantiation "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 42
+Info (12133): Instantiated megafunction "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 42
+    Info (12134): Parameter "add_ram_output_register" = "OFF"
+    Info (12134): Parameter "add_usedw_msb_bit" = "ON"
+    Info (12134): Parameter "clocks_are_synchronized" = "FALSE"
+    Info (12134): Parameter "delay_rdusedw" = "1"
+    Info (12134): Parameter "delay_wrusedw" = "1"
+    Info (12134): Parameter "intended_device_family" = "Cyclone IV E"
+    Info (12134): Parameter "enable_ecc" = "FALSE"
+    Info (12134): Parameter "lpm_numwords" = "8"
+    Info (12134): Parameter "lpm_showahead" = "ON"
+    Info (12134): Parameter "lpm_width" = "32"
+    Info (12134): Parameter "lpm_widthu" = "4"
+    Info (12134): Parameter "overflow_checking" = "ON"
+    Info (12134): Parameter "rdsync_delaypipe" = "4"
+    Info (12134): Parameter "read_aclr_synch" = "OFF"
+    Info (12134): Parameter "underflow_checking" = "ON"
+    Info (12134): Parameter "use_eab" = "ON"
+    Info (12134): Parameter "write_aclr_synch" = "OFF"
+    Info (12134): Parameter "wrsync_delaypipe" = "4"
+    Info (12134): Parameter "lpm_hint" = "UNUSED"
+    Info (12134): Parameter "lpm_type" = "dcfifo"
+Info (12021): Found 1 design units, including 1 entities, in source file db/dcfifo_mn02.tdf
+    Info (12023): Found entity 1: dcfifo_mn02 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dcfifo_mn02.tdf Line: 37
+Info (12128): Elaborating entity "dcfifo_mn02" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated" File: e:/software/intelfpga_lite/23.1std/quartus/libraries/megafunctions/dcfifo.tdf Line: 191
+Info (12021): Found 1 design units, including 1 entities, in source file db/a_graycounter_o57.tdf
+    Info (12023): Found entity 1: a_graycounter_o57 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_graycounter_o57.tdf Line: 25
+Info (12128): Elaborating entity "a_graycounter_o57" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|a_graycounter_o57:rdptr_g1p" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dcfifo_mn02.tdf Line: 50
+Info (12021): Found 1 design units, including 1 entities, in source file db/a_graycounter_kjc.tdf
+    Info (12023): Found entity 1: a_graycounter_kjc File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_graycounter_kjc.tdf Line: 25
+Info (12128): Elaborating entity "a_graycounter_kjc" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|a_graycounter_kjc:wrptr_g1p" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dcfifo_mn02.tdf Line: 51
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_vn41.tdf
+    Info (12023): Found entity 1: altsyncram_vn41 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 28
+Info (12128): Elaborating entity "altsyncram_vn41" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dcfifo_mn02.tdf Line: 52
+Info (12021): Found 1 design units, including 1 entities, in source file db/alt_synch_pipe_rnl.tdf
+    Info (12023): Found entity 1: alt_synch_pipe_rnl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/alt_synch_pipe_rnl.tdf Line: 27
+Info (12128): Elaborating entity "alt_synch_pipe_rnl" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|alt_synch_pipe_rnl:rs_dgwp" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dcfifo_mn02.tdf Line: 59
+Info (12021): Found 1 design units, including 1 entities, in source file db/dffpipe_cd9.tdf
+    Info (12023): Found entity 1: dffpipe_cd9 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dffpipe_cd9.tdf Line: 25
+Info (12128): Elaborating entity "dffpipe_cd9" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|alt_synch_pipe_rnl:rs_dgwp|dffpipe_cd9:dffpipe10" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/alt_synch_pipe_rnl.tdf Line: 35
+Info (12021): Found 1 design units, including 1 entities, in source file db/alt_synch_pipe_snl.tdf
+    Info (12023): Found entity 1: alt_synch_pipe_snl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/alt_synch_pipe_snl.tdf Line: 27
+Info (12128): Elaborating entity "alt_synch_pipe_snl" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|alt_synch_pipe_snl:ws_dgrp" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dcfifo_mn02.tdf Line: 60
+Info (12021): Found 1 design units, including 1 entities, in source file db/dffpipe_dd9.tdf
+    Info (12023): Found entity 1: dffpipe_dd9 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dffpipe_dd9.tdf Line: 25
+Info (12128): Elaborating entity "dffpipe_dd9" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|alt_synch_pipe_snl:ws_dgrp|dffpipe_dd9:dffpipe13" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/alt_synch_pipe_snl.tdf Line: 35
+Info (12021): Found 1 design units, including 1 entities, in source file db/cmpr_a66.tdf
+    Info (12023): Found entity 1: cmpr_a66 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/cmpr_a66.tdf Line: 23
+Info (12128): Elaborating entity "cmpr_a66" for hierarchy "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|cmpr_a66:rdempty_eq_comp" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/dcfifo_mn02.tdf Line: 61
 Info (12128): Elaborating entity "vga_text_terminal" for hierarchy "vga_text_terminal:u_vga" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 516
 Info (12128): Elaborating entity "vga_pixel_ctrl" for hierarchy "vga_pixel_ctrl:u_vga_px" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 536
-Warning (10492): VHDL Process Statement warning at vga_pixel_ctrl.vhd(172): signal "testpat_en" is read inside the Process Statement but isn't in the Process Statement's sensitivity list File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 172
+Warning (10036): Verilog HDL or VHDL warning at vga_pixel_ctrl.vhd(106): object "rd_word_addr" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 106
+Warning (10492): VHDL Process Statement warning at vga_pixel_ctrl.vhd(274): signal "testpat_en" is read inside the Process Statement but isn't in the Process Statement's sensitivity list File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 274
+Info (12128): Elaborating entity "altsyncram" for hierarchy "vga_pixel_ctrl:u_vga_px|altsyncram:u_linebuf_a" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 146
+Info (12130): Elaborated megafunction instantiation "vga_pixel_ctrl:u_vga_px|altsyncram:u_linebuf_a" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 146
+Info (12133): Instantiated megafunction "vga_pixel_ctrl:u_vga_px|altsyncram:u_linebuf_a" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 146
+    Info (12134): Parameter "address_aclr_a" = "NONE"
+    Info (12134): Parameter "address_aclr_b" = "NONE"
+    Info (12134): Parameter "address_reg_b" = "CLOCK1"
+    Info (12134): Parameter "byte_size" = "8"
+    Info (12134): Parameter "byteena_aclr_a" = "UNUSED"
+    Info (12134): Parameter "byteena_aclr_b" = "NONE"
+    Info (12134): Parameter "byteena_reg_b" = "CLOCK1"
+    Info (12134): Parameter "clock_enable_core_a" = "USE_INPUT_CLKEN"
+    Info (12134): Parameter "clock_enable_core_b" = "USE_INPUT_CLKEN"
+    Info (12134): Parameter "clock_enable_input_a" = "NORMAL"
+    Info (12134): Parameter "clock_enable_input_b" = "NORMAL"
+    Info (12134): Parameter "clock_enable_output_a" = "NORMAL"
+    Info (12134): Parameter "clock_enable_output_b" = "NORMAL"
+    Info (12134): Parameter "intended_device_family" = "Cyclone IV E"
+    Info (12134): Parameter "ecc_pipeline_stage_enabled" = "FALSE"
+    Info (12134): Parameter "enable_ecc" = "FALSE"
+    Info (12134): Parameter "implement_in_les" = "OFF"
+    Info (12134): Parameter "indata_aclr_a" = "NONE"
+    Info (12134): Parameter "indata_aclr_b" = "NONE"
+    Info (12134): Parameter "indata_reg_b" = "CLOCK1"
+    Info (12134): Parameter "init_file" = "UNUSED"
+    Info (12134): Parameter "init_file_layout" = "PORT_A"
+    Info (12134): Parameter "maximum_depth" = "0"
+    Info (12134): Parameter "numwords_a" = "160"
+    Info (12134): Parameter "numwords_b" = "160"
+    Info (12134): Parameter "operation_mode" = "DUAL_PORT"
+    Info (12134): Parameter "outdata_aclr_a" = "NONE"
+    Info (12134): Parameter "outdata_aclr_b" = "NONE"
+    Info (12134): Parameter "outdata_reg_a" = "UNREGISTERED"
+    Info (12134): Parameter "outdata_reg_b" = "UNREGISTERED"
+    Info (12134): Parameter "power_up_uninitialized" = "FALSE"
+    Info (12134): Parameter "ram_block_type" = "M9K"
+    Info (12134): Parameter "rdcontrol_aclr_b" = "NONE"
+    Info (12134): Parameter "rdcontrol_reg_b" = "CLOCK1"
+    Info (12134): Parameter "read_during_write_mode_mixed_ports" = "DONT_CARE"
+    Info (12134): Parameter "read_during_write_mode_port_a" = "NEW_DATA_NO_NBE_READ"
+    Info (12134): Parameter "read_during_write_mode_port_b" = "NEW_DATA_NO_NBE_READ"
+    Info (12134): Parameter "stratixiv_m144k_allow_dual_clocks" = "ON"
+    Info (12134): Parameter "width_a" = "32"
+    Info (12134): Parameter "width_b" = "32"
+    Info (12134): Parameter "width_byteena_a" = "1"
+    Info (12134): Parameter "width_byteena_b" = "1"
+    Info (12134): Parameter "width_eccstatus" = "3"
+    Info (12134): Parameter "widthad_a" = "8"
+    Info (12134): Parameter "widthad_b" = "8"
+    Info (12134): Parameter "wrcontrol_aclr_a" = "NONE"
+    Info (12134): Parameter "wrcontrol_aclr_b" = "NONE"
+    Info (12134): Parameter "wrcontrol_wraddress_reg_b" = "CLOCK1"
+    Info (12134): Parameter "lpm_hint" = "UNUSED"
+    Info (12134): Parameter "lpm_type" = "altsyncram"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_86v3.tdf
+    Info (12023): Found entity 1: altsyncram_86v3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_86v3.tdf Line: 28
+Info (12128): Elaborating entity "altsyncram_86v3" for hierarchy "vga_pixel_ctrl:u_vga_px|altsyncram:u_linebuf_a|altsyncram_86v3:auto_generated" File: e:/software/intelfpga_lite/23.1std/quartus/libraries/megafunctions/altsyncram.tdf Line: 792
 Info (12128): Elaborating entity "ps2_controller" for hierarchy "ps2_controller:u_ps2" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 590
 Info (12128): Elaborating entity "ps2_sync" for hierarchy "ps2_controller:u_ps2|ps2_sync:u_sync" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_controller.vhd Line: 130
 Info (12128): Elaborating entity "ps2_receiver" for hierarchy "ps2_controller:u_ps2|ps2_receiver:u_rx" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_controller.vhd Line: 144
@@ -762,7 +874,7 @@ Info (12128): Elaborating entity "altera_reset_synchronizer" for hierarchy "jtag
 Info (12128): Elaborating entity "uart_jtag_bridge" for hierarchy "uart_jtag_bridge:u_jtag_bridge" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 749
 Info (12128): Elaborating entity "lcd_wb" for hierarchy "lcd_wb:u_lcd" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 791
 Info (11170): Starting IP generation for the debug fabric: alt_sld_fab.
-Info (11172): 2026.05.26.13:00:21 Progress: Loading slda2af9e54/alt_sld_fab_wrapper_hw.tcl
+Info (11172): 2026.05.26.19:06:21 Progress: Loading slda2af9e54/alt_sld_fab_wrapper_hw.tcl
 Info (11172): Alt_sld_fab.alt_sld_fab: SLD fabric agents which did not specify prefer_host were connected to JTAG
 Info (11172): Alt_sld_fab: Generating alt_sld_fab "alt_sld_fab" for QUARTUS_SYNTH
 Info (11172): Alt_sld_fab: "alt_sld_fab" instantiated alt_sld_fab "alt_sld_fab"
@@ -797,6 +909,40 @@ Warning (14284): Synthesized away the following node(s):
         Warning (14320): Synthesized away node "jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[7]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 250
 Warning (19016): Clock multiplexers are found and protected
     Warning (19017): Found clock multiplexer expdemo_top:u_expdemo|adapt_exp11:u_e11|DDS:u_dds|dds_clk File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/exp/dds.vhd Line: 48
+Warning (14284): Synthesized away the following node(s):
+    Warning (14285): Synthesized away the following RAM node(s):
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[0]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 41
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[1]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 71
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[2]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 101
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[3]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 131
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[4]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 161
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[5]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 191
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[6]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 221
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[7]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 251
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[8]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 281
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[9]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 311
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[10]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 341
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[11]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 371
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[12]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 401
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[13]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 431
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[14]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 461
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[15]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 491
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[16]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 521
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[17]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 551
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[18]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 581
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[19]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 611
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[20]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 641
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[21]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 671
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[22]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 701
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[23]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 731
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[24]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 761
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[25]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 791
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[26]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 821
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[27]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 851
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[28]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 881
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[29]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 911
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[30]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 941
+        Warning (14320): Synthesized away node "sdram_ctrl:u_sdram|async_fifo:u_fifo|dcfifo:u_dcfifo|dcfifo_mn02:auto_generated|altsyncram_vn41:fifo_ram|q_b[31]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_vn41.tdf Line: 971
 Warning (276027): Inferred dual-clock RAM node "expdemo_top:u_expdemo|adapt_exp4:u_e4|ram_top:u_ram|dpram:u_ram|RAMTMP_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
 Warning (276027): Inferred dual-clock RAM node "expdemo_top:u_expdemo|adapt_exp12:u_e12|simple_cpu:u_cpu|mem_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
 Warning (276020): Inferred RAM node "vga_text_terminal:u_vga|char_ram_rtl_1" from synchronous design logic.  Pass-through logic has been added to match the read-during-write behavior of the original design.
@@ -808,17 +954,10 @@ Warning (276027): Inferred dual-clock RAM node "neorv32_wrapper:u_cpu|neorv32_to
 Warning (276027): Inferred dual-clock RAM node "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:2:ram_inst|spram_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
 Warning (276027): Inferred dual-clock RAM node "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_imem:\memory_system:neorv32_imem_enabled:neorv32_imem_inst|neorv32_imem_ram:\imem_ram:imem_ram_inst|neorv32_prim_spram:\ram_gen:3:ram_inst|spram_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
 Warning (276027): Inferred dual-clock RAM node "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:3:ram_inst|spram_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
-Warning (276027): Inferred dual-clock RAM node "vga_pixel_ctrl:u_vga_px|linebuf_b_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
-Warning (113028): 96 out of 256 addresses are uninitialized. The Quartus Prime software will initialize them to "0". There are 1 warnings found, and 1 warnings are reported. File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
-    Warning (113027): Addresses ranging from 160 to 255 are not initialized File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
-Warning (276027): Inferred dual-clock RAM node "vga_pixel_ctrl:u_vga_px|linebuf_a_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
-Warning (113028): 96 out of 256 addresses are uninitialized. The Quartus Prime software will initialize them to "0". There are 1 warnings found, and 1 warnings are reported. File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
-    Warning (113027): Addresses ranging from 160 to 255 are not initialized File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
-Info (276014): Found 3 instances of uninferred RAM logic
+Info (276014): Found 2 instances of uninferred RAM logic
     Info (276004): RAM logic "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_frontend:neorv32_cpu_frontend_inst|neorv32_cpu_frontend_ipb:\prefetch_buffer:0:ipb_inst|ipb" is uninferred due to inappropriate RAM size File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 358
     Info (276004): RAM logic "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_frontend:neorv32_cpu_frontend_inst|neorv32_cpu_frontend_ipb:\prefetch_buffer:1:ipb_inst|ipb" is uninferred due to inappropriate RAM size File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 358
-    Info (276004): RAM logic "sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem" is uninferred due to inappropriate RAM size File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
-Info (19000): Inferred 19 megafunctions from design logic
+Info (19000): Inferred 17 megafunctions from design logic
     Info (276029): Inferred altsyncram megafunction from the following design logic: "expdemo_top:u_expdemo|adapt_exp4:u_e4|ram_top:u_ram|dpram:u_ram|RAMTMP_rtl_0" 
         Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
         Info (286033): Parameter WIDTH_A set to 8
@@ -1025,40 +1164,6 @@ Info (19000): Inferred 19 megafunctions from design logic
         Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
         Info (286033): Parameter INDATA_ACLR_A set to NONE
         Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
-    Info (276029): Inferred altsyncram megafunction from the following design logic: "vga_pixel_ctrl:u_vga_px|linebuf_b_rtl_0" 
-        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
-        Info (286033): Parameter WIDTH_A set to 32
-        Info (286033): Parameter WIDTHAD_A set to 8
-        Info (286033): Parameter NUMWORDS_A set to 160
-        Info (286033): Parameter WIDTH_B set to 32
-        Info (286033): Parameter WIDTHAD_B set to 8
-        Info (286033): Parameter NUMWORDS_B set to 160
-        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
-        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
-        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
-        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
-        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
-        Info (286033): Parameter INDATA_ACLR_A set to NONE
-        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
-        Info (286033): Parameter RAM_BLOCK_TYPE set to M9K
-        Info (286033): Parameter INIT_FILE set to db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif
-    Info (276029): Inferred altsyncram megafunction from the following design logic: "vga_pixel_ctrl:u_vga_px|linebuf_a_rtl_0" 
-        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
-        Info (286033): Parameter WIDTH_A set to 32
-        Info (286033): Parameter WIDTHAD_A set to 8
-        Info (286033): Parameter NUMWORDS_A set to 160
-        Info (286033): Parameter WIDTH_B set to 32
-        Info (286033): Parameter WIDTHAD_B set to 8
-        Info (286033): Parameter NUMWORDS_B set to 160
-        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
-        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
-        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
-        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
-        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
-        Info (286033): Parameter INDATA_ACLR_A set to NONE
-        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
-        Info (286033): Parameter RAM_BLOCK_TYPE set to M9K
-        Info (286033): Parameter INIT_FILE set to db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif
     Info (276029): Inferred altsyncram megafunction from the following design logic: "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:tx_fifo_inst|fifo_rtl_0" 
         Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
         Info (286033): Parameter WIDTH_A set to 8
@@ -1111,7 +1216,7 @@ Info (278001): Inferred 4 megafunctions from design logic
     Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "expdemo_top:u_expdemo|adapt_exp10:u_e10|Mod0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/exp/adapt_exp10.vhd Line: 89
     Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "expdemo_top:u_expdemo|adapt_exp10:u_e10|Div0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/exp/adapt_exp10.vhd Line: 90
     Info (278003): Inferred multiplier megafunction ("lpm_mult") from the following logic: "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_muldiv:\neorv32_cpu_alu_muldiv_enabled:neorv32_cpu_alu_muldiv_inst|neorv32_prim_mul:\multiplier_core_parallel:multiplier_inst|Mult0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 304
-    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "vga_pixel_ctrl:u_vga_px|Div0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 250
+    Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "vga_pixel_ctrl:u_vga_px|Div0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 416
 Info (12130): Elaborated megafunction instantiation "expdemo_top:u_expdemo|adapt_exp4:u_e4|ram_top:u_ram|dpram:u_ram|altsyncram:RAMTMP_rtl_0"
 Info (12133): Instantiated megafunction "expdemo_top:u_expdemo|adapt_exp4:u_e4|ram_top:u_ram|dpram:u_ram|altsyncram:RAMTMP_rtl_0" with the following parameter:
     Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
@@ -1231,46 +1336,6 @@ Info (12133): Instantiated megafunction "neorv32_wrapper:u_cpu|neorv32_top:u_neo
     Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
 Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_20e1.tdf
     Info (12023): Found entity 1: altsyncram_20e1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_20e1.tdf Line: 28
-Info (12130): Elaborated megafunction instantiation "vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_b_rtl_0"
-Info (12133): Instantiated megafunction "vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_b_rtl_0" with the following parameter:
-    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
-    Info (12134): Parameter "WIDTH_A" = "32"
-    Info (12134): Parameter "WIDTHAD_A" = "8"
-    Info (12134): Parameter "NUMWORDS_A" = "160"
-    Info (12134): Parameter "WIDTH_B" = "32"
-    Info (12134): Parameter "WIDTHAD_B" = "8"
-    Info (12134): Parameter "NUMWORDS_B" = "160"
-    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
-    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
-    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
-    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
-    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK1"
-    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
-    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
-    Info (12134): Parameter "RAM_BLOCK_TYPE" = "M9K"
-    Info (12134): Parameter "INIT_FILE" = "db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif"
-Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_r2k1.tdf
-    Info (12023): Found entity 1: altsyncram_r2k1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_r2k1.tdf Line: 28
-Info (12130): Elaborated megafunction instantiation "vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_a_rtl_0"
-Info (12133): Instantiated megafunction "vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_a_rtl_0" with the following parameter:
-    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
-    Info (12134): Parameter "WIDTH_A" = "32"
-    Info (12134): Parameter "WIDTHAD_A" = "8"
-    Info (12134): Parameter "NUMWORDS_A" = "160"
-    Info (12134): Parameter "WIDTH_B" = "32"
-    Info (12134): Parameter "WIDTHAD_B" = "8"
-    Info (12134): Parameter "NUMWORDS_B" = "160"
-    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
-    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
-    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
-    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
-    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK1"
-    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
-    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
-    Info (12134): Parameter "RAM_BLOCK_TYPE" = "M9K"
-    Info (12134): Parameter "INIT_FILE" = "db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif"
-Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_q2k1.tdf
-    Info (12023): Found entity 1: altsyncram_q2k1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_q2k1.tdf Line: 28
 Info (12130): Elaborated megafunction instantiation "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:tx_fifo_inst|altsyncram:fifo_rtl_0"
 Info (12133): Instantiated megafunction "neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:tx_fifo_inst|altsyncram:fifo_rtl_0" with the following parameter:
     Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
@@ -1353,8 +1418,8 @@ Info (12133): Instantiated megafunction "neorv32_wrapper:u_cpu|neorv32_top:u_neo
     Info (12134): Parameter "MAXIMIZE_SPEED" = "5"
 Info (12021): Found 1 design units, including 1 entities, in source file db/mult_86t.tdf
     Info (12023): Found entity 1: mult_86t File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/mult_86t.tdf Line: 31
-Info (12130): Elaborated megafunction instantiation "vga_pixel_ctrl:u_vga_px|lpm_divide:Div0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 250
-Info (12133): Instantiated megafunction "vga_pixel_ctrl:u_vga_px|lpm_divide:Div0" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 250
+Info (12130): Elaborated megafunction instantiation "vga_pixel_ctrl:u_vga_px|lpm_divide:Div0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 416
+Info (12133): Instantiated megafunction "vga_pixel_ctrl:u_vga_px|lpm_divide:Div0" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 416
     Info (12134): Parameter "LPM_WIDTHN" = "10"
     Info (12134): Parameter "LPM_WIDTHD" = "7"
     Info (12134): Parameter "LPM_NREPRESENTATION" = "UNSIGNED"
@@ -1386,28 +1451,28 @@ Warning (13024): Output pins are stuck at VCC or GND
     Warning (13410): Pin "LCD_ON" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 67
     Warning (13410): Pin "LCD_BLON" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 68
 Info (286031): Timing-Driven Synthesis is running on partition "Top"
-Info (17049): 254 registers lost all their fanouts during netlist optimizations.
+Info (17049): 270 registers lost all their fanouts during netlist optimizations.
 Info (17016): Found the following redundant logic cells in design
     Info (17048): Logic cell "vga_pixel_ctrl:u_vga_px|lpm_divide:Div0|lpm_divide_vim:auto_generated|sign_div_unsign_nlh:divider|alt_u_div_27f:divider|add_sub_6_result_int[1]~12" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/alt_u_div_27f.tdf Line: 57
 Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
     Info (16011): Adding 1 node(s), including 0 DDIO, 1 PLL, 0 transceiver and 0 LCELL
-Info (21057): Implemented 16563 device resources after synthesis - the final resource count might be different
+Info (21057): Implemented 16260 device resources after synthesis - the final resource count might be different
     Info (21058): Implemented 28 input pins
     Info (21059): Implemented 152 output pins
     Info (21060): Implemented 34 bidirectional pins
-    Info (21061): Implemented 16017 logic cells
-    Info (21064): Implemented 322 RAM segments
+    Info (21061): Implemented 15682 logic cells
+    Info (21064): Implemented 354 RAM segments
     Info (21065): Implemented 1 PLLs
     Info (21062): Implemented 8 DSP elements
-Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 93 warnings
-    Info: Peak virtual memory: 5232 megabytes
-    Info: Processing ended: Tue May 26 13:01:19 2026
-    Info: Elapsed time: 00:01:14
-    Info: Total CPU time (on all processors): 00:01:21
+Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 127 warnings
+    Info: Peak virtual memory: 5233 megabytes
+    Info: Processing ended: Tue May 26 19:07:57 2026
+    Info: Elapsed time: 00:02:02
+    Info: Total CPU time (on all processors): 00:02:08
 Info: *******************************************************************
 Info: Running Quartus Prime Fitter
     Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
-    Info: Processing started: Tue May 26 13:01:20 2026
+    Info: Processing started: Tue May 26 19:08:00 2026
 Info: Command: quartus_fit --read_settings_files=off --write_settings_files=off de2os -c de2os
 Info: qfit2_default_script.tcl version: #1
 Info: Project  = de2os
@@ -1467,6 +1532,9 @@ Info (332164): Evaluating HDL-embedded SDC commands
         Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_ena*}]
         Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_pause*}]
         Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_valid}]
+    Info (332165): Entity dcfifo_mn02
+        Info (332166): set_false_path -from *rdptr_g* -to *ws_dgrp|dffpipe_dd9:dffpipe13|dffe14a* 
+        Info (332166): set_false_path -from *delayed_wrptr_g* -to *rs_dgwp|dffpipe_cd9:dffpipe10|dffe11a* 
     Info (332165): Entity sld_hub
         Info (332166): create_clock -name altera_reserved_tck [get_ports {altera_reserved_tck}] -period 10MHz   
         Info (332166): set_clock_groups -asynchronous -group {altera_reserved_tck}
@@ -1503,7 +1571,7 @@ Info (332110): Deriving PLL clocks
     Info (332110): create_generated_clock -source {u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -multiply_by 2 -phase 56.25 -duty_cycle 50.00 -name {u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]} {u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]}
 Info (332151): Clock uncertainty is not calculated until you update the timing netlist.
 Warning (332060): Node: vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
-    Info (13166): Register vga_pixel_ctrl:u_vga_px|v_count[5] is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
+    Info (13166): Register vga_pixel_ctrl:u_vga_px|buf_sel is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
 Warning (332060): Node: vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
     Info (13166): Register vga_text_terminal:u_vga|v_count[4] is being clocked by vga_text_terminal:u_vga|clk_25m
 Warning (332060): Node: expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|clk_1hz was determined to be a clock but was found without an associated clock assignment.
@@ -1527,11 +1595,11 @@ Info (176353): Automatically promoted node clk_rst_gen:u_clk_rst|altpll_50_100:u
     Info (176355): Automatically promoted destinations to use location or clock signal External Clock Output CLKCTRL_PLL1E0
 Info (176353): Automatically promoted node CLOCK_50~input (placed in PIN Y2 (CLK2, DIFFCLK_1p)) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 20
     Info (176355): Automatically promoted destinations to use location or clock signal Global Clock CLKCTRL_G3
-Info (176353): Automatically promoted node vga_pixel_ctrl:u_vga_px|clk_25m  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 125
+Info (176353): Automatically promoted node vga_pixel_ctrl:u_vga_px|clk_25m  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 80
     Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
     Info (176356): Following destination nodes may be non-global or may not use global or regional clocks
         Info (176357): Destination node VGA_CLK~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 79
-        Info (176357): Destination node vga_pixel_ctrl:u_vga_px|clk_25m~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 125
+        Info (176357): Destination node vga_pixel_ctrl:u_vga_px|clk_25m~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 80
 Info (176353): Automatically promoted node altera_internal_jtag~TCKUTAP 
     Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
 Info (176353): Automatically promoted node vga_text_terminal:u_vga|clk_25m  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_text_terminal.vhd Line: 119
@@ -1556,51 +1624,47 @@ Info (176353): Automatically promoted node clk_rst_gen:u_clk_rst|rst_n_o  File: 
         Info (176357): Destination node expdemo_top:u_expdemo|ps2_break_seen File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/expdemo_top.vhd Line: 94
         Info (176357): Destination node expdemo_top:u_expdemo|ir_dbg_exp10:u_ir_menu_mon|vld File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 49
         Info (176357): Destination node expdemo_top:u_expdemo|ir_dbg_exp10:u_ir_menu_mon|state File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 24
-        Info (176357): Destination node ir_nec_wb:u_ir|ack File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 121
         Info (176357): Destination node expdemo_top:u_expdemo|expdemo_wb:u_wb|ack File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/expdemo_wb.vhd Line: 56
+        Info (176357): Destination node ir_nec_wb:u_ir|ack File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 121
         Info (176357): Destination node ir_nec_wb:u_ir|reg_valid File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 44
         Info (176357): Destination node ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder|vld File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 49
         Info (176358): Non-global destination nodes limited to 10 nodes
 Info (176353): Automatically promoted node rst_sdram_sync[1]  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 332
     Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
     Info (176356): Following destination nodes may be non-global or may not use global or regional clocks
-        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[3] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 482
-        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[2] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 482
-        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[1] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 482
-        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[0] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 482
-        Info (176357): Destination node sdram_ctrl:u_sdram|dram_addr[10] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 482
-        Info (176357): Destination node sdram_ctrl:u_sdram|dram_addr[0]~3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 482
-        Info (176357): Destination node sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~338 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
-        Info (176357): Destination node sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~340 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
-        Info (176357): Destination node sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~342 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
-        Info (176357): Destination node sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~344 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
-        Info (176358): Non-global destination nodes limited to 10 nodes
+        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[3] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 485
+        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[2] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 485
+        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[1] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 485
+        Info (176357): Destination node sdram_ctrl:u_sdram|dram_dqm[0] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 485
+        Info (176357): Destination node sdram_ctrl:u_sdram|dram_addr[10] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 485
+        Info (176357): Destination node sdram_ctrl:u_sdram|dram_addr[0]~3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 485
+        Info (176357): Destination node sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|comb~0
 Info (176233): Starting register packing
 Info (176235): Finished register packing
     Extra Info (176218): Packed 8 registers into blocks of type Block RAM
     Extra Info (176218): Packed 132 registers into blocks of type Embedded multiplier block
     Extra Info (176218): Packed 32 registers into blocks of type I/O Input Buffer
     Extra Info (176220): Created 66 register duplicates
-Info (171121): Fitter preparation operations ending: elapsed time is 00:00:08
+Info (171121): Fitter preparation operations ending: elapsed time is 00:00:13
 Info (14896): Fitter has disabled Advanced Physical Optimization because it is not supported for the current family.
 Info (170189): Fitter placement preparation operations beginning
-Info (170190): Fitter placement preparation operations ending: elapsed time is 00:00:02
+Info (170190): Fitter placement preparation operations ending: elapsed time is 00:00:03
 Info (170191): Fitter placement operations beginning
 Info (170137): Fitter placement was successful
-Info (170192): Fitter placement operations ending: elapsed time is 00:00:08
+Info (170192): Fitter placement operations ending: elapsed time is 00:00:24
 Info (170193): Fitter routing operations beginning
-Info (170195): Router estimated average interconnect usage is 4% of the available device resources
-    Info (170196): Router estimated peak interconnect usage is 32% of the available device resources in the region that extends from location X46_Y37 to location X57_Y48
+Info (170195): Router estimated average interconnect usage is 5% of the available device resources
+    Info (170196): Router estimated peak interconnect usage is 35% of the available device resources in the region that extends from location X34_Y37 to location X45_Y48
 Info (170199): The Fitter performed an Auto Fit compilation.  Optimizations were skipped to reduce compilation time.
     Info (170201): Optimizations that may affect the design's routability were skipped
     Info (170200): Optimizations that may affect the design's timing were skipped
-Info (170194): Fitter routing operations ending: elapsed time is 00:00:05
-Info (11888): Total time spent on timing analysis during the Fitter is 4.77 seconds.
+Info (170194): Fitter routing operations ending: elapsed time is 00:00:11
+Info (11888): Total time spent on timing analysis during the Fitter is 12.47 seconds.
 Info (334003): Started post-fitting delay annotation
 Info (334004): Delay annotation completed successfully
 Info (334003): Started post-fitting delay annotation
 Info (334004): Delay annotation completed successfully
-Info (11218): Fitter post-fit operations ending: elapsed time is 00:00:04
+Info (11218): Fitter post-fit operations ending: elapsed time is 00:00:06
 Warning (169177): 37 pins must meet Intel FPGA requirements for 3.3-, 3.0-, and 2.5-V interfaces. For more information, refer to AN 447: Interfacing Cyclone IV E Devices with 3.3/3.0/2.5-V LVTTL/LVCMOS I/O Systems.
     Info (169178): Pin PS2_CLK uses I/O standard 3.3-V LVTTL at G6 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 30
     Info (169178): Pin PS2_DAT uses I/O standard 3.3-V LVTTL at H5 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 31
@@ -1641,27 +1705,27 @@ Warning (169177): 37 pins must meet Intel FPGA requirements for 3.3-, 3.0-, and 
     Info (169178): Pin UART_RXD uses I/O standard 3.3-V LVTTL at G12 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 27
 Info (144001): Generated suppressed messages file E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os.fit.smsg
 Info: Quartus Prime Fitter was successful. 0 errors, 21 warnings
-    Info: Peak virtual memory: 6494 megabytes
-    Info: Processing ended: Tue May 26 13:02:00 2026
-    Info: Elapsed time: 00:00:40
-    Info: Total CPU time (on all processors): 00:01:09
+    Info: Peak virtual memory: 6491 megabytes
+    Info: Processing ended: Tue May 26 19:09:19 2026
+    Info: Elapsed time: 00:01:19
+    Info: Total CPU time (on all processors): 00:02:26
 Info: *******************************************************************
 Info: Running Quartus Prime Assembler
     Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
-    Info: Processing started: Tue May 26 13:02:01 2026
+    Info: Processing started: Tue May 26 19:09:23 2026
 Info: Command: quartus_asm --read_settings_files=off --write_settings_files=off de2os -c de2os
 Info (115031): Writing out detailed assembly data for power analysis
 Info (115030): Assembler is generating device programming files
 Info: Quartus Prime Assembler was successful. 0 errors, 0 warnings
     Info: Peak virtual memory: 5045 megabytes
-    Info: Processing ended: Tue May 26 13:02:05 2026
-    Info: Elapsed time: 00:00:04
-    Info: Total CPU time (on all processors): 00:00:04
+    Info: Processing ended: Tue May 26 19:09:29 2026
+    Info: Elapsed time: 00:00:06
+    Info: Total CPU time (on all processors): 00:00:06
 Info (293026): Skipped module Power Analyzer due to the assignment FLOW_ENABLE_POWER_ANALYZER
 Info: *******************************************************************
 Info: Running Quartus Prime Timing Analyzer
     Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
-    Info: Processing started: Tue May 26 13:02:07 2026
+    Info: Processing started: Tue May 26 19:09:32 2026
 Info: Command: quartus_sta de2os -c de2os
 Info: qsta_default_script.tcl version: #1
 Info (20032): Parallel compilation is enabled and will use up to 8 processors
@@ -1695,6 +1759,9 @@ Info (332164): Evaluating HDL-embedded SDC commands
         Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_ena*}]
         Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_pause*}]
         Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_valid}]
+    Info (332165): Entity dcfifo_mn02
+        Info (332166): set_false_path -from *rdptr_g* -to *ws_dgrp|dffpipe_dd9:dffpipe13|dffe14a* 
+        Info (332166): set_false_path -from *delayed_wrptr_g* -to *rs_dgwp|dffpipe_cd9:dffpipe10|dffe11a* 
     Info (332165): Entity sld_hub
         Info (332166): create_clock -name altera_reserved_tck [get_ports {altera_reserved_tck}] -period 10MHz   
         Info (332166): set_clock_groups -asynchronous -group {altera_reserved_tck}
@@ -1731,172 +1798,181 @@ Info (332110): Deriving PLL clocks
     Info (332110): create_generated_clock -source {u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -multiply_by 2 -phase 56.25 -duty_cycle 50.00 -name {u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]} {u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]}
 Info (332151): Clock uncertainty is not calculated until you update the timing netlist.
 Warning (332060): Node: vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
-    Info (13166): Register vga_pixel_ctrl:u_vga_px|v_count[3] is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
+    Info (13166): Register vga_pixel_ctrl:u_vga_px|buf_sel is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
 Warning (332060): Node: vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
-    Info (13166): Register vga_text_terminal:u_vga|v_count[7] is being clocked by vga_text_terminal:u_vga|clk_25m
+    Info (13166): Register vga_text_terminal:u_vga|v_count[6] is being clocked by vga_text_terminal:u_vga|clk_25m
 Warning (332060): Node: expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|clk_1hz was determined to be a clock but was found without an associated clock assignment.
     Info (13166): Register expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|hex_val[0][0] is being clocked by expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|clk_1hz
 Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
 Info: Found TIMING_ANALYZER_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS = ON
 Info: Analyzing Slow 1200mV 85C Model
-Info (332146): Worst-case setup slack is 1.410
+Info (332146): Worst-case setup slack is 1.408
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     1.410               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):     1.997               0.000 clk_sdram 
-    Info (332119):     4.782               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):    18.804               0.000 clk_50m 
-    Info (332119):    46.483               0.000 altera_reserved_tck 
-Info (332146): Worst-case hold slack is 0.401
+    Info (332119):     1.408               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     2.138               0.000 clk_sdram 
+    Info (332119):     5.875               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    19.127               0.000 clk_50m 
+    Info (332119):    46.539               0.000 altera_reserved_tck 
+Info (332146): Worst-case hold slack is 0.366
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     0.401               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):     0.401               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):     0.403               0.000 altera_reserved_tck 
-    Info (332119):     0.601               0.000 clk_50m 
+    Info (332119):     0.366               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.368               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     0.402               0.000 altera_reserved_tck 
+    Info (332119):     0.427               0.000 clk_50m 
     Info (332119):     3.358               0.000 clk_sdram 
-Info (332146): Worst-case recovery slack is 1.708
+Info (332146): Worst-case recovery slack is 1.596
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     1.708               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):    10.514               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):    47.924               0.000 altera_reserved_tck 
-Info (332146): Worst-case removal slack is 1.382
+    Info (332119):     1.596               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.240               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    48.091               0.000 altera_reserved_tck 
+Info (332146): Worst-case removal slack is 0.974
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     1.382               0.000 altera_reserved_tck 
-    Info (332119):     1.745               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):     3.672               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.974               0.000 altera_reserved_tck 
+    Info (332119):     1.380               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     4.077               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
 Info (332146): Worst-case minimum pulse width slack is 4.707
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
     Info (332119):     4.707               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
     Info (332119):     4.920               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2] 
     Info (332119):     5.790               0.000 clk_sdram 
-    Info (332119):     9.611               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):     9.687               0.000 clk_50m 
-    Info (332119):    49.548               0.000 altera_reserved_tck 
-Info (332114): Report Metastability: Found 41 synchronizer chains.
-    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
-    Info (332114): Number of Synchronizer Chains Found: 41
+    Info (332119):     9.615               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     9.686               0.000 clk_50m 
+    Info (332119):    49.557               0.000 altera_reserved_tck 
+Info (332114): Report Metastability: Found 57 synchronizer chains.
+    Info (332114): Typical MTBF of Design is 1e+09 years or 3.15e+16 seconds.
+
+    Info (332114): Number of Synchronizer Chains Found: 57
     Info (332114): Shortest Synchronizer Chain: 2 Registers
-    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-    Info (332114): Worst Case Available Settling Time: 15.007 ns
+    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 0.860
+    Info (332114): Worst Case Available Settling Time: 14.531 ns
+    Info (332114): Typical MTBF values are calculated based on the nominal silicon characteristics, at nominal operating conditions.
+    Info (332114):   - Under typical conditions, an increase of 100ps in available settling time will increase MTBF values by a factor of 10.8
 Info: Analyzing Slow 1200mV 0C Model
 Info (334003): Started post-fitting delay annotation
 Info (334004): Delay annotation completed successfully
 Warning (332060): Node: vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
-    Info (13166): Register vga_pixel_ctrl:u_vga_px|v_count[3] is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
+    Info (13166): Register vga_pixel_ctrl:u_vga_px|buf_sel is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
 Warning (332060): Node: vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
-    Info (13166): Register vga_text_terminal:u_vga|v_count[7] is being clocked by vga_text_terminal:u_vga|clk_25m
+    Info (13166): Register vga_text_terminal:u_vga|v_count[6] is being clocked by vga_text_terminal:u_vga|clk_25m
 Warning (332060): Node: expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|clk_1hz was determined to be a clock but was found without an associated clock assignment.
     Info (13166): Register expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|hex_val[0][0] is being clocked by expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|clk_1hz
 Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
-Info (332146): Worst-case setup slack is 1.780
+Info (332146): Worst-case setup slack is 1.764
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     1.780               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):     2.481               0.000 clk_sdram 
-    Info (332119):     5.170               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):    18.920               0.000 clk_50m 
-    Info (332119):    46.898               0.000 altera_reserved_tck 
+    Info (332119):     1.764               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     2.621               0.000 clk_sdram 
+    Info (332119):     6.150               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    19.215               0.000 clk_50m 
+    Info (332119):    46.882               0.000 altera_reserved_tck 
 Info (332146): Worst-case hold slack is 0.352
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
     Info (332119):     0.352               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):     0.353               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
     Info (332119):     0.354               0.000 altera_reserved_tck 
-    Info (332119):     0.550               0.000 clk_50m 
+    Info (332119):     0.354               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.395               0.000 clk_50m 
     Info (332119):     3.133               0.000 clk_sdram 
-Info (332146): Worst-case recovery slack is 2.595
+Info (332146): Worst-case recovery slack is 2.494
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     2.595               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):    11.407               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):    48.188               0.000 altera_reserved_tck 
-Info (332146): Worst-case removal slack is 1.269
+    Info (332119):     2.494               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.762               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    48.357               0.000 altera_reserved_tck 
+Info (332146): Worst-case removal slack is 0.878
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     1.269               0.000 altera_reserved_tck 
-    Info (332119):     1.575               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):     3.268               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.878               0.000 altera_reserved_tck 
+    Info (332119):     1.238               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     3.623               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
 Info (332146): Worst-case minimum pulse width slack is 4.708
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
     Info (332119):     4.708               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
     Info (332119):     4.924               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2] 
     Info (332119):     5.790               0.000 clk_sdram 
-    Info (332119):     9.631               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     9.650               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
     Info (332119):     9.691               0.000 clk_50m 
-    Info (332119):    49.475               0.000 altera_reserved_tck 
-Info (332114): Report Metastability: Found 41 synchronizer chains.
-    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
-    Info (332114): Number of Synchronizer Chains Found: 41
+    Info (332119):    49.489               0.000 altera_reserved_tck 
+Info (332114): Report Metastability: Found 57 synchronizer chains.
+    Info (332114): Typical MTBF of Design is 1e+09 years or 3.15e+16 seconds.
+
+    Info (332114): Number of Synchronizer Chains Found: 57
     Info (332114): Shortest Synchronizer Chain: 2 Registers
-    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-    Info (332114): Worst Case Available Settling Time: 15.381 ns
+    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 0.860
+    Info (332114): Worst Case Available Settling Time: 14.956 ns
+    Info (332114): Typical MTBF values are calculated based on the nominal silicon characteristics, at nominal operating conditions.
+    Info (332114):   - Under typical conditions, an increase of 100ps in available settling time will increase MTBF values by a factor of 10.8
 Info: Analyzing Fast 1200mV 0C Model
 Warning (332060): Node: vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
-    Info (13166): Register vga_pixel_ctrl:u_vga_px|v_count[3] is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
+    Info (13166): Register vga_pixel_ctrl:u_vga_px|buf_sel is being clocked by vga_pixel_ctrl:u_vga_px|clk_25m
 Warning (332060): Node: vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
-    Info (13166): Register vga_text_terminal:u_vga|v_count[7] is being clocked by vga_text_terminal:u_vga|clk_25m
+    Info (13166): Register vga_text_terminal:u_vga|v_count[6] is being clocked by vga_text_terminal:u_vga|clk_25m
 Warning (332060): Node: expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|clk_1hz was determined to be a clock but was found without an associated clock assignment.
     Info (13166): Register expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|hex_val[0][0] is being clocked by expdemo_top:u_expdemo|adapt_exp3:u_e3|exp3_top:u_exp3|hex_scan:u_hex_scan|clk_1hz
 Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
-Info (332146): Worst-case setup slack is 2.363
+Info (332146): Worst-case setup slack is 2.304
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     2.363               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):     4.656               0.000 clk_sdram 
-    Info (332119):     7.389               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):    19.431               0.000 clk_50m 
-    Info (332119):    48.554               0.000 altera_reserved_tck 
-Info (332146): Worst-case hold slack is 0.178
+    Info (332119):     2.304               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.725               0.000 clk_sdram 
+    Info (332119):     7.811               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    19.571               0.000 clk_50m 
+    Info (332119):    48.601               0.000 altera_reserved_tck 
+Info (332146): Worst-case hold slack is 0.150
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     0.178               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):     0.180               0.000 altera_reserved_tck 
-    Info (332119):     0.180               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):     0.263               0.000 clk_50m 
+    Info (332119):     0.150               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     0.155               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.181               0.000 altera_reserved_tck 
+    Info (332119):     0.188               0.000 clk_50m 
     Info (332119):     1.951               0.000 clk_sdram 
-Info (332146): Worst-case recovery slack is 5.520
+Info (332146): Worst-case recovery slack is 5.469
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     5.520               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-    Info (332119):    15.009               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):    49.280               0.000 altera_reserved_tck 
-Info (332146): Worst-case removal slack is 0.654
+    Info (332119):     5.469               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     7.022               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    49.373               0.000 altera_reserved_tck 
+Info (332146): Worst-case removal slack is 0.477
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     0.654               0.000 altera_reserved_tck 
-    Info (332119):     0.824               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):     1.901               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
-Info (332146): Worst-case minimum pulse width slack is 4.779
+    Info (332119):     0.477               0.000 altera_reserved_tck 
+    Info (332119):     0.645               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     2.062               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+Info (332146): Worst-case minimum pulse width slack is 4.752
     Info (332119):     Slack       End Point TNS Clock 
     Info (332119): ========= =================== =====================
-    Info (332119):     4.779               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.752               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
     Info (332119):     4.946               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2] 
     Info (332119):     6.000               0.000 clk_sdram 
-    Info (332119):     9.267               0.000 clk_50m 
-    Info (332119):     9.708               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
-    Info (332119):    49.301               0.000 altera_reserved_tck 
-Info (332114): Report Metastability: Found 41 synchronizer chains.
-    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
-    Info (332114): Number of Synchronizer Chains Found: 41
+    Info (332119):     9.266               0.000 clk_50m 
+    Info (332119):     9.705               0.000 u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    49.302               0.000 altera_reserved_tck 
+Info (332114): Report Metastability: Found 57 synchronizer chains.
+    Info (332114): Typical MTBF of Design is 1e+09 years or 3.15e+16 seconds.
+
+    Info (332114): Number of Synchronizer Chains Found: 57
     Info (332114): Shortest Synchronizer Chain: 2 Registers
-    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
-    Info (332114): Worst Case Available Settling Time: 17.393 ns
+    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 0.860
+    Info (332114): Worst Case Available Settling Time: 17.165 ns
+    Info (332114): Typical MTBF values are calculated based on the nominal silicon characteristics, at nominal operating conditions.
+    Info (332114):   - Under typical conditions, an increase of 100ps in available settling time will increase MTBF values by a factor of 10.8
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus Prime Timing Analyzer was successful. 0 errors, 24 warnings
-    Info: Peak virtual memory: 5118 megabytes
-    Info: Processing ended: Tue May 26 13:02:13 2026
-    Info: Elapsed time: 00:00:06
-    Info: Total CPU time (on all processors): 00:00:08
-Info (293000): Quartus Prime Full Compilation was successful. 0 errors, 138 warnings
+    Info: Peak virtual memory: 5124 megabytes
+    Info: Processing ended: Tue May 26 19:09:41 2026
+    Info: Elapsed time: 00:00:09
+    Info: Total CPU time (on all processors): 00:00:11
+Info (293000): Quartus Prime Full Compilation was successful. 0 errors, 172 warnings
 Info (23030): Evaluation of Tcl script e:/software/intelfpga_lite/23.1std/quartus/common/tcl/internal/qsh_flow.tcl was successful
-Info: Quartus Prime Shell was successful. 0 errors, 138 warnings
+Info: Quartus Prime Shell was successful. 0 errors, 172 warnings
     Info: Peak virtual memory: 4630 megabytes
-    Info: Processing ended: Tue May 26 13:02:13 2026
-    Info: Elapsed time: 00:02:10
-    Info: Total CPU time (on all processors): 00:00:01
+    Info: Processing ended: Tue May 26 19:09:42 2026
+    Info: Elapsed time: 00:03:51
+    Info: Total CPU time (on all processors): 00:00:02

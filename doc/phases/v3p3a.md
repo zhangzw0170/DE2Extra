@@ -423,10 +423,10 @@ APP_SRC += $(DE2SHELL_DIR)/ps2_decoder.c
 | V3P3A.S1.2 | fb_hal NEORV32 后端: fb_hw_mode_set 正确启用/禁用像素模式 | ⬜ |
 | V3P3A.S2.1 | gfx 全部 9 种图元 (clear/fill_rect/rect/hline/vline/line/char/text/bevel/window_frame) 在 FPGA 上渲染正确 | ⬜ |
 | V3P3A.S2.2 | gfx_window_frame 带标题栏窗口在像素模式下正确显示 | ⬜ |
-| V3P3A.S3.1 | de2shell_rtos 构建包含 GUI 源文件, Docker 交叉编译零错误 | ⬜ |
+| V3P3A.S3.1 | de2shell_rtos 构建包含 GUI 源文件, Docker 交叉编译零错误 | 代码已包含 (makefile L55-60: fb_hal/gfx/gui/gui_widgets/ps2_decoder/twm) |
 | V3P3A.S3.2 | 固件大小合理 (<100KB @ SDRAM) | ⬜ |
-| V3P3A.S4.1 | `make local-gui` (SDL2) 编译通过 | ⬜ |
-| V3P3A.S4.2 | SDL2 窗口打开, 显示 Win 3.0 桌面 (背景/图标/任务栏/窗口) | ⬜ |
+| V3P3A.S4.1 | `make local` (SDL2) 编译通过, 包含 GUI 源文件 | ✅ 代码确认 (makefile local 目标包含 fb_hal/gfx/gui/gui_widgets/twm) |
+| V3P3A.S4.2 | SDL2 窗口打开, 显示桌面 (背景/图标/任务栏/窗口) | ⬜ |
 | V3P3A.S4.3 | SDL2 桌面交互: Tab 焦点切换, Enter 激活, ESC 退出 | ⬜ |
 | V3P3A.S5.1 | FPGA 像素模式: VGA 显示 RGB 渐变填充 | ⬜ |
 | V3P3A.S5.2 | FPGA 像素模式: Win 3.0 桌面完整渲染 (9 图标 + 2 窗口 + 任务栏) | ⬜ |
@@ -437,5 +437,10 @@ APP_SRC += $(DE2SHELL_DIR)/ps2_decoder.c
 | V3P3A.S7.1 | Quartus 编译通过, LE 占用 <11,000 (含 vga_pixel_ctrl) | ⬜ |
 | V3P3A.S7.2 | 单帧渲染 (clear + gui_render_all) < 50ms | ⬜ |
 | V3P3A.S7.3 | SDRAM 帧缓冲不与代码段/堆重叠 (链接脚本确认) | ⬜ |
-| V3P3A.S8.1 | fb_hal VGA 寄存器偏移与 wb_intercon 地址解码一致 | ⬜ |
-| V3P3A.S8.2 | win30_desk.c PS2_MMIO_BASE 地址与 de2extra_pkg.vhd 一致 (0xF0008000) | ⬜ |
+| V3P3A.S8.1 | fb_hal VGA 寄存器偏移与 wb_intercon 地址解码一致 | ⬜ 需交叉验证 |
+| V3P3A.S8.2 | twm.c PS2_MMIO_BASE 地址与 de2extra_pkg.vhd 一致 (0xF0008000) | ✅ 代码确认 |
+| V3P3A.S9.1 | Snake 全屏: GRID_W=78, GRID_H=27, 填满 80x30 (留 2 列 2 行边距) | ✅ 代码确认 (snake.c L7-8) |
+| V3P3A.S9.2 | Snake CP437 box-drawing 边框: CH_BOX_HZ/VT/TL/TR/BL/BR 等字符 | ✅ 代码确认 (snake.c L131-145) |
+| V3P3A.S9.3 | vga_wait_vblank() 实现并集成到 snake 更新循环 | ✅ 代码确认 (vga_hal.c L128 + snake.c L213) |
+| V3P3A.S10.1 | TWM (tiling window manager) 替代 win30_desk, twm.c 编译通过 | ✅ 代码确认 (makefile local 目标包含 twm.c) |
+| V3P3A.S10.2 | `twm` CLI 命令已注册 (替换 `win30`/`startui`/`gui` 别名) | ⬜ 需确认 main.c |

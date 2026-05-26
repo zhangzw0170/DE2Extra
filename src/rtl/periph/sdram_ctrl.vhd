@@ -173,6 +173,7 @@ architecture rtl of sdram_ctrl is
     signal vga_seen_100m     : std_logic;
     signal vga_fire_100m     : std_logic;
     signal vga_valid         : std_logic;
+    signal vga_shadow_adr    : std_logic_vector(24 downto 0);
     signal vga_adr           : std_logic_vector(24 downto 0);
     signal vga_col_cnt       : unsigned(2 downto 0);
 
@@ -433,8 +434,10 @@ begin
         if rst_n_i = '0' then
             vga_toggle_cpu <= '0';
             vga_req_pending_cpu <= '0';
+            vga_shadow_adr <= (others => '0');
         elsif rising_edge(clk_cpu_i) then
             if vga_rd_req_i = '1' and vga_req_pending_cpu = '0' then
+                vga_shadow_adr <= vga_rd_adr_i;
                 vga_toggle_cpu <= not vga_toggle_cpu;
                 vga_req_pending_cpu <= '1';
             elsif vga_fifo_rd_en = '1' and vga_fifo_pop_cnt = 7 then
@@ -519,6 +522,14 @@ begin
             fifo_wr_en <= '0';
             vga_fifo_wr_en <= '0';
 
+            -- Latch the VGA request as soon as it crosses into the SDRAM
+            -- domain. The main SDRAM FSM can then service it later from IDLE
+            -- without losing a one-cycle pulse.
+            if vga_fire_100m = '1' then
+                vga_valid <= '1';
+                vga_adr   <= vga_shadow_adr;
+            end if;
+
             case state is
 
                 when S_INIT =>
@@ -593,9 +604,6 @@ begin
                             col_r   <= burst_adr(9 downto 0);
                             burst_col_cnt <= (others => '0');
                             state   <= S_ACTIVATE;
-                        elsif vga_fire_100m = '1' then
-                            vga_valid <= '1';
-                            vga_adr   <= vga_rd_adr_i;
                         elsif vga_valid = '1' then
                             addr_r  <= vga_adr;
                             we_r    <= '0';
