@@ -87,7 +87,6 @@ architecture rtl of pong_engine is
 
     -- Control
     signal paused    : std_logic := '0';
-    signal do_serve  : std_logic := '0';
 
     -- Frame sync: detect end of frame for physics update
     signal vsync_d  : integer range 0 to V_TOTAL - 1 := 0;
@@ -169,12 +168,12 @@ begin
             end if;
 
             -- Pixel coordinates (within active region)
-            if h_count >= H_SYNC + H_BP then
+            if h_count >= H_SYNC + H_BP and h_count < H_SYNC + H_BP + H_ACTIVE then
                 pixel_x <= h_count - (H_SYNC + H_BP);
             else
                 pixel_x <= 0;
             end if;
-            if v_count >= V_SYNC + V_BP then
+            if v_count >= V_SYNC + V_BP and v_count < V_SYNC + V_BP + V_ACTIVE then
                 pixel_y <= v_count - (V_SYNC + V_BP);
             else
                 pixel_y <= 0;
@@ -183,10 +182,13 @@ begin
     end process;
 
     -- ================================================================
-    -- Wishbone Slave (50MHz domain)
+    -- Wishbone Slave + Game Physics (merged, 50MHz domain)
     -- ================================================================
     process(clk_50m_i)
         variable addr : integer range 0 to 7;
+        variable v_serve_req : std_logic;
+        variable new_x : integer range 0 to H_ACTIVE - 1;
+        variable new_y : integer range 0 to V_ACTIVE - BALL_SIZE;
     begin
         if rising_edge(clk_50m_i) then
             if rst_n_i = '0' then
@@ -200,11 +202,16 @@ begin
                 ball_vy <= 1;
                 score_l <= 0;
                 score_r <= 0;
-                do_serve <= '0';
+                wb_dat_o <= (others => '0');
+                wb_ack_o <= '0';
             else
+                -- Defaults
                 wb_ack_o <= '0';
                 wb_dat_o <= (others => '0');
 
+                v_serve_req := '0';
+
+                -- WB slave
                 if wb_stb_i = '1' then
                     wb_ack_o <= '1';
                     addr := to_integer(unsigned(wb_adr_i(4 downto 2)));
@@ -220,8 +227,8 @@ begin
                                     paddle_r <= to_integer(unsigned(wb_dat_i(9 downto 0)));
                                 end if;
                             when 2 =>  -- control
-                                if wb_dat_i(0) = '1' then  -- serve/reset
-                                    do_serve <= '1';
+                                if wb_dat_i(0) = '1' then
+                                    v_serve_req := '1';
                                 end if;
                                 paused <= wb_dat_i(1);
                                 enabled <= wb_dat_i(2);
@@ -236,95 +243,70 @@ begin
                         end case;
                     end if;
                 end if;
-            end if;
-        end if;
-    end process;
 
-    vga_en_o <= enabled;
+                -- Physics
+                vsync_d <= v_count;
 
-    -- ================================================================
-    -- Game Physics (50MHz, once per frame)
-    -- ================================================================
-    process(clk_50m_i)
-        variable new_x : integer range 0 to H_ACTIVE - 1;
-        variable new_y : integer range 0 to V_ACTIVE - BALL_SIZE;
-    begin
-        if rising_edge(clk_50m_i) then
-            vsync_d <= v_count;
-            do_serve <= '0';
-
-            if rst_n_i = '0' then
-                ball_x <= H_ACTIVE / 2;
-                ball_y <= V_ACTIVE / 2 - 4;
-                ball_vx <= 2;
-                ball_vy <= 1;
-                score_l <= 0;
-                score_r <= 0;
-            elsif enabled = '0' then
-                null;
-            elsif do_serve = '1' then
-                ball_x <= H_ACTIVE / 2;
-                ball_y <= V_ACTIVE / 2 - 4;
-                ball_vx <= 2;
-                ball_vy <= 1;
-            else
-                -- Detect end of frame (vsync falling edge)
-                if vsync_d >= (V_TOTAL - 10) and v_count < 10 and paused = '0' then
-                    -- Ball out of bounds = score
-                    if ball_x + BALL_SIZE < PADDLE_W then
-                        -- Left side: right player scores
-                        score_r <= score_r + 1;
-                        ball_x <= H_ACTIVE / 2;
-                        ball_y <= V_ACTIVE / 2 - 4;
-                        ball_vx <= 2;
-                        ball_vy <= 1;
-                    elsif ball_x >= H_ACTIVE - PADDLE_W then
-                        -- Right side: left player scores
-                        score_l <= score_l + 1;
-                        ball_x <= H_ACTIVE / 2;
-                        ball_y <= V_ACTIVE / 2 - 4;
-                        ball_vx <= -2;
-                        ball_vy <= 1;
-                    else
-                        -- Move ball Y with wall bounce
-                        new_y := ball_y + ball_vy;
-                        if new_y < 0 then
-                            new_y := 0;
-                            ball_vy <= -ball_vy;
-                        elsif new_y + BALL_SIZE > V_ACTIVE - 1 then
-                            new_y := V_ACTIVE - BALL_SIZE;
-                            ball_vy <= -ball_vy;
-                        end if;
-                        ball_y <= new_y;
-
-                        -- Move ball X
-                        new_x := ball_x + ball_vx;
-
-                        -- Left paddle collision
-                        if ball_vx < 0 and new_x <= PADDLE_W and ball_x > PADDLE_W then
-                            if (ball_y + BALL_SIZE > paddle_l) and
-                               (ball_y < paddle_l + PADDLE_H) then
-                                ball_vx <= -ball_vx;
-                                new_x := PADDLE_W + 1;
+                if enabled = '0' then
+                    null;
+                elsif v_serve_req = '1' then
+                    ball_x <= H_ACTIVE / 2;
+                    ball_y <= V_ACTIVE / 2 - 4;
+                    ball_vx <= 2;
+                    ball_vy <= 1;
+                else
+                    if vsync_d >= (V_TOTAL - 10) and v_count < 10 and paused = '0' then
+                        if ball_x + BALL_SIZE < PADDLE_W then
+                            score_r <= score_r + 1;
+                            ball_x <= H_ACTIVE / 2;
+                            ball_y <= V_ACTIVE / 2 - 4;
+                            ball_vx <= 2;
+                            ball_vy <= 1;
+                        elsif ball_x >= H_ACTIVE - PADDLE_W then
+                            score_l <= score_l + 1;
+                            ball_x <= H_ACTIVE / 2;
+                            ball_y <= V_ACTIVE / 2 - 4;
+                            ball_vx <= -2;
+                            ball_vy <= 1;
+                        else
+                            new_y := ball_y + ball_vy;
+                            if new_y < 0 then
+                                new_y := 0;
+                                ball_vy <= -ball_vy;
+                            elsif new_y + BALL_SIZE > V_ACTIVE - 1 then
+                                new_y := V_ACTIVE - BALL_SIZE;
+                                ball_vy <= -ball_vy;
                             end if;
-                        end if;
+                            ball_y <= new_y;
 
-                        -- Right paddle collision
-                        if ball_vx > 0 and new_x + BALL_SIZE >= H_ACTIVE - PADDLE_W and
-                           ball_x + BALL_SIZE < H_ACTIVE - PADDLE_W then
-                            if (ball_y + BALL_SIZE > paddle_r) and
-                               (ball_y < paddle_r + PADDLE_H) then
-                                ball_vx <= -ball_vx;
-                                new_x := H_ACTIVE - PADDLE_W - BALL_SIZE - 1;
+                            new_x := ball_x + ball_vx;
+
+                            if ball_vx < 0 and new_x <= PADDLE_W and ball_x > PADDLE_W then
+                                if (ball_y + BALL_SIZE > paddle_l) and
+                                   (ball_y < paddle_l + PADDLE_H) then
+                                    ball_vx <= -ball_vx;
+                                    new_x := PADDLE_W + 1;
+                                end if;
                             end if;
-                        end if;
 
-                        ball_x <= new_x;
+                            if ball_vx > 0 and new_x + BALL_SIZE >= H_ACTIVE - PADDLE_W and
+                               ball_x + BALL_SIZE < H_ACTIVE - PADDLE_W then
+                                if (ball_y + BALL_SIZE > paddle_r) and
+                                   (ball_y < paddle_r + PADDLE_H) then
+                                    ball_vx <= -ball_vx;
+                                    new_x := H_ACTIVE - PADDLE_W - BALL_SIZE - 1;
+                                end if;
+                            end if;
+
+                            ball_x <= new_x;
+                        end if;
                     end if;
                 end if;
             end if;
         end if;
     end process;
+
+    vga_en_o <= enabled;
 
     -- ================================================================
     -- Pixel Rendering (combinatorial in 25MHz domain)

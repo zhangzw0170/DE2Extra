@@ -1,0 +1,89 @@
+Reading pref.tcl
+
+# 2020.4
+
+# do run_conway.do
+# Model Technology ModelSim SE-64 vcom 2020.4 Compiler 2020.10 Oct 13 2020
+# Start time: 15:51:36 on May 26,2026
+# vcom -93 ../conway_engine.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity conway_engine
+# -- Compiling architecture rtl of conway_engine
+# End time: 15:51:37 on May 26,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+# Model Technology ModelSim SE-64 vcom 2020.4 Compiler 2020.10 Oct 13 2020
+# Start time: 15:51:37 on May 26,2026
+# vcom -93 conway_engine_tb.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity conway_engine_tb
+# -- Compiling architecture sim of conway_engine_tb
+# -- Loading entity conway_engine
+# End time: 15:51:37 on May 26,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# vsim -c work.conway_engine_tb 
+# Start time: 15:51:37 on May 26,2026
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# //  ModelSim SE-64 2020.4 Oct 13 2020
+# //
+# //  Copyright 1991-2020 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  ModelSim SE-64 and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.numeric_std(body)
+# Loading work.conway_engine_tb(sim)#1
+# ** Note: === Conway Engine Testbench ===
+#    Time: 0 fs  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: --- Test 1: Reset state ---
+#    Time: 310 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   PASS
+#    Time: 470 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: --- Test 2: Randomize ---
+#    Time: 470 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   idle returned
+#    Time: 50530 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   PASS
+#    Time: 50670 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: --- Test 3: Single step ---
+#    Time: 50670 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   Generation: 1 Pop: 75
+#    Time: 150890 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   PASS
+#    Time: 150890 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: --- Test 4: Clear ---
+#    Time: 150890 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   PASS
+#    Time: 151450 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: --- Test 5: 5 consecutive steps ---
+#    Time: 151450 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   PASS
+#    Time: 751890 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: --- Test 6: Auto run toggle ---
+#    Time: 751890 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   gen went from 1 to 3
+#    Time: 1052430 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note:   PASS
+#    Time: 1252650 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: ========================================
+#    Time: 1252650 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: All 6 tests PASSED
+#    Time: 1252650 ns  Iteration: 0  Instance: /conway_engine_tb
+# ** Note: ========================================
+#    Time: 1252650 ns  Iteration: 0  Instance: /conway_engine_tb
+# End time: 15:51:40 on May 26,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 0

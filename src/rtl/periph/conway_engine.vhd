@@ -47,50 +47,78 @@ architecture rtl of conway_engine is
 
     -- Active buffer: '0' = A, '1' = B (flips after each generation)
     signal buf_sel    : std_logic := '0';
-    signal auto_run   : std_logic := '0';
 
-    -- Generation FSM (one cell per clock)
-    type gen_state_t is (S_IDLE, S_COMPUTE, S_FLIP);
-    signal gen_state  : gen_state_t := S_IDLE;
-    signal gen_idx    : integer range 0 to GRID_SIZE - 1 := 0;
-    signal gen_done_p : std_logic := '0';
+    -- FSM state
+    type fsm_mode_t is (FSM_IDLE, FSM_RAND, FSM_COMPUTE, FSM_FLIP, FSM_POP);
+    signal fsm_mode   : fsm_mode_t := FSM_IDLE;
+    signal fsm_idx    : integer range 0 to GRID_SIZE - 1 := 0;
     signal generation : unsigned(15 downto 0) := (others => '0');
 
     -- Population counter
     signal pop_count  : unsigned(15 downto 0) := (others => '0');
     signal pop_idx    : integer range 0 to GRID_SIZE - 1 := 0;
-    signal pop_active : std_logic := '0';
 
     -- Row read register (set by write to 0x04, read at 0x10)
     signal row_idx    : integer range 0 to ROWS - 1 := 0;
 
-    -- LFSR for random
+    -- LFSR
     signal lfsr : unsigned(15 downto 0) := x"A59B";
+    signal rand_seed : unsigned(15 downto 0) := x"A59B";
+
+    -- Busy (registered, set inside process for WB read consistency)
+    signal busy : std_logic;
 
 begin
 
     -- ================================================================
-    -- Wishbone Slave
+    -- Single unified process: WB slave + FSM
+    -- Variables ensure request signals are visible within the same
+    -- clock edge, avoiding the two-process race condition.
     -- ================================================================
     process(clk_i)
         variable addr : integer range 0 to 7;
         variable row_idx_v : integer range 0 to ROWS - 1;
         variable rd_idx : integer;
         variable row_data : std_logic_vector(31 downto 0);
-        variable rand_lfsr : unsigned(15 downto 0);
+        variable v_clear_req : std_logic;
+        variable v_rand_req  : std_logic;
+        variable v_step_req  : std_logic;
+        variable v_rand_seed : unsigned(15 downto 0);
+        variable auto_run   : std_logic := '0';
+        variable y, x, di : integer;
+        variable ny, nx : integer;
+        variable n_count : unsigned(3 downto 0);
+        variable alive, next_alive : std_logic;
+        variable new_lfsr : unsigned(15 downto 0);
     begin
         if rising_edge(clk_i) then
             if rst_n_i = '0' then
-                auto_run <= '0';
+                fsm_mode <= FSM_IDLE;
+                fsm_idx <= 0;
                 generation <= (others => '0');
+                pop_count <= (others => '0');
+                pop_idx <= 0;
                 grid_a <= (others => '0');
                 grid_b <= (others => '0');
                 buf_sel <= '0';
+                auto_run := '0';
+                lfsr <= x"A59B";
+                rand_seed <= x"A59B";
                 row_idx <= 0;
+                wb_dat_o <= (others => '0');
+                wb_ack_o <= '0';
             else
+                -- Defaults
                 wb_ack_o <= '0';
                 wb_dat_o <= (others => '0');
 
+                -- WB request capture (variables — immediate effect)
+                v_clear_req := '0';
+                v_rand_req  := '0';
+                v_step_req  := '0';
+                v_rand_seed := rand_seed;
+
+                -- Wishbone slave handling (process every clock stb is asserted)
                 if wb_stb_i = '1' then
                     wb_ack_o <= '1';
                     addr := to_integer(unsigned(wb_adr_i(4 downto 2)));
@@ -98,36 +126,20 @@ begin
                     if wb_we_i = '1' then
                         case addr is
                             when 0 =>  -- cmd
-                                if wb_dat_i(0) = '1' then  -- clear
-                                    auto_run <= '0';
-                                    grid_a <= (others => '0');
-                                    grid_b <= (others => '0');
-                                    generation <= (others => '0');
-                                    buf_sel <= '0';
+                                if wb_dat_i(0) = '1' then
+                                    v_clear_req := '1';
                                 end if;
-                                if wb_dat_i(1) = '1' then  -- randomize
-                                    rand_lfsr := unsigned(wb_dat_i(15 downto 0));
-                                    for i in 0 to GRID_SIZE - 1 loop
-                                        rand_lfsr := rand_lfsr(14 downto 0) &
-                                                     (rand_lfsr(15) xor rand_lfsr(14) xor rand_lfsr(12) xor rand_lfsr(3));
-                                        if rand_lfsr(3 downto 0) = "0000" then
-                                            if buf_sel = '0' then grid_a(i) <= '1';
-                                            else grid_b(i) <= '1'; end if;
-                                        else
-                                            if buf_sel = '0' then grid_a(i) <= '0';
-                                            else grid_b(i) <= '0'; end if;
-                                        end if;
-                                    end loop;
-                                    lfsr <= rand_lfsr;
+                                if wb_dat_i(1) = '1' then
+                                    v_rand_req := '1';
+                                    v_rand_seed := unsigned(wb_dat_i(15 downto 0));
                                 end if;
-                                if wb_dat_i(2) = '1' and gen_state = S_IDLE then  -- step
-                                    gen_state <= S_COMPUTE;
-                                    gen_idx <= 0;
+                                if wb_dat_i(2) = '1' then
+                                    v_step_req := '1';
                                 end if;
-                                if wb_dat_i(3) = '1' then  -- auto_run toggle
-                                    auto_run <= not auto_run;
+                                if wb_dat_i(3) = '1' then
+                                    auto_run := not auto_run;
                                 end if;
-                            when 1 =>  -- control: set row_index for row read
+                            when 1 =>  -- control: set row_index
                                 row_idx_v := to_integer(unsigned(wb_dat_i(12 downto 8)));
                                 if row_idx_v < ROWS then
                                     row_idx <= row_idx_v;
@@ -137,11 +149,7 @@ begin
                     else
                         case addr is
                             when 2 =>  -- status
-                                if gen_state /= S_IDLE then
-                                    wb_dat_o(0) <= '1';
-                                else
-                                    wb_dat_o(0) <= '0';
-                                end if;
+                                wb_dat_o(0) <= busy;
                                 wb_dat_o(1) <= auto_run;
                                 wb_dat_o(17 downto 2) <= std_logic_vector(generation);
                             when 3 =>  -- population
@@ -162,38 +170,56 @@ begin
                         end case;
                     end if;
                 end if;
-            end if;
-        end if;
-    end process;
 
-    -- ================================================================
-    -- Next Generation: 1 cell per clock
-    -- ================================================================
-    process(clk_i)
-        variable y, x, di : integer;
-        variable ny, nx : integer;
-        variable n_count : unsigned(3 downto 0);
-        variable alive, next_alive : std_logic;
-    begin
-        if rising_edge(clk_i) then
-            if rst_n_i = '0' then
-                gen_state <= S_IDLE;
-                gen_idx <= 0;
-            else
-                gen_done_p <= '0';
-
-                if auto_run = '1' and gen_state = S_IDLE then
-                    gen_state <= S_COMPUTE;
-                    gen_idx <= 0;
+                -- Store seed if requested
+                if v_rand_req = '1' then
+                    rand_seed <= v_rand_seed;
                 end if;
 
-                case gen_state is
-                    when S_IDLE => null;
+                -- FSM
+                case fsm_mode is
+                    when FSM_IDLE =>
+                        busy <= '0';
+                        if v_clear_req = '1' then
+                            auto_run := '0';
+                            generation <= (others => '0');
+                            pop_count <= (others => '0');
+                            buf_sel <= '0';
+                            grid_a <= (others => '0');
+                            grid_b <= (others => '0');
+                        elsif v_rand_req = '1' then
+                            busy <= '1';
+                            fsm_idx <= 0;
+                            lfsr <= v_rand_seed;
+                            fsm_mode <= FSM_RAND;
+                        elsif (v_step_req = '1' or auto_run = '1') then
+                            busy <= '1';
+                            fsm_idx <= 0;
+                            fsm_mode <= FSM_COMPUTE;
+                        end if;
 
-                    when S_COMPUTE =>
-                        y := gen_idx / COLS;
-                        x := gen_idx mod COLS;
-                        di := gen_idx;
+                    when FSM_RAND =>
+                        new_lfsr := lfsr(14 downto 0) &
+                                   (lfsr(15) xor lfsr(14) xor lfsr(12) xor lfsr(3));
+                        if new_lfsr(3 downto 0) = "0000" then
+                            if buf_sel = '0' then grid_a(fsm_idx) <= '1';
+                            else grid_b(fsm_idx) <= '1'; end if;
+                        else
+                            if buf_sel = '0' then grid_a(fsm_idx) <= '0';
+                            else grid_b(fsm_idx) <= '0'; end if;
+                        end if;
+                        lfsr <= new_lfsr;
+
+                        if fsm_idx = GRID_SIZE - 1 then
+                            fsm_mode <= FSM_IDLE;
+                        else
+                            fsm_idx <= fsm_idx + 1;
+                        end if;
+
+                    when FSM_COMPUTE =>
+                        y := fsm_idx / COLS;
+                        x := fsm_idx mod COLS;
+                        di := fsm_idx;
 
                         if buf_sel = '0' then
                             alive := grid_a(di);
@@ -218,67 +244,45 @@ begin
                         end loop;
 
                         if alive = '1' then
-                            if (n_count = 2) or (n_count = 3) then
-                                next_alive := '1';
-                            else
-                                next_alive := '0';
-                            end if;
+                            if (n_count = 2) or (n_count = 3) then next_alive := '1';
+                            else next_alive := '0'; end if;
                         else
-                            if n_count = 3 then
-                                next_alive := '1';
-                            else
-                                next_alive := '0';
-                            end if;
+                            if n_count = 3 then next_alive := '1';
+                            else next_alive := '0'; end if;
                         end if;
 
-                        di := gen_idx;
+                        di := fsm_idx;
                         if buf_sel = '0' then grid_b(di) <= next_alive;
                         else grid_a(di) <= next_alive; end if;
 
-                        if gen_idx = GRID_SIZE - 1 then
-                            gen_state <= S_FLIP;
+                        if fsm_idx = GRID_SIZE - 1 then
+                            fsm_mode <= FSM_FLIP;
                         else
-                            gen_idx <= gen_idx + 1;
+                            fsm_idx <= fsm_idx + 1;
                         end if;
 
-                    when S_FLIP =>
+                    when FSM_FLIP =>
                         buf_sel <= not buf_sel;
                         generation <= generation + 1;
-                        gen_done_p <= '1';
-                        gen_state <= S_IDLE;
-                        pop_idx <= 0;
                         pop_count <= (others => '0');
-                        pop_active <= '1';
+                        pop_idx <= 0;
+                        fsm_mode <= FSM_POP;
+
+                    when FSM_POP =>
+                        di := pop_idx;
+                        if buf_sel = '0' then
+                            if grid_a(di) = '1' then pop_count <= pop_count + 1; end if;
+                        else
+                            if grid_b(di) = '1' then pop_count <= pop_count + 1; end if;
+                        end if;
+
+                        if pop_idx = GRID_SIZE - 1 then
+                            fsm_mode <= FSM_IDLE;
+                        else
+                            pop_idx <= pop_idx + 1;
+                        end if;
 
                 end case;
-            end if;
-        end if;
-    end process;
-
-    -- ================================================================
-    -- Population Counter
-    -- ================================================================
-    process(clk_i)
-        variable di : integer;
-    begin
-        if rising_edge(clk_i) then
-            if rst_n_i = '0' then
-                pop_active <= '0';
-                pop_count <= (others => '0');
-            else
-                if pop_active = '1' then
-                    di := pop_idx;
-                    if buf_sel = '0' then
-                        if grid_a(di) = '1' then pop_count <= pop_count + 1; end if;
-                    else
-                        if grid_b(di) = '1' then pop_count <= pop_count + 1; end if;
-                    end if;
-                    if pop_idx = GRID_SIZE - 1 then
-                        pop_active <= '0';
-                    else
-                        pop_idx <= pop_idx + 1;
-                    end if;
-                end if;
             end if;
         end if;
     end process;
