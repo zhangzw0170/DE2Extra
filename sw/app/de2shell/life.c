@@ -9,8 +9,16 @@
 #define GRID_H 20
 
 typedef unsigned char cell_t;
-static cell_t cur[GRID_H][GRID_W];
-static cell_t nxt[GRID_H][GRID_W];
+static cell_t cur[GRID_H][GRID_W]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
+static cell_t nxt[GRID_H][GRID_W]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
 static int gen;
 static int initialized;
 static int frame_count;
@@ -51,15 +59,15 @@ static void grid_glider(void) {
 static void grid_gun(void) {
     grid_clear();
     const char *p =
-        "................................O..........."
-        "..............................O.O..........."
-        "....................OO......OO............OO"
-        "...................O...O....OO............OO"
-        "........OO........O.....O...OO.............."
-        "........OO........O...O.OO....O.O..........."
-        "..................O.....O.......O..........."
-        "...................O...O...................."
-        "....................OO......................";
+        "........................O..........."
+        "......................O.O..........."
+        "............OO......OO............OO"
+        "...........O...O....OO............OO"
+        "OO........O.....O...OO.............."
+        "OO........O...O.OO....O.O..........."
+        "..........O.....O.......O..........."
+        "...........O...O...................."
+        "............OO......................";
     place(2, 4, p, 36, 9);
 }
 

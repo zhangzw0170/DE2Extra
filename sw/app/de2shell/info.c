@@ -10,7 +10,7 @@ typedef volatile struct {
     uint32_t status;
 } ir_regs_t;
 
-#define IR_DBG ((ir_regs_t*)0xF0009000u)
+#define IR_DBG ((ir_regs_t*)0xF000C000u)
 #endif
 
 /* Shared IR command from main.c */
@@ -83,8 +83,8 @@ static void init(void) {
     vga_puts("Version: v0.2\n", VGA_GREEN);
     vga_puts("Repo:    https://github.com/zhangzw0170/DE2Extra.git\n", VGA_GREEN);
     vga_puts("CPU:     NEORV32 RV32IMC + Zk* @ 50MHz\n", VGA_GREEN);
-    vga_puts("Memory:  IMEM 64KB  DMEM 16KB  SDRAM 128MB\n", VGA_GREEN);
-    vga_puts("VGA:     640x480@60Hz  80x25 text\n", VGA_GREEN);
+    vga_puts("Memory:  IMEM 16KB  DMEM 16KB  SDRAM 128MB\n", VGA_GREEN);
+    vga_puts("VGA:     640x480@60Hz  80x30 text\n", VGA_GREEN);
     vga_puts("Input:   UART + PS/2 + IR Remote\n", VGA_GREEN);
     vga_puts("Crypto:  AES-128 SHA-256 SHA-512 SM4 SM3\n", VGA_GREEN);
     vga_puts("Live:    SW / KEY / IR / GPIO / uptime\n", VGA_GREEN);

@@ -59,7 +59,7 @@ typedef volatile struct {
     uint32_t tx_data;
 } ps2_regs_t;
 
-#define PS2 ((ps2_regs_t*)0xF0002000u)
+#define PS2 ((ps2_regs_t*)0xF0008000u)
 
 typedef struct {
     const char *zone;

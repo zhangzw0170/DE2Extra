@@ -51,7 +51,6 @@ static BaseType_t cli_##name(char *buf, size_t len, const char *cmd) {   \
 }
 
 PROG_CMD(hello)
-PROG_CMD(memtest)
 PROG_CMD(crypto)
 PROG_CMD(ps2)
 PROG_CMD(snake)
@@ -59,7 +58,7 @@ PROG_CMD(life)
 PROG_CMD(info)
 PROG_CMD(monitor)
 PROG_CMD(expdemo)
-PROG_CMD(startui)
+PROG_CMD(gui)
 
 /* ── System stats (mocked) ─────────────────────────────────────── */
 
@@ -99,22 +98,15 @@ static BaseType_t cli_cpustat(char *buf, size_t len, const char *cmd) {
 
 static const CLI_Command_Definition_t cmds[] = {
     {"hello",    "hello:    LED chaser\r\n",                 cli_hello,    0},
-    {"memtest",  "memtest:  SDRAM diagnostics\r\n",          cli_memtest,  0},
     {"crypto",   "crypto:   AES/SHA/SM4 CLI\r\n",            cli_crypto,   0},
     {"ps2",      "ps2:      PS/2 keyboard test\r\n",          cli_ps2,      0},
     {"snake",    "snake:    Snake game\r\n",                  cli_snake,    0},
-    {"life",     "life:     Conway's Game of Life\r\n",       cli_life,     0},
     {"info",     "info:     System dashboard\r\n",            cli_info,     0},
-    {"monitor",  "monitor:  RISC-V instruction monitor\r\n",  cli_monitor,  0},
     {"expdemo",  "expdemo:  11 course labs\r\n",              cli_expdemo,  0},
-    {"startui",  "startui:  Win 3.0 GUI\r\n",                cli_startui,  0},
+    {"gui",      "gui:      Win 3.0 GUI\r\n",                 cli_gui,      0},
     /* Aliases */
-    {"kbd",       "kbd:       PS/2 (alias)\r\n",             cli_ps2,      0},
-    {"conwaylife","conwaylife: life (alias)\r\n",            cli_life,     0},
-    {"dash",      "dash:      info (alias)\r\n",            cli_info,     0},
-    {"riscvasm",  "riscvasm:  monitor (alias)\r\n",         cli_monitor,  0},
-    {"rv32",      "rv32:      monitor (alias)\r\n",         cli_monitor,  0},
-    {"gui",       "gui:       startui (alias)\r\n",         cli_startui,  0},
+    {"conwaylife","conwaylife: Conway's Game of Life (alias)\r\n", cli_life, 0},
+    {"riscvasm",  "riscvasm:  monitor alias\r\n",           cli_monitor,  0},
     /* Stats */
     {"stats",    "stats:    Task list + stack HWM\r\n",      cli_stats,    0},
     {"heapstat", "heapstat: Heap usage\r\n",                 cli_heapstat, 0},
@@ -174,7 +166,9 @@ static void test_help(void) {
     printf("\n=== test: help ===\n");
     run_command("help");
     assert_contains("help lists hello",    accumulated_buf, "hello");
-    assert_contains("help lists memtest",  accumulated_buf, "memtest");
+    assert_not_contains("help hides memtest", accumulated_buf, "memtest");
+    assert_not_contains("help hides startui", accumulated_buf, "startui");
+    assert_contains("help lists gui", accumulated_buf, "gui");
     assert_contains("help lists stats",    accumulated_buf, "stats");
     assert_contains("help lists heapstat", accumulated_buf, "heapstat");
     assert_contains("help lists cpustat",  accumulated_buf, "cpustat");
@@ -182,12 +176,12 @@ static void test_help(void) {
 
 static void test_program_commands(void) {
     printf("\n=== test: program commands ===\n");
-    const char *cmds[] = {"hello", "memtest", "crypto", "ps2", "snake",
-                          "life", "info", "monitor", "expdemo", "startui"};
-    const char *names[] = {"hello", "memtest", "crypto", "ps2", "snake",
-                           "life", "info", "monitor", "expdemo", "startui"};
+    const char *cmds[] = {"hello", "crypto", "ps2", "snake",
+                          "info", "expdemo", "gui"};
+    const char *names[] = {"hello", "crypto", "ps2", "snake",
+                           "info", "expdemo", "gui"};
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 7; i++) {
         run_command(cmds[i]);
         char expected[64];
         sprintf(expected, "Starting %s", names[i]);
@@ -198,23 +192,11 @@ static void test_program_commands(void) {
 static void test_aliases(void) {
     printf("\n=== test: aliases ===\n");
 
-    run_command("kbd");
-    assert_contains("kbd -> ps2", output_buf, "Starting ps2");
-
     run_command("conwaylife");
     assert_contains("conwaylife -> life", output_buf, "Starting life");
 
-    run_command("dash");
-    assert_contains("dash -> info", output_buf, "Starting info");
-
     run_command("riscvasm");
     assert_contains("riscvasm -> monitor", output_buf, "Starting monitor");
-
-    run_command("rv32");
-    assert_contains("rv32 -> monitor", output_buf, "Starting monitor");
-
-    run_command("gui");
-    assert_contains("gui -> startui", output_buf, "Starting startui");
 }
 
 static void test_stats(void) {

@@ -105,7 +105,8 @@ def format_vhd(data):
 
         for row in range(16):
             b = data[ch * 16 + row]
-            lines.append(f'        x"{b:02X}",  -- row {row}')
+            suffix = "," if (ch != 255 or row != 15) else ""
+            lines.append(f'        x"{b:02X}"{suffix}  -- row {row}')
 
     lines.append("    );")
     lines.append("end package font_rom_pkg;")

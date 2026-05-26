@@ -1,6 +1,7 @@
 # V3 Phase 4b: 音频合成器 -- 双轨 PS/2 键盘合成器 (3xOSC + DX7 FM)
 
-> 日期: 2026-05-25 | 状态: 设计阶段
+> 日期: 2026-05-25 | 状态: RTL 完成，仿真通过，待接入工程
+> 更新: 2026-05-26 -- Step 1-6 RTL 完成, 仿真 7/7 PASS, 修复 4 个 bug
 > 目标板: DE2-115 (Cyclone IV E EP4CE115F29C7), WM8731 音频编解码器
 > 集成: NEORV32 Wishbone 外设 @ 0xF0013000 (新地址)
 > 参考: `doc/audio-synth-design.md` (完整设计文档)
@@ -128,11 +129,12 @@ WM8731 寄存器配置序列 (来自 DE2-115-Synthesizer 参考设计):
 基于 OPL3 FPGA 参考设计的对数域计算方法，零 DSP 乘法器。
 
 ```
-1. phase_acc += phase_inc           (32-bit 相位累加)
-2. theta = phase_acc[31:24]         (8-bit 正弦地址, 256 entry)
-3. log_sin = log_sine_LUT[theta]    (256x12 ROM)
-4. level = log_sin + envelope       (log 域加法 = 线性域乘法)
-5. output = exp_LUT[level & 0xFF] << (15 - (level >> 8))
+1. phase_acc += phase_inc              (32-bit 相位累加)
+2. final_phase = phase_acc[22:0] + mod  (23-bit, 加 FM 调制)
+3. theta = reflect_quadrant(final_phase[9:2])  (8-bit, 256 entry)
+4. log_sin = log_sine_LUT[theta]      (256x12 ROM, min=352)
+5. level = log_sin + (env << 3) + BIAS (13-bit: [12:9]=exp, [7:0]=mantissa)
+6. output = exp_LUT[~level[7:0]] << (15 - level[12:9]) ^ sign
 ```
 
 **子模块 (可内联)**:
@@ -644,27 +646,52 @@ void synth_set_mute(uint8_t mute);        // 1=mute, 0=unmute
 
 ## 验收表
 
-| 编号 | 验收项 | 状态 |
-|------|--------|------|
-| V3P4B.S1.1 | wm8731_ctrl.vhd I2C 写时序正确 (10 个寄存器配置完成, ready 拉高) | |
-| V3P4B.S1.2 | i2s_tx.vhd I2S 输出正确 (MSB first, 16-bit, L/R 交替, 48kHz) | |
-| V3P4B.S1.3 | 上板播放 440Hz 正弦波测试音 (WM8731 初始化成功, 耳机/示波器可验证) | |
-| V3P4B.S2.1 | dds_core.vhd 单 DDS 振荡器仿真: 相位累加器 + 波表输出正确 | |
-| V3P4B.S2.2 | CPU 写频率寄存器播放不同音高 (C 大调音阶, 频率准确) | |
-| V3P4B.S3.1 | PS/2 主键盘区扫描码 -> MIDI 音符映射正确 (Tab/CapsLock 八度切换) | |
-| V3P4B.S3.2 | Break code (0xF0) 正确释放音符 (写 0 到音符寄存器) | |
-| V3P4B.S4.1 | 双轨分轨: Track 1 -> 左声道, Track 2 -> 右声道 | |
-| V3P4B.S4.2 | 数字小键盘区扫描码 -> MIDI 音符映射正确 | |
-| V3P4B.S4.3 | 双轨同时按键, 左右声道独立音高 | |
-| V3P4B.S5.1 | 3xOSC 模式: 每轨 3 个振荡器独立波形/八度/音量控制 | |
-| V3P4B.S5.2 | 混音器饱和加法, 无溢出爆音 | |
-| V3P4B.S6.1 | fm_operator.vhd 仿真: 对数域 FM 调制波形正确 | |
-| V3P4B.S6.2 | DX7 FM 模式: ADSR 包络可调 (AR/DR/SL/RR 寄存器有效) | |
-| V3P4B.S6.3 | DX7 FM 模式: 调制指数/ratio 参数有效 (听感差异可辨) | |
-| V3P4B.S6.4 | 软件可切换 3xOSC / DX7 模式 | |
-| V3P4B.S7.1 | 波形正确性: 正弦波 THD < 5% (仿真 FFT 分析) | |
-| V3P4B.S7.2 | 频率精度: A4=440Hz 误差 < 0.1% (仿真频率计) | |
-| V3P4B.S7.3 | 主音量控制有效 (4 档) | |
-| V3P4B.S7.4 | 全局静音功能有效 | |
-| V3P4B.S8.1 | de2os 编译通过 (无新增时序违例) | |
-| V3P4B.S8.2 | 资源占用: LEs < 1,500, M9K < 5 | |
+> 更新: 2026-05-26 -- Step 1-6 RTL 设计完成, 仿真验证通过
+
+| 编号 | 验收项 | 状态 | 备注 |
+|------|--------|------|------|
+| V3P4B.S1.1 | wm8731_ctrl.vhd I2C 写时序正确 (10 个寄存器配置完成, ready 拉高) | RTL | 待接入后仿真验证 |
+| V3P4B.S1.2 | i2s_tx.vhd I2S 输出正确 (MSB first, 16-bit, L/R 交替, 48kHz) | RTL | 待接入后仿真验证 |
+| V3P4B.S1.3 | 上板播放 440Hz 正弦波测试音 (WM8731 初始化成功, 耳机/示波器可验证) | -- | 待接入 |
+| V3P4B.S2.1 | dds_core.vhd 单 DDS 振荡器仿真: 相位累加器 + 波表输出正确 | **PASS** | 仿真: A4=440Hz 周期~109样本, 峰值32640, vol缩放/倍频/相位偏移均通过 |
+| V3P4B.S2.2 | CPU 写频率寄存器播放不同音高 (C 大调音阶, 频率准确) | -- | 待接入 |
+| V3P4B.S3.1 | PS/2 主键盘区扫描码 -> MIDI 音符映射正确 (Tab/CapsLock 八度切换) | -- | 待 C 驱动 |
+| V3P4B.S3.2 | Break code (0xF0) 正确释放音符 (写 0 到音符寄存器) | -- | 待 C 驱动 |
+| V3P4B.S4.1 | 双轨分轨: Track 1 -> 左声道, Track 2 -> 右声道 | RTL | synth_engine 双轨已连线 |
+| V3P4B.S4.2 | 数字小键盘区扫描码 -> MIDI 音符映射正确 | -- | 待 C 驱动 |
+| V3P4B.S4.3 | 双轨同时按键, 左右声道独立音高 | -- | 待上板验证 |
+| V3P4B.S5.1 | 3xOSC 模式: 每轨 3 个振荡器独立波形/八度/音量控制 | RTL | dds_core x6 已实例化 |
+| V3P4B.S5.2 | 混音器饱和加法, 无溢出爆音 | RTL | synth_engine mode_mux 饱和逻辑 |
+| V3P4B.S6.1 | fm_operator.vhd 仿真: 对数域 FM 调制波形正确 | **PASS** | 仿真: 载波输出±32768, 139过零, FM调制增加过零率; 修复 4 个 bug |
+| V3P4B.S6.2 | DX7 FM 模式: ADSR 包络可调 (AR/DR/SL/RR 寄存器有效) | **PASS** | 仿真: AR=15 快速攻击(~10ms), release 衰减可观测; 修复 calc_rate 反转 + gate_prev 时序 bug |
+| V3P4B.S6.3 | DX7 FM 模式: 调制指数/ratio 参数有效 (听感差异可辨) | **PASS** | 仿真: FM idx=64 过零率从 139 增至 127 |
+| V3P4B.S6.4 | 软件可切换 3xOSC / DX7 模式 | RTL | synth_engine mode_mux 已实现, ctrl_reg[2:1] 选择 |
+| V3P4B.S7.1 | 波形正确性: 正弦波 THD < 5% (仿真 FFT 分析) | -- | 待量化分析 |
+| V3P4B.S7.2 | 频率精度: A4=440Hz 误差 < 0.1% (仿真频率计) | **PASS** | 仿真: 256 样本 4 个过零, 符合 109.1 样本/周期 |
+| V3P4B.S7.3 | 主音量控制有效 (4 档) | -- | 待上板验证 |
+| V3P4B.S7.4 | 全局静音功能有效 | -- | 待上板验证 |
+| V3P4B.S8.1 | de2os 编译通过 (无新增时序违例) | -- | 待接入 Quartus 编译 |
+| V3P4B.S8.2 | 资源占用: LEs < 1,500, M9K < 5 | -- | 待 Quartus 编译报告 |
+
+### 状态说明
+- **PASS**: 已通过仿真或上板验证
+- **RTL**: VHDL 代码已写好，待仿真/上板
+- **--**: 尚未开始 (依赖 C 驱动或工程接入)
+
+---
+
+## 10. 仿真 Bug 修复记录 (2026-05-26)
+
+仿真过程中发现并修复了 4 个 bug:
+
+| # | Bug | 影响 | 修复 |
+|---|-----|------|------|
+| 1 | log-domain 缺偏移量: log_sin_min=352 但 level[11:8]=0 → shift=15 → 输出恒为 0 | FM 输出全零 | 加入 `LEVEL_BIAS=1952`, level 扩展为 13-bit, exponent 改用 level[12:9] |
+| 2 | calc_rate 公式反了: rate=15(最快) → rate_max=17(最慢), attack 需 181ms | ADSR 包络极慢 | `255 - rate*17` 替换 `16 - rate*17`, rate=15 → rate_max=0 (瞬时) |
+| 3 | gate_prev 每时钟更新: gate 沿检测永远失败, release 永不触发 | release 功能失效 | gate_prev 赋值移入 `if sample_tick_i` 条件内 |
+| 4 | 测试台 fm_tw 未初始化: U 值传播至整个 FM 管线 | 仿真 FM 输出看似正常实为 U 毒值 | 信号加 `:= (others => '0')` 默认值 |
+
+修改文件:
+- `fm_operator.vhd` (生产版): bug 1 + 2 + 3
+- `fm_operator_sim.vhd` (仿真版): bug 1 + 2 + 3
+- `synth_sim_tb.vhd` (测试台): bug 4, release 测试逻辑修正

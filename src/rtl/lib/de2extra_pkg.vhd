@@ -14,16 +14,18 @@ package de2extra_pkg is
     -- Address space (used by Wishbone interconnect in Phase 1)
     -- ================================================================
     constant ADDR_SDRAM_BASE   : std_logic_vector(31 downto 0) := x"01000000"; -- 128MB
-    constant ADDR_VGA_BASE     : std_logic_vector(31 downto 0) := x"F0000000"; -- 8KB
-    constant ADDR_PS2_BASE     : std_logic_vector(31 downto 0) := x"F0002000"; -- 4KB
-    constant ADDR_TIMER_BASE   : std_logic_vector(31 downto 0) := x"F0004000"; -- 4KB
-    constant ADDR_INTC_BASE    : std_logic_vector(31 downto 0) := x"F0006000"; -- 4KB
-    constant ADDR_LCD_BASE     : std_logic_vector(31 downto 0) := x"F0008000"; -- 4KB
-    constant ADDR_IR_BASE      : std_logic_vector(31 downto 0) := x"F0009000"; -- 4KB
-    constant ADDR_DDS_BASE     : std_logic_vector(31 downto 0) := x"F000A000"; -- 4KB
-    constant ADDR_SD_BASE      : std_logic_vector(31 downto 0) := x"F000B000"; -- 4KB
-    constant ADDR_NTT_BASE     : std_logic_vector(31 downto 0) := x"F000C000"; -- 4KB
-    constant ADDR_EXPDEMO_BASE : std_logic_vector(31 downto 0) := x"F000D000"; -- 4KB
+    constant ADDR_VGA_BASE     : std_logic_vector(31 downto 0) := x"F0000000"; -- 32KB
+    constant ADDR_PS2_BASE     : std_logic_vector(31 downto 0) := x"F0008000"; -- 4KB
+    constant ADDR_TIMER_BASE   : std_logic_vector(31 downto 0) := x"F0009000"; -- 4KB
+    constant ADDR_INTC_BASE    : std_logic_vector(31 downto 0) := x"F000A000"; -- 4KB
+    constant ADDR_LCD_BASE     : std_logic_vector(31 downto 0) := x"F000B000"; -- 4KB
+    constant ADDR_IR_BASE      : std_logic_vector(31 downto 0) := x"F000C000"; -- 4KB
+    constant ADDR_DDS_BASE     : std_logic_vector(31 downto 0) := x"F000D000"; -- 4KB
+    constant ADDR_SD_BASE      : std_logic_vector(31 downto 0) := x"F000E000"; -- 4KB
+    constant ADDR_NTT_BASE     : std_logic_vector(31 downto 0) := x"F000F000"; -- 4KB
+    constant ADDR_EXPDEMO_BASE : std_logic_vector(31 downto 0) := x"F0010000"; -- 4KB
+    constant ADDR_PONG_BASE    : std_logic_vector(31 downto 0) := x"F0011000"; -- 4KB
+    constant ADDR_CONWAY_BASE  : std_logic_vector(31 downto 0) := x"F0012000"; -- 4KB
 
     -- ================================================================
     -- ExpDemo: unified experiment output type

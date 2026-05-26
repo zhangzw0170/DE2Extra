@@ -1,8 +1,14 @@
-/* gui.h — Lightweight static GUI widget toolkit
+/* gui.h — Tiling window manager (i3wm/sway style)
  *
- * No heap — all widgets from a static pool (max GUI_MAX_WIDGETS).
- * Z-order: linked list, bottom to top.
- * Keyboard-driven: Tab cycles focus, Enter activates.
+ * Binary tree of containers: SPLIT_H, SPLIT_V, or LEAF.
+ * No heap — static pool. Keyboard-driven, no mouse.
+ *
+ * Key bindings (Alt as Mod):
+ *   Alt+H          Split focused leaf horizontally (side by side)
+ *   Alt+V          Split focused leaf vertically (top and bottom)
+ *   Alt+Arrow      Move focus to adjacent leaf
+ *   Alt+W          Close focused leaf
+ *   Esc            Exit desktop
  */
 #ifndef GUI_H
 #define GUI_H
@@ -12,91 +18,63 @@
 
 /* ── Limits ─────────────────────────────────────────────────────── */
 
-#define GUI_MAX_WIDGETS 32
-#define GUI_TEXTINPUT_MAX 64
+#define TILE_MAX       16
+#define TILE_TITLE_MAX 24
 
-/* ── Widget types ───────────────────────────────────────────────── */
+/* ── Node types ─────────────────────────────────────────────────── */
 
-typedef enum {
-    WIDGET_NONE = 0,
-    WIDGET_WINDOW,
-    WIDGET_BUTTON,
-    WIDGET_LABEL,
-    WIDGET_TEXTINPUT,
-    WIDGET_TASKBAR,
-    WIDGET_ICON
-} widget_type_t;
+#define TILE_LEAF    0
+#define TILE_SPLIT_H 1
+#define TILE_SPLIT_V 2
 
-/* ── Keyboard event ─────────────────────────────────────────────── */
+/* ── Tile node ──────────────────────────────────────────────────── */
 
-typedef struct {
-    uint8_t ascii;
-    uint8_t scancode;
-    uint8_t is_press;
-    uint8_t is_extended;
-} gui_event_t;
+typedef struct tile {
+    int         type;
+    struct tile *parent;
+    struct tile *child[2];
+    float       ratio;          /* child[0]'s share */
 
-/* ── Forward declaration ────────────────────────────────────────── */
+    /* Leaf fields */
+    char  title[TILE_TITLE_MAX];
+    int   id;
+    int   focused;
+    int   active;
 
-struct widget;
-typedef struct widget widget_t;
-
-/* ── Widget callbacks ───────────────────────────────────────────── */
-
-typedef void (*widget_render_fn)(widget_t *self);
-typedef int  (*widget_key_fn)(widget_t *self, const gui_event_t *ev);
-
-/* ── Widget struct ──────────────────────────────────────────────── */
-
-struct widget {
-    widget_type_t  type;
-    int            x, y, w, h;
-    int            visible;
-    int            focused;
-    int            pressed;       /* button/visual feedback */
-    int            active;        /* window: title bar highlighted */
-    const char    *text;          /* label, button caption, window title */
-    char           textbuf[GUI_TEXTINPUT_MAX]; /* textinput buffer */
-    int            textpos;       /* cursor position in textbuf */
-    int            textlen;       /* current text length */
-    widget_t      *parent;
-    widget_t      *next;          /* z-order linked list */
-    widget_t      *children;      /* first child */
-    widget_render_fn render;
-    widget_key_fn    key;
-    /* icon-specific */
-    const uint8_t  *icon_bitmap;  /* 32x32 or NULL */
-};
+    /* Computed rect (set by tile_layout) */
+    int   x, y, w, h;
+} tile_t;
 
 /* ── Public API ─────────────────────────────────────────────────── */
 
-void gui_init(void);
+void     tile_init(void);
+tile_t  *tile_split(int dir);       /* 0=H, 1=V. Returns new leaf. */
+void     tile_close(void);
+void     tile_focus_dir(int dir);   /* 0=left, 1=right, 2=up, 3=down */
+tile_t  *tile_focused(void);
+tile_t  *tile_root(void);
+void     tile_layout(void);
+void     tile_render_all(void);
 
-/* Allocate a widget from the pool. Returns NULL if pool exhausted. */
-widget_t *gui_create(widget_type_t type, int x, int y, int w, int h,
-                     const char *text, widget_t *parent);
+/* Resize: axis 0=H(left/right) 1=V(up/down), sign +1/-1 */
+void     tile_resize(int axis, int sign);
 
-/* Remove widget (and children) from the scene. */
-void gui_destroy(widget_t *w);
+/* Fullscreen toggle for focused leaf */
+void     tile_toggle_fullscreen(void);
 
-/* Render all visible widgets bottom-to-top. */
-void gui_render_all(void);
+/* Cycle focus: +1 forward, -1 backward */
+void     tile_focus_cycle(int reverse);
 
-/* Send a keyboard event to the focused widget.
- * Returns 1 if the event was consumed, 0 if not. */
-int gui_dispatch_key(const gui_event_t *ev);
+/* ── Panel content callback ─────────────────────────────────────── */
 
-/* Move focus to next/prev focusable widget. */
-void gui_focus_next(void);
-void gui_focus_prev(void);
+typedef void (*tile_panel_render_fn)(tile_t *t, int cx, int cy, int cw, int ch);
 
-/* Bring widget to top of z-order. */
-void gui_raise(widget_t *w);
+void tile_set_panel_render(tile_panel_render_fn fn);
 
-/* Find widget at pixel coordinates (for future mouse/touch). */
-widget_t *gui_widget_at(int x, int y);
+/* Panel content dispatcher (defined in gui_widgets.c) */
+void panel_render(tile_t *t, int cx, int cy, int cw, int ch);
 
-/* Assign render/key callbacks based on widget type. Called by gui_create. */
-void gui_widget_setup(widget_t *w);
+/* Cycle panel type for new splits (defined in gui_widgets.c) */
+int gui_widgets_next_id(void);
 
 #endif /* GUI_H */

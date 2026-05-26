@@ -54,6 +54,9 @@
 #define GRID_H  20
 #define MAX_SNAKE (GRID_W * GRID_H)
 
+/* Use int16_t to fit in limited DMEM */
+typedef int16_t coord_t;
+
 /* ── I/O Abstraction ──────────────────────────────────────────── */
 
 #ifdef LOCAL_BUILD
@@ -149,14 +152,15 @@ static char input_char(void) {
 
 /* ── Snake Data ────────────────────────────────────────────────── */
 
-static int snake_x[MAX_SNAKE];
-static int snake_y[MAX_SNAKE];
+static coord_t snake_x[MAX_SNAKE];
+static coord_t snake_y[MAX_SNAKE];
 static int snake_len;
 static int dir_x, dir_y;    /* direction: -1,0,+1 */
 static int food_x, food_y;
 static int score;
 static int game_over;
 static int game_speed_ms;
+static int esc_state = 0;  /* 0=none, 1=got ESC */
 
 /* ── Game Logic ────────────────────────────────────────────────── */
 
@@ -358,16 +362,22 @@ int main(void) {
             case 'a': case 'A': new_dir_x = -1; new_dir_y =  0; break;
             case 'd': case 'D': new_dir_x =  1; new_dir_y =  0; break;
             case 'q': case 'Q': game_over = 1; continue;
-            /* Arrow key sequences (ESC [ A/B/C/D) — skip ESC + [ */
-            case 27: /* ESC */
-                if (input_char() == '[') {
-                    c = input_char();
+            case 27:
+                esc_state = 1; continue;
+            default:
+                if (esc_state == 1) {
+                    esc_state = (c == '[') ? 2 : 0;
+                    continue;
+                }
+                if (esc_state == 2) {
+                    esc_state = 0;
                     switch (c) {
                         case 'A': new_dir_x =  0; new_dir_y = -1; break;
                         case 'B': new_dir_x =  0; new_dir_y =  1; break;
                         case 'C': new_dir_x =  1; new_dir_y =  0; break;
                         case 'D': new_dir_x = -1; new_dir_y =  0; break;
                     }
+                    break;
                 }
                 break;
         }
@@ -426,14 +436,21 @@ int main(void) {
             case 'd': case 'D': new_dir_x =  1; new_dir_y =  0; break;
             case 'q': case 'Q': goto quit;
             case 27:
-                if (input_char() == '[') {
-                    c = input_char();
+                esc_state = 1; continue;
+            default:
+                if (esc_state == 1) {
+                    esc_state = (c == '[') ? 2 : 0;
+                    continue;
+                }
+                if (esc_state == 2) {
+                    esc_state = 0;
                     switch (c) {
                         case 'A': new_dir_x =  0; new_dir_y = -1; break;
                         case 'B': new_dir_x =  0; new_dir_y =  1; break;
                         case 'C': new_dir_x =  1; new_dir_y =  0; break;
                         case 'D': new_dir_x = -1; new_dir_y =  0; break;
                     }
+                    break;
                 }
                 break;
         }

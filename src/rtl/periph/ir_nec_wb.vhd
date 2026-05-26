@@ -1,7 +1,7 @@
 -- ir_nec_wb.vhd — IR NEC Decoder with Wishbone Register Interface
 --
 -- Wraps ir_nec_decoder (Exp10) and exposes decoded NEC commands as
--- memory-mapped registers at ADDR_IR_BASE (0xF0009000).
+-- memory-mapped registers at ADDR_IR_BASE (0xF000C000).
 --
 -- Register Map (word-addressed, 4-byte aligned):
 --   0x00  DATA (R)   — [7:0]=cmd, [15:8]=addr_hi

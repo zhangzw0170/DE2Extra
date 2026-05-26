@@ -184,7 +184,7 @@ architecture rtl of sdram_ctrl is
     signal vga_fifo_rd_data  : std_logic_vector(31 downto 0);
     signal vga_fifo_rd_empty : std_logic;
     signal vga_fifo_pop_cnt  : unsigned(2 downto 0);
-    signal vga_burst_active  : std_logic;
+    signal vga_req_pending_cpu : std_logic;
 
 begin
 
@@ -432,9 +432,13 @@ begin
     begin
         if rst_n_i = '0' then
             vga_toggle_cpu <= '0';
+            vga_req_pending_cpu <= '0';
         elsif rising_edge(clk_cpu_i) then
-            if vga_rd_req_i = '1' then
+            if vga_rd_req_i = '1' and vga_req_pending_cpu = '0' then
                 vga_toggle_cpu <= not vga_toggle_cpu;
+                vga_req_pending_cpu <= '1';
+            elsif vga_fifo_rd_en = '1' and vga_fifo_pop_cnt = 7 then
+                vga_req_pending_cpu <= '0';
             end if;
         end if;
     end process;
@@ -442,10 +446,8 @@ begin
     -- ================================================================
     -- VGA burst pop side (50 MHz domain)
     -- ================================================================
-    vga_burst_active <= vga_fire_100m or vga_valid;  -- simplified
-
-    vga_fifo_rd_en <= '1' when vga_fifo_rd_empty = '0' and
-                              (vga_rd_req_i = '1' or vga_fifo_pop_cnt /= 0)
+    vga_fifo_rd_en <= '1' when vga_req_pending_cpu = '1' and
+                              vga_fifo_rd_empty = '0'
                        else '0';
 
     p_vga_pop : process (clk_cpu_i, rst_n_i)
@@ -453,8 +455,14 @@ begin
         if rst_n_i = '0' then
             vga_fifo_pop_cnt <= (others => '0');
         elsif rising_edge(clk_cpu_i) then
-            if vga_fifo_rd_en = '1' then
-                vga_fifo_pop_cnt <= vga_fifo_pop_cnt + 1;
+            if vga_rd_req_i = '1' and vga_req_pending_cpu = '0' then
+                vga_fifo_pop_cnt <= (others => '0');
+            elsif vga_fifo_rd_en = '1' then
+                if vga_fifo_pop_cnt = 7 then
+                    vga_fifo_pop_cnt <= (others => '0');
+                else
+                    vga_fifo_pop_cnt <= vga_fifo_pop_cnt + 1;
+                end if;
             end if;
         end if;
     end process;

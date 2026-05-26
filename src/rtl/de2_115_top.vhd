@@ -210,7 +210,7 @@ architecture rtl of de2_115_top is
     signal dbg_ir_cmd   : std_logic_vector(7 downto 0);
     signal dbg_ir_toggle : std_logic := '0';
 
-    -- Timer @ 0xF0004000
+    -- Timer @ 0xF0009000
     signal tmr_wb_adr   : std_logic_vector(2 downto 0);
     signal tmr_wb_dat_o : std_logic_vector(31 downto 0);
     signal tmr_wb_dat_i : std_logic_vector(31 downto 0);
@@ -219,7 +219,7 @@ architecture rtl of de2_115_top is
     signal tmr_wb_ack   : std_logic;
     signal tmr_irq      : std_logic;
 
-    -- INTC @ 0xF0006000
+    -- INTC @ 0xF000A000
     signal intc_wb_adr   : std_logic_vector(2 downto 0);
     signal intc_wb_dat_o : std_logic_vector(31 downto 0);
     signal intc_wb_dat_i : std_logic_vector(31 downto 0);
@@ -305,7 +305,7 @@ architecture rtl of de2_115_top is
 
 begin
 
-    vga_txt_reg_stb <= vga_reg_stb when unsigned(vga_reg_adr) < to_unsigned(16#1F80#, 16) else '0';
+    vga_txt_reg_stb <= vga_reg_stb when unsigned(vga_reg_adr) < to_unsigned(16#7000#, 16) else '0';
     -- Bring-up build: keep the text terminal active, but stub out the pixel-mode
     -- register window so UI/framebuffer logic stays out of Quartus elaboration.
     vga_px_reg_stb   <= '0';
@@ -314,8 +314,8 @@ begin
     vga_px_reg_we    <= '0';
     vga_px_reg_dat_i <= (others => '0');
     vga_px_reg_ack   <= '0';
-    vga_reg_dat_i    <= (others => '0') when unsigned(vga_reg_adr) >= to_unsigned(16#1F80#, 16) else vga_txt_reg_dat_i;
-    vga_reg_ack      <= vga_reg_stb when unsigned(vga_reg_adr) >= to_unsigned(16#1F80#, 16) else vga_txt_reg_ack;
+    vga_reg_dat_i    <= (others => '0') when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_dat_i;
+    vga_reg_ack      <= vga_reg_stb when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_ack;
     vga_pixel_mode   <= '0';
     vga_pixel_r      <= (others => '0');
     vga_pixel_g      <= (others => '0');
@@ -605,7 +605,7 @@ begin
     PS2_DAT <= '0' when ps2_dat_oe = '1' else 'Z';
 
     -- ================================================================
-    -- IR NEC Receiver @ 0xF0009000
+    -- IR NEC Receiver @ 0xF000C000
     -- ================================================================
     u_ir : entity work.ir_nec_wb
     port map (
@@ -647,7 +647,7 @@ begin
     gpio_in(30) <= dbg_ir_valid;
     gpio_in(29 downto 22) <= dbg_ir_cmd;
 
-    -- LCD @ 0xF0008000 — shell/de2os-style Wishbone LCD controller
+    -- LCD @ 0xF000B000 — shell/de2os-style Wishbone LCD controller
     u_lcd_shell : entity work.lcd_wb
     port map (
         clk_i    => clk_50m,
@@ -667,7 +667,7 @@ begin
     );
 
     -- ================================================================
-    -- Timer @ 0xF0004000 — captures IR pulse widths
+    -- Timer @ 0xF0009000 — captures IR pulse widths
     -- ================================================================
     u_timer : entity work.timer_wb
     port map (
@@ -684,7 +684,7 @@ begin
     );
 
     -- ================================================================
-    -- INTC @ 0xF0006000 — irq_i(0)=IR, (1)=timer, (2)=PS2
+    -- INTC @ 0xF000A000 — irq_i(0)=IR, (1)=timer, (2)=PS2
     -- ================================================================
     u_intc : entity work.intc_wb
     port map (
@@ -701,7 +701,7 @@ begin
     );
 
     -- ================================================================
-    -- ExpDemo: Hardware experiment multiplexer @ 0xF000D000
+    -- ExpDemo: Hardware experiment multiplexer @ 0xF0010000
     -- ================================================================
     u_expdemo : entity work.expdemo_top
     port map (
@@ -809,6 +809,7 @@ begin
         clk_i          => clk_50m,
         rst_n_i        => rst_n,
         uart_tx_i      => uart_txd_int,
+        uart_rx_o      => open,
         av_chipselect  => jtag_av_cs,
         av_address     => jtag_av_addr,
         av_read_n      => jtag_av_read_n,

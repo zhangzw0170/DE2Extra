@@ -5,7 +5,7 @@
 
 #include "de2os_hal.h"
 
-#define LCD_BASE 0xF0008000u
+#define LCD_BASE 0xF000B000u
 #define LCD_DR   (*(volatile uint32_t *)(LCD_BASE + 0x00u))
 #define LCD_CR   (*(volatile uint32_t *)(LCD_BASE + 0x04u))
 

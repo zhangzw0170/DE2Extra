@@ -3,7 +3,7 @@
 -- 32-bit cell: [31:24]=ASCII, [23:16]=reserved, [15:0]=fg RGB565
 -- Background color from global bg_color register (not per-cell)
 -- Dual-port M9K BRAM (4096x32): Port A 50MHz CPU write, Port B 25MHz render read
--- Font ROM: font_rom_pkg CP437, 128 chars x 16 rows, 8-bit wide
+-- Font ROM: font_rom_pkg CP437, 256 chars x 16 rows, 8-bit wide
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;

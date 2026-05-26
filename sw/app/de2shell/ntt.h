@@ -1,7 +1,7 @@
 /* ntt.h — NTT accelerator driver and CLI
  *
  * LOCAL_BUILD: pure-software reference (DIF stages 7→0 + bit-reversal)
- * NEORV32:     MMIO driver for ntt_sdf.vhd @ 0xF000C000
+ * NEORV32:     MMIO driver for ntt_sdf.vhd @ 0xF000F000
  */
 
 #ifndef NTT_H
@@ -27,7 +27,7 @@ void ntt_sw(uint16_t *a, int inverse);
 void ntt_bit_reverse(uint16_t *a);
 #else
 /* Hardware NTT via MMIO */
-#define NTT_BASE ((volatile uint32_t *)0xF000C000u)
+#define NTT_BASE ((volatile uint32_t *)0xF000F000u)
 
 static inline void ntt_hw_write(int idx, uint16_t val) {
     NTT_BASE[idx] = (uint32_t)val;

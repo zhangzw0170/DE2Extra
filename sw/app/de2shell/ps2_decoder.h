@@ -34,5 +34,8 @@ int ps2_dec_feed(uint8_t raw_scancode, ps2_key_t *out);
 int ps2_dec_shift(void);
 int ps2_dec_ctrl(void);
 int ps2_dec_alt(void);
+int ps2_dec_caps_lock(void);
+int ps2_dec_num_lock(void);
+int ps2_dec_scroll_lock(void);
 
 #endif /* PS2_DECODER_H */

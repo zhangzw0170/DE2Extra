@@ -91,7 +91,7 @@ static int decode_main(uint8_t sc, int sh, int caps, int ctrl, int num, ps2_key_
         case 0x29: out->name="SPACE";   out->ascii=0x20; out->has_ascii=1; return 1;
         case 0x76: out->name="ESC";     out->ascii=0x1b; out->has_ascii=1; return 1;
         /* numpad keys (when num lock on) */
-        case 0x70: out->name="KP0"; out->ascii=(uint8_t)(num?'1':'0'); out->has_ascii=(uint8_t)num; return 1;
+        case 0x70: out->name="KP0"; out->ascii='0'; out->has_ascii=(uint8_t)num; return 1;
         case 0x69: out->name="KP1"; out->ascii='1'; out->has_ascii=(uint8_t)num; return 1;
         case 0x72: out->name="KP2"; out->ascii='2'; out->has_ascii=(uint8_t)num; return 1;
         case 0x7a: out->name="KP3"; out->ascii='3'; out->has_ascii=(uint8_t)num; return 1;
@@ -101,6 +101,10 @@ static int decode_main(uint8_t sc, int sh, int caps, int ctrl, int num, ps2_key_
         case 0x6c: out->name="KP7"; out->ascii='7'; out->has_ascii=(uint8_t)num; return 1;
         case 0x75: out->name="KP8"; out->ascii='8'; out->has_ascii=(uint8_t)num; return 1;
         case 0x7d: out->name="KP9"; out->ascii='9'; out->has_ascii=(uint8_t)num; return 1;
+        case 0x71: out->name="KPDOT"; out->ascii='.'; out->has_ascii=(uint8_t)num; return 1;
+        case 0x79: out->name="KP+"; out->ascii='+'; out->has_ascii=1; return 1;
+        case 0x7b: out->name="KP-"; out->ascii='-'; out->has_ascii=1; return 1;
+        case 0x7c: out->name="KP*"; out->ascii='*'; out->has_ascii=1; return 1;
         default: return 0;
     }
 }
@@ -190,3 +194,6 @@ int ps2_dec_feed(uint8_t raw, ps2_key_t *out) {
 int ps2_dec_shift(void) { return shift_l || shift_r; }
 int ps2_dec_ctrl(void)  { return ctrl_l || ctrl_r; }
 int ps2_dec_alt(void)   { return alt_l || alt_r; }
+int ps2_dec_caps_lock(void) { return caps_lock; }
+int ps2_dec_num_lock(void) { return num_lock; }
+int ps2_dec_scroll_lock(void) { return scroll_lock; }

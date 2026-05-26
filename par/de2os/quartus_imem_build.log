@@ -1,0 +1,1514 @@
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize
+Info: *******************************************************************
+Info: Running Quartus Prime Shell
+    Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
+    Info: Copyright (C) 2023  Intel Corporation. All rights reserved.
+    Info: Your use of Intel Corporation's design tools, logic functions 
+    Info: and other software and tools, and any partner logic 
+    Info: functions, and any output files from any of the foregoing 
+    Info: (including device programming or simulation files), and any 
+    Info: associated documentation or information are expressly subject 
+    Info: to the terms and conditions of the Intel Program License 
+    Info: Subscription Agreement, the Intel Quartus Prime License Agreement,
+    Info: the Intel FPGA IP License Agreement, or other applicable license
+    Info: agreement, including, without limitation, that your use is for
+    Info: the sole purpose of programming logic devices manufactured by
+    Info: Intel and sold by Intel or its authorized distributors.  Please
+    Info: refer to the applicable agreement for further details, at
+    Info: https://fpgasoftware.intel.com/eula.
+    Info: Processing started: Mon May 25 21:08:40 2026
+Info: Command: quartus_sh --flow compile E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os.qpf -c de2os
+Info: Quartus(args): compile E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os.qpf -c de2os
+Info: Project Name = E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os
+Info: Revision Name = de2os
+Info: *******************************************************************
+Info: Running Quartus Prime Analysis & Synthesis
+    Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
+    Info: Processing started: Mon May 25 21:08:44 2026
+Info: Command: quartus_map --read_settings_files=on --write_settings_files=off de2os -c de2os
+Info (20032): Parallel compilation is enabled and will use up to 8 processors
+Info (12021): Found 2 design units, including 0 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/lib/de2extra_pkg.vhd
+    Info (12022): Found design unit 1: de2extra_pkg File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/lib/de2extra_pkg.vhd Line: 5
+    Info (12022): Found design unit 2: de2extra_pkg-body File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/lib/de2extra_pkg.vhd Line: 63
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/glue/clk_rst_gen.vhd
+    Info (12022): Found design unit 1: clk_rst_gen-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/glue/clk_rst_gen.vhd Line: 23
+    Info (12023): Found entity 1: clk_rst_gen File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/glue/clk_rst_gen.vhd Line: 10
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/neorv32_wrapper.vhd
+    Info (12022): Found design unit 1: neorv32_wrapper-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/neorv32_wrapper.vhd Line: 57
+    Info (12023): Found entity 1: neorv32_wrapper File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/neorv32_wrapper.vhd Line: 13
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/seg7_mapper.vhd
+    Info (12022): Found design unit 1: seg7_mapper-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/seg7_mapper.vhd Line: 20
+    Info (12023): Found entity 1: seg7_mapper File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/seg7_mapper.vhd Line: 10
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/sdram_ctrl.vhd
+    Info (12022): Found design unit 1: sdram_ctrl-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 62
+    Info (12023): Found entity 1: sdram_ctrl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 20
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/async_fifo.vhd
+    Info (12022): Found design unit 1: async_fifo-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 34
+    Info (12023): Found entity 1: async_fifo File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 12
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/bus/wb_intercon.vhd
+    Info (12022): Found design unit 1: wb_intercon-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/bus/wb_intercon.vhd Line: 115
+    Info (12023): Found entity 1: wb_intercon File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/bus/wb_intercon.vhd Line: 8
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/lcd_status.vhd
+    Info (12022): Found design unit 1: lcd_status-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/lcd_status.vhd Line: 37
+    Info (12023): Found entity 1: lcd_status File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/lcd_status.vhd Line: 23
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ps2_sync.vhd
+    Info (12022): Found design unit 1: ps2_sync-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_sync.vhd Line: 18
+    Info (12023): Found entity 1: ps2_sync File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_sync.vhd Line: 7
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ps2_receiver.vhd
+    Info (12022): Found design unit 1: ps2_receiver-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_receiver.vhd Line: 18
+    Info (12023): Found entity 1: ps2_receiver File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_receiver.vhd Line: 7
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ps2_controller.vhd
+    Info (12022): Found design unit 1: ps2_controller-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_controller.vhd Line: 61
+    Info (12023): Found entity 1: ps2_controller File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_controller.vhd Line: 33
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ir_nec_decoder.vhd
+    Info (12022): Found design unit 1: ir_nec_decoder-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_decoder.vhd Line: 36
+    Info (12023): Found entity 1: ir_nec_decoder File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_decoder.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ir_nec_wb.vhd
+    Info (12022): Found design unit 1: ir_nec_wb-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 36
+    Info (12023): Found entity 1: ir_nec_wb File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 20
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ir_exp10.vhd
+    Info (12022): Found design unit 1: ir_exp10-behavioral File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_exp10.vhd Line: 30
+    Info (12023): Found entity 1: ir_exp10 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_exp10.vhd Line: 11
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ir_dbg_exp10.vhd
+    Info (12022): Found design unit 1: ir_dbg_exp10-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 19
+    Info (12023): Found entity 1: ir_dbg_exp10 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 9
+Info (12021): Found 2 design units, including 0 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/font_rom_pkg.vhd
+    Info (12022): Found design unit 1: font_rom_pkg File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/font_rom_pkg.vhd Line: 8
+    Info (12022): Found design unit 2: font_rom_pkg-body File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/font_rom_pkg.vhd Line: 2164
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/vga_text_terminal.vhd
+    Info (12022): Found design unit 1: vga_text_terminal-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_text_terminal.vhd Line: 38
+    Info (12023): Found entity 1: vga_text_terminal File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_text_terminal.vhd Line: 13
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/lcd_debug.vhd
+    Info (12022): Found design unit 1: lcd_debug-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/lcd_debug.vhd Line: 37
+    Info (12023): Found entity 1: lcd_debug File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/lcd_debug.vhd Line: 17
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/uart_jtag_bridge.vhd
+    Info (12022): Found design unit 1: uart_jtag_bridge-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/uart_jtag_bridge.vhd Line: 34
+    Info (12023): Found entity 1: uart_jtag_bridge File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/uart_jtag_bridge.vhd Line: 11
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/de2os_top.vhd
+    Info (12022): Found design unit 1: de2os_top-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 84
+    Info (12023): Found entity 1: de2os_top File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 12
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/de2os_imem_top.vhd
+    Info (12022): Found design unit 1: de2os_imem_top-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 55
+    Info (12023): Found entity 1: de2os_imem_top File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 8
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/ntt_sdf.vhd
+    Info (12022): Found design unit 1: ntt_sdf-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ntt_sdf.vhd Line: 39
+    Info (12023): Found entity 1: ntt_sdf File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ntt_sdf.vhd Line: 24
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/vga_pixel_ctrl.vhd
+    Info (12022): Found design unit 1: vga_pixel_ctrl-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 54
+    Info (12023): Found entity 1: vga_pixel_ctrl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/par/jtag_uart_0/synthesis/jtag_uart_0.vhd
+    Info (12022): Found design unit 1: jtag_uart_0-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/jtag_uart_0.vhd Line: 23
+    Info (12023): Found entity 1: jtag_uart_0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/jtag_uart_0.vhd Line: 9
+Info (12021): Found 1 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/par/jtag_uart_0/synthesis/submodules/altera_reset_controller.v
+    Info (12023): Found entity 1: altera_reset_controller File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/altera_reset_controller.v Line: 42
+Info (12021): Found 1 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/par/jtag_uart_0/synthesis/submodules/altera_reset_synchronizer.v
+    Info (12023): Found entity 1: altera_reset_synchronizer File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/altera_reset_synchronizer.v Line: 24
+Info (12021): Found 5 design units, including 5 entities, in source file /main/juniorii/nonexam/fpga/de2extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v
+    Info (12023): Found entity 1: jtag_uart_0_jtag_uart_0_sim_scfifo_w File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 21
+    Info (12023): Found entity 2: jtag_uart_0_jtag_uart_0_scfifo_w File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 78
+    Info (12023): Found entity 3: jtag_uart_0_jtag_uart_0_sim_scfifo_r File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 164
+    Info (12023): Found entity 4: jtag_uart_0_jtag_uart_0_scfifo_r File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 243
+    Info (12023): Found entity 5: jtag_uart_0_jtag_uart_0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 331
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/ip/altpll_50_100.vhd
+    Info (12022): Found design unit 1: altpll_50_100-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/ip/altpll_50_100.vhd Line: 33
+    Info (12023): Found entity 1: altpll_50_100 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/ip/altpll_50_100.vhd Line: 16
+Info (12021): Found 2 design units, including 0 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_package.vhd
+    Info (12022): Found design unit 1: neorv32_package File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_package.vhd Line: 15
+    Info (12022): Found design unit 2: neorv32_package-body File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_package.vhd Line: 1151
+Info (12021): Found 8 design units, including 4 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_prim.vhd
+    Info (12022): Found design unit 1: neorv32_prim_fifo-neorv32_prim_fifo_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 46
+    Info (12022): Found design unit 2: neorv32_prim_spram-neorv32_prim_spram_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 186
+    Info (12022): Found design unit 3: neorv32_prim_mul-neorv32_prim_mul_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 277
+    Info (12022): Found design unit 4: neorv32_prim_cnt-neorv32_prim_cnt_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 349
+    Info (12023): Found entity 1: neorv32_prim_fifo File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 24
+    Info (12023): Found entity 2: neorv32_prim_spram File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 168
+    Info (12023): Found entity 3: neorv32_prim_mul File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 259
+    Info (12023): Found entity 4: neorv32_prim_cnt File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 332
+Info (12021): Found 1 design units, including 0 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_bootrom_image.vhd
+    Info (12022): Found design unit 1: neorv32_bootrom_image File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bootrom_image.vhd Line: 4
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_bootrom_rom.vhd
+    Info (12022): Found design unit 1: neorv32_bootrom_rom-neorv32_bootrom_rom_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bootrom_rom.vhd Line: 33
+    Info (12023): Found entity 1: neorv32_bootrom_rom File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bootrom_rom.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_bootrom.vhd
+    Info (12022): Found design unit 1: neorv32_bootrom-neorv32_bootrom_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bootrom.vhd Line: 26
+    Info (12023): Found entity 1: neorv32_bootrom File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bootrom.vhd Line: 17
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_imem_rom.vhd
+    Info (12022): Found design unit 1: neorv32_imem_rom-neorv32_imem_rom_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem_rom.vhd Line: 34
+    Info (12023): Found entity 1: neorv32_imem_rom File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem_rom.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_imem_ram.vhd
+    Info (12022): Found design unit 1: neorv32_imem_ram-neorv32_imem_ram_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem_ram.vhd Line: 35
+    Info (12023): Found entity 1: neorv32_imem_ram File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem_ram.vhd Line: 20
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_imem.vhd
+    Info (12022): Found design unit 1: neorv32_imem-neorv32_imem_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem.vhd Line: 31
+    Info (12023): Found entity 1: neorv32_imem File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem.vhd Line: 17
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_dmem_ram.vhd
+    Info (12022): Found design unit 1: neorv32_dmem_ram-neorv32_dmem_ram_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dmem_ram.vhd Line: 35
+    Info (12023): Found entity 1: neorv32_dmem_ram File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dmem_ram.vhd Line: 20
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_dmem.vhd
+    Info (12022): Found design unit 1: neorv32_dmem-neorv32_dmem_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dmem.vhd Line: 30
+    Info (12023): Found entity 1: neorv32_dmem File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dmem.vhd Line: 17
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cache_ram.vhd
+    Info (12022): Found design unit 1: neorv32_cache_ram-neorv32_cache_ram_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cache_ram.vhd Line: 40
+    Info (12023): Found entity 1: neorv32_cache_ram File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cache_ram.vhd Line: 20
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cache.vhd
+    Info (12022): Found design unit 1: neorv32_cache-neorv32_cache_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cache.vhd Line: 47
+    Info (12023): Found entity 1: neorv32_cache File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cache.vhd Line: 28
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_sysinfo.vhd
+    Info (12022): Found design unit 1: neorv32_sysinfo-neorv32_sysinfo_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sysinfo.vhd Line: 67
+    Info (12023): Found entity 1: neorv32_sysinfo File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sysinfo.vhd Line: 18
+Info (12021): Found 4 design units, including 2 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_sys.vhd
+    Info (12022): Found design unit 1: neorv32_sys_reset-neorv32_sys_reset_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sys.vhd Line: 34
+    Info (12022): Found design unit 2: neorv32_sys_clock-neorv32_sys_clock_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sys.vhd Line: 106
+    Info (12023): Found entity 1: neorv32_sys_reset File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sys.vhd Line: 17
+    Info (12023): Found entity 2: neorv32_sys_clock File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sys.vhd Line: 97
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_uart.vhd
+    Info (12022): Found design unit 1: neorv32_uart-neorv32_uart_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_uart.vhd Line: 43
+    Info (12023): Found entity 1: neorv32_uart File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_uart.vhd Line: 24
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_spi.vhd
+    Info (12022): Found design unit 1: neorv32_spi-neorv32_spi_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_spi.vhd Line: 36
+    Info (12023): Found entity 1: neorv32_spi File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_spi.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_sdi.vhd
+    Info (12022): Found design unit 1: neorv32_sdi-neorv32_sdi_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sdi.vhd Line: 35
+    Info (12023): Found entity 1: neorv32_sdi File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sdi.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_twi.vhd
+    Info (12022): Found design unit 1: neorv32_twi-neorv32_twi_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_twi.vhd Line: 36
+    Info (12023): Found entity 1: neorv32_twi File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_twi.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_twd.vhd
+    Info (12022): Found design unit 1: neorv32_twd-neorv32_twd_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_twd.vhd Line: 36
+    Info (12023): Found entity 1: neorv32_twd File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_twd.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_gpio.vhd
+    Info (12022): Found design unit 1: neorv32_gpio-neorv32_gpio_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_gpio.vhd Line: 34
+    Info (12023): Found entity 1: neorv32_gpio File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_gpio.vhd Line: 17
+Info (12021): Found 4 design units, including 2 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_pwm.vhd
+    Info (12022): Found design unit 1: neorv32_pwm-neorv32_pwm_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_pwm.vhd Line: 35
+    Info (12022): Found design unit 2: neorv32_pwm_channel-neorv32_pwm_channel_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_pwm.vhd Line: 208
+    Info (12023): Found entity 1: neorv32_pwm File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_pwm.vhd Line: 21
+    Info (12023): Found entity 2: neorv32_pwm_channel File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_pwm.vhd Line: 187
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_wdt.vhd
+    Info (12022): Found design unit 1: neorv32_wdt-neorv32_wdt_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_wdt.vhd Line: 31
+    Info (12023): Found entity 1: neorv32_wdt File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_wdt.vhd Line: 18
+Info (12021): Found 6 design units, including 3 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_trng.vhd
+    Info (12022): Found design unit 1: neorv32_trng-neorv32_trng_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_trng.vhd Line: 36
+    Info (12022): Found design unit 2: neoTRNG-neoTRNG_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_trng.vhd Line: 251
+    Info (12022): Found design unit 3: neoTRNG_cell-neoTRNG_cell_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_trng.vhd Line: 424
+    Info (12023): Found entity 1: neorv32_trng File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_trng.vhd Line: 20
+    Info (12023): Found entity 2: neoTRNG File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_trng.vhd Line: 235
+    Info (12023): Found entity 3: neoTRNG_cell File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_trng.vhd Line: 410
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cfs.vhd
+    Info (12022): Found design unit 1: neorv32_cfs-neorv32_cfs_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cfs.vhd Line: 34
+    Info (12023): Found entity 1: neorv32_cfs File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cfs.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_neoled.vhd
+    Info (12022): Found design unit 1: neorv32_neoled-neorv32_neoled_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_neoled.vhd Line: 33
+    Info (12023): Found entity 1: neorv32_neoled File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_neoled.vhd Line: 18
+Info (12021): Found 4 design units, including 2 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_gptmr.vhd
+    Info (12022): Found design unit 1: neorv32_gptmr-neorv32_gptmr_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_gptmr.vhd Line: 34
+    Info (12022): Found design unit 2: neorv32_gptmr_slice-neorv32_gptmr_slice_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_gptmr.vhd Line: 232
+    Info (12023): Found entity 1: neorv32_gptmr File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_gptmr.vhd Line: 20
+    Info (12023): Found entity 2: neorv32_gptmr_slice File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_gptmr.vhd Line: 213
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_onewire.vhd
+    Info (12022): Found design unit 1: neorv32_onewire-neorv32_onewire_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_onewire.vhd Line: 34
+    Info (12023): Found entity 1: neorv32_onewire File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_onewire.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_dma.vhd
+    Info (12022): Found design unit 1: neorv32_dma-neorv32_dma_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dma.vhd Line: 33
+    Info (12023): Found entity 1: neorv32_dma File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dma.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_slink.vhd
+    Info (12022): Found design unit 1: neorv32_slink-neorv32_slink_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_slink.vhd Line: 45
+    Info (12023): Found entity 1: neorv32_slink File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_slink.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_tracer.vhd
+    Info (12022): Found design unit 1: neorv32_tracer-neorv32_tracer_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_tracer.vhd Line: 37
+    Info (12023): Found entity 1: neorv32_tracer File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_tracer.vhd Line: 18
+Info (12021): Found 4 design units, including 2 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_clint.vhd
+    Info (12022): Found design unit 1: neorv32_clint-neorv32_clint_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_clint.vhd Line: 36
+    Info (12022): Found design unit 2: neorv32_clint_mtimecmp-neorv32_clint_mtimecmp_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_clint.vhd Line: 222
+    Info (12023): Found entity 1: neorv32_clint File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_clint.vhd Line: 21
+    Info (12023): Found entity 2: neorv32_clint_mtimecmp File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_clint.vhd Line: 209
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_xbus.vhd
+    Info (12022): Found design unit 1: neorv32_xbus-neorv32_xbus_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_xbus.vhd Line: 44
+    Info (12023): Found entity 1: neorv32_xbus File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_xbus.vhd Line: 20
+Info (12021): Found 12 design units, including 6 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_bus.vhd
+    Info (12022): Found design unit 1: neorv32_bus_switch-neorv32_bus_switch_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 35
+    Info (12022): Found design unit 2: neorv32_bus_reg-neorv32_bus_reg_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 189
+    Info (12022): Found design unit 3: neorv32_bus_gateway-neorv32_bus_gateway_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 302
+    Info (12022): Found design unit 4: neorv32_bus_io_switch-neorv32_bus_io_switch_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 546
+    Info (12022): Found design unit 5: neorv32_bus_amo_rmw-neorv32_bus_amo_rmw_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 715
+    Info (12022): Found design unit 6: neorv32_bus_amo_rvs-neorv32_bus_amo_rvs_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 868
+    Info (12023): Found entity 1: neorv32_bus_switch File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 17
+    Info (12023): Found entity 2: neorv32_bus_reg File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 172
+    Info (12023): Found entity 3: neorv32_bus_gateway File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 263
+    Info (12023): Found entity 4: neorv32_bus_io_switch File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 466
+    Info (12023): Found entity 5: neorv32_bus_amo_rmw File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 701
+    Info (12023): Found entity 6: neorv32_bus_amo_rvs File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_bus.vhd Line: 854
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_debug_auth.vhd
+    Info (12022): Found design unit 1: neorv32_debug_auth-neorv32_debug_auth_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_debug_auth.vhd Line: 36
+    Info (12023): Found entity 1: neorv32_debug_auth File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_debug_auth.vhd Line: 19
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_debug_dm.vhd
+    Info (12022): Found design unit 1: neorv32_debug_dm-neorv32_debug_dm_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_debug_dm.vhd Line: 42
+    Info (12023): Found entity 1: neorv32_debug_dm File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_debug_dm.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_debug_dtm.vhd
+    Info (12022): Found design unit 1: neorv32_debug_dtm-neorv32_debug_dtm_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_debug_dtm.vhd Line: 40
+    Info (12023): Found entity 1: neorv32_debug_dtm File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_debug_dtm.vhd Line: 19
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_regfile.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_regfile-neorv32_cpu_regfile_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_regfile.vhd Line: 46
+    Info (12023): Found entity 1: neorv32_cpu_regfile File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_regfile.vhd Line: 28
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu-neorv32_cpu_alu_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 61
+    Info (12023): Found entity 1: neorv32_cpu_alu File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu_bitmanip.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu_bitmanip-neorv32_cpu_alu_bitmanip_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_bitmanip.vhd Line: 55
+    Info (12023): Found entity 1: neorv32_cpu_alu_bitmanip File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_bitmanip.vhd Line: 28
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu_cfu.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu_cfu-neorv32_cpu_alu_cfu_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_cfu.vhd Line: 37
+    Info (12023): Found entity 1: neorv32_cpu_alu_cfu File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_cfu.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu_cond.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu_cond-neorv32_cpu_alu_cond_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_cond.vhd Line: 32
+    Info (12023): Found entity 1: neorv32_cpu_alu_cond File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_cond.vhd Line: 17
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu_crypto.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu_crypto-neorv32_cpu_alu_crypto_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_crypto.vhd Line: 47
+    Info (12023): Found entity 1: neorv32_cpu_alu_crypto File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_crypto.vhd Line: 25
+Info (12021): Found 6 design units, including 3 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu_fpu.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu_fpu-neorv32_cpu_alu_fpu_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_fpu.vhd Line: 59
+    Info (12022): Found design unit 2: neorv32_cpu_alu_fpu_normalizer-neorv32_cpu_alu_fpu_normalizer_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_fpu.vhd Line: 1547
+    Info (12022): Found design unit 3: neorv32_cpu_alu_fpu_f2i-neorv32_cpu_alu_fpu_f2i_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_fpu.vhd Line: 1980
+    Info (12023): Found entity 1: neorv32_cpu_alu_fpu File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_fpu.vhd Line: 33
+    Info (12023): Found entity 2: neorv32_cpu_alu_fpu_normalizer File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_fpu.vhd Line: 1521
+    Info (12023): Found entity 3: neorv32_cpu_alu_fpu_f2i File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_fpu.vhd Line: 1956
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu_muldiv.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu_muldiv-neorv32_cpu_alu_muldiv_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_muldiv.vhd Line: 42
+    Info (12023): Found entity 1: neorv32_cpu_alu_muldiv File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_muldiv.vhd Line: 23
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_alu_shifter.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_alu_shifter-neorv32_cpu_alu_shifter_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_shifter.vhd Line: 39
+    Info (12023): Found entity 1: neorv32_cpu_alu_shifter File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_shifter.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_control.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_control-neorv32_cpu_control_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_control.vhd Line: 92
+    Info (12023): Found entity 1: neorv32_cpu_control File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_control.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_counters.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_counters-neorv32_cpu_counters_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 44
+    Info (12023): Found entity 1: neorv32_cpu_counters File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 23
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_decompressor.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_decompressor-neorv32_cpu_decompressor_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_decompressor.vhd Line: 31
+    Info (12023): Found entity 1: neorv32_cpu_decompressor File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_decompressor.vhd Line: 21
+Info (12021): Found 4 design units, including 2 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_frontend-neorv32_cpu_frontend_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 45
+    Info (12022): Found design unit 2: neorv32_cpu_frontend_ipb-neorv32_cpu_frontend_ipb_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 350
+    Info (12023): Found entity 1: neorv32_cpu_frontend File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 22
+    Info (12023): Found entity 2: neorv32_cpu_frontend_ipb File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 329
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_hwtrig.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_hwtrig-neorv32_cpu_hwtrig_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_hwtrig.vhd Line: 39
+    Info (12023): Found entity 1: neorv32_cpu_hwtrig File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_hwtrig.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_lsu.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_lsu-neorv32_cpu_lsu_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_lsu.vhd Line: 42
+    Info (12023): Found entity 1: neorv32_cpu_lsu File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_lsu.vhd Line: 18
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_pmp.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_pmp-neorv32_cpu_pmp_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_pmp.vhd Line: 46
+    Info (12023): Found entity 1: neorv32_cpu_pmp File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_pmp.vhd Line: 22
+Info (12021): Found 4 design units, including 2 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu_trace.vhd
+    Info (12022): Found design unit 1: neorv32_cpu_trace-neorv32_cpu_trace_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_trace.vhd Line: 36
+    Info (12022): Found design unit 2: neorv32_cpu_trace_simlog-neorv32_cpu_trace_simlog_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_trace.vhd Line: 201
+    Info (12023): Found entity 1: neorv32_cpu_trace File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_trace.vhd Line: 18
+    Info (12023): Found entity 2: neorv32_cpu_trace_simlog File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_trace.vhd Line: 190
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_cpu.vhd
+    Info (12022): Found design unit 1: neorv32_cpu-neorv32_cpu_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 102
+    Info (12023): Found entity 1: neorv32_cpu File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 21
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_top.vhd
+    Info (12022): Found design unit 1: neorv32_top-neorv32_top_rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 284
+    Info (12023): Found entity 1: neorv32_top File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 21
+Info (12021): Found 1 design units, including 0 entities, in source file /main/juniorii/nonexam/fpga/de2extra/neorv32/rtl/core/neorv32_imem_image.vhd
+    Info (12022): Found design unit 1: neorv32_imem_image File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem_image.vhd Line: 4
+Info (12021): Found 2 design units, including 1 entities, in source file /main/juniorii/nonexam/fpga/de2extra/src/rtl/periph/lcd_wb.vhd
+    Info (12022): Found design unit 1: lcd_wb-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/lcd_wb.vhd Line: 33
+    Info (12023): Found entity 1: lcd_wb File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/lcd_wb.vhd Line: 12
+Info (12127): Elaborating entity "de2os_imem_top" for the top level hierarchy
+Info (12128): Elaborating entity "de2os_top" for hierarchy "de2os_top:u_top" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 58
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(110): object "xbus_tag" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 110
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(147): object "ps2_irq" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 147
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(148): object "ps2_valid" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 148
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(149): object "ps2_scancode" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 149
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(195): object "ntt_wb_adr" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 195
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(196): object "ntt_wb_dat_o" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 196
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(198): object "ntt_wb_we" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 198
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(203): object "pong_wb_adr" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 203
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(204): object "pong_wb_dat_o" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 204
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(206): object "pong_wb_we" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 206
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(222): object "conway_wb_adr" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 222
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(223): object "conway_wb_dat_o" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 223
+Warning (10036): Verilog HDL or VHDL warning at de2os_top.vhd(225): object "conway_wb_we" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 225
+Info (12128): Elaborating entity "clk_rst_gen" for hierarchy "de2os_top:u_top|clk_rst_gen:u_clk_rst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 270
+Info (12128): Elaborating entity "altpll_50_100" for hierarchy "de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/glue/clk_rst_gen.vhd Line: 34
+Info (12128): Elaborating entity "altpll" for hierarchy "de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/ip/altpll_50_100.vhd Line: 118
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/ip/altpll_50_100.vhd Line: 118
+Info (12133): Instantiated megafunction "de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/ip/altpll_50_100.vhd Line: 118
+    Info (12134): Parameter "bandwidth_type" = "AUTO"
+    Info (12134): Parameter "clk0_divide_by" = "1"
+    Info (12134): Parameter "clk0_duty_cycle" = "50"
+    Info (12134): Parameter "clk0_multiply_by" = "1"
+    Info (12134): Parameter "clk0_phase_shift" = "0"
+    Info (12134): Parameter "clk1_divide_by" = "1"
+    Info (12134): Parameter "clk1_duty_cycle" = "50"
+    Info (12134): Parameter "clk1_multiply_by" = "2"
+    Info (12134): Parameter "clk1_phase_shift" = "0"
+    Info (12134): Parameter "clk2_divide_by" = "1"
+    Info (12134): Parameter "clk2_duty_cycle" = "50"
+    Info (12134): Parameter "clk2_multiply_by" = "2"
+    Info (12134): Parameter "clk2_phase_shift" = "1560"
+    Info (12134): Parameter "compensate_clock" = "CLK0"
+    Info (12134): Parameter "inclk0_input_frequency" = "20000"
+    Info (12134): Parameter "intended_device_family" = "Cyclone IV E"
+    Info (12134): Parameter "lpm_hint" = "CBX_MODULE_PREFIX=altpll_50_100"
+    Info (12134): Parameter "lpm_type" = "altpll"
+    Info (12134): Parameter "operation_mode" = "NORMAL"
+    Info (12134): Parameter "pll_type" = "AUTO"
+    Info (12134): Parameter "port_activeclock" = "PORT_UNUSED"
+    Info (12134): Parameter "port_areset" = "PORT_USED"
+    Info (12134): Parameter "port_clkbad0" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkbad1" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkloss" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkswitch" = "PORT_UNUSED"
+    Info (12134): Parameter "port_configupdate" = "PORT_UNUSED"
+    Info (12134): Parameter "port_fbin" = "PORT_UNUSED"
+    Info (12134): Parameter "port_inclk0" = "PORT_USED"
+    Info (12134): Parameter "port_inclk1" = "PORT_UNUSED"
+    Info (12134): Parameter "port_locked" = "PORT_USED"
+    Info (12134): Parameter "port_pfdena" = "PORT_UNUSED"
+    Info (12134): Parameter "port_phasecounterselect" = "PORT_UNUSED"
+    Info (12134): Parameter "port_phasedone" = "PORT_UNUSED"
+    Info (12134): Parameter "port_phasestep" = "PORT_UNUSED"
+    Info (12134): Parameter "port_phaseupdown" = "PORT_UNUSED"
+    Info (12134): Parameter "port_pllena" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scanaclr" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scanclk" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scanclkena" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scandata" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scandataout" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scandone" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scanread" = "PORT_UNUSED"
+    Info (12134): Parameter "port_scanwrite" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clk0" = "PORT_USED"
+    Info (12134): Parameter "port_clk1" = "PORT_USED"
+    Info (12134): Parameter "port_clk2" = "PORT_USED"
+    Info (12134): Parameter "port_clk3" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clk4" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clk5" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkena0" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkena1" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkena2" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkena3" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkena4" = "PORT_UNUSED"
+    Info (12134): Parameter "port_clkena5" = "PORT_UNUSED"
+    Info (12134): Parameter "port_extclk0" = "PORT_UNUSED"
+    Info (12134): Parameter "port_extclk1" = "PORT_UNUSED"
+    Info (12134): Parameter "port_extclk2" = "PORT_UNUSED"
+    Info (12134): Parameter "port_extclk3" = "PORT_UNUSED"
+    Info (12134): Parameter "self_reset_on_loss_lock" = "OFF"
+    Info (12134): Parameter "width_clock" = "5"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altpll_50_100_altpll.v
+    Info (12023): Found entity 1: altpll_50_100_altpll File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 30
+Info (12128): Elaborating entity "altpll_50_100_altpll" for hierarchy "de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated" File: e:/software/intelfpga_lite/23.1std/quartus/libraries/megafunctions/altpll.tdf Line: 898
+Info (12128): Elaborating entity "neorv32_wrapper" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 297
+Warning (10036): Verilog HDL or VHDL warning at neorv32_wrapper.vhd(60): object "rstn_ocd" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/neorv32_wrapper.vhd Line: 60
+Warning (10036): Verilog HDL or VHDL warning at neorv32_wrapper.vhd(61): object "rstn_wdt" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/neorv32_wrapper.vhd Line: 61
+Info (12128): Elaborating entity "neorv32_top" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/neorv32_wrapper.vhd Line: 92
+Warning (10036): Verilog HDL or VHDL warning at neorv32_top.vhd(336): object "cpu_fence" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 336
+Warning (10036): Verilog HDL or VHDL warning at neorv32_top.vhd(345): object "dma_req" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 345
+Warning (10036): Verilog HDL or VHDL warning at neorv32_top.vhd(346): object "dma_rsp" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 346
+Info (10544): VHDL Assertion Statement at neorv32_top.vhd(384): assertion is false - report "[NEORV32] The NEORV32 RISC-V Processor (v01.13.01.00), github.com/stnolting/neorv32" (NOTE) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 384
+Info (10544): VHDL Assertion Statement at neorv32_top.vhd(393): assertion is false - report "[NEORV32] Processor Configuration: CPU (single-core) IMEM-ROM DMEM XBUS CLINT GPIO UART0 SYSINFO OCD OCD-HWBP " (NOTE) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 393
+Info (10544): VHDL Assertion Statement at neorv32_top.vhd(441): assertion is false - report "[NEORV32] BOOT_MODE_SELECT 2 - booting IMEM image" (NOTE) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 441
+Info (12128): Elaborating entity "neorv32_sys_reset" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_sys_reset:\soc_generators:neorv32_sys_reset_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 474
+Info (12128): Elaborating entity "neorv32_sys_clock" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_sys_clock:\soc_generators:neorv32_sys_clock_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 487
+Info (12128): Elaborating entity "neorv32_cpu" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 525
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu.vhd(122): object "if_pmp_addr" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 122
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu.vhd(123): object "if_pmp_priv" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 123
+Info (10544): VHDL Assertion Statement at neorv32_cpu.vhd(152): assertion is false - report "[NEORV32] CPU ISA: rv32icmx_zbkb_zbkc_zbkx_zca_zicntr_zicsr_zifencei_zkn_zknd_zkne_zknh_zks_zksed_zksh_zkt_sdext_sdtrig" (NOTE) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 152
+Info (10544): VHDL Assertion Statement at neorv32_cpu.vhd(196): assertion is false - report "[NEORV32] CPU tuning options: fast_mul fast_shift rf_arch=sram_sync " (NOTE) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 196
+Info (12128): Elaborating entity "neorv32_cpu_frontend" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_frontend:neorv32_cpu_frontend_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 216
+Info (12128): Elaborating entity "neorv32_cpu_frontend_ipb" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_frontend:neorv32_cpu_frontend_inst|neorv32_cpu_frontend_ipb:\prefetch_buffer:0:ipb_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 183
+Info (12128): Elaborating entity "neorv32_cpu_decompressor" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_frontend:neorv32_cpu_frontend_inst|neorv32_cpu_decompressor:\issue_enabled:neorv32_cpu_decompressor_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 213
+Info (12128): Elaborating entity "neorv32_cpu_control" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_control:neorv32_cpu_control_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 241
+Info (12128): Elaborating entity "neorv32_cpu_hwtrig" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_hwtrig:\trigger_module_enabled:neorv32_cpu_hwtrig_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 331
+Info (12128): Elaborating entity "neorv32_cpu_counters" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_counters:\cnts_enabled:neorv32_cpu_counters_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 360
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_counters.vhd(49): object "pmf_acc" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 49
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_counters.vhd(50): object "cfg_we" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 50
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_counters.vhd(50): object "cfg_re" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 50
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_counters.vhd(54): object "pmf_cy" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 54
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_counters.vhd(54): object "pmf_ir" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 54
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_counters.vhd(59): object "hpmevent_rd" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 59
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_counters.vhd(60): object "hpmcnt_rd" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 60
+Info (12128): Elaborating entity "neorv32_prim_cnt" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_counters:\cnts_enabled:neorv32_cpu_counters_inst|neorv32_prim_cnt:\base_enabled:cycle_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_counters.vhd Line: 199
+Info (12128): Elaborating entity "neorv32_cpu_regfile" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_regfile:neorv32_cpu_regfile_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 389
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_regfile.vhd(51): object "wdata" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_regfile.vhd Line: 51
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_regfile.vhd(52): object "onehot" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_regfile.vhd Line: 52
+Info (12128): Elaborating entity "neorv32_cpu_alu" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 412
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu.vhd(84): object "cfu_inst" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 84
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu.vhd(85): object "fpu_csr_en" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 85
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu.vhd(85): object "fpu_csr_we" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 85
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu.vhd(85): object "cfu_done" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 85
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu.vhd(85): object "cfu_busy" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 85
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu.vhd(86): object "fpu_csr_rd" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 86
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu.vhd(86): object "cfu_res" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 86
+Info (12128): Elaborating entity "neorv32_cpu_alu_shifter" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_shifter:neorv32_cpu_alu_shifter_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 147
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu_shifter.vhd(52): object "serial" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_shifter.vhd Line: 52
+Info (12128): Elaborating entity "neorv32_cpu_alu_muldiv" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_muldiv:\neorv32_cpu_alu_muldiv_enabled:neorv32_cpu_alu_muldiv_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 168
+Info (12128): Elaborating entity "neorv32_prim_mul" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_muldiv:\neorv32_cpu_alu_muldiv_enabled:neorv32_cpu_alu_muldiv_inst|neorv32_prim_mul:\multiplier_core_parallel:multiplier_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_muldiv.vhd Line: 170
+Info (12128): Elaborating entity "neorv32_cpu_alu_bitmanip" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_bitmanip:\neorv32_cpu_alu_bitmanip_enabled:neorv32_cpu_alu_bitmanip_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 197
+Info (12128): Elaborating entity "neorv32_cpu_alu_crypto" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_crypto:\neorv32_cpu_alu_crypto_enabled:neorv32_cpu_alu_crypto_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu.vhd Line: 355
+Warning (10036): Verilog HDL or VHDL warning at neorv32_cpu_alu_crypto.vhd(192): object "funct3" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_alu_crypto.vhd Line: 192
+Info (12128): Elaborating entity "neorv32_cpu_lsu" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_lsu:neorv32_cpu_lsu_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu.vhd Line: 457
+Info (12128): Elaborating entity "neorv32_bus_switch" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_bus_switch:\core_complex_gen:0:neorv32_core_bus_switch_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 665
+Info (12128): Elaborating entity "neorv32_bus_gateway" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_bus_gateway:neorv32_bus_gateway_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 825
+Info (12128): Elaborating entity "neorv32_imem" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_imem:\memory_system:neorv32_imem_enabled:neorv32_imem_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 874
+Warning (10036): Verilog HDL or VHDL warning at neorv32_imem.vhd(75): object "ben" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem.vhd Line: 75
+Info (12128): Elaborating entity "neorv32_imem_rom" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_imem:\memory_system:neorv32_imem_enabled:neorv32_imem_inst|neorv32_imem_rom:\imem_rom:imem_rom_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem.vhd Line: 83
+Info (10544): VHDL Assertion Statement at neorv32_imem_rom.vhd(42): assertion is false - report "[NEORV32] Using default IMEM ROM component (131072 bytes)." (NOTE) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_imem_rom.vhd Line: 42
+Info (12128): Elaborating entity "neorv32_dmem" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 897
+Info (12128): Elaborating entity "neorv32_dmem_ram" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dmem.vhd Line: 64
+Info (10544): VHDL Assertion Statement at neorv32_dmem_ram.vhd(40): assertion is false - report "[NEORV32] Using default DMEM RAM component (16384 bytes)." (NOTE) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dmem_ram.vhd Line: 40
+Info (12128): Elaborating entity "neorv32_prim_spram" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:0:ram_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_dmem_ram.vhd Line: 47
+Info (12128): Elaborating entity "neorv32_xbus" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_xbus:\memory_system:neorv32_xbus_enabled:neorv32_xbus_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 919
+Info (12128): Elaborating entity "neorv32_bus_reg" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_xbus:\memory_system:neorv32_xbus_enabled:neorv32_xbus_inst|neorv32_bus_reg:reg_stage_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_xbus.vhd Line: 54
+Info (12128): Elaborating entity "neorv32_bus_io_switch" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_bus_io_switch:\io_system:neorv32_bus_io_switch_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 967
+Info (12128): Elaborating entity "neorv32_gpio" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_gpio:\io_system:neorv32_gpio_enabled:neorv32_gpio_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 1115
+Info (12128): Elaborating entity "neorv32_clint" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_clint:\io_system:neorv32_clint_enabled:neorv32_clint_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 1167
+Info (12128): Elaborating entity "neorv32_clint_mtimecmp" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_clint:\io_system:neorv32_clint_enabled:neorv32_clint_inst|neorv32_clint_mtimecmp:\neorv32_clint_mtimecmp_gen:0:neorv32_clint_mtimecmp_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_clint.vhd Line: 114
+Info (12128): Elaborating entity "neorv32_uart" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 1206
+Info (12128): Elaborating entity "neorv32_prim_fifo" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:tx_fifo_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_uart.vhd Line: 183
+Info (12128): Elaborating entity "neorv32_sysinfo" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_sysinfo:\io_system:neorv32_sysinfo_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 1551
+Info (12128): Elaborating entity "neorv32_debug_dtm" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_debug_dtm:\neorv32_ocd_enabled:neorv32_debug_dtm_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 1610
+Info (12128): Elaborating entity "neorv32_debug_dm" for hierarchy "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_debug_dm:\neorv32_ocd_enabled:neorv32_debug_dm_inst" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_top.vhd Line: 1629
+Info (12128): Elaborating entity "wb_intercon" for hierarchy "de2os_top:u_top|wb_intercon:u_intercon" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 337
+Info (12128): Elaborating entity "sdram_ctrl" for hierarchy "de2os_top:u_top|sdram_ctrl:u_sdram" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 423
+Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(107): object "rd_data_r" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 107
+Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(111): object "addr_r" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 111
+Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(146): object "burst_req_cpu" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 146
+Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(161): object "fifo_wr_full" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 161
+Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(182): object "vga_fifo_wr_full" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 182
+Warning (10036): Verilog HDL or VHDL warning at sdram_ctrl.vhd(187): object "vga_burst_active" assigned a value but never read File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 187
+Info (12128): Elaborating entity "async_fifo" for hierarchy "de2os_top:u_top|sdram_ctrl:u_sdram|async_fifo:u_fifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 194
+Info (12128): Elaborating entity "vga_text_terminal" for hierarchy "de2os_top:u_top|vga_text_terminal:u_vga" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 461
+Info (12128): Elaborating entity "vga_pixel_ctrl" for hierarchy "de2os_top:u_top|vga_pixel_ctrl:u_vga_px" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 481
+Info (12128): Elaborating entity "ps2_controller" for hierarchy "de2os_top:u_top|ps2_controller:u_ps2" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 535
+Info (12128): Elaborating entity "ps2_sync" for hierarchy "de2os_top:u_top|ps2_controller:u_ps2|ps2_sync:u_sync" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_controller.vhd Line: 130
+Info (12128): Elaborating entity "ps2_receiver" for hierarchy "de2os_top:u_top|ps2_controller:u_ps2|ps2_receiver:u_rx" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ps2_controller.vhd Line: 144
+Info (12128): Elaborating entity "ir_nec_wb" for hierarchy "de2os_top:u_top|ir_nec_wb:u_ir" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 560
+Info (12128): Elaborating entity "ir_dbg_exp10" for hierarchy "de2os_top:u_top|ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 57
+Info (12128): Elaborating entity "seg7_mapper" for hierarchy "de2os_top:u_top|seg7_mapper:u_seg7_lo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 589
+Info (12128): Elaborating entity "jtag_uart_0" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 614
+Info (12128): Elaborating entity "jtag_uart_0_jtag_uart_0" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/jtag_uart_0.vhd Line: 111
+Info (12128): Elaborating entity "jtag_uart_0_jtag_uart_0_scfifo_w" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 420
+Info (12128): Elaborating entity "scfifo" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 139
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 139
+Info (12133): Instantiated megafunction "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 139
+    Info (12134): Parameter "lpm_hint" = "RAM_BLOCK_TYPE=AUTO"
+    Info (12134): Parameter "lpm_numwords" = "64"
+    Info (12134): Parameter "lpm_showahead" = "OFF"
+    Info (12134): Parameter "lpm_type" = "scfifo"
+    Info (12134): Parameter "lpm_width" = "8"
+    Info (12134): Parameter "lpm_widthu" = "6"
+    Info (12134): Parameter "overflow_checking" = "OFF"
+    Info (12134): Parameter "underflow_checking" = "OFF"
+    Info (12134): Parameter "use_eab" = "ON"
+Info (12021): Found 1 design units, including 1 entities, in source file db/scfifo_jr21.tdf
+    Info (12023): Found entity 1: scfifo_jr21 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/scfifo_jr21.tdf Line: 25
+Info (12128): Elaborating entity "scfifo_jr21" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo|scfifo_jr21:auto_generated" File: e:/software/intelfpga_lite/23.1std/quartus/libraries/megafunctions/scfifo.tdf Line: 300
+Info (12021): Found 1 design units, including 1 entities, in source file db/a_dpfifo_l011.tdf
+    Info (12023): Found entity 1: a_dpfifo_l011 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_dpfifo_l011.tdf Line: 29
+Info (12128): Elaborating entity "a_dpfifo_l011" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/scfifo_jr21.tdf Line: 38
+Info (12021): Found 1 design units, including 1 entities, in source file db/a_fefifo_7cf.tdf
+    Info (12023): Found entity 1: a_fefifo_7cf File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_fefifo_7cf.tdf Line: 25
+Info (12128): Elaborating entity "a_fefifo_7cf" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|a_fefifo_7cf:fifo_state" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_dpfifo_l011.tdf Line: 43
+Info (12021): Found 1 design units, including 1 entities, in source file db/cntr_do7.tdf
+    Info (12023): Found entity 1: cntr_do7 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/cntr_do7.tdf Line: 26
+Info (12128): Elaborating entity "cntr_do7" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|a_fefifo_7cf:fifo_state|cntr_do7:count_usedw" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_fefifo_7cf.tdf Line: 39
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_nio1.tdf
+    Info (12023): Found entity 1: altsyncram_nio1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 28
+Info (12128): Elaborating entity "altsyncram_nio1" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_dpfifo_l011.tdf Line: 44
+Info (12021): Found 1 design units, including 1 entities, in source file db/cntr_1ob.tdf
+    Info (12023): Found entity 1: cntr_1ob File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/cntr_1ob.tdf Line: 26
+Info (12128): Elaborating entity "cntr_1ob" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_w:the_jtag_uart_0_jtag_uart_0_scfifo_w|scfifo:wfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|cntr_1ob:rd_ptr_count" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/a_dpfifo_l011.tdf Line: 45
+Info (12128): Elaborating entity "jtag_uart_0_jtag_uart_0_scfifo_r" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 434
+Info (12128): Elaborating entity "alt_jtag_atlantic" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|alt_jtag_atlantic:jtag_uart_0_jtag_uart_0_alt_jtag_atlantic" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 569
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|alt_jtag_atlantic:jtag_uart_0_jtag_uart_0_alt_jtag_atlantic" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 569
+Info (12133): Instantiated megafunction "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|alt_jtag_atlantic:jtag_uart_0_jtag_uart_0_alt_jtag_atlantic" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/jtag_uart_0_jtag_uart_0.v Line: 569
+    Info (12134): Parameter "INSTANCE_ID" = "0"
+    Info (12134): Parameter "LOG2_RXFIFO_DEPTH" = "6"
+    Info (12134): Parameter "LOG2_TXFIFO_DEPTH" = "6"
+    Info (12134): Parameter "SLD_AUTO_INSTANCE_INDEX" = "YES"
+Info (12128): Elaborating entity "sld_jtag_endpoint_adapter" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|alt_jtag_atlantic:jtag_uart_0_jtag_uart_0_alt_jtag_atlantic|sld_jtag_endpoint_adapter:inst" File: e:/software/intelfpga_lite/23.1std/quartus/libraries/megafunctions/alt_jtag_atlantic.v Line: 276
+Info (12128): Elaborating entity "sld_jtag_endpoint_adapter_impl" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|alt_jtag_atlantic:jtag_uart_0_jtag_uart_0_alt_jtag_atlantic|sld_jtag_endpoint_adapter:inst|sld_jtag_endpoint_adapter_impl:sld_jtag_endpoint_adapter_impl_inst" File: e:/software/intelfpga_lite/23.1std/quartus/libraries/megafunctions/sld_jtag_endpoint_adapter.vhd Line: 232
+Info (12128): Elaborating entity "altera_reset_controller" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|altera_reset_controller:rst_controller" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/jtag_uart_0.vhd Line: 125
+Info (12128): Elaborating entity "altera_reset_synchronizer" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|altera_reset_controller:rst_controller|altera_reset_synchronizer:alt_rst_sync_uq1" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/altera_reset_controller.v Line: 208
+Info (12128): Elaborating entity "altera_reset_synchronizer" for hierarchy "de2os_top:u_top|jtag_uart_0:u_jtag_uart|altera_reset_controller:rst_controller|altera_reset_synchronizer:alt_rst_req_sync_uq1" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/jtag_uart_0/synthesis/submodules/altera_reset_controller.v Line: 220
+Info (12128): Elaborating entity "uart_jtag_bridge" for hierarchy "de2os_top:u_top|uart_jtag_bridge:u_jtag_bridge" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 627
+Info (12128): Elaborating entity "lcd_wb" for hierarchy "de2os_top:u_top|lcd_wb:u_lcd" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 668
+Info (11170): Starting IP generation for the debug fabric: alt_sld_fab.
+Info (11172): 2026.05.25.21:09:06 Progress: Loading slda2af9e54/alt_sld_fab_wrapper_hw.tcl
+Info (11172): Alt_sld_fab.alt_sld_fab: SLD fabric agents which did not specify prefer_host were connected to JTAG
+Info (11172): Alt_sld_fab: Generating alt_sld_fab "alt_sld_fab" for QUARTUS_SYNTH
+Info (11172): Alt_sld_fab: "alt_sld_fab" instantiated alt_sld_fab "alt_sld_fab"
+Info (11172): Presplit: "alt_sld_fab" instantiated altera_super_splitter "presplit"
+Info (11172): Splitter: "alt_sld_fab" instantiated altera_sld_splitter "splitter"
+Info (11172): Sldfabric: "alt_sld_fab" instantiated altera_sld_jtag_hub "sldfabric"
+Info (11172): Ident: "alt_sld_fab" instantiated altera_connection_identification_hub "ident"
+Info (11172): Alt_sld_fab: Done "alt_sld_fab" with 6 modules, 6 files
+Info (11171): Finished IP generation for the debug fabric: alt_sld_fab.
+Info (12021): Found 1 design units, including 1 entities, in source file db/ip/slda2af9e54/alt_sld_fab.v
+    Info (12023): Found entity 1: alt_sld_fab File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/ip/slda2af9e54/alt_sld_fab.v Line: 9
+Info (12021): Found 1 design units, including 1 entities, in source file db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab.v
+    Info (12023): Found entity 1: alt_sld_fab_alt_sld_fab File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab.v Line: 9
+Info (12021): Found 1 design units, including 1 entities, in source file db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_ident.sv
+    Info (12023): Found entity 1: alt_sld_fab_alt_sld_fab_ident File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_ident.sv Line: 33
+Info (12021): Found 1 design units, including 1 entities, in source file db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_presplit.sv
+    Info (12023): Found entity 1: alt_sld_fab_alt_sld_fab_presplit File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_presplit.sv Line: 3
+Info (12021): Found 2 design units, including 1 entities, in source file db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_sldfabric.vhd
+    Info (12022): Found design unit 1: alt_sld_fab_alt_sld_fab_sldfabric-rtl File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_sldfabric.vhd Line: 102
+    Info (12023): Found entity 1: alt_sld_fab_alt_sld_fab_sldfabric File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_sldfabric.vhd Line: 11
+Info (12021): Found 1 design units, including 1 entities, in source file db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_splitter.sv
+    Info (12023): Found entity 1: alt_sld_fab_alt_sld_fab_splitter File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/ip/slda2af9e54/submodules/alt_sld_fab_alt_sld_fab_splitter.sv Line: 3
+Warning (14284): Synthesized away the following node(s):
+    Warning (14285): Synthesized away the following RAM node(s):
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[0]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 40
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[1]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 70
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[2]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 100
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[3]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 130
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[4]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 160
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[5]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 190
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[6]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 220
+        Warning (14320): Synthesized away node "de2os_top:u_top|jtag_uart_0:u_jtag_uart|jtag_uart_0_jtag_uart_0:jtag_uart_0|jtag_uart_0_jtag_uart_0_scfifo_r:the_jtag_uart_0_jtag_uart_0_scfifo_r|scfifo:rfifo|scfifo_jr21:auto_generated|a_dpfifo_l011:dpfifo|altsyncram_nio1:FIFOram|q_b[7]" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_nio1.tdf Line: 250
+Warning (276020): Inferred RAM node "de2os_top:u_top|vga_text_terminal:u_vga|char_ram_rtl_1" from synchronous design logic.  Pass-through logic has been added to match the read-during-write behavior of the original design.
+Warning (276027): Inferred dual-clock RAM node "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:0:ram_inst|spram_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
+Warning (276027): Inferred dual-clock RAM node "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:1:ram_inst|spram_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
+Warning (276027): Inferred dual-clock RAM node "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:2:ram_inst|spram_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
+Warning (276027): Inferred dual-clock RAM node "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:3:ram_inst|spram_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
+Warning (276027): Inferred dual-clock RAM node "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|linebuf_b_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
+Warning (113028): 96 out of 256 addresses are uninitialized. The Quartus Prime software will initialize them to "0". There are 1 warnings found, and 1 warnings are reported. File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
+    Warning (113027): Addresses ranging from 160 to 255 are not initialized File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
+Warning (276027): Inferred dual-clock RAM node "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|linebuf_a_rtl_0" from synchronous design logic.  The read-during-write behavior of a dual-clock RAM is undefined and may not match the behavior of the original design.
+Warning (113028): 96 out of 256 addresses are uninitialized. The Quartus Prime software will initialize them to "0". There are 1 warnings found, and 1 warnings are reported. File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
+    Warning (113027): Addresses ranging from 160 to 255 are not initialized File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif Line: 1
+Info (276014): Found 3 instances of uninferred RAM logic
+    Info (276004): RAM logic "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_frontend:neorv32_cpu_frontend_inst|neorv32_cpu_frontend_ipb:\prefetch_buffer:0:ipb_inst|ipb" is uninferred due to inappropriate RAM size File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 358
+    Info (276004): RAM logic "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_frontend:neorv32_cpu_frontend_inst|neorv32_cpu_frontend_ipb:\prefetch_buffer:1:ipb_inst|ipb" is uninferred due to inappropriate RAM size File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_cpu_frontend.vhd Line: 358
+    Info (276004): RAM logic "de2os_top:u_top|sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem" is uninferred due to inappropriate RAM size File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
+Info (19000): Inferred 13 megafunctions from design logic
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_regfile:neorv32_cpu_regfile_inst|regfile_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to BIDIR_DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 32
+        Info (286033): Parameter WIDTH_B set to 32
+        Info (286033): Parameter WIDTHAD_A set to 5
+        Info (286033): Parameter WIDTHAD_B set to 5
+        Info (286033): Parameter NUMWORDS_A set to 32
+        Info (286033): Parameter NUMWORDS_B set to 32
+        Info (286033): Parameter OUTDATA_REG_A set to UNREGISTERED
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK0
+        Info (286033): Parameter INDATA_REG_B set to CLOCK0
+        Info (286033): Parameter WRCONTROL_WRADDRESS_REG_B set to CLOCK0
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter READ_DURING_WRITE_MODE_PORT_A set to OLD_DATA
+        Info (286033): Parameter READ_DURING_WRITE_MODE_MIXED_PORTS set to OLD_DATA
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|vga_text_terminal:u_vga|char_ram_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 32
+        Info (286033): Parameter WIDTHAD_A set to 12
+        Info (286033): Parameter NUMWORDS_A set to 4096
+        Info (286033): Parameter WIDTH_B set to 32
+        Info (286033): Parameter WIDTHAD_B set to 12
+        Info (286033): Parameter NUMWORDS_B set to 4096
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+        Info (286033): Parameter RAM_BLOCK_TYPE set to M9K
+        Info (286033): Parameter INIT_FILE set to db/de2os.ram0_vga_text_terminal_c76d6ce0.hdl.mif
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|vga_text_terminal:u_vga|char_ram_rtl_1" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 32
+        Info (286033): Parameter WIDTHAD_A set to 12
+        Info (286033): Parameter NUMWORDS_A set to 4096
+        Info (286033): Parameter WIDTH_B set to 32
+        Info (286033): Parameter WIDTHAD_B set to 12
+        Info (286033): Parameter NUMWORDS_B set to 4096
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK0
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+        Info (286033): Parameter RAM_BLOCK_TYPE set to M9K
+        Info (286033): Parameter INIT_FILE set to db/de2os.ram0_vga_text_terminal_c76d6ce0.hdl.mif
+        Info (286033): Parameter READ_DURING_WRITE_MODE_MIXED_PORTS set to OLD_DATA
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:0:ram_inst|spram_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 8
+        Info (286033): Parameter WIDTHAD_A set to 12
+        Info (286033): Parameter NUMWORDS_A set to 4096
+        Info (286033): Parameter WIDTH_B set to 8
+        Info (286033): Parameter WIDTHAD_B set to 12
+        Info (286033): Parameter NUMWORDS_B set to 4096
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:1:ram_inst|spram_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 8
+        Info (286033): Parameter WIDTHAD_A set to 12
+        Info (286033): Parameter NUMWORDS_A set to 4096
+        Info (286033): Parameter WIDTH_B set to 8
+        Info (286033): Parameter WIDTHAD_B set to 12
+        Info (286033): Parameter NUMWORDS_B set to 4096
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:2:ram_inst|spram_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 8
+        Info (286033): Parameter WIDTHAD_A set to 12
+        Info (286033): Parameter NUMWORDS_A set to 4096
+        Info (286033): Parameter WIDTH_B set to 8
+        Info (286033): Parameter WIDTHAD_B set to 12
+        Info (286033): Parameter NUMWORDS_B set to 4096
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:3:ram_inst|spram_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 8
+        Info (286033): Parameter WIDTHAD_A set to 12
+        Info (286033): Parameter NUMWORDS_A set to 4096
+        Info (286033): Parameter WIDTH_B set to 8
+        Info (286033): Parameter WIDTHAD_B set to 12
+        Info (286033): Parameter NUMWORDS_B set to 4096
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|linebuf_b_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 32
+        Info (286033): Parameter WIDTHAD_A set to 8
+        Info (286033): Parameter NUMWORDS_A set to 160
+        Info (286033): Parameter WIDTH_B set to 32
+        Info (286033): Parameter WIDTHAD_B set to 8
+        Info (286033): Parameter NUMWORDS_B set to 160
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+        Info (286033): Parameter RAM_BLOCK_TYPE set to M9K
+        Info (286033): Parameter INIT_FILE set to db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|linebuf_a_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 32
+        Info (286033): Parameter WIDTHAD_A set to 8
+        Info (286033): Parameter NUMWORDS_A set to 160
+        Info (286033): Parameter WIDTH_B set to 32
+        Info (286033): Parameter WIDTHAD_B set to 8
+        Info (286033): Parameter NUMWORDS_B set to 160
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK1
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+        Info (286033): Parameter RAM_BLOCK_TYPE set to M9K
+        Info (286033): Parameter INIT_FILE set to db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:tx_fifo_inst|fifo_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 8
+        Info (286033): Parameter WIDTHAD_A set to 5
+        Info (286033): Parameter NUMWORDS_A set to 32
+        Info (286033): Parameter WIDTH_B set to 8
+        Info (286033): Parameter WIDTHAD_B set to 5
+        Info (286033): Parameter NUMWORDS_B set to 32
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK0
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+        Info (286033): Parameter READ_DURING_WRITE_MODE_MIXED_PORTS set to OLD_DATA
+    Info (276029): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:rx_fifo_inst|fifo_rtl_0" 
+        Info (286033): Parameter OPERATION_MODE set to DUAL_PORT
+        Info (286033): Parameter WIDTH_A set to 8
+        Info (286033): Parameter WIDTHAD_A set to 5
+        Info (286033): Parameter NUMWORDS_A set to 32
+        Info (286033): Parameter WIDTH_B set to 8
+        Info (286033): Parameter WIDTHAD_B set to 5
+        Info (286033): Parameter NUMWORDS_B set to 32
+        Info (286033): Parameter ADDRESS_ACLR_A set to NONE
+        Info (286033): Parameter OUTDATA_REG_B set to UNREGISTERED
+        Info (286033): Parameter ADDRESS_ACLR_B set to NONE
+        Info (286033): Parameter OUTDATA_ACLR_B set to NONE
+        Info (286033): Parameter ADDRESS_REG_B set to CLOCK0
+        Info (286033): Parameter INDATA_ACLR_A set to NONE
+        Info (286033): Parameter WRCONTROL_ACLR_A set to NONE
+        Info (286033): Parameter READ_DURING_WRITE_MODE_MIXED_PORTS set to OLD_DATA
+    Info (276031): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_imem:\memory_system:neorv32_imem_enabled:neorv32_imem_inst|neorv32_imem_rom:\imem_rom:imem_rom_inst|Mux27_rtl_0"
+        Info (286033): Parameter OPERATION_MODE set to ROM
+        Info (286033): Parameter WIDTH_A set to 32
+        Info (286033): Parameter WIDTHAD_A set to 15
+        Info (286033): Parameter NUMWORDS_A set to 32768
+        Info (286033): Parameter OUTDATA_REG_A set to UNREGISTERED
+        Info (286033): Parameter RAM_BLOCK_TYPE set to AUTO
+        Info (286033): Parameter INIT_FILE set to de2os.de2os_imem_top0.rtl.mif
+    Info (276031): Inferred altsyncram megafunction from the following design logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_crypto:\neorv32_cpu_alu_crypto_enabled:neorv32_cpu_alu_crypto_inst|Mux104_rtl_0"
+        Info (286033): Parameter OPERATION_MODE set to ROM
+        Info (286033): Parameter WIDTH_A set to 16
+        Info (286033): Parameter WIDTHAD_A set to 9
+        Info (286033): Parameter NUMWORDS_A set to 512
+        Info (286033): Parameter OUTDATA_REG_A set to UNREGISTERED
+        Info (286033): Parameter RAM_BLOCK_TYPE set to AUTO
+        Info (286033): Parameter INIT_FILE set to de2os.de2os_imem_top1.rtl.mif
+Info (278001): Inferred 1 megafunctions from design logic
+    Info (278003): Inferred multiplier megafunction ("lpm_mult") from the following logic: "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_muldiv:\neorv32_cpu_alu_muldiv_enabled:neorv32_cpu_alu_muldiv_inst|neorv32_prim_mul:\multiplier_core_parallel:multiplier_inst|Mult0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 304
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_regfile:neorv32_cpu_regfile_inst|altsyncram:regfile_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_regfile:neorv32_cpu_regfile_inst|altsyncram:regfile_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "BIDIR_DUAL_PORT"
+    Info (12134): Parameter "WIDTH_A" = "32"
+    Info (12134): Parameter "WIDTH_B" = "32"
+    Info (12134): Parameter "WIDTHAD_A" = "5"
+    Info (12134): Parameter "WIDTHAD_B" = "5"
+    Info (12134): Parameter "NUMWORDS_A" = "32"
+    Info (12134): Parameter "NUMWORDS_B" = "32"
+    Info (12134): Parameter "OUTDATA_REG_A" = "UNREGISTERED"
+    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
+    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK0"
+    Info (12134): Parameter "INDATA_REG_B" = "CLOCK0"
+    Info (12134): Parameter "WRCONTROL_WRADDRESS_REG_B" = "CLOCK0"
+    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
+    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
+    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
+    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
+    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
+    Info (12134): Parameter "READ_DURING_WRITE_MODE_PORT_A" = "OLD_DATA"
+    Info (12134): Parameter "READ_DURING_WRITE_MODE_MIXED_PORTS" = "OLD_DATA"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_icu1.tdf
+    Info (12023): Found entity 1: altsyncram_icu1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_icu1.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
+    Info (12134): Parameter "WIDTH_A" = "32"
+    Info (12134): Parameter "WIDTHAD_A" = "12"
+    Info (12134): Parameter "NUMWORDS_A" = "4096"
+    Info (12134): Parameter "WIDTH_B" = "32"
+    Info (12134): Parameter "WIDTHAD_B" = "12"
+    Info (12134): Parameter "NUMWORDS_B" = "4096"
+    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
+    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
+    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
+    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
+    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK1"
+    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
+    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
+    Info (12134): Parameter "RAM_BLOCK_TYPE" = "M9K"
+    Info (12134): Parameter "INIT_FILE" = "db/de2os.ram0_vga_text_terminal_c76d6ce0.hdl.mif"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_qjk1.tdf
+    Info (12023): Found entity 1: altsyncram_qjk1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_1"
+Info (12133): Instantiated megafunction "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_1" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
+    Info (12134): Parameter "WIDTH_A" = "32"
+    Info (12134): Parameter "WIDTHAD_A" = "12"
+    Info (12134): Parameter "NUMWORDS_A" = "4096"
+    Info (12134): Parameter "WIDTH_B" = "32"
+    Info (12134): Parameter "WIDTHAD_B" = "12"
+    Info (12134): Parameter "NUMWORDS_B" = "4096"
+    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
+    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
+    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
+    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
+    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK0"
+    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
+    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
+    Info (12134): Parameter "RAM_BLOCK_TYPE" = "M9K"
+    Info (12134): Parameter "INIT_FILE" = "db/de2os.ram0_vga_text_terminal_c76d6ce0.hdl.mif"
+    Info (12134): Parameter "READ_DURING_WRITE_MODE_MIXED_PORTS" = "OLD_DATA"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_rvp1.tdf
+    Info (12023): Found entity 1: altsyncram_rvp1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_rvp1.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:0:ram_inst|altsyncram:spram_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_dmem:\memory_system:neorv32_dmem_enabled:neorv32_dmem_inst|neorv32_dmem_ram:dmem_ram_inst|neorv32_prim_spram:\ram_gen:0:ram_inst|altsyncram:spram_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
+    Info (12134): Parameter "WIDTH_A" = "8"
+    Info (12134): Parameter "WIDTHAD_A" = "12"
+    Info (12134): Parameter "NUMWORDS_A" = "4096"
+    Info (12134): Parameter "WIDTH_B" = "8"
+    Info (12134): Parameter "WIDTHAD_B" = "12"
+    Info (12134): Parameter "NUMWORDS_B" = "4096"
+    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
+    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
+    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
+    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
+    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK1"
+    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
+    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_20e1.tdf
+    Info (12023): Found entity 1: altsyncram_20e1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_20e1.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_b_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_b_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
+    Info (12134): Parameter "WIDTH_A" = "32"
+    Info (12134): Parameter "WIDTHAD_A" = "8"
+    Info (12134): Parameter "NUMWORDS_A" = "160"
+    Info (12134): Parameter "WIDTH_B" = "32"
+    Info (12134): Parameter "WIDTHAD_B" = "8"
+    Info (12134): Parameter "NUMWORDS_B" = "160"
+    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
+    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
+    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
+    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
+    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK1"
+    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
+    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
+    Info (12134): Parameter "RAM_BLOCK_TYPE" = "M9K"
+    Info (12134): Parameter "INIT_FILE" = "db/de2os.ram1_vga_pixel_ctrl_325fcd1b.hdl.mif"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_r2k1.tdf
+    Info (12023): Found entity 1: altsyncram_r2k1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_r2k1.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_a_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|vga_pixel_ctrl:u_vga_px|altsyncram:linebuf_a_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
+    Info (12134): Parameter "WIDTH_A" = "32"
+    Info (12134): Parameter "WIDTHAD_A" = "8"
+    Info (12134): Parameter "NUMWORDS_A" = "160"
+    Info (12134): Parameter "WIDTH_B" = "32"
+    Info (12134): Parameter "WIDTHAD_B" = "8"
+    Info (12134): Parameter "NUMWORDS_B" = "160"
+    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
+    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
+    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
+    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
+    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK1"
+    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
+    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
+    Info (12134): Parameter "RAM_BLOCK_TYPE" = "M9K"
+    Info (12134): Parameter "INIT_FILE" = "db/de2os.ram0_vga_pixel_ctrl_325fcd1b.hdl.mif"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_q2k1.tdf
+    Info (12023): Found entity 1: altsyncram_q2k1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_q2k1.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:tx_fifo_inst|altsyncram:fifo_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_uart:\io_system:neorv32_uart0_enabled:neorv32_uart0_inst|neorv32_prim_fifo:tx_fifo_inst|altsyncram:fifo_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "DUAL_PORT"
+    Info (12134): Parameter "WIDTH_A" = "8"
+    Info (12134): Parameter "WIDTHAD_A" = "5"
+    Info (12134): Parameter "NUMWORDS_A" = "32"
+    Info (12134): Parameter "WIDTH_B" = "8"
+    Info (12134): Parameter "WIDTHAD_B" = "5"
+    Info (12134): Parameter "NUMWORDS_B" = "32"
+    Info (12134): Parameter "ADDRESS_ACLR_A" = "NONE"
+    Info (12134): Parameter "OUTDATA_REG_B" = "UNREGISTERED"
+    Info (12134): Parameter "ADDRESS_ACLR_B" = "NONE"
+    Info (12134): Parameter "OUTDATA_ACLR_B" = "NONE"
+    Info (12134): Parameter "ADDRESS_REG_B" = "CLOCK0"
+    Info (12134): Parameter "INDATA_ACLR_A" = "NONE"
+    Info (12134): Parameter "WRCONTROL_ACLR_A" = "NONE"
+    Info (12134): Parameter "READ_DURING_WRITE_MODE_MIXED_PORTS" = "OLD_DATA"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_kpg1.tdf
+    Info (12023): Found entity 1: altsyncram_kpg1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_kpg1.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_imem:\memory_system:neorv32_imem_enabled:neorv32_imem_inst|neorv32_imem_rom:\imem_rom:imem_rom_inst|altsyncram:Mux27_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_imem:\memory_system:neorv32_imem_enabled:neorv32_imem_inst|neorv32_imem_rom:\imem_rom:imem_rom_inst|altsyncram:Mux27_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "ROM"
+    Info (12134): Parameter "WIDTH_A" = "32"
+    Info (12134): Parameter "WIDTHAD_A" = "15"
+    Info (12134): Parameter "NUMWORDS_A" = "32768"
+    Info (12134): Parameter "OUTDATA_REG_A" = "UNREGISTERED"
+    Info (12134): Parameter "RAM_BLOCK_TYPE" = "AUTO"
+    Info (12134): Parameter "INIT_FILE" = "de2os.de2os_imem_top0.rtl.mif"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_1011.tdf
+    Info (12023): Found entity 1: altsyncram_1011 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_1011.tdf Line: 30
+Info (12021): Found 1 design units, including 1 entities, in source file db/mux_job.tdf
+    Info (12023): Found entity 1: mux_job File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/mux_job.tdf Line: 23
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_crypto:\neorv32_cpu_alu_crypto_enabled:neorv32_cpu_alu_crypto_inst|altsyncram:Mux104_rtl_0"
+Info (12133): Instantiated megafunction "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_crypto:\neorv32_cpu_alu_crypto_enabled:neorv32_cpu_alu_crypto_inst|altsyncram:Mux104_rtl_0" with the following parameter:
+    Info (12134): Parameter "OPERATION_MODE" = "ROM"
+    Info (12134): Parameter "WIDTH_A" = "16"
+    Info (12134): Parameter "WIDTHAD_A" = "9"
+    Info (12134): Parameter "NUMWORDS_A" = "512"
+    Info (12134): Parameter "OUTDATA_REG_A" = "UNREGISTERED"
+    Info (12134): Parameter "RAM_BLOCK_TYPE" = "AUTO"
+    Info (12134): Parameter "INIT_FILE" = "de2os.de2os_imem_top1.rtl.mif"
+Info (12021): Found 1 design units, including 1 entities, in source file db/altsyncram_m101.tdf
+    Info (12023): Found entity 1: altsyncram_m101 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_m101.tdf Line: 28
+Info (12130): Elaborated megafunction instantiation "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_muldiv:\neorv32_cpu_alu_muldiv_enabled:neorv32_cpu_alu_muldiv_inst|neorv32_prim_mul:\multiplier_core_parallel:multiplier_inst|lpm_mult:Mult0" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 304
+Info (12133): Instantiated megafunction "de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_cpu:\core_complex_gen:0:neorv32_cpu_inst|neorv32_cpu_alu:neorv32_cpu_alu_inst|neorv32_cpu_alu_muldiv:\neorv32_cpu_alu_muldiv_enabled:neorv32_cpu_alu_muldiv_inst|neorv32_prim_mul:\multiplier_core_parallel:multiplier_inst|lpm_mult:Mult0" with the following parameter: File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_prim.vhd Line: 304
+    Info (12134): Parameter "LPM_WIDTHA" = "33"
+    Info (12134): Parameter "LPM_WIDTHB" = "33"
+    Info (12134): Parameter "LPM_WIDTHP" = "66"
+    Info (12134): Parameter "LPM_WIDTHR" = "66"
+    Info (12134): Parameter "LPM_WIDTHS" = "1"
+    Info (12134): Parameter "LPM_REPRESENTATION" = "SIGNED"
+    Info (12134): Parameter "INPUT_A_IS_CONSTANT" = "NO"
+    Info (12134): Parameter "INPUT_B_IS_CONSTANT" = "NO"
+    Info (12134): Parameter "MAXIMIZE_SPEED" = "5"
+Info (12021): Found 1 design units, including 1 entities, in source file db/mult_86t.tdf
+    Info (12023): Found entity 1: mult_86t File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/mult_86t.tdf Line: 31
+Warning (14284): Synthesized away the following node(s):
+    Warning (14285): Synthesized away the following RAM node(s):
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a16" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 551
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a17" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 583
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a18" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 615
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a19" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 647
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a20" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 679
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a21" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 711
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a22" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 743
+        Warning (14320): Synthesized away node "de2os_top:u_top|vga_text_terminal:u_vga|altsyncram:char_ram_rtl_0|altsyncram_qjk1:auto_generated|ram_block1a23" File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altsyncram_qjk1.tdf Line: 775
+Warning (12241): 2 hierarchies have connectivity warnings - see the Connectivity Checks report folder
+Info (13014): Ignored 204 buffer(s)
+    Info (13019): Ignored 204 SOFT buffer(s)
+Info (13000): Registers with preset signals will power-up high File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_uart.vhd Line: 35
+Info (13003): DEV_CLRn pin will set, and not reset, register with preset signal due to NOT Gate Push-Back
+Warning (13024): Output pins are stuck at VCC or GND
+    Warning (13410): Pin "HEX6[0]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 25
+    Warning (13410): Pin "HEX6[1]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 25
+    Warning (13410): Pin "HEX6[2]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 25
+    Warning (13410): Pin "HEX6[3]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 25
+    Warning (13410): Pin "HEX6[4]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 25
+    Warning (13410): Pin "HEX6[5]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 25
+    Warning (13410): Pin "HEX6[6]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 25
+    Warning (13410): Pin "HEX7[0]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 26
+    Warning (13410): Pin "HEX7[1]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 26
+    Warning (13410): Pin "HEX7[2]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 26
+    Warning (13410): Pin "HEX7[3]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 26
+    Warning (13410): Pin "HEX7[4]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 26
+    Warning (13410): Pin "HEX7[5]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 26
+    Warning (13410): Pin "HEX7[6]" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 26
+    Warning (13410): Pin "DRAM_CS_N" is stuck at GND File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 32
+    Warning (13410): Pin "LCD_RW" is stuck at GND File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 39
+    Warning (13410): Pin "LCD_ON" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 41
+    Warning (13410): Pin "LCD_BLON" is stuck at VCC File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 42
+Info (286031): Timing-Driven Synthesis is running on partition "Top"
+Info (17049): 223 registers lost all their fanouts during netlist optimizations.
+Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
+    Info (16011): Adding 1 node(s), including 0 DDIO, 1 PLL, 0 transceiver and 0 LCELL
+Info (21057): Implemented 11166 device resources after synthesis - the final resource count might be different
+    Info (21058): Implemented 28 input pins
+    Info (21059): Implemented 152 output pins
+    Info (21060): Implemented 34 bidirectional pins
+    Info (21061): Implemented 10590 logic cells
+    Info (21064): Implemented 352 RAM segments
+    Info (21065): Implemented 1 PLLs
+    Info (21062): Implemented 8 DSP elements
+Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 96 warnings
+    Info: Peak virtual memory: 5380 megabytes
+    Info: Processing ended: Mon May 25 21:10:12 2026
+    Info: Elapsed time: 00:01:28
+    Info: Total CPU time (on all processors): 00:01:36
+Info: *******************************************************************
+Info: Running Quartus Prime Fitter
+    Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
+    Info: Processing started: Mon May 25 21:10:14 2026
+Info: Command: quartus_fit --read_settings_files=off --write_settings_files=off de2os -c de2os
+Info: qfit2_default_script.tcl version: #1
+Info: Project  = de2os
+Info: Revision = de2os
+Info (20032): Parallel compilation is enabled and will use up to 8 processors
+Info (119006): Selected device EP4CE115F29C7 for design "de2os"
+Info (21077): Low junction temperature is 0 degrees C
+Info (21077): High junction temperature is 85 degrees C
+Info (15535): Implemented PLL "de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated|pll1" as Cyclone IV E PLL type File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 46
+    Info (15099): Implementing clock multiplication of 1, clock division of 1, and phase shift of 0 degrees (0 ps) for de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated|wire_pll1_clk[0] port File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 46
+    Info (15099): Implementing clock multiplication of 2, clock division of 1, and phase shift of 0 degrees (0 ps) for de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated|wire_pll1_clk[1] port File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 46
+    Info (15099): Implementing clock multiplication of 2, clock division of 1, and phase shift of 56 degrees (1563 ps) for de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated|wire_pll1_clk[2] port File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 46
+Info (171003): Fitter is performing an Auto Fit compilation, which may decrease Fitter effort to reduce compilation time
+Warning (292013): Feature LogicLock is only available with a valid subscription license. You can purchase a software subscription to gain full access to this feature.
+Info (176444): Device migration not selected. If you intend to use device migration later, you may need to change the pin assignments as they may be incompatible with other devices
+    Info (176445): Device EP4CE40F29C7 is compatible
+    Info (176445): Device EP4CE40F29I7 is compatible
+    Info (176445): Device EP4CE30F29C7 is compatible
+    Info (176445): Device EP4CE30F29I7 is compatible
+    Info (176445): Device EP4CE55F29C7 is compatible
+    Info (176445): Device EP4CE55F29I7 is compatible
+    Info (176445): Device EP4CE75F29C7 is compatible
+    Info (176445): Device EP4CE75F29I7 is compatible
+    Info (176445): Device EP4CE115F29I7 is compatible
+Info (169124): Fitter converted 4 user pins into dedicated programming pins
+    Info (169125): Pin ~ALTERA_ASDO_DATA1~ is reserved at location F4
+    Info (169125): Pin ~ALTERA_FLASH_nCE_nCSO~ is reserved at location E2
+    Info (169125): Pin ~ALTERA_DCLK~ is reserved at location P3
+    Info (169125): Pin ~ALTERA_DATA0~ is reserved at location N7
+Warning (15714): Some pins have incomplete I/O assignments. Refer to the I/O Assignment Warnings report for details
+Info (176045): Design uses memory blocks. Violating setup or hold times of memory block address registers for either read or write operations could cause memory contents to be corrupted. Make sure that all memory block address registers meet the setup and hold time requirements.
+Critical Warning (169085): No exact pin location assignment(s) for 16 pins of 210 total pins. For the list of pins please refer to the I/O Assignment Warnings table in the fitter report.
+Info (332164): Evaluating HDL-embedded SDC commands
+    Info (332165): Entity alt_jtag_atlantic
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|jupdate}] -to [get_registers {*|alt_jtag_atlantic:*|jupdate1*}] 
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|read}] -to [get_registers {*|alt_jtag_atlantic:*|read1*}] 
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|read_req}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rvalid}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|t_dav}] -to [get_registers {*|alt_jtag_atlantic:*|tck_t_dav}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|user_saw_rvalid}] -to [get_registers {*|alt_jtag_atlantic:*|rvalid0*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write}] -to [get_registers {*|alt_jtag_atlantic:*|write1*}] 
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_ena*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_pause*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_valid}]
+    Info (332165): Entity sld_hub
+        Info (332166): create_clock -name altera_reserved_tck [get_ports {altera_reserved_tck}] -period 10MHz   
+        Info (332166): set_clock_groups -asynchronous -group {altera_reserved_tck}
+Warning (332174): Ignored filter at qfit2_legacy_fmain_fitter_flow.tcl(117): *|alt_jtag_atlantic:*|jupdate could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332174): Ignored filter at qfit2_legacy_fmain_fitter_flow.tcl(117): *|alt_jtag_atlantic:*|jupdate1* could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <to> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332174): Ignored filter at qfit2_legacy_fmain_fitter_flow.tcl(117): *|alt_jtag_atlantic:*|wdata[*] could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332174): Ignored filter at qfit2_legacy_fmain_fitter_flow.tcl(117): *|alt_jtag_atlantic:*|t_pause* could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Warning (332049): Ignored set_false_path at qfit2_legacy_fmain_fitter_flow.tcl(117): Argument <to> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+    Info (332050): run_legacy_fitter_flow File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qfit2_legacy_fmain_fitter_flow.tcl Line: 117
+Info (332104): Reading SDC File: '../jtag_uart_0/synthesis/submodules/altera_reset_controller.sdc'
+Info (332104): Reading SDC File: '../constraints/de2extra.sdc'
+Info (332110): Deriving PLL clocks
+    Info (332110): create_generated_clock -source {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -duty_cycle 50.00 -name {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0]} {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0]}
+    Info (332110): create_generated_clock -source {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -multiply_by 2 -duty_cycle 50.00 -name {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1]} {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1]}
+    Info (332110): create_generated_clock -source {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -multiply_by 2 -phase 56.25 -duty_cycle 50.00 -name {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]} {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]}
+Info (332151): Clock uncertainty is not calculated until you update the timing netlist.
+Warning (332060): Node: de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_pixel_ctrl:u_vga_px|v_count[9] is being clocked by de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m
+Warning (332060): Node: de2os_top:u_top|vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_text_terminal:u_vga|v_count[5] is being clocked by de2os_top:u_top|vga_text_terminal:u_vga|clk_25m
+Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
+Info (332129): Detected timing requirements -- optimizing circuit to achieve only the specified requirements
+Info (332111): Found 6 clocks
+    Info (332111):   Period   Clock Name
+    Info (332111): ======== ============
+    Info (332111):  100.000 altera_reserved_tck
+    Info (332111):   20.000      clk_50m
+    Info (332111):   10.000    clk_sdram
+    Info (332111):   20.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0]
+    Info (332111):   10.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1]
+    Info (332111):   10.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]
+Info (176353): Automatically promoted node CLOCK_50~input (placed in PIN Y2 (CLK2, DIFFCLK_1p)) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 10
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock CLKCTRL_G3
+Info (176353): Automatically promoted node de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated|wire_pll1_clk[0] (placed in counter C2 of PLL_1) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 81
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock CLKCTRL_G2
+Info (176353): Automatically promoted node de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated|wire_pll1_clk[1] (placed in counter C1 of PLL_1) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 81
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock CLKCTRL_G4
+Info (176353): Automatically promoted node de2os_top:u_top|clk_rst_gen:u_clk_rst|altpll_50_100:u_pll|altpll:u_pll|altpll_50_100_altpll:auto_generated|wire_pll1_clk[2] (placed in counter C0 of PLL_1) File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/db/altpll_50_100_altpll.v Line: 81
+    Info (176355): Automatically promoted destinations to use location or clock signal External Clock Output CLKCTRL_PLL1E0
+Info (176353): Automatically promoted node de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 123
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
+    Info (176356): Following destination nodes may be non-global or may not use global or regional clocks
+        Info (176357): Destination node de2os_top:u_top|VGA_CLK~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 78
+        Info (176357): Destination node de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 123
+Info (176353): Automatically promoted node altera_internal_jtag~TCKUTAP 
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
+Info (176353): Automatically promoted node de2os_top:u_top|vga_text_terminal:u_vga|clk_25m  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_text_terminal.vhd Line: 118
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
+    Info (176356): Following destination nodes may be non-global or may not use global or regional clocks
+        Info (176357): Destination node de2os_top:u_top|VGA_CLK~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 78
+        Info (176357): Destination node de2os_top:u_top|vga_text_terminal:u_vga|clk_25m~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_text_terminal.vhd Line: 118
+Info (176353): Automatically promoted node de2os_top:u_top|neorv32_wrapper:u_cpu|neorv32_top:u_neorv32|neorv32_sys_reset:\soc_generators:neorv32_sys_reset_inst|rstn_ext_o  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/neorv32/rtl/core/neorv32_sys.vhd Line: 26
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
+Info (176353): Automatically promoted node de2os_top:u_top|clk_rst_gen:u_clk_rst|rst_n_o  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/glue/clk_rst_gen.vhd Line: 18
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
+    Info (176356): Following destination nodes may be non-global or may not use global or regional clocks
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|ack File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 121
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|reg_valid File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_nec_wb.vhd Line: 44
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder|vld File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 49
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder|state File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 24
+        Info (176357): Destination node de2os_top:u_top|vga_pixel_ctrl:u_vga_px|linebuf_a~76 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 83
+        Info (176357): Destination node de2os_top:u_top|vga_pixel_ctrl:u_vga_px|linebuf_b~78 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/vga_pixel_ctrl.vhd Line: 84
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder|cmd_r[0]~0 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 49
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder|shift_r[15]~1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 49
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder|ecnt[1]~58 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 49
+        Info (176357): Destination node de2os_top:u_top|ir_nec_wb:u_ir|ir_dbg_exp10:u_decoder|bcnt[1]~23 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/ir_dbg_exp10.vhd Line: 49
+        Info (176358): Non-global destination nodes limited to 10 nodes
+Info (176353): Automatically promoted node de2os_top:u_top|rst_sdram_sync[1]  File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_top.vhd Line: 285
+    Info (176355): Automatically promoted destinations to use location or clock signal Global Clock
+    Info (176356): Following destination nodes may be non-global or may not use global or regional clocks
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|dram_dqm[3] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 474
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|dram_dqm[2] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 474
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|dram_dqm[1] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 474
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|dram_dqm[0] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 474
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|dram_addr[10] File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 474
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|dram_addr[0]~3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/sdram_ctrl.vhd Line: 474
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~338 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~344 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~346 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
+        Info (176357): Destination node de2os_top:u_top|sdram_ctrl:u_sdram|async_fifo:u_vga_fifo|mem~349 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/periph/async_fifo.vhd Line: 39
+Info (176233): Starting register packing
+Info (176235): Finished register packing
+    Extra Info (176218): Packed 8 registers into blocks of type Block RAM
+    Extra Info (176218): Packed 132 registers into blocks of type Embedded multiplier block
+    Extra Info (176218): Packed 32 registers into blocks of type I/O Input Buffer
+    Extra Info (176220): Created 66 register duplicates
+Info (176214): Statistics of I/O pins that need to be placed that use the same VCCIO and VREF, before I/O pin placement
+    Info (176211): Number of I/O pins in group: 16 (unused VREF, 2.5V VCCIO, 16 input, 0 output, 0 bidirectional)
+        Info (176212): I/O standards used: 2.5 V.
+Info (176215): I/O bank details before I/O pin placement
+    Info (176214): Statistics of I/O banks
+        Info (176213): I/O bank number 1 does not use VREF pins and has 3.3V VCCIO pins. 34 total pin(s) used --  26 pins available
+        Info (176213): I/O bank number 2 does not use VREF pins and has 3.3V VCCIO pins. 46 total pin(s) used --  17 pins available
+        Info (176213): I/O bank number 3 does not use VREF pins and has 3.3V VCCIO pins. 3 total pin(s) used --  70 pins available
+        Info (176213): I/O bank number 4 does not use VREF pins and has 2.5V VCCIO pins. 32 total pin(s) used --  39 pins available
+        Info (176213): I/O bank number 5 does not use VREF pins and has 2.5V VCCIO pins. 18 total pin(s) used --  47 pins available
+        Info (176213): I/O bank number 6 does not use VREF pins and has 2.5V VCCIO pins. 8 total pin(s) used --  50 pins available
+        Info (176213): I/O bank number 7 does not use VREF pins and has 2.5V VCCIO pins. 30 total pin(s) used --  42 pins available
+        Info (176213): I/O bank number 8 does not use VREF pins and has 3.3V VCCIO pins. 31 total pin(s) used --  40 pins available
+Info (171121): Fitter preparation operations ending: elapsed time is 00:00:08
+Info (14896): Fitter has disabled Advanced Physical Optimization because it is not supported for the current family.
+Info (170189): Fitter placement preparation operations beginning
+Info (170190): Fitter placement preparation operations ending: elapsed time is 00:00:02
+Info (170191): Fitter placement operations beginning
+Info (170137): Fitter placement was successful
+Info (170192): Fitter placement operations ending: elapsed time is 00:00:05
+Info (170193): Fitter routing operations beginning
+Info (170195): Router estimated average interconnect usage is 4% of the available device resources
+    Info (170196): Router estimated peak interconnect usage is 38% of the available device resources in the region that extends from location X58_Y24 to location X68_Y36
+Info (170199): The Fitter performed an Auto Fit compilation.  Optimizations were skipped to reduce compilation time.
+    Info (170201): Optimizations that may affect the design's routability were skipped
+    Info (170200): Optimizations that may affect the design's timing were skipped
+Info (170194): Fitter routing operations ending: elapsed time is 00:00:05
+Info (11888): Total time spent on timing analysis during the Fitter is 4.28 seconds.
+Info (334003): Started post-fitting delay annotation
+Info (334004): Delay annotation completed successfully
+Info (334003): Started post-fitting delay annotation
+Info (334004): Delay annotation completed successfully
+Info (11218): Fitter post-fit operations ending: elapsed time is 00:00:04
+Warning (169177): 37 pins must meet Intel FPGA requirements for 3.3-, 3.0-, and 2.5-V interfaces. For more information, refer to AN 447: Interfacing Cyclone IV E Devices with 3.3/3.0/2.5-V LVTTL/LVCMOS I/O Systems.
+    Info (169178): Pin PS2_CLK uses I/O standard 3.3-V LVTTL at G6 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 14
+    Info (169178): Pin PS2_DAT uses I/O standard 3.3-V LVTTL at H5 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 15
+    Info (169178): Pin DRAM_DQ[0] uses I/O standard 3.3-V LVTTL at W3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[1] uses I/O standard 3.3-V LVTTL at W2 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[2] uses I/O standard 3.3-V LVTTL at V4 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[3] uses I/O standard 3.3-V LVTTL at W1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[4] uses I/O standard 3.3-V LVTTL at V3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[5] uses I/O standard 3.3-V LVTTL at V2 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[6] uses I/O standard 3.3-V LVTTL at V1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[7] uses I/O standard 3.3-V LVTTL at U3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[8] uses I/O standard 3.3-V LVTTL at Y3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[9] uses I/O standard 3.3-V LVTTL at Y4 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[10] uses I/O standard 3.3-V LVTTL at AB1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[11] uses I/O standard 3.3-V LVTTL at AA3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[12] uses I/O standard 3.3-V LVTTL at AB2 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[13] uses I/O standard 3.3-V LVTTL at AC1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[14] uses I/O standard 3.3-V LVTTL at AB3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[15] uses I/O standard 3.3-V LVTTL at AC2 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[16] uses I/O standard 3.3-V LVTTL at M8 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[17] uses I/O standard 3.3-V LVTTL at L8 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[18] uses I/O standard 3.3-V LVTTL at P2 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[19] uses I/O standard 3.3-V LVTTL at N3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[20] uses I/O standard 3.3-V LVTTL at N4 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[21] uses I/O standard 3.3-V LVTTL at M4 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[22] uses I/O standard 3.3-V LVTTL at M7 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[23] uses I/O standard 3.3-V LVTTL at L7 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[24] uses I/O standard 3.3-V LVTTL at U5 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[25] uses I/O standard 3.3-V LVTTL at R7 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[26] uses I/O standard 3.3-V LVTTL at R1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[27] uses I/O standard 3.3-V LVTTL at R2 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[28] uses I/O standard 3.3-V LVTTL at R3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[29] uses I/O standard 3.3-V LVTTL at T3 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[30] uses I/O standard 3.3-V LVTTL at U4 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin DRAM_DQ[31] uses I/O standard 3.3-V LVTTL at U1 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 33
+    Info (169178): Pin CLOCK_50 uses I/O standard 3.3-V LVTTL at Y2 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 10
+    Info (169178): Pin IRDA_RXD uses I/O standard 2.5 V at Y15 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 43
+    Info (169178): Pin UART_RXD uses I/O standard 3.3-V LVTTL at G12 File: E:/Main/JuniorII/NonExam/FPGA/DE2Extra/src/rtl/de2os_imem_top.vhd Line: 13
+Info (144001): Generated suppressed messages file E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/de2os/de2os.fit.smsg
+Info: Quartus Prime Fitter was successful. 0 errors, 21 warnings
+    Info: Peak virtual memory: 6375 megabytes
+    Info: Processing ended: Mon May 25 21:10:56 2026
+    Info: Elapsed time: 00:00:42
+    Info: Total CPU time (on all processors): 00:01:05
+Info: *******************************************************************
+Info: Running Quartus Prime Assembler
+    Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
+    Info: Processing started: Mon May 25 21:10:58 2026
+Info: Command: quartus_asm --read_settings_files=off --write_settings_files=off de2os -c de2os
+Info (115031): Writing out detailed assembly data for power analysis
+Info (115030): Assembler is generating device programming files
+Info: Quartus Prime Assembler was successful. 0 errors, 0 warnings
+    Info: Peak virtual memory: 5044 megabytes
+    Info: Processing ended: Mon May 25 21:11:04 2026
+    Info: Elapsed time: 00:00:06
+    Info: Total CPU time (on all processors): 00:00:06
+Info (293026): Skipped module Power Analyzer due to the assignment FLOW_ENABLE_POWER_ANALYZER
+Info: *******************************************************************
+Info: Running Quartus Prime Timing Analyzer
+    Info: Version 23.1std.0 Build 991 11/28/2023 Patches 0.02std SC Lite Edition
+    Info: Processing started: Mon May 25 21:11:07 2026
+Info: Command: quartus_sta de2os -c de2os
+Info: qsta_default_script.tcl version: #1
+Info (20032): Parallel compilation is enabled and will use up to 8 processors
+Info (21077): Low junction temperature is 0 degrees C
+Info (21077): High junction temperature is 85 degrees C
+Info (332164): Evaluating HDL-embedded SDC commands
+    Info (332165): Entity alt_jtag_atlantic
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|jupdate}] -to [get_registers {*|alt_jtag_atlantic:*|jupdate1*}] 
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|read}] -to [get_registers {*|alt_jtag_atlantic:*|read1*}] 
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|read_req}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rvalid}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
+        Info (332166): set_false_path -from [get_registers {*|t_dav}] -to [get_registers {*|alt_jtag_atlantic:*|tck_t_dav}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|user_saw_rvalid}] -to [get_registers {*|alt_jtag_atlantic:*|rvalid0*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|wdata[*]}] -to [get_registers {*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write}] -to [get_registers {*|alt_jtag_atlantic:*|write1*}] 
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_ena*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_pause*}]
+        Info (332166): set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_valid}]
+    Info (332165): Entity sld_hub
+        Info (332166): create_clock -name altera_reserved_tck [get_ports {altera_reserved_tck}] -period 10MHz   
+        Info (332166): set_clock_groups -asynchronous -group {altera_reserved_tck}
+Warning (332174): Ignored filter at qsta_default_script.tcl(1297): *|alt_jtag_atlantic:*|jupdate could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332174): Ignored filter at qsta_default_script.tcl(1297): *|alt_jtag_atlantic:*|jupdate1* could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <to> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332174): Ignored filter at qsta_default_script.tcl(1297): *|alt_jtag_atlantic:*|wdata[*] could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <from> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332174): Ignored filter at qsta_default_script.tcl(1297): *|alt_jtag_atlantic:*|t_pause* could not be matched with a register File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Warning (332049): Ignored set_false_path at qsta_default_script.tcl(1297): Argument <to> is an empty collection File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+    Info (332050): read_sdc File: E:/Software/intelFPGA_lite/23.1std/quartus/common/tcl/internal/qsta_default_script.tcl Line: 1297
+Info (332104): Reading SDC File: '../jtag_uart_0/synthesis/submodules/altera_reset_controller.sdc'
+Info (332104): Reading SDC File: '../constraints/de2extra.sdc'
+Info (332110): Deriving PLL clocks
+    Info (332110): create_generated_clock -source {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -duty_cycle 50.00 -name {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0]} {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0]}
+    Info (332110): create_generated_clock -source {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -multiply_by 2 -duty_cycle 50.00 -name {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1]} {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1]}
+    Info (332110): create_generated_clock -source {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|inclk[0]} -multiply_by 2 -phase 56.25 -duty_cycle 50.00 -name {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]} {u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2]}
+Info (332151): Clock uncertainty is not calculated until you update the timing netlist.
+Warning (332060): Node: de2os_top:u_top|vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_text_terminal:u_vga|v_count[0] is being clocked by de2os_top:u_top|vga_text_terminal:u_vga|clk_25m
+Warning (332060): Node: de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_pixel_ctrl:u_vga_px|video_on is being clocked by de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m
+Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
+Info: Found TIMING_ANALYZER_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS = ON
+Info: Analyzing Slow 1200mV 85C Model
+Info (332146): Worst-case setup slack is 1.445
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     1.445               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     2.013               0.000 clk_sdram 
+    Info (332119):     3.912               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    18.948               0.000 clk_50m 
+    Info (332119):    46.629               0.000 altera_reserved_tck 
+Info (332146): Worst-case hold slack is 0.334
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     0.334               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     0.401               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.403               0.000 altera_reserved_tck 
+    Info (332119):     0.601               0.000 clk_50m 
+    Info (332119):     3.524               0.000 clk_sdram 
+Info (332146): Worst-case recovery slack is 2.165
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     2.165               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):    11.748               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    48.166               0.000 altera_reserved_tck 
+Info (332146): Worst-case removal slack is 1.047
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     1.047               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     1.384               0.000 altera_reserved_tck 
+    Info (332119):     3.808               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+Info (332146): Worst-case minimum pulse width slack is 4.707
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     4.707               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.920               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2] 
+    Info (332119):     5.790               0.000 clk_sdram 
+    Info (332119):     9.613               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     9.682               0.000 clk_50m 
+    Info (332119):    49.549               0.000 altera_reserved_tck 
+Info (332114): Report Metastability: Found 32 synchronizer chains.
+    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
+    Info (332114): Number of Synchronizer Chains Found: 32
+    Info (332114): Shortest Synchronizer Chain: 2 Registers
+    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
+    Info (332114): Worst Case Available Settling Time: 14.828 ns
+Info: Analyzing Slow 1200mV 0C Model
+Info (334003): Started post-fitting delay annotation
+Info (334004): Delay annotation completed successfully
+Warning (332060): Node: de2os_top:u_top|vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_text_terminal:u_vga|v_count[0] is being clocked by de2os_top:u_top|vga_text_terminal:u_vga|clk_25m
+Warning (332060): Node: de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_pixel_ctrl:u_vga_px|video_on is being clocked by de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m
+Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
+Info (332146): Worst-case setup slack is 1.821
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     1.821               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     2.497               0.000 clk_sdram 
+    Info (332119):     4.493               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    19.042               0.000 clk_50m 
+    Info (332119):    47.032               0.000 altera_reserved_tck 
+Info (332146): Worst-case hold slack is 0.341
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     0.341               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     0.353               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.354               0.000 altera_reserved_tck 
+    Info (332119):     0.549               0.000 clk_50m 
+    Info (332119):     3.223               0.000 clk_sdram 
+Info (332146): Worst-case recovery slack is 3.022
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     3.022               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):    12.637               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    48.429               0.000 altera_reserved_tck 
+Info (332146): Worst-case removal slack is 0.956
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     0.956               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     1.268               0.000 altera_reserved_tck 
+    Info (332119):     3.387               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+Info (332146): Worst-case minimum pulse width slack is 4.708
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     4.708               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.924               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2] 
+    Info (332119):     5.790               0.000 clk_sdram 
+    Info (332119):     9.632               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     9.688               0.000 clk_50m 
+    Info (332119):    49.479               0.000 altera_reserved_tck 
+Info (332114): Report Metastability: Found 32 synchronizer chains.
+    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
+    Info (332114): Number of Synchronizer Chains Found: 32
+    Info (332114): Shortest Synchronizer Chain: 2 Registers
+    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
+    Info (332114): Worst Case Available Settling Time: 15.293 ns
+Info: Analyzing Fast 1200mV 0C Model
+Warning (332060): Node: de2os_top:u_top|vga_text_terminal:u_vga|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_text_terminal:u_vga|v_count[0] is being clocked by de2os_top:u_top|vga_text_terminal:u_vga|clk_25m
+Warning (332060): Node: de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m was determined to be a clock but was found without an associated clock assignment.
+    Info (13166): Register de2os_top:u_top|vga_pixel_ctrl:u_vga_px|video_on is being clocked by de2os_top:u_top|vga_pixel_ctrl:u_vga_px|clk_25m
+Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
+Info (332146): Worst-case setup slack is 2.373
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     2.373               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.667               0.000 clk_sdram 
+    Info (332119):     6.860               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    19.505               0.000 clk_50m 
+    Info (332119):    48.635               0.000 altera_reserved_tck 
+Info (332146): Worst-case hold slack is 0.134
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     0.134               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     0.180               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     0.181               0.000 altera_reserved_tck 
+    Info (332119):     0.262               0.000 clk_50m 
+    Info (332119):     2.036               0.000 clk_sdram 
+Info (332146): Worst-case recovery slack is 5.792
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     5.792               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):    15.575               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    49.421               0.000 altera_reserved_tck 
+Info (332146): Worst-case removal slack is 0.496
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     0.496               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):     0.653               0.000 altera_reserved_tck 
+    Info (332119):     1.957               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+Info (332146): Worst-case minimum pulse width slack is 4.779
+    Info (332119):     Slack       End Point TNS Clock 
+    Info (332119): ========= =================== =====================
+    Info (332119):     4.779               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[1] 
+    Info (332119):     4.946               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[2] 
+    Info (332119):     6.000               0.000 clk_sdram 
+    Info (332119):     9.267               0.000 clk_50m 
+    Info (332119):     9.750               0.000 u_top|u_clk_rst|u_pll|u_pll|auto_generated|pll1|clk[0] 
+    Info (332119):    49.303               0.000 altera_reserved_tck 
+Info (332114): Report Metastability: Found 32 synchronizer chains.
+    Info (332114): The design MTBF is not calculated because there are no specified synchronizers in the design.
+    Info (332114): Number of Synchronizer Chains Found: 32
+    Info (332114): Shortest Synchronizer Chain: 2 Registers
+    Info (332114): Fraction of Chains for which MTBFs Could Not be Calculated: 1.000
+    Info (332114): Worst Case Available Settling Time: 17.358 ns
+Info (332102): Design is not fully constrained for setup requirements
+Info (332102): Design is not fully constrained for hold requirements
+Info: Quartus Prime Timing Analyzer was successful. 0 errors, 21 warnings
+    Info: Peak virtual memory: 5062 megabytes
+    Info: Processing ended: Mon May 25 21:11:14 2026
+    Info: Elapsed time: 00:00:07
+    Info: Total CPU time (on all processors): 00:00:09
+Info (293000): Quartus Prime Full Compilation was successful. 0 errors, 138 warnings
+Info (23030): Evaluation of Tcl script e:/software/intelfpga_lite/23.1std/quartus/common/tcl/internal/qsh_flow.tcl was successful
+Info: Quartus Prime Shell was successful. 0 errors, 138 warnings
+    Info: Peak virtual memory: 4630 megabytes
+    Info: Processing ended: Mon May 25 21:11:15 2026
+    Info: Elapsed time: 00:02:35
+    Info: Total CPU time (on all processors): 00:00:02

@@ -1,221 +1,376 @@
--- pong_engine.vhd — Hardware PONG game engine with VGA pixel output
+-- pong_engine.vhd — Hardware PONG game engine with VGA output
 --
--- 640×480 playfield, 8×8 ball, 8×40 paddles, 60fps physics.
--- CPU writes paddle positions (from PS/2), reads scores.
--- VGA pixel output is fully hardware: no frame buffer needed.
+-- 640x480 playfield, 8x8 ball, 8x40 paddles.
+-- Self-contained VGA timing generator (25MHz pixel clock from 50MHz divider).
+-- Wishbone slave for CPU control (paddle positions, scores).
+--
+-- Slave registers (word-aligned, 4-byte stride):
+--   0x00 [W] paddle_l: bits[8:0] = top Y position (0..439)
+--   0x04 [W] paddle_r: bits[8:0] = top Y position
+--   0x08 [W] control: bit0=reset/serve, bit1=pause
+--   0x0C [R] scores: [15:8]=left, [7:0]=right (0..9 each)
+--
+-- VGA outputs directly drive display (no framebuffer needed).
+-- A top-level MUX selects between pong VGA and text terminal VGA.
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 entity pong_engine is
     port (
-        clk_i        : in  std_logic;
-        rst_n_i      : in  std_logic;
+        clk_50m_i   : in  std_logic;
+        rst_n_i     : in  std_logic;
 
-        -- VGA timing inputs (for pixel rendering)
-        h_count_i    : in  integer range 0 to 799;
-        v_count_i    : in  integer range 0 to 524;
-        video_on_i   : in  std_logic;
+        -- Wishbone slave (CPU control)
+        wb_adr_i    : in  std_logic_vector(4 downto 0);
+        wb_dat_i    : in  std_logic_vector(31 downto 0);
+        wb_dat_o    : out std_logic_vector(31 downto 0);
+        wb_we_i     : in  std_logic;
+        wb_stb_i    : in  std_logic;
+        wb_ack_o    : out std_logic;
 
-        -- Paddle control (from CPU/PS2)
-        paddle_l_i   : in  integer range 0 to 439;  -- left paddle top Y (0-439, 40px tall)
-        paddle_r_i   : in  integer range 0 to 439;  -- right paddle top Y
-
-        -- Game control
-        serve_i      : in  std_logic;   -- restart ball from center
-        pause_i      : in  std_logic;
-
-        -- Score output
-        score_l_o    : out integer range 0 to 9;
-        score_r_o    : out integer range 0 to 9;
-
-        -- VGA pixel output
-        pixel_r_o    : out std_logic_vector(7 downto 0);
-        pixel_g_o    : out std_logic_vector(7 downto 0);
-        pixel_b_o    : out std_logic_vector(7 downto 0)
+        -- VGA outputs (direct pixel generation)
+        vga_r_o     : out std_logic_vector(7 downto 0);
+        vga_g_o     : out std_logic_vector(7 downto 0);
+        vga_b_o     : out std_logic_vector(7 downto 0);
+        vga_hs_o    : out std_logic;
+        vga_vs_o    : out std_logic;
+        vga_blank_o : out std_logic;
+        vga_sync_o  : out std_logic;
+        vga_clk_o   : out std_logic;
+        vga_en_o    : out std_logic   -- '1' = pong active, top-level MUX uses this
     );
-end pong_engine;
+end entity pong_engine;
 
 architecture rtl of pong_engine is
 
-    -- Playfield constants
-    constant FIELD_W   : integer := 640;
-    constant FIELD_H   : integer := 480;
+    -- VGA 640x480 @ 60Hz timing
+    constant H_TOTAL   : integer := 800;
+    constant H_SYNC    : integer := 96;
+    constant H_BP      : integer := 48;
+    constant H_ACTIVE  : integer := 640;
+    constant V_TOTAL   : integer := 525;
+    constant V_SYNC    : integer := 2;
+    constant V_BP      : integer := 33;
+    constant V_ACTIVE  : integer := 480;
+
+    -- Game objects
     constant PADDLE_W  : integer := 8;
     constant PADDLE_H  : integer := 40;
     constant BALL_SIZE : integer := 8;
 
+    -- VGA counters
+    signal h_count  : integer range 0 to H_TOTAL - 1 := 0;
+    signal v_count  : integer range 0 to V_TOTAL - 1 := 0;
+    signal pixel_x  : integer range 0 to H_ACTIVE - 1 := 0;
+    signal pixel_y  : integer range 0 to V_ACTIVE - 1 := 0;
+    signal video_on : std_logic;
+
+    -- 25MHz pixel clock divider
+    signal clk_25m  : std_logic := '0';
+    signal clk_25m_r : std_logic := '0';
+
+    -- Paddle positions (CPU writes)
+    signal paddle_l  : integer range 0 to V_ACTIVE - PADDLE_H := 220;
+    signal paddle_r  : integer range 0 to V_ACTIVE - PADDLE_H := 220;
+
     -- Ball state
-    signal ball_x     : integer range -16 to FIELD_W + 16 := FIELD_W / 2;
-    signal ball_y     : integer range -16 to FIELD_H + 16 := FIELD_H / 2;
-    signal ball_vx    : integer range -4 to 4 := 2;
-    signal ball_vy    : integer range -4 to 4 := 1;
+    signal ball_x    : integer range 0 to H_ACTIVE - 1 := H_ACTIVE / 2;
+    signal ball_y    : integer range 0 to V_ACTIVE - BALL_SIZE := V_ACTIVE / 2 - 4;
+    signal ball_vx   : integer range -3 to 3 := 2;
+    signal ball_vy   : integer range -3 to 3 := 1;
 
     -- Scores
-    signal score_l    : integer range 0 to 9 := 0;
-    signal score_r    : integer range 0 to 9 := 0;
+    signal score_l   : integer range 0 to 9 := 0;
+    signal score_r   : integer range 0 to 9 := 0;
 
-    -- Frame counter (ball moves once per vsync)
-    signal vs_prev    : std_logic := '0';
+    -- Control
+    signal paused    : std_logic := '0';
+    signal do_serve  : std_logic := '0';
 
-    -- Pixel generation signals
-    signal pixel_x    : integer range 0 to 639;
-    signal pixel_y    : integer range 0 to 479;
+    -- Frame sync: detect end of frame for physics update
+    signal vsync_d  : integer range 0 to V_TOTAL - 1 := 0;
 
-    -- Dash pattern for center line
-    signal dash_on    : std_logic;
+    -- Enable
+    signal enabled  : std_logic := '0';
 
 begin
 
-    pixel_x <= h_count_i - 144;  -- after sync + back porch
-    pixel_y <= v_count_i - 34;
-
-    -- ═══════════════════════════════════════════════════════════
-    -- Game physics (runs once per frame on vsync falling edge)
-    -- ═══════════════════════════════════════════════════════════
-    process(clk_i)
-        variable new_ball_y : integer;
+    -- ================================================================
+    -- 25MHz pixel clock
+    -- ================================================================
+    process(clk_50m_i)
     begin
-        if rising_edge(clk_i) then
+        if rising_edge(clk_50m_i) then
+            clk_25m <= not clk_25m;
+        end if;
+    end process;
+    vga_clk_o <= clk_25m;
+
+    -- Double-flop for metastability
+    process(clk_50m_i)
+    begin
+        if rising_edge(clk_50m_i) then
+            clk_25m_r <= clk_25m;
+        end if;
+    end process;
+
+    -- ================================================================
+    -- VGA Timing Generator (25MHz domain)
+    -- ================================================================
+    process(clk_25m)
+    begin
+        if rising_edge(clk_25m) then
+            -- Horizontal
+            if h_count = H_TOTAL - 1 then
+                h_count <= 0;
+            else
+                h_count <= h_count + 1;
+            end if;
+
+            -- Vertical
+            if h_count = H_TOTAL - 1 then
+                if v_count = V_TOTAL - 1 then
+                    v_count <= 0;
+                else
+                    v_count <= v_count + 1;
+                end if;
+            end if;
+
+            -- Sync signals
+            if h_count < H_SYNC then
+                vga_hs_o <= '0';
+            else
+                vga_hs_o <= '1';
+            end if;
+
+            if v_count < V_SYNC then
+                vga_vs_o <= '0';
+            else
+                vga_vs_o <= '1';
+            end if;
+
+            if (h_count >= H_SYNC + H_BP) and
+               (h_count < H_SYNC + H_BP + H_ACTIVE) and
+               (v_count >= V_SYNC + V_BP) and
+               (v_count < V_SYNC + V_BP + V_ACTIVE) then
+                vga_blank_o <= '0';
+                video_on    <= '1';
+            else
+                vga_blank_o <= '1';
+                video_on    <= '0';
+            end if;
+
+            if (h_count < H_SYNC) or (v_count < V_SYNC) then
+                vga_sync_o <= '1';
+            else
+                vga_sync_o <= '0';
+            end if;
+
+            -- Pixel coordinates (within active region)
+            if h_count >= H_SYNC + H_BP then
+                pixel_x <= h_count - (H_SYNC + H_BP);
+            else
+                pixel_x <= 0;
+            end if;
+            if v_count >= V_SYNC + V_BP then
+                pixel_y <= v_count - (V_SYNC + V_BP);
+            else
+                pixel_y <= 0;
+            end if;
+        end if;
+    end process;
+
+    -- ================================================================
+    -- Wishbone Slave (50MHz domain)
+    -- ================================================================
+    process(clk_50m_i)
+        variable addr : integer range 0 to 7;
+    begin
+        if rising_edge(clk_50m_i) then
             if rst_n_i = '0' then
-                ball_x  <= FIELD_W / 2;
-                ball_y  <= FIELD_H / 2;
+                paddle_l <= 220;
+                paddle_r <= 220;
+                paused <= '0';
+                enabled <= '0';
+                ball_x <= H_ACTIVE / 2;
+                ball_y <= V_ACTIVE / 2 - 4;
                 ball_vx <= 2;
                 ball_vy <= 1;
                 score_l <= 0;
                 score_r <= 0;
+                do_serve <= '0';
             else
-                vs_prev <= v_count_i;
+                wb_ack_o <= '0';
+                wb_dat_o <= (others => '0');
 
-                -- Serve
-                if serve_i = '1' then
-                    ball_x     <= FIELD_W / 2;
-                    ball_y     <= FIELD_H / 2;
-                    ball_vx    <= 2;
-                    ball_vy    <= 1;
-                end if;
+                if wb_stb_i = '1' then
+                    wb_ack_o <= '1';
+                    addr := to_integer(unsigned(wb_adr_i(4 downto 2)));
 
-                -- Physics update on vsync falling edge (end of frame)
-                if vs_prev > 512 and v_count_i < 10 and pause_i = '0' then
-                    if ball_x < -BALL_SIZE then
-                        -- Left scores
-                        score_r <= score_r + 1;
-                        ball_x  <= FIELD_W / 2;
-                        ball_y  <= FIELD_H / 2;
-                        ball_vx <=  2;
-                        ball_vy <=  1;
-                    elsif ball_x > FIELD_W + BALL_SIZE then
-                        -- Right scores
-                        score_l <= score_l + 1;
-                        ball_x  <= FIELD_W / 2;
-                        ball_y  <= FIELD_H / 2;
-                        ball_vx <= -2;
-                        ball_vy <=  1;
+                    if wb_we_i = '1' then
+                        case addr is
+                            when 0 =>  -- paddle_l
+                                if to_integer(unsigned(wb_dat_i(9 downto 0))) < V_ACTIVE - PADDLE_H then
+                                    paddle_l <= to_integer(unsigned(wb_dat_i(9 downto 0)));
+                                end if;
+                            when 1 =>  -- paddle_r
+                                if to_integer(unsigned(wb_dat_i(9 downto 0))) < V_ACTIVE - PADDLE_H then
+                                    paddle_r <= to_integer(unsigned(wb_dat_i(9 downto 0)));
+                                end if;
+                            when 2 =>  -- control
+                                if wb_dat_i(0) = '1' then  -- serve/reset
+                                    do_serve <= '1';
+                                end if;
+                                paused <= wb_dat_i(1);
+                                enabled <= wb_dat_i(2);
+                            when others => null;
+                        end case;
                     else
-                        -- Move ball
-                        new_ball_y := ball_y + ball_vy;
-
-                        -- Top/bottom wall bounce
-                        if new_ball_y < 0 then
-                            new_ball_y := 0;
-                            ball_vy    <= -ball_vy;
-                        elsif new_ball_y + BALL_SIZE > FIELD_H - 1 then
-                            new_ball_y := FIELD_H - BALL_SIZE;
-                            ball_vy    <= -ball_vy;
-                        end if;
-                        ball_y <= new_ball_y;
-
-                        -- Left paddle collision
-                        if ball_vx < 0 and ball_x <= PADDLE_W + 4 and ball_x >= PADDLE_W - 4 then
-                            if (ball_y + BALL_SIZE > paddle_l_i) and
-                               (ball_y < paddle_l_i + PADDLE_H) then
-                                ball_vx <= -ball_vx;
-                                ball_x  <= PADDLE_W + 1;
-                            end if;
-                        end if;
-
-                        -- Right paddle collision
-                        if ball_vx > 0 and
-                           ball_x + BALL_SIZE >= FIELD_W - PADDLE_W - 4 and
-                           ball_x + BALL_SIZE <= FIELD_W - PADDLE_W + 4 then
-                            if (ball_y + BALL_SIZE > paddle_r_i) and
-                               (ball_y < paddle_r_i + PADDLE_H) then
-                                ball_vx <= -ball_vx;
-                                ball_x  <= FIELD_W - PADDLE_W - BALL_SIZE - 1;
-                            end if;
-                        end if;
-
-                        ball_x <= ball_x + ball_vx;
+                        case addr is
+                            when 3 =>  -- scores
+                                wb_dat_o(15 downto 8) <= std_logic_vector(to_unsigned(score_l, 8));
+                                wb_dat_o(7 downto 0) <= std_logic_vector(to_unsigned(score_r, 8));
+                            when others => null;
+                        end case;
                     end if;
                 end if;
             end if;
         end if;
     end process;
 
-    -- ═══════════════════════════════════════════════════════════
-    -- Score output
-    -- ═══════════════════════════════════════════════════════════
-    score_l_o <= score_l;
-    score_r_o <= score_r;
+    vga_en_o <= enabled;
 
-    -- ═══════════════════════════════════════════════════════════
-    -- Center dash line pattern
-    -- ═══════════════════════════════════════════════════════════
-    dash_on <= '1' when (pixel_y / 16) mod 2 = 0 else '0';
-
-    -- ═══════════════════════════════════════════════════════════
-    -- Pixel rendering (combinatorial)
-    -- ═══════════════════════════════════════════════════════════
-    process(clk_i)
-        variable is_ball   : boolean;
-        variable is_pad_l  : boolean;
-        variable is_pad_r  : boolean;
-        variable is_center : boolean;
-        variable is_top    : boolean;
-        variable is_bottom : boolean;
+    -- ================================================================
+    -- Game Physics (50MHz, once per frame)
+    -- ================================================================
+    process(clk_50m_i)
+        variable new_x : integer range 0 to H_ACTIVE - 1;
+        variable new_y : integer range 0 to V_ACTIVE - BALL_SIZE;
     begin
-        if rising_edge(clk_i) then
-            if video_on_i = '0' then
-                pixel_r_o <= x"00";
-                pixel_g_o <= x"00";
-                pixel_b_o <= x"00";
+        if rising_edge(clk_50m_i) then
+            vsync_d <= v_count;
+            do_serve <= '0';
+
+            if rst_n_i = '0' then
+                ball_x <= H_ACTIVE / 2;
+                ball_y <= V_ACTIVE / 2 - 4;
+                ball_vx <= 2;
+                ball_vy <= 1;
+                score_l <= 0;
+                score_r <= 0;
+            elsif enabled = '0' then
+                null;
+            elsif do_serve = '1' then
+                ball_x <= H_ACTIVE / 2;
+                ball_y <= V_ACTIVE / 2 - 4;
+                ball_vx <= 2;
+                ball_vy <= 1;
             else
-                -- Hit test all objects
-                is_ball := (pixel_x >= ball_x) and
-                           (pixel_x < ball_x + BALL_SIZE) and
-                           (pixel_y >= ball_y) and
-                           (pixel_y < ball_y + BALL_SIZE);
+                -- Detect end of frame (vsync falling edge)
+                if vsync_d >= (V_TOTAL - 10) and v_count < 10 and paused = '0' then
+                    -- Ball out of bounds = score
+                    if ball_x + BALL_SIZE < PADDLE_W then
+                        -- Left side: right player scores
+                        score_r <= score_r + 1;
+                        ball_x <= H_ACTIVE / 2;
+                        ball_y <= V_ACTIVE / 2 - 4;
+                        ball_vx <= 2;
+                        ball_vy <= 1;
+                    elsif ball_x >= H_ACTIVE - PADDLE_W then
+                        -- Right side: left player scores
+                        score_l <= score_l + 1;
+                        ball_x <= H_ACTIVE / 2;
+                        ball_y <= V_ACTIVE / 2 - 4;
+                        ball_vx <= -2;
+                        ball_vy <= 1;
+                    else
+                        -- Move ball Y with wall bounce
+                        new_y := ball_y + ball_vy;
+                        if new_y < 0 then
+                            new_y := 0;
+                            ball_vy <= -ball_vy;
+                        elsif new_y + BALL_SIZE > V_ACTIVE - 1 then
+                            new_y := V_ACTIVE - BALL_SIZE;
+                            ball_vy <= -ball_vy;
+                        end if;
+                        ball_y <= new_y;
 
-                is_pad_l := (pixel_x < PADDLE_W) and
-                            (pixel_y >= paddle_l_i) and
-                            (pixel_y < paddle_l_i + PADDLE_H);
+                        -- Move ball X
+                        new_x := ball_x + ball_vx;
 
-                is_pad_r := (pixel_x >= FIELD_W - PADDLE_W) and
-                            (pixel_x < FIELD_W) and
-                            (pixel_y >= paddle_r_i) and
-                            (pixel_y < paddle_r_i + PADDLE_H);
+                        -- Left paddle collision
+                        if ball_vx < 0 and new_x <= PADDLE_W and ball_x > PADDLE_W then
+                            if (ball_y + BALL_SIZE > paddle_l) and
+                               (ball_y < paddle_l + PADDLE_H) then
+                                ball_vx <= -ball_vx;
+                                new_x := PADDLE_W + 1;
+                            end if;
+                        end if;
 
-                is_center := (pixel_x >= 318) and (pixel_x <= 321) and dash_on = '1';
-                is_top    := (pixel_y < 2);
-                is_bottom := (pixel_y >= FIELD_H - 2);
+                        -- Right paddle collision
+                        if ball_vx > 0 and new_x + BALL_SIZE >= H_ACTIVE - PADDLE_W and
+                           ball_x + BALL_SIZE < H_ACTIVE - PADDLE_W then
+                            if (ball_y + BALL_SIZE > paddle_r) and
+                               (ball_y < paddle_r + PADDLE_H) then
+                                ball_vx <= -ball_vx;
+                                new_x := H_ACTIVE - PADDLE_W - BALL_SIZE - 1;
+                            end if;
+                        end if;
 
-                if is_ball then
-                    pixel_r_o <= x"FF"; pixel_g_o <= x"FF"; pixel_b_o <= x"00";  -- yellow
-                elsif is_pad_l then
-                    pixel_r_o <= x"00"; pixel_g_o <= x"FF"; pixel_b_o <= x"FF";  -- cyan
-                elsif is_pad_r then
-                    pixel_r_o <= x"FF"; pixel_g_o <= x"00"; pixel_b_o <= x"FF";  -- magenta
-                elsif is_center then
-                    pixel_r_o <= x"80"; pixel_g_o <= x"80"; pixel_b_o <= x"80";  -- gray dashed
-                elsif is_top or is_bottom then
-                    pixel_r_o <= x"FF"; pixel_g_o <= x"FF"; pixel_b_o <= x"FF";  -- white walls
-                else
-                    pixel_r_o <= x"00"; pixel_g_o <= x"10"; pixel_b_o <= x"20";  -- dark blue bg
+                        ball_x <= new_x;
+                    end if;
                 end if;
             end if;
         end if;
     end process;
 
-end rtl;
+    -- ================================================================
+    -- Pixel Rendering (combinatorial in 25MHz domain)
+    -- ================================================================
+    process(clk_25m)
+        variable is_ball   : boolean;
+        variable is_pad_l  : boolean;
+        variable is_pad_r  : boolean;
+        variable is_dash   : boolean;
+        variable is_wall   : boolean;
+    begin
+        if rising_edge(clk_25m) then
+            if video_on = '0' then
+                vga_r_o <= x"00";
+                vga_g_o <= x"10";
+                vga_b_o <= x"20";
+            else
+                is_ball  := (pixel_x >= ball_x) and (pixel_x < ball_x + BALL_SIZE) and
+                            (pixel_y >= ball_y) and (pixel_y < ball_y + BALL_SIZE);
+
+                is_pad_l := (pixel_x < PADDLE_W) and
+                             (pixel_y >= paddle_l) and (pixel_y < paddle_l + PADDLE_H);
+
+                is_pad_r := (pixel_x >= H_ACTIVE - PADDLE_W) and (pixel_x < H_ACTIVE) and
+                             (pixel_y >= paddle_r) and (pixel_y < paddle_r + PADDLE_H);
+
+                is_dash  := (pixel_x >= 318) and (pixel_x <= 321) and
+                             ((pixel_y / 16) mod 2 = 0);
+
+                is_wall  := (pixel_y < 2) or (pixel_y >= V_ACTIVE - 2);
+
+                if is_ball then
+                    vga_r_o <= x"FF"; vga_g_o <= x"FF"; vga_b_o <= x"00";  -- yellow
+                elsif is_pad_l then
+                    vga_r_o <= x"00"; vga_g_o <= x"FF"; vga_b_o <= x"FF";  -- cyan
+                elsif is_pad_r then
+                    vga_r_o <= x"FF"; vga_g_o <= x"00"; vga_b_o <= x"FF";  -- magenta
+                elsif is_dash then
+                    vga_r_o <= x"60"; vga_g_o <= x"60"; vga_b_o <= x"60";  -- gray dash
+                elsif is_wall then
+                    vga_r_o <= x"FF"; vga_g_o <= x"FF"; vga_b_o <= x"FF";  -- white
+                else
+                    vga_r_o <= x"00"; vga_g_o <= x"10"; vga_b_o <= x"20";  -- dark bg
+                end if;
+            end if;
+        end if;
+    end process;
+
+end architecture rtl;

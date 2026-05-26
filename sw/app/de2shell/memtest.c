@@ -213,7 +213,7 @@ static void init(void) {
 
     vga_clear();
     vga_goto(0, 0);
-    vga_puts("MemTest — SDRAM Self-Test\n", VGA_CYAN);
+    vga_puts("MemTest - SDRAM Self-Test\n", VGA_CYAN);
     vga_puts("========================\n", VGA_WHITE);
     vga_puts("Test cases:\n", VGA_GRAY);
     for (int i = 0; i < 5; i++) {

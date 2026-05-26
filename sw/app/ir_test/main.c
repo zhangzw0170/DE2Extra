@@ -1,6 +1,6 @@
 // ir_test/main.c — Software NEC IR decode via hardware timer captures
 //
-// Timer (0xF0004000):
+// Timer (0xF0009000):
 //   0x00 COUNTER (R) — free-running 32-bit counter
 //   0x04 CAPTURE (R) — counter value at last IR edge
 //   0x08 CONTROL (R/W)— [0]=cap_en, [1]=irq_en, [2]=cap_flag
@@ -12,8 +12,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define TIMER_BASE  ((volatile uint32_t *)0xF0004000)
-#define INTC_BASE   ((volatile uint32_t *)0xF0006000)
+#define TIMER_BASE  ((volatile uint32_t *)0xF0009000u)
+#define INTC_BASE   ((volatile uint32_t *)0xF000A000u)
 #define GPIO_BASE   ((volatile uint32_t *)0xFFFC0000)
 
 #define TIMER_COUNTER  0

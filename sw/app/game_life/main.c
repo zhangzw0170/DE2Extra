@@ -97,7 +97,7 @@ static void delay_ms(int ms) {
 #else
 static void delay_ms(int ms) {
     volatile int i;
-    for (i = 0; i < ms * 5000; i++) __asm__("nop");
+    for (i = 0; i < ms * 5000; i++) __asm__ volatile("nop");
 }
 #endif
 
@@ -151,15 +151,15 @@ static const char glider_pat[] =
 
 /* Gosper glider gun (36x9) */
 static const char gun_pat[] =
-    "................................O..........."
-    "..............................O.O..........."
-    "....................OO......OO............OO"
-    "...................O...O....OO............OO"
-    "........OO........O.....O...OO.............."
-    "........OO........O...O.OO....O.O..........."
-    "..................O.....O.......O..........."
-    "...................O...O...................."
-    "....................OO......................";
+    "........................O..........."
+    "......................O.O..........."
+    "............OO......OO............OO"
+    "...........O...O....OO............OO"
+    "OO........O.....O...OO.............."
+    "OO........O...O.OO....O.O..........."
+    "..........O.....O.......O..........."
+    "...........O...O...................."
+    "............OO......................";
 
 static void grid_glider(void) {
     grid_clear();
@@ -285,10 +285,10 @@ int main(void) {
             case ' ': step_generation(); break;
             case 'p': case 'P': paused = !paused; break;
             case 'g': case 'G':
-            case 'u': case 'U':
                 paused = 1;
                 grid_glider();
                 break;
+            case 'u': case 'U':
             case 'n': case 'N':
                 paused = 1;
                 grid_gun();

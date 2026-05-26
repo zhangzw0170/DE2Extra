@@ -20,8 +20,8 @@ typedef volatile struct {
     uint32_t status;
 } ir_regs_t;
 
-#define EXPDEMO ((expdemo_regs_t*)0xF000D000u)
-#define IR_DBG  ((ir_regs_t*)0xF0009000u)
+#define EXPDEMO ((expdemo_regs_t*)0xF0010000u)
+#define IR_DBG  ((ir_regs_t*)0xF000C000u)
 #endif
 
 #define IR_BTN_A       0x0Fu
@@ -592,7 +592,7 @@ static void draw_menu_page(void) {
         if (entry) {
             vga_puts("  ", VGA_WHITE);
             vga_puts(entry->name, VGA_GREEN);
-            vga_puts(" — ", VGA_WHITE);
+            vga_puts(" - ", VGA_WHITE);
             vga_puts(entry->detail, VGA_GREEN);
         } else if ((typed_value == 8) || (typed_value == 10)) {
             vga_puts("  redirected to shell command ", VGA_WHITE);
@@ -639,7 +639,7 @@ static void draw_exp12_page(const exp_entry_t *entry, const expdemo_monitor_t *m
     build_exp12_line1(fsm, ir, detail, line1);
     push_exp12_history(line0, line1);
 
-    vga_puts("expdemo — ", VGA_CYAN);
+    vga_puts("expdemo - ", VGA_CYAN);
     vga_puts(entry->name, VGA_CYAN);
     vga_puts("\n", VGA_WHITE);
     vga_puts("====================\n", VGA_WHITE);
@@ -757,7 +757,7 @@ static void draw_exp13_page(const exp_entry_t *entry, const expdemo_monitor_t *m
 
     build_exp13_lines(mon, line0, line1, &page, &scroll);
 
-    vga_puts("expdemo — ", VGA_CYAN);
+    vga_puts("expdemo - ", VGA_CYAN);
     vga_puts(entry->name, VGA_CYAN);
     vga_puts("\n", VGA_WHITE);
     vga_puts("====================\n", VGA_WHITE);
@@ -825,7 +825,7 @@ static void draw_exp11_page(const exp_entry_t *entry, const expdemo_monitor_t *m
     uint8_t fword = (uint8_t)(mon->gpio_in & 0xffu);
     uint64_t freq_mhz = exp11_freq_millihz(sw_mode, fword);
 
-    vga_puts("expdemo — ", VGA_CYAN);
+    vga_puts("expdemo - ", VGA_CYAN);
     vga_puts(entry->name, VGA_CYAN);
     vga_puts("\n", VGA_WHITE);
     vga_puts("====================\n", VGA_WHITE);
@@ -926,7 +926,7 @@ static void draw_exp9_rx_box(void) {
 static void draw_exp9_page(const exp_entry_t *entry, const expdemo_monitor_t *mon) {
     uint8_t sw_byte = (uint8_t)(mon->gpio_in & 0xffu);
 
-    vga_puts("expdemo — ", VGA_CYAN);
+    vga_puts("expdemo - ", VGA_CYAN);
     vga_puts(entry->name, VGA_CYAN);
     vga_puts("\n", VGA_WHITE);
     vga_puts("====================\n", VGA_WHITE);
@@ -1008,7 +1008,7 @@ static void draw_active_page(void) {
         return;
     }
 
-    vga_puts("expdemo — ", VGA_CYAN);
+    vga_puts("expdemo - ", VGA_CYAN);
     vga_puts(entry->name, VGA_CYAN);
     vga_puts("\n", VGA_WHITE);
     vga_puts("====================\n", VGA_WHITE);

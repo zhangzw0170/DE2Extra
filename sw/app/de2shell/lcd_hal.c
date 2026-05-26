@@ -9,7 +9,7 @@
       uint32_t cr;
   } lcd_regs_t;
 
-  #define LCD ((lcd_regs_t*)0xF0008000u)
+  #define LCD ((lcd_regs_t*)0xF000B000u)
 #endif
 
 static char lcd_shadow[2][17] = {

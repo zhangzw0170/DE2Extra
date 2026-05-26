@@ -200,6 +200,11 @@ static void uart_put_u32(uint32_t value) {
     neorv32_uart0_puts(buf);
 }
 
+static void uart_put_line(const char *s) {
+    neorv32_uart0_puts(s);
+    neorv32_uart0_putc('\n');
+}
+
 static void vga_dump_snapshot_locked(void) {
     int row;
     int col;
@@ -408,6 +413,7 @@ static BaseType_t cli_vgadump(char *buf, size_t len, const char *cmd) {
     (void)cmd;
     (void)len;
     g_vga_dump_req = 1u;
+    uart_put_line("vgadump: snapshot queued to UART");
     strcpy_local(buf, "vgadump:  snapshot queued to UART\r\n");
     return pdFALSE;
 }
@@ -440,11 +446,15 @@ static BaseType_t cli_vgamon(char *buf, size_t len, const char *cmd) {
     g_vga_dump_next_tick = xTaskGetTickCount();
 
     if (g_vga_dump_period_ticks == 0) {
+        uart_put_line("vgamon: disabled");
         strcpy_local(buf, "vgamon:   disabled\r\n");
     } else {
         p += strcpy_local(p, "vgamon:   every ");
         p += utoa_local(p, (uint32_t)(g_vga_dump_period_ticks / configTICK_RATE_HZ));
         p += strcpy_local(p, " s to UART\r\n");
+        neorv32_uart0_puts("vgamon: every ");
+        uart_put_u32((uint32_t)(g_vga_dump_period_ticks / configTICK_RATE_HZ));
+        uart_put_line(" s to UART");
     }
     return pdFALSE;
 }
@@ -858,9 +868,11 @@ int main(void) {
     neorv32_uart0_puts(cOutputBuffer);
     append_sw_build(cOutputBuffer);
     neorv32_uart0_puts(cOutputBuffer);
+    neorv32_uart0_puts("UART debug mode: VGA mirroring disabled; use vgadump/vgamon for screen capture.\n");
 
     gpio_write_out(0u);
     board_status_init();
+    vga_set_serial_mirror(0);
     vga_init();
     reset_display_mode();
     write_resume_marker();

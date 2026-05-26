@@ -58,8 +58,8 @@ static void update(void) {
     /* Software mode: just show paddle position */
     draw_field();
 #else
-    /* NEORV32: write paddle_y to hardware register 0xF000E000 */
-    volatile uint32_t *pong_paddle = (volatile uint32_t*)0xF000E000;
+    /* NEORV32: write paddle_y to hardware register 0xF0011000 */
+    volatile uint32_t *pong_paddle = (volatile uint32_t*)0xF0011000;
     *pong_paddle = paddle_y;
 #endif
 }
@@ -79,7 +79,7 @@ static void input(char c) {
         case '\r': case '\n':  /* ENTER — serve */
             /* On NEORV32, write serve=1 to control register */
 #ifndef LOCAL_BUILD
-            volatile uint32_t *pong_ctrl = (volatile uint32_t*)0xF000E00C;
+            volatile uint32_t *pong_ctrl = (volatile uint32_t*)0xF001100C;
             *pong_ctrl = 1;
 #endif
             break;

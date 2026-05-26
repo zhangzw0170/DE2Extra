@@ -1,16 +1,19 @@
 -- conway_engine.vhd — Conway's Game of Life hardware engine
 --
--- 80×25 grid, B3/S23 rules, toroidal wrap, double-buffered BRAM.
--- Pipeline: 25 clocks per generation. CPU sets cmd[2:0] to load patterns.
+-- 80x25 grid, B3/S23 rules, toroidal wrap, dual-buffered BRAM.
+-- Wishbone slave for CPU control.
+-- Hardware computes next generation; CPU reads grid for VGA display.
 --
--- Grid encoding: 2 bits per cell packed into 16-bit words.
---   80×25 = 2000 cells × 2 bits = 4000 bits → fits in 1 M9K per buffer.
---   Current frame:   bit 0 of each cell = alive (1) / dead (0)
---   Pattern preview:  bit 1 of each cell = 1 during pattern load (not used for sim)
+-- Slave registers (word-aligned, 4-byte stride):
+--   0x00 [W] cmd: bit0=clear, bit1=randomize, bit2=step, bit3=auto_run
+--   0x04 [W] control/data: bits[15:8]=row_index, bits[7:0]=seed(used by randomize)
+--   0x08 [R] status: bit0=busy, bit1=auto_run, bits[17:2]=generation[15:0]
+--   0x0C [R] population count [15:0]
+--   0x10 [R] grid_row: returns 80-bit row data (read row_index set by last write to 0x04)
+--              bits[79:0] = column alive/dead (1=alive), left-to-right
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 entity conway_engine is
@@ -18,233 +21,266 @@ entity conway_engine is
         clk_i       : in  std_logic;
         rst_n_i     : in  std_logic;
 
-        -- CPU command: 000=idle, 001=reset, 010=glider, 011=gun, 100=random, 101=step
-        cmd_i       : in  std_logic_vector(2 downto 0);
-        cmd_valid_i : in  std_logic;  -- single-cycle pulse
-
-        -- Status output
-        gen_o       : out std_logic_vector(31 downto 0);  -- generation counter
-        busy_o      : out std_logic;   -- high while computing
-
-        -- Grid output (for VGA or testbench)
-        grid_row_o  : out std_logic_vector(79 downto 0);  -- one row, bit=1 means alive
-        grid_row_idx_i : in std_logic_vector(4 downto 0);  -- which row (0-24)
-        grid_page_i : in std_logic   -- 0=current frame, 1=next frame (during computation)
+        -- Wishbone slave (CPU registers)
+        wb_adr_i    : in  std_logic_vector(4 downto 0);  -- word address [4:2]
+        wb_dat_i    : in  std_logic_vector(31 downto 0);
+        wb_dat_o    : out std_logic_vector(31 downto 0);
+        wb_we_i     : in  std_logic;
+        wb_stb_i    : in  std_logic;
+        wb_ack_o    : out std_logic
     );
-end conway_engine;
+end entity conway_engine;
 
 architecture rtl of conway_engine is
 
-    constant ROWS : integer := 25;
-    constant COLS : integer := 80;
+    constant COLS      : integer := 80;
+    constant ROWS      : integer := 25;
+    constant GRID_SIZE : integer := COLS * ROWS;  -- 2000
 
-    -- Grid storage: two buffers, each [ROWS][COLS] packed bits
-    type grid_t is array (0 to ROWS - 1) of std_logic_vector(COLS - 1 downto 0);
-    signal grid_a    : grid_t := (others => (others => '0'));
-    signal grid_b    : grid_t := (others => (others => '0'));
+    -- Grid: 1 bit per cell, dual buffer
+    type grid_t is array(0 to GRID_SIZE - 1) of std_logic;
+    signal grid_a : grid_t := (others => '0');
+    signal grid_b : grid_t := (others => '0');
+    attribute ramstyle : string;
+    attribute ramstyle of grid_a : signal is "M9K, no_rw_check";
+    attribute ramstyle of grid_b : signal is "M9K, no_rw_check";
 
-    -- State machine
-    type state_t is (IDLE, COMPUTE, DONE);
-    signal state    : state_t := IDLE;
-    signal cur_row  : integer range 0 to ROWS - 1 := 0;
+    -- Active buffer: '0' = A, '1' = B (flips after each generation)
+    signal buf_sel    : std_logic := '0';
+    signal auto_run   : std_logic := '0';
 
-    -- Neighbor counting pipeline
-    signal row_t     : std_logic_vector(COLS - 1 downto 0);  -- top row
-    signal row_m     : std_logic_vector(COLS - 1 downto 0);  -- middle row
-    signal row_b     : std_logic_vector(COLS - 1 downto 0);  -- bottom row
-    signal row_out   : std_logic_vector(COLS - 1 downto 0);  -- computed next row
+    -- Generation FSM (one cell per clock)
+    type gen_state_t is (S_IDLE, S_COMPUTE, S_FLIP);
+    signal gen_state  : gen_state_t := S_IDLE;
+    signal gen_idx    : integer range 0 to GRID_SIZE - 1 := 0;
+    signal gen_done_p : std_logic := '0';
+    signal generation : unsigned(15 downto 0) := (others => '0');
 
-    signal gen_count : unsigned(31 downto 0) := (others => '0');
-    signal rng       : std_logic_vector(31 downto 0) := x"DEADBEEF";
+    -- Population counter
+    signal pop_count  : unsigned(15 downto 0) := (others => '0');
+    signal pop_idx    : integer range 0 to GRID_SIZE - 1 := 0;
+    signal pop_active : std_logic := '0';
 
-    -- Command tracking
-    signal cmd_r     : std_logic_vector(2 downto 0) := "000";
+    -- Row read register (set by write to 0x04, read at 0x10)
+    signal row_idx    : integer range 0 to ROWS - 1 := 0;
 
-    -- Glider pattern (3×3, moves SE)
-    constant GLIDER : std_logic_vector(2 downto 0) := "010001111";  -- row-major: .O. ..O OOO
-
-    -- Gosper glider gun: simplified to a 4×4 block for brevity (full 36×9 is too large for init)
-    -- We'll generate it procedurally in the state machine.
+    -- LFSR for random
+    signal lfsr : unsigned(15 downto 0) := x"A59B";
 
 begin
 
-    -- ═══════════════════════════════════════════════════════════
-    -- Main state machine
-    -- ═══════════════════════════════════════════════════════════
+    -- ================================================================
+    -- Wishbone Slave
+    -- ================================================================
     process(clk_i)
-        variable nw, n_n, ne, w_w, e_e, sw, s_s, se : std_logic;
-        variable neighbors_v : integer range 0 to 8;
-        variable col : integer range 0 to COLS - 1;
-        variable t_row, b_row : integer range 0 to ROWS - 1;
+        variable addr : integer range 0 to 7;
+        variable row_idx_v : integer range 0 to ROWS - 1;
+        variable rd_idx : integer;
+        variable row_data : std_logic_vector(31 downto 0);
+        variable rand_lfsr : unsigned(15 downto 0);
     begin
         if rising_edge(clk_i) then
             if rst_n_i = '0' then
-                state    <= IDLE;
-                cur_row  <= 0;
-                gen_count <= (others => '0');
-                busy_o   <= '0';
-                -- Clear grids
-                for r in 0 to ROWS - 1 loop
-                    grid_a(r) <= (others => '0');
-                    grid_b(r) <= (others => '0');
-                end loop;
+                auto_run <= '0';
+                generation <= (others => '0');
+                grid_a <= (others => '0');
+                grid_b <= (others => '0');
+                buf_sel <= '0';
+                row_idx <= 0;
             else
-                -- Command processing
-                if cmd_valid_i = '1' then
-                    cmd_r <= cmd_i;
-                    case cmd_i is
-                        when "001" =>  -- reset
-                            for r in 0 to ROWS - 1 loop
-                                grid_a(r) <= (others => '0');
-                            end loop;
-                            gen_count <= (others => '0');
+                wb_ack_o <= '0';
+                wb_dat_o <= (others => '0');
 
-                        when "010" =>  -- glider at center
-                            for r in 0 to ROWS - 1 loop
-                                grid_a(r) <= (others => '0');
-                            end loop;
-                            -- Place at (38, 11) — near center
-                            grid_a(11)(38) <= '1';
-                            grid_a(12)(39) <= '1';
-                            grid_a(13)(37) <= '1';
-                            grid_a(13)(38) <= '1';
-                            grid_a(13)(39) <= '1';
+                if wb_stb_i = '1' then
+                    wb_ack_o <= '1';
+                    addr := to_integer(unsigned(wb_adr_i(4 downto 2)));
 
-                        when "011" =>  -- gun (simplified: block + eater)
-                            for r in 0 to ROWS - 1 loop
-                                grid_a(r) <= (others => '0');
-                            end loop;
-                            -- 2×2 block
-                            grid_a(10)(5) <= '1'; grid_a(10)(6) <= '1';
-                            grid_a(11)(5) <= '1'; grid_a(11)(6) <= '1';
-                            -- 2×2 block at (15,15)
-                            grid_a(15)(15) <= '1'; grid_a(15)(16) <= '1';
-                            grid_a(16)(15) <= '1'; grid_a(16)(16) <= '1';
-
-                        when "100" =>  -- random (~25% density)
-                            for r in 0 to ROWS - 1 loop
-                                for c in 0 to COLS - 1 loop
-                                    rng <= rng(30 downto 0) & (rng(31) xor rng(21) xor rng(1) xor rng(0));
-                                    if (rng(15 downto 14) = "00") then
-                                        grid_a(r)(c) <= '1';
+                    if wb_we_i = '1' then
+                        case addr is
+                            when 0 =>  -- cmd
+                                if wb_dat_i(0) = '1' then  -- clear
+                                    auto_run <= '0';
+                                    grid_a <= (others => '0');
+                                    grid_b <= (others => '0');
+                                    generation <= (others => '0');
+                                    buf_sel <= '0';
+                                end if;
+                                if wb_dat_i(1) = '1' then  -- randomize
+                                    rand_lfsr := unsigned(wb_dat_i(15 downto 0));
+                                    for i in 0 to GRID_SIZE - 1 loop
+                                        rand_lfsr := rand_lfsr(14 downto 0) &
+                                                     (rand_lfsr(15) xor rand_lfsr(14) xor rand_lfsr(12) xor rand_lfsr(3));
+                                        if rand_lfsr(3 downto 0) = "0000" then
+                                            if buf_sel = '0' then grid_a(i) <= '1';
+                                            else grid_b(i) <= '1'; end if;
+                                        else
+                                            if buf_sel = '0' then grid_a(i) <= '0';
+                                            else grid_b(i) <= '0'; end if;
+                                        end if;
+                                    end loop;
+                                    lfsr <= rand_lfsr;
+                                end if;
+                                if wb_dat_i(2) = '1' and gen_state = S_IDLE then  -- step
+                                    gen_state <= S_COMPUTE;
+                                    gen_idx <= 0;
+                                end if;
+                                if wb_dat_i(3) = '1' then  -- auto_run toggle
+                                    auto_run <= not auto_run;
+                                end if;
+                            when 1 =>  -- control: set row_index for row read
+                                row_idx_v := to_integer(unsigned(wb_dat_i(12 downto 8)));
+                                if row_idx_v < ROWS then
+                                    row_idx <= row_idx_v;
+                                end if;
+                            when others => null;
+                        end case;
+                    else
+                        case addr is
+                            when 2 =>  -- status
+                                if gen_state /= S_IDLE then
+                                    wb_dat_o(0) <= '1';
+                                else
+                                    wb_dat_o(0) <= '0';
+                                end if;
+                                wb_dat_o(1) <= auto_run;
+                                wb_dat_o(17 downto 2) <= std_logic_vector(generation);
+                            when 3 =>  -- population
+                                wb_dat_o(15 downto 0) <= std_logic_vector(pop_count);
+                            when 4 =>  -- grid_row
+                                rd_idx := row_idx * COLS;
+                                row_data := (others => '0');
+                                for c in 0 to 31 loop
+                                    if buf_sel = '0' then
+                                        row_data(c) := grid_a(rd_idx);
                                     else
-                                        grid_a(r)(c) <= '0';
+                                        row_data(c) := grid_b(rd_idx);
                                     end if;
+                                    rd_idx := rd_idx + 1;
                                 end loop;
-                            end loop;
-
-                        when "101" =>  -- single step
-                            state   <= COMPUTE;
-                            cur_row <= 0;
-                            busy_o  <= '1';
-
-                        when others => null;
-                    end case;
-                end if;
-
-                -- ═══════════════════════════════════════════════════════
-                -- Compute pipeline: process one row per clock cycle
-                -- ═══════════════════════════════════════════════════════
-                if state = COMPUTE then
-                    -- Read three rows: top, middle, bottom (toroidal wrap)
-                    if cur_row = 0 then
-                        t_row := ROWS - 1;
-                        b_row := cur_row + 1;
-                    elsif cur_row = ROWS - 1 then
-                        t_row := cur_row - 1;
-                        b_row := 0;
-                    else
-                        t_row := cur_row - 1;
-                        b_row := cur_row + 1;
+                                wb_dat_o <= row_data;
+                            when others => null;
+                        end case;
                     end if;
-
-                    row_t <= grid_a(t_row);
-                    row_m <= grid_a(cur_row);
-                    row_b <= grid_a(b_row);
-
-                    -- Neighbor counting + B3/S23 per column
-                    for c in 0 to COLS - 1 loop
-                        -- Wrap columns
-                        if c = 0 then
-                            w_w := grid_a(t_row)(COLS - 1);
-                            n_n := grid_a(cur_row)(COLS - 1);
-                            s_s := grid_a(b_row)(COLS - 1);
-                        else
-                            w_w := grid_a(t_row)(c - 1);
-                            n_n := grid_a(cur_row)(c - 1);
-                            s_s := grid_a(b_row)(c - 1);
-                        end if;
-
-                        if c = COLS - 1 then
-                            e_e := grid_a(t_row)(0);
-                            ne  := grid_a(cur_row)(0);
-                            se  := grid_a(b_row)(0);
-                        else
-                            e_e := grid_a(t_row)(c + 1);
-                            ne  := grid_a(cur_row)(c + 1);
-                            se  := grid_a(b_row)(c + 1);
-                        end if;
-
-                        nw := grid_a(t_row)(c);
-                        sw := grid_a(b_row)(c);
-
-                        -- Count neighbors (0-8)
-                        neighbors_v := 0;
-                        if nw = '1' then neighbors_v := neighbors_v + 1; end if;
-                        if w_w = '1' then neighbors_v := neighbors_v + 1; end if;
-                        if sw = '1' then neighbors_v := neighbors_v + 1; end if;
-                        if n_n = '1' then neighbors_v := neighbors_v + 1; end if;
-                        if s_s = '1' then neighbors_v := neighbors_v + 1; end if;
-                        if ne = '1' then neighbors_v := neighbors_v + 1; end if;
-                        if e_e = '1' then neighbors_v := neighbors_v + 1; end if;
-                        if se = '1' then neighbors_v := neighbors_v + 1; end if;
-
-                        -- B3/S23 rule
-                        if grid_a(cur_row)(c) = '1' then
-                            -- Alive: survives with 2 or 3 neighbors
-                            if neighbors_v = 2 or neighbors_v = 3 then
-                                row_out(c) <= '1';
-                            else
-                                row_out(c) <= '0';
-                            end if;
-                        else
-                            -- Dead: born with exactly 3 neighbors
-                            if neighbors_v = 3 then
-                                row_out(c) <= '1';
-                            else
-                                row_out(c) <= '0';
-                            end if;
-                        end if;
-                    end loop;
-
-                    -- Write result to grid_b
-                    grid_b(cur_row) <= row_out;
-
-                    if cur_row = ROWS - 1 then
-                        -- Swap buffers: grid_b becomes new grid_a
-                        for r in 0 to ROWS - 1 loop
-                            grid_a(r) <= grid_b(r);
-                        end loop;
-                        gen_count <= gen_count + 1;
-                        state     <= DONE;
-                    else
-                        cur_row <= cur_row + 1;
-                    end if;
-                end if;
-
-                if state = DONE then
-                    busy_o <= '0';
-                    state  <= IDLE;
                 end if;
             end if;
         end if;
     end process;
 
-    -- ═══════════════════════════════════════════════════════════
-    -- Grid read port (for VGA / testbench)
-    -- ═══════════════════════════════════════════════════════════
-    grid_row_o <= grid_a(to_integer(unsigned(grid_row_idx_i)));
+    -- ================================================================
+    -- Next Generation: 1 cell per clock
+    -- ================================================================
+    process(clk_i)
+        variable y, x, di : integer;
+        variable ny, nx : integer;
+        variable n_count : unsigned(3 downto 0);
+        variable alive, next_alive : std_logic;
+    begin
+        if rising_edge(clk_i) then
+            if rst_n_i = '0' then
+                gen_state <= S_IDLE;
+                gen_idx <= 0;
+            else
+                gen_done_p <= '0';
 
-    gen_o <= std_logic_vector(gen_count);
+                if auto_run = '1' and gen_state = S_IDLE then
+                    gen_state <= S_COMPUTE;
+                    gen_idx <= 0;
+                end if;
 
-end rtl;
+                case gen_state is
+                    when S_IDLE => null;
+
+                    when S_COMPUTE =>
+                        y := gen_idx / COLS;
+                        x := gen_idx mod COLS;
+                        di := gen_idx;
+
+                        if buf_sel = '0' then
+                            alive := grid_a(di);
+                        else
+                            alive := grid_b(di);
+                        end if;
+
+                        n_count := (others => '0');
+                        for dy in -1 to 1 loop
+                            for dx in -1 to 1 loop
+                                if dy /= 0 or dx /= 0 then
+                                    ny := (y + dy + ROWS) mod ROWS;
+                                    nx := (x + dx + COLS) mod COLS;
+                                    di := ny * COLS + nx;
+                                    if buf_sel = '0' then
+                                        if grid_a(di) = '1' then n_count := n_count + 1; end if;
+                                    else
+                                        if grid_b(di) = '1' then n_count := n_count + 1; end if;
+                                    end if;
+                                end if;
+                            end loop;
+                        end loop;
+
+                        if alive = '1' then
+                            if (n_count = 2) or (n_count = 3) then
+                                next_alive := '1';
+                            else
+                                next_alive := '0';
+                            end if;
+                        else
+                            if n_count = 3 then
+                                next_alive := '1';
+                            else
+                                next_alive := '0';
+                            end if;
+                        end if;
+
+                        di := gen_idx;
+                        if buf_sel = '0' then grid_b(di) <= next_alive;
+                        else grid_a(di) <= next_alive; end if;
+
+                        if gen_idx = GRID_SIZE - 1 then
+                            gen_state <= S_FLIP;
+                        else
+                            gen_idx <= gen_idx + 1;
+                        end if;
+
+                    when S_FLIP =>
+                        buf_sel <= not buf_sel;
+                        generation <= generation + 1;
+                        gen_done_p <= '1';
+                        gen_state <= S_IDLE;
+                        pop_idx <= 0;
+                        pop_count <= (others => '0');
+                        pop_active <= '1';
+
+                end case;
+            end if;
+        end if;
+    end process;
+
+    -- ================================================================
+    -- Population Counter
+    -- ================================================================
+    process(clk_i)
+        variable di : integer;
+    begin
+        if rising_edge(clk_i) then
+            if rst_n_i = '0' then
+                pop_active <= '0';
+                pop_count <= (others => '0');
+            else
+                if pop_active = '1' then
+                    di := pop_idx;
+                    if buf_sel = '0' then
+                        if grid_a(di) = '1' then pop_count <= pop_count + 1; end if;
+                    else
+                        if grid_b(di) = '1' then pop_count <= pop_count + 1; end if;
+                    end if;
+                    if pop_idx = GRID_SIZE - 1 then
+                        pop_active <= '0';
+                    else
+                        pop_idx <= pop_idx + 1;
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
+
+end architecture rtl;

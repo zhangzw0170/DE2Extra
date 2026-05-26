@@ -14,7 +14,7 @@ typedef volatile struct {
     uint32_t status;
 } ir_regs_t;
 
-#define IR_DBG ((ir_regs_t*)0xF0009000u)
+#define IR_DBG ((ir_regs_t*)0xF000C000u)
 #endif
 
 /* Shared IR command from main.c */

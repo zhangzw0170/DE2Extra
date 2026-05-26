@@ -86,6 +86,10 @@
       SDL_memset(fb, color, sizeof(fb));
   }
 
+  void fb_set_debug_pattern(int enabled) {
+      (void)enabled;
+  }
+
   void fb_shutdown(void) {
       if (texture)  SDL_DestroyTexture(texture);
       if (renderer) SDL_DestroyRenderer(renderer);
@@ -100,15 +104,17 @@
   #define SDRAM_BASE       0x01000000u
   #define FRAMEBUFFER_BASE 0x01800000u
   #define VGA_BASE         0xF0000000u
-  #define VGA_PX_MODE      0x1F80u
-  #define VGA_PX_FB_BASE   0x1F84u
+  #define VGA_PX_MODE      0x7000u
+  #define VGA_PX_FB_BASE   0x7004u
+  #define VGA_PX_TESTPAT   0x00000002u
 
   static volatile uint8_t * const fb = (volatile uint8_t *)FRAMEBUFFER_BASE;
   static volatile uint32_t * const vga_regs = (volatile uint32_t *)VGA_BASE;
+  static uint32_t fb_mode_flags = 1u;
 
   static void fb_hw_mode_set(uint32_t enable) {
       vga_regs[VGA_PX_FB_BASE / 4u] = (FRAMEBUFFER_BASE - SDRAM_BASE) >> 2;
-      vga_regs[VGA_PX_MODE / 4u] = enable;
+      vga_regs[VGA_PX_MODE / 4u] = enable ? fb_mode_flags : 0u;
   }
 
   void fb_init(void) {
@@ -136,6 +142,15 @@
   void fb_clear(uint8_t color) {
       for (int i = 0; i < FB_W * FB_H; i++)
           fb[i] = color;
+  }
+
+  void fb_set_debug_pattern(int enabled) {
+      if (enabled) {
+          fb_mode_flags |= VGA_PX_TESTPAT;
+      } else {
+          fb_mode_flags &= ~VGA_PX_TESTPAT;
+      }
+      fb_hw_mode_set(1u);
   }
 
   void fb_shutdown(void) {

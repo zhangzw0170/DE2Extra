@@ -27,52 +27,52 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x01 SOH
-        x"07",  -- row 0
-        x"18",  -- row 1
-        x"20",  -- row 2
-        x"20",  -- row 3
-        x"4D",  -- row 4
-        x"4D",  -- row 5
-        x"40",  -- row 6
-        x"40",  -- row 7
-        x"48",  -- row 8
-        x"47",  -- row 9
-        x"20",  -- row 10
-        x"20",  -- row 11
-        x"18",  -- row 12
-        x"07",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7E",  -- row 2
+        x"81",  -- row 3
+        x"A5",  -- row 4
+        x"81",  -- row 5
+        x"81",  -- row 6
+        x"BD",  -- row 7
+        x"99",  -- row 8
+        x"81",  -- row 9
+        x"81",  -- row 10
+        x"7E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x02 STX
-        x"07",  -- row 0
-        x"1F",  -- row 1
-        x"3F",  -- row 2
-        x"3F",  -- row 3
-        x"72",  -- row 4
-        x"72",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"77",  -- row 8
-        x"78",  -- row 9
-        x"3F",  -- row 10
-        x"3F",  -- row 11
-        x"1F",  -- row 12
-        x"07",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7E",  -- row 2
+        x"FF",  -- row 3
+        x"DB",  -- row 4
+        x"FF",  -- row 5
+        x"FF",  -- row 6
+        x"C3",  -- row 7
+        x"E7",  -- row 8
+        x"FF",  -- row 9
+        x"FF",  -- row 10
+        x"7E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x03 ETX
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"18",  -- row 3
-        x"3D",  -- row 4
-        x"3F",  -- row 5
-        x"3F",  -- row 6
-        x"3F",  -- row 7
-        x"1F",  -- row 8
-        x"0F",  -- row 9
-        x"07",  -- row 10
-        x"02",  -- row 11
+        x"00",  -- row 3
+        x"6C",  -- row 4
+        x"FE",  -- row 5
+        x"FE",  -- row 6
+        x"FE",  -- row 7
+        x"FE",  -- row 8
+        x"7C",  -- row 9
+        x"38",  -- row 10
+        x"10",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
@@ -81,15 +81,15 @@ package font_rom_pkg is
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"02",  -- row 3
-        x"07",  -- row 4
-        x"0F",  -- row 5
-        x"1F",  -- row 6
-        x"3F",  -- row 7
-        x"1F",  -- row 8
-        x"0F",  -- row 9
-        x"07",  -- row 10
-        x"02",  -- row 11
+        x"00",  -- row 3
+        x"10",  -- row 4
+        x"38",  -- row 5
+        x"7C",  -- row 6
+        x"FE",  -- row 7
+        x"7C",  -- row 8
+        x"38",  -- row 9
+        x"10",  -- row 10
+        x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
@@ -97,34 +97,34 @@ package font_rom_pkg is
   -- 0x05 ENQ
         x"00",  -- row 0
         x"00",  -- row 1
-        x"07",  -- row 2
-        x"0F",  -- row 3
-        x"0F",  -- row 4
-        x"0F",  -- row 5
-        x"37",  -- row 6
-        x"7F",  -- row 7
-        x"7F",  -- row 8
-        x"7F",  -- row 9
-        x"32",  -- row 10
-        x"07",  -- row 11
-        x"0F",  -- row 12
+        x"00",  -- row 2
+        x"18",  -- row 3
+        x"3C",  -- row 4
+        x"3C",  -- row 5
+        x"E7",  -- row 6
+        x"E7",  -- row 7
+        x"E7",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x06 ACK
         x"00",  -- row 0
         x"00",  -- row 1
-        x"02",  -- row 2
-        x"02",  -- row 3
-        x"07",  -- row 4
-        x"0F",  -- row 5
-        x"1F",  -- row 6
-        x"3F",  -- row 7
-        x"3F",  -- row 8
-        x"3F",  -- row 9
-        x"1A",  -- row 10
-        x"07",  -- row 11
-        x"0F",  -- row 12
+        x"00",  -- row 2
+        x"18",  -- row 3
+        x"3C",  -- row 4
+        x"7E",  -- row 5
+        x"FF",  -- row 6
+        x"FF",  -- row 7
+        x"7E",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
@@ -135,10 +135,10 @@ package font_rom_pkg is
         x"00",  -- row 3
         x"00",  -- row 4
         x"00",  -- row 5
-        x"06",  -- row 6
-        x"0F",  -- row 7
-        x"0F",  -- row 8
-        x"06",  -- row 9
+        x"18",  -- row 6
+        x"3C",  -- row 7
+        x"3C",  -- row 8
+        x"18",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
@@ -152,10 +152,10 @@ package font_rom_pkg is
         x"FF",  -- row 3
         x"FF",  -- row 4
         x"FF",  -- row 5
-        x"F9",  -- row 6
-        x"F0",  -- row 7
-        x"F0",  -- row 8
-        x"F9",  -- row 9
+        x"E7",  -- row 6
+        x"C3",  -- row 7
+        x"C3",  -- row 8
+        x"E7",  -- row 9
         x"FF",  -- row 10
         x"FF",  -- row 11
         x"FF",  -- row 12
@@ -167,14 +167,14 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"06",  -- row 4
-        x"09",  -- row 5
-        x"10",  -- row 6
-        x"10",  -- row 7
-        x"10",  -- row 8
-        x"10",  -- row 9
-        x"09",  -- row 10
-        x"06",  -- row 11
+        x"00",  -- row 4
+        x"3C",  -- row 5
+        x"66",  -- row 6
+        x"42",  -- row 7
+        x"42",  -- row 8
+        x"66",  -- row 9
+        x"3C",  -- row 10
+        x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
@@ -184,14 +184,14 @@ package font_rom_pkg is
         x"FF",  -- row 1
         x"FF",  -- row 2
         x"FF",  -- row 3
-        x"F9",  -- row 4
-        x"F6",  -- row 5
-        x"EF",  -- row 6
-        x"EF",  -- row 7
-        x"EF",  -- row 8
-        x"EF",  -- row 9
-        x"F6",  -- row 10
-        x"F9",  -- row 11
+        x"FF",  -- row 4
+        x"C3",  -- row 5
+        x"99",  -- row 6
+        x"BD",  -- row 7
+        x"BD",  -- row 8
+        x"99",  -- row 9
+        x"C3",  -- row 10
+        x"FF",  -- row 11
         x"FF",  -- row 12
         x"FF",  -- row 13
         x"FF",  -- row 14
@@ -199,16 +199,16 @@ package font_rom_pkg is
   -- 0x0B VT
         x"00",  -- row 0
         x"00",  -- row 1
-        x"00",  -- row 2
-        x"01",  -- row 3
-        x"00",  -- row 4
-        x"1E",  -- row 5
-        x"33",  -- row 6
-        x"61",  -- row 7
-        x"61",  -- row 8
-        x"61",  -- row 9
-        x"33",  -- row 10
-        x"1E",  -- row 11
+        x"1E",  -- row 2
+        x"0E",  -- row 3
+        x"1A",  -- row 4
+        x"32",  -- row 5
+        x"78",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"78",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
@@ -216,170 +216,170 @@ package font_rom_pkg is
   -- 0x0C FF
         x"00",  -- row 0
         x"00",  -- row 1
-        x"07",  -- row 2
-        x"0C",  -- row 3
-        x"18",  -- row 4
-        x"18",  -- row 5
-        x"18",  -- row 6
-        x"0C",  -- row 7
-        x"07",  -- row 8
-        x"03",  -- row 9
-        x"03",  -- row 10
-        x"0F",  -- row 11
-        x"03",  -- row 12
-        x"03",  -- row 13
+        x"3C",  -- row 2
+        x"66",  -- row 3
+        x"66",  -- row 4
+        x"66",  -- row 5
+        x"66",  -- row 6
+        x"3C",  -- row 7
+        x"18",  -- row 8
+        x"7E",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x0D CR
-        x"02",  -- row 0
-        x"03",  -- row 1
-        x"03",  -- row 2
-        x"03",  -- row 3
-        x"02",  -- row 4
-        x"02",  -- row 5
-        x"02",  -- row 6
-        x"02",  -- row 7
-        x"02",  -- row 8
-        x"0E",  -- row 9
-        x"1E",  -- row 10
-        x"1E",  -- row 11
-        x"0C",  -- row 12
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3F",  -- row 2
+        x"33",  -- row 3
+        x"3F",  -- row 4
+        x"30",  -- row 5
+        x"30",  -- row 6
+        x"30",  -- row 7
+        x"30",  -- row 8
+        x"70",  -- row 9
+        x"F0",  -- row 10
+        x"E0",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x0E SO
-        x"0C",  -- row 0
-        x"0E",  -- row 1
-        x"0B",  -- row 2
-        x"09",  -- row 3
-        x"0C",  -- row 4
-        x"0E",  -- row 5
-        x"0B",  -- row 6
-        x"09",  -- row 7
-        x"38",  -- row 8
-        x"78",  -- row 9
-        x"78",  -- row 10
-        x"31",  -- row 11
-        x"03",  -- row 12
-        x"03",  -- row 13
-        x"01",  -- row 14
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7F",  -- row 2
+        x"63",  -- row 3
+        x"7F",  -- row 4
+        x"63",  -- row 5
+        x"63",  -- row 6
+        x"63",  -- row 7
+        x"63",  -- row 8
+        x"67",  -- row 9
+        x"E7",  -- row 10
+        x"E6",  -- row 11
+        x"C0",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
         x"00",  -- row 15
   -- 0x0F SI
         x"00",  -- row 0
-        x"02",  -- row 1
-        x"02",  -- row 2
-        x"27",  -- row 3
-        x"1F",  -- row 4
-        x"18",  -- row 5
-        x"30",  -- row 6
-        x"70",  -- row 7
-        x"30",  -- row 8
-        x"18",  -- row 9
-        x"1F",  -- row 10
-        x"27",  -- row 11
-        x"02",  -- row 12
-        x"02",  -- row 13
+        x"00",  -- row 1
+        x"00",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"DB",  -- row 5
+        x"3C",  -- row 6
+        x"E7",  -- row 7
+        x"3C",  -- row 8
+        x"DB",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x10 DLE
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"10",  -- row 2
-        x"18",  -- row 3
-        x"1C",  -- row 4
-        x"1E",  -- row 5
-        x"1F",  -- row 6
-        x"1F",  -- row 7
-        x"1F",  -- row 8
-        x"1E",  -- row 9
-        x"1C",  -- row 10
-        x"18",  -- row 11
-        x"10",  -- row 12
+        x"80",  -- row 1
+        x"C0",  -- row 2
+        x"E0",  -- row 3
+        x"F0",  -- row 4
+        x"F8",  -- row 5
+        x"FE",  -- row 6
+        x"F8",  -- row 7
+        x"F0",  -- row 8
+        x"E0",  -- row 9
+        x"C0",  -- row 10
+        x"80",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x11 DC1
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"00",  -- row 2
-        x"01",  -- row 3
-        x"03",  -- row 4
-        x"07",  -- row 5
-        x"0F",  -- row 6
-        x"1F",  -- row 7
-        x"0F",  -- row 8
-        x"07",  -- row 9
-        x"03",  -- row 10
-        x"01",  -- row 11
+        x"02",  -- row 1
+        x"06",  -- row 2
+        x"0E",  -- row 3
+        x"1E",  -- row 4
+        x"3E",  -- row 5
+        x"FE",  -- row 6
+        x"3E",  -- row 7
+        x"1E",  -- row 8
+        x"0E",  -- row 9
+        x"06",  -- row 10
+        x"02",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x12 DC2
         x"00",  -- row 0
-        x"02",  -- row 1
-        x"07",  -- row 2
-        x"0F",  -- row 3
-        x"1F",  -- row 4
-        x"02",  -- row 5
-        x"02",  -- row 6
-        x"02",  -- row 7
-        x"02",  -- row 8
-        x"02",  -- row 9
-        x"1F",  -- row 10
-        x"0F",  -- row 11
-        x"07",  -- row 12
-        x"02",  -- row 13
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"3C",  -- row 3
+        x"7E",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"7E",  -- row 8
+        x"3C",  -- row 9
+        x"18",  -- row 10
+        x"00",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x13 DC3
         x"00",  -- row 0
-        x"19",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
-        x"19",  -- row 4
-        x"19",  -- row 5
-        x"19",  -- row 6
-        x"19",  -- row 7
-        x"19",  -- row 8
-        x"19",  -- row 9
-        x"19",  -- row 10
-        x"00",  -- row 11
-        x"19",  -- row 12
-        x"19",  -- row 13
+        x"00",  -- row 1
+        x"66",  -- row 2
+        x"66",  -- row 3
+        x"66",  -- row 4
+        x"66",  -- row 5
+        x"66",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"00",  -- row 9
+        x"66",  -- row 10
+        x"66",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x14 DC4
         x"00",  -- row 0
-        x"1F",  -- row 1
-        x"36",  -- row 2
-        x"66",  -- row 3
-        x"66",  -- row 4
-        x"66",  -- row 5
-        x"36",  -- row 6
-        x"1E",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
+        x"00",  -- row 1
+        x"7F",  -- row 2
+        x"DB",  -- row 3
+        x"DB",  -- row 4
+        x"DB",  -- row 5
+        x"7B",  -- row 6
+        x"1B",  -- row 7
+        x"1B",  -- row 8
+        x"1B",  -- row 9
+        x"1B",  -- row 10
+        x"1B",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x15 NAK
         x"00",  -- row 0
-        x"1F",  -- row 1
-        x"30",  -- row 2
-        x"30",  -- row 3
-        x"30",  -- row 4
-        x"1F",  -- row 5
-        x"30",  -- row 6
-        x"30",  -- row 7
-        x"1F",  -- row 8
-        x"00",  -- row 9
-        x"00",  -- row 10
-        x"30",  -- row 11
-        x"1F",  -- row 12
+        x"7C",  -- row 1
+        x"C6",  -- row 2
+        x"60",  -- row 3
+        x"38",  -- row 4
+        x"6C",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"6C",  -- row 8
+        x"38",  -- row 9
+        x"0C",  -- row 10
+        x"C6",  -- row 11
+        x"7C",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
@@ -392,63 +392,63 @@ package font_rom_pkg is
         x"00",  -- row 5
         x"00",  -- row 6
         x"00",  -- row 7
-        x"00",  -- row 8
-        x"00",  -- row 9
-        x"00",  -- row 10
-        x"1F",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"FE",  -- row 8
+        x"FE",  -- row 9
+        x"FE",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x17 ETB
-        x"02",  -- row 0
-        x"07",  -- row 1
-        x"0F",  -- row 2
-        x"1F",  -- row 3
-        x"02",  -- row 4
-        x"02",  -- row 5
-        x"02",  -- row 6
-        x"02",  -- row 7
-        x"02",  -- row 8
-        x"02",  -- row 9
-        x"1F",  -- row 10
-        x"0F",  -- row 11
-        x"07",  -- row 12
-        x"02",  -- row 13
-        x"1F",  -- row 14
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"3C",  -- row 3
+        x"7E",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"7E",  -- row 8
+        x"3C",  -- row 9
+        x"18",  -- row 10
+        x"7E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
         x"00",  -- row 15
   -- 0x18 CAN
         x"00",  -- row 0
-        x"02",  -- row 1
-        x"07",  -- row 2
-        x"0F",  -- row 3
-        x"1F",  -- row 4
-        x"02",  -- row 5
-        x"02",  -- row 6
-        x"02",  -- row 7
-        x"02",  -- row 8
-        x"02",  -- row 9
-        x"02",  -- row 10
-        x"02",  -- row 11
-        x"02",  -- row 12
-        x"02",  -- row 13
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"3C",  -- row 3
+        x"7E",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x19 EM
         x"00",  -- row 0
-        x"02",  -- row 1
-        x"02",  -- row 2
-        x"02",  -- row 3
-        x"02",  -- row 4
-        x"02",  -- row 5
-        x"02",  -- row 6
-        x"02",  -- row 7
-        x"02",  -- row 8
-        x"02",  -- row 9
-        x"1F",  -- row 10
-        x"0F",  -- row 11
-        x"07",  -- row 12
-        x"02",  -- row 13
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"7E",  -- row 9
+        x"3C",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x1A SUB
@@ -456,13 +456,13 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"01",  -- row 4
-        x"01",  -- row 5
-        x"01",  -- row 6
-        x"3F",  -- row 7
-        x"01",  -- row 8
-        x"01",  -- row 9
-        x"01",  -- row 10
+        x"00",  -- row 4
+        x"18",  -- row 5
+        x"0C",  -- row 6
+        x"FE",  -- row 7
+        x"0C",  -- row 8
+        x"18",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -473,13 +473,13 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"04",  -- row 4
-        x"0C",  -- row 5
-        x"1C",  -- row 6
-        x"3F",  -- row 7
-        x"1C",  -- row 8
-        x"0C",  -- row 9
-        x"04",  -- row 10
+        x"00",  -- row 4
+        x"30",  -- row 5
+        x"60",  -- row 6
+        x"FE",  -- row 7
+        x"60",  -- row 8
+        x"30",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -492,14 +492,14 @@ package font_rom_pkg is
         x"00",  -- row 3
         x"00",  -- row 4
         x"00",  -- row 5
-        x"00",  -- row 6
-        x"00",  -- row 7
-        x"40",  -- row 8
-        x"40",  -- row 9
-        x"40",  -- row 10
-        x"40",  -- row 11
-        x"40",  -- row 12
-        x"7F",  -- row 13
+        x"C0",  -- row 6
+        x"C0",  -- row 7
+        x"C0",  -- row 8
+        x"FE",  -- row 9
+        x"00",  -- row 10
+        x"00",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x1D GS
@@ -507,13 +507,13 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"08",  -- row 4
-        x"18",  -- row 5
-        x"38",  -- row 6
-        x"7F",  -- row 7
-        x"38",  -- row 8
-        x"18",  -- row 9
-        x"08",  -- row 10
+        x"00",  -- row 4
+        x"28",  -- row 5
+        x"6C",  -- row 6
+        x"FE",  -- row 7
+        x"6C",  -- row 8
+        x"28",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -524,13 +524,13 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"00",  -- row 4
-        x"02",  -- row 5
-        x"07",  -- row 6
-        x"0F",  -- row 7
-        x"1F",  -- row 8
-        x"3F",  -- row 9
-        x"7F",  -- row 10
+        x"10",  -- row 4
+        x"38",  -- row 5
+        x"38",  -- row 6
+        x"7C",  -- row 7
+        x"7C",  -- row 8
+        x"FE",  -- row 9
+        x"FE",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -541,13 +541,13 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"00",  -- row 4
-        x"7F",  -- row 5
-        x"3F",  -- row 6
-        x"1F",  -- row 7
-        x"0F",  -- row 8
-        x"07",  -- row 9
-        x"02",  -- row 10
+        x"FE",  -- row 4
+        x"FE",  -- row 5
+        x"7C",  -- row 6
+        x"7C",  -- row 7
+        x"38",  -- row 8
+        x"38",  -- row 9
+        x"10",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -571,29 +571,29 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x21 !
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"0F",  -- row 2
-        x"0F",  -- row 3
-        x"0F",  -- row 4
-        x"0F",  -- row 5
-        x"0F",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"00",  -- row 10
-        x"00",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"3C",  -- row 3
+        x"3C",  -- row 4
+        x"3C",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"00",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x22 "
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
-        x"19",  -- row 4
-        x"19",  -- row 5
+        x"66",  -- row 1
+        x"66",  -- row 2
+        x"66",  -- row 3
+        x"24",  -- row 4
+        x"00",  -- row 5
         x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
@@ -606,79 +606,79 @@ package font_rom_pkg is
         x"00",  -- row 15
   -- 0x23 #
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"3F",  -- row 4
-        x"0C",  -- row 5
-        x"0C",  -- row 6
-        x"19",  -- row 7
-        x"19",  -- row 8
-        x"7F",  -- row 9
-        x"33",  -- row 10
-        x"33",  -- row 11
-        x"33",  -- row 12
+        x"00",  -- row 1
+        x"00",  -- row 2
+        x"6C",  -- row 3
+        x"6C",  -- row 4
+        x"FE",  -- row 5
+        x"6C",  -- row 6
+        x"6C",  -- row 7
+        x"6C",  -- row 8
+        x"FE",  -- row 9
+        x"6C",  -- row 10
+        x"6C",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x24 $
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"1F",  -- row 2
-        x"3F",  -- row 3
-        x"36",  -- row 4
-        x"36",  -- row 5
-        x"3F",  -- row 6
-        x"1F",  -- row 7
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"C2",  -- row 4
+        x"C0",  -- row 5
+        x"7C",  -- row 6
+        x"06",  -- row 7
         x"06",  -- row 8
-        x"06",  -- row 9
-        x"3F",  -- row 10
-        x"1F",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
+        x"86",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x25 %
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"38",  -- row 3
-        x"38",  -- row 4
-        x"38",  -- row 5
-        x"01",  -- row 6
-        x"03",  -- row 7
-        x"07",  -- row 8
-        x"0E",  -- row 9
-        x"1C",  -- row 10
-        x"38",  -- row 11
-        x"70",  -- row 12
-        x"60",  -- row 13
+        x"00",  -- row 3
+        x"C2",  -- row 4
+        x"C6",  -- row 5
+        x"0C",  -- row 6
+        x"18",  -- row 7
+        x"30",  -- row 8
+        x"60",  -- row 9
+        x"C6",  -- row 10
+        x"86",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x26 &
         x"00",  -- row 0
-        x"07",  -- row 1
-        x"0D",  -- row 2
-        x"19",  -- row 3
-        x"19",  -- row 4
-        x"1B",  -- row 5
-        x"0E",  -- row 6
-        x"1E",  -- row 7
-        x"3E",  -- row 8
-        x"33",  -- row 9
-        x"33",  -- row 10
-        x"31",  -- row 11
-        x"3B",  -- row 12
-        x"1E",  -- row 13
+        x"00",  -- row 1
+        x"38",  -- row 2
+        x"6C",  -- row 3
+        x"6C",  -- row 4
+        x"38",  -- row 5
+        x"76",  -- row 6
+        x"DC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x27 '
-        x"0E",  -- row 0
-        x"0E",  -- row 1
-        x"0E",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"0C",  -- row 5
+        x"00",  -- row 0
+        x"30",  -- row 1
+        x"30",  -- row 2
+        x"30",  -- row 3
+        x"60",  -- row 4
+        x"00",  -- row 5
         x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
@@ -690,52 +690,52 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x28 (
-        x"03",  -- row 0
-        x"06",  -- row 1
-        x"0E",  -- row 2
-        x"0C",  -- row 3
-        x"1C",  -- row 4
-        x"1C",  -- row 5
-        x"1C",  -- row 6
-        x"1C",  -- row 7
-        x"1C",  -- row 8
-        x"1C",  -- row 9
-        x"0C",  -- row 10
-        x"0E",  -- row 11
-        x"06",  -- row 12
-        x"03",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"0C",  -- row 2
+        x"18",  -- row 3
+        x"30",  -- row 4
+        x"30",  -- row 5
+        x"30",  -- row 6
+        x"30",  -- row 7
+        x"30",  -- row 8
+        x"30",  -- row 9
+        x"18",  -- row 10
+        x"0C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x29 )
-        x"1C",  -- row 0
-        x"06",  -- row 1
-        x"07",  -- row 2
-        x"03",  -- row 3
-        x"03",  -- row 4
-        x"03",  -- row 5
-        x"03",  -- row 6
-        x"03",  -- row 7
-        x"03",  -- row 8
-        x"03",  -- row 9
-        x"03",  -- row 10
-        x"07",  -- row 11
-        x"06",  -- row 12
-        x"1C",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"30",  -- row 2
+        x"18",  -- row 3
+        x"0C",  -- row 4
+        x"0C",  -- row 5
+        x"0C",  -- row 6
+        x"0C",  -- row 7
+        x"0C",  -- row 8
+        x"0C",  -- row 9
+        x"18",  -- row 10
+        x"30",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x2A *
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"36",  -- row 3
-        x"36",  -- row 4
-        x"1F",  -- row 5
-        x"0F",  -- row 6
-        x"3F",  -- row 7
-        x"0F",  -- row 8
-        x"1F",  -- row 9
-        x"36",  -- row 10
-        x"36",  -- row 11
+        x"00",  -- row 3
+        x"00",  -- row 4
+        x"66",  -- row 5
+        x"3C",  -- row 6
+        x"FF",  -- row 7
+        x"3C",  -- row 8
+        x"66",  -- row 9
+        x"00",  -- row 10
+        x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
@@ -745,14 +745,14 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"3F",  -- row 7
-        x"3F",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
+        x"00",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"7E",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"00",  -- row 10
+        x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
@@ -767,13 +767,13 @@ package font_rom_pkg is
         x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
-        x"00",  -- row 9
-        x"00",  -- row 10
-        x"0E",  -- row 11
-        x"0E",  -- row 12
-        x"0E",  -- row 13
-        x"06",  -- row 14
-        x"0C",  -- row 15
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"30",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
   -- 0x2D -
         x"00",  -- row 0
         x"00",  -- row 1
@@ -782,8 +782,8 @@ package font_rom_pkg is
         x"00",  -- row 4
         x"00",  -- row 5
         x"00",  -- row 6
-        x"3F",  -- row 7
-        x"3F",  -- row 8
+        x"FE",  -- row 7
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -802,10 +802,10 @@ package font_rom_pkg is
         x"00",  -- row 7
         x"00",  -- row 8
         x"00",  -- row 9
-        x"00",  -- row 10
-        x"0E",  -- row 11
-        x"0E",  -- row 12
-        x"0E",  -- row 13
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x2F /
@@ -813,186 +813,186 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"00",  -- row 4
-        x"01",  -- row 5
-        x"03",  -- row 6
-        x"07",  -- row 7
-        x"0E",  -- row 8
-        x"1C",  -- row 9
-        x"38",  -- row 10
-        x"70",  -- row 11
-        x"60",  -- row 12
+        x"02",  -- row 4
+        x"06",  -- row 5
+        x"0C",  -- row 6
+        x"18",  -- row 7
+        x"30",  -- row 8
+        x"60",  -- row 9
+        x"C0",  -- row 10
+        x"80",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x30 0
-        x"0F",  -- row 0
-        x"3F",  -- row 1
-        x"30",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"61",  -- row 5
-        x"63",  -- row 6
-        x"66",  -- row 7
-        x"6C",  -- row 8
-        x"78",  -- row 9
-        x"70",  -- row 10
-        x"30",  -- row 11
-        x"3F",  -- row 12
-        x"0F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"38",  -- row 2
+        x"6C",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"D6",  -- row 6
+        x"D6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"6C",  -- row 10
+        x"38",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x31 1
-        x"03",  -- row 0
-        x"07",  -- row 1
-        x"1F",  -- row 2
-        x"1F",  -- row 3
-        x"03",  -- row 4
-        x"03",  -- row 5
-        x"03",  -- row 6
-        x"03",  -- row 7
-        x"03",  -- row 8
-        x"03",  -- row 9
-        x"03",  -- row 10
-        x"03",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"38",  -- row 3
+        x"78",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"7E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x32 2
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"70",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"00",  -- row 5
-        x"01",  -- row 6
-        x"03",  -- row 7
-        x"07",  -- row 8
-        x"0E",  -- row 9
-        x"1C",  -- row 10
-        x"38",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"06",  -- row 4
+        x"0C",  -- row 5
+        x"18",  -- row 6
+        x"30",  -- row 7
+        x"60",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x33 3
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"70",  -- row 2
-        x"60",  -- row 3
-        x"00",  -- row 4
-        x"00",  -- row 5
-        x"0F",  -- row 6
-        x"0F",  -- row 7
-        x"00",  -- row 8
-        x"00",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"06",  -- row 4
+        x"06",  -- row 5
+        x"3C",  -- row 6
+        x"06",  -- row 7
+        x"06",  -- row 8
+        x"06",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x34 4
-        x"01",  -- row 0
-        x"03",  -- row 1
-        x"07",  -- row 2
-        x"0E",  -- row 3
-        x"1C",  -- row 4
-        x"38",  -- row 5
-        x"70",  -- row 6
-        x"60",  -- row 7
-        x"7F",  -- row 8
-        x"7F",  -- row 9
-        x"00",  -- row 10
-        x"00",  -- row 11
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"0C",  -- row 2
+        x"1C",  -- row 3
+        x"3C",  -- row 4
+        x"6C",  -- row 5
+        x"CC",  -- row 6
+        x"FE",  -- row 7
+        x"0C",  -- row 8
+        x"0C",  -- row 9
+        x"0C",  -- row 10
+        x"1E",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x35 5
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"7F",  -- row 5
-        x"3F",  -- row 6
-        x"00",  -- row 7
-        x"00",  -- row 8
-        x"00",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FE",  -- row 2
+        x"C0",  -- row 3
+        x"C0",  -- row 4
+        x"C0",  -- row 5
+        x"FC",  -- row 6
+        x"06",  -- row 7
+        x"06",  -- row 8
+        x"06",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x36 6
-        x"03",  -- row 0
-        x"07",  -- row 1
-        x"0E",  -- row 2
-        x"1C",  -- row 3
-        x"38",  -- row 4
-        x"30",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"70",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"38",  -- row 2
+        x"60",  -- row 3
+        x"C0",  -- row 4
+        x"C0",  -- row 5
+        x"FC",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x37 7
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"00",  -- row 2
-        x"00",  -- row 3
-        x"00",  -- row 4
-        x"00",  -- row 5
-        x"01",  -- row 6
-        x"01",  -- row 7
-        x"03",  -- row 8
-        x"03",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"0C",  -- row 12
-        x"0C",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FE",  -- row 2
+        x"C6",  -- row 3
+        x"06",  -- row 4
+        x"06",  -- row 5
+        x"0C",  -- row 6
+        x"18",  -- row 7
+        x"30",  -- row 8
+        x"30",  -- row 9
+        x"30",  -- row 10
+        x"30",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x38 8
-        x"0F",  -- row 0
-        x"1F",  -- row 1
-        x"38",  -- row 2
-        x"30",  -- row 3
-        x"30",  -- row 4
-        x"38",  -- row 5
-        x"1F",  -- row 6
-        x"3F",  -- row 7
-        x"70",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"7C",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x39 9
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"70",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"70",  -- row 5
-        x"3F",  -- row 6
-        x"1F",  -- row 7
-        x"00",  -- row 8
-        x"00",  -- row 9
-        x"01",  -- row 10
-        x"03",  -- row 11
-        x"1F",  -- row 12
-        x"1E",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"7E",  -- row 6
+        x"06",  -- row 7
+        x"06",  -- row 8
+        x"06",  -- row 9
+        x"0C",  -- row 10
+        x"78",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x3A :
@@ -1000,15 +1000,15 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"0E",  -- row 4
-        x"0E",  -- row 5
-        x"0E",  -- row 6
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
-        x"00",  -- row 9
-        x"0E",  -- row 10
-        x"0E",  -- row 11
-        x"0E",  -- row 12
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"00",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
@@ -1017,32 +1017,32 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"0E",  -- row 4
-        x"0E",  -- row 5
-        x"0E",  -- row 6
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
-        x"00",  -- row 9
-        x"0E",  -- row 10
-        x"0E",  -- row 11
-        x"0E",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"0C",  -- row 15
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"30",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
   -- 0x3C <
         x"00",  -- row 0
-        x"01",  -- row 1
-        x"03",  -- row 2
-        x"07",  -- row 3
-        x"0E",  -- row 4
-        x"1C",  -- row 5
-        x"38",  -- row 6
-        x"38",  -- row 7
-        x"1C",  -- row 8
-        x"0E",  -- row 9
-        x"07",  -- row 10
-        x"03",  -- row 11
-        x"01",  -- row 12
+        x"00",  -- row 1
+        x"00",  -- row 2
+        x"06",  -- row 3
+        x"0C",  -- row 4
+        x"18",  -- row 5
+        x"30",  -- row 6
+        x"60",  -- row 7
+        x"30",  -- row 8
+        x"18",  -- row 9
+        x"0C",  -- row 10
+        x"06",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
@@ -1052,514 +1052,208 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"3F",  -- row 5
-        x"3F",  -- row 6
+        x"7E",  -- row 5
+        x"00",  -- row 6
         x"00",  -- row 7
-        x"00",  -- row 8
-        x"3F",  -- row 9
-        x"3F",  -- row 10
+        x"7E",  -- row 8
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x3E >
-        x"30",  -- row 0
-        x"38",  -- row 1
-        x"1C",  -- row 2
-        x"0E",  -- row 3
-        x"07",  -- row 4
-        x"03",  -- row 5
-        x"01",  -- row 6
-        x"01",  -- row 7
-        x"03",  -- row 8
-        x"07",  -- row 9
-        x"0E",  -- row 10
-        x"1C",  -- row 11
-        x"38",  -- row 12
-        x"30",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x3F ?
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"70",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"01",  -- row 5
-        x"03",  -- row 6
-        x"07",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"00",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x40 @
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"30",  -- row 2
-        x"67",  -- row 3
-        x"6F",  -- row 4
-        x"6D",  -- row 5
-        x"6D",  -- row 6
-        x"6D",  -- row 7
-        x"6D",  -- row 8
-        x"6F",  -- row 9
-        x"67",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"0F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x41 A
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"0F",  -- row 2
-        x"0F",  -- row 3
-        x"0F",  -- row 4
-        x"19",  -- row 5
-        x"19",  -- row 6
-        x"19",  -- row 7
-        x"30",  -- row 8
-        x"3F",  -- row 9
-        x"3F",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x42 B
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"61",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"61",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x43 C
-        x"0F",  -- row 0
-        x"1F",  -- row 1
-        x"38",  -- row 2
-        x"30",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"30",  -- row 10
-        x"38",  -- row 11
-        x"1F",  -- row 12
-        x"0F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x44 D
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"61",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"61",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x45 E
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x46 F
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x47 G
-        x"0F",  -- row 0
-        x"1F",  -- row 1
-        x"38",  -- row 2
-        x"30",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"63",  -- row 6
-        x"63",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"30",  -- row 10
-        x"38",  -- row 11
-        x"1F",  -- row 12
-        x"0F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x48 H
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x49 I
-        x"1F",  -- row 0
-        x"1F",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x4A J
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"00",  -- row 3
-        x"00",  -- row 4
-        x"00",  -- row 5
-        x"00",  -- row 6
-        x"00",  -- row 7
-        x"00",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x4B K
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"61",  -- row 2
-        x"63",  -- row 3
-        x"67",  -- row 4
-        x"6E",  -- row 5
-        x"7C",  -- row 6
-        x"7C",  -- row 7
-        x"6E",  -- row 8
-        x"67",  -- row 9
-        x"63",  -- row 10
-        x"61",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x4C L
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"60",  -- row 2
         x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x4D M
-        x"60",  -- row 0
-        x"70",  -- row 1
-        x"70",  -- row 2
-        x"79",  -- row 3
-        x"79",  -- row 4
-        x"6F",  -- row 5
-        x"6F",  -- row 6
-        x"66",  -- row 7
-        x"66",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x4E N
-        x"60",  -- row 0
-        x"70",  -- row 1
-        x"70",  -- row 2
-        x"78",  -- row 3
-        x"6C",  -- row 4
-        x"6C",  -- row 5
-        x"66",  -- row 6
-        x"66",  -- row 7
-        x"63",  -- row 8
-        x"63",  -- row 9
-        x"61",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x4F O
-        x"0F",  -- row 0
-        x"1F",  -- row 1
-        x"39",  -- row 2
-        x"30",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"30",  -- row 10
-        x"39",  -- row 11
-        x"1F",  -- row 12
-        x"0F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x50 P
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"7F",  -- row 7
-        x"7F",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x51 Q
-        x"0F",  -- row 0
-        x"1F",  -- row 1
-        x"39",  -- row 2
-        x"30",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"63",  -- row 9
-        x"33",  -- row 10
-        x"39",  -- row 11
-        x"1F",  -- row 12
-        x"0F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x52 R
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"7F",  -- row 7
-        x"7F",  -- row 8
-        x"67",  -- row 9
-        x"63",  -- row 10
-        x"61",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x53 S
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"70",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"70",  -- row 5
-        x"3F",  -- row 6
-        x"1F",  -- row 7
-        x"00",  -- row 8
-        x"00",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x54 T
-        x"3F",  -- row 0
-        x"3F",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x55 U
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"30",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x56 V
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"60",  -- row 2
-        x"30",  -- row 3
         x"30",  -- row 4
-        x"30",  -- row 5
-        x"19",  -- row 6
-        x"19",  -- row 7
-        x"19",  -- row 8
-        x"0F",  -- row 9
-        x"0F",  -- row 10
-        x"0F",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x57 W
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"60",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"66",  -- row 7
-        x"66",  -- row 8
-        x"6F",  -- row 9
-        x"79",  -- row 10
-        x"70",  -- row 11
-        x"70",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x58 X
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"30",  -- row 2
-        x"30",  -- row 3
-        x"19",  -- row 4
-        x"0F",  -- row 5
-        x"06",  -- row 6
-        x"06",  -- row 7
-        x"0F",  -- row 8
-        x"19",  -- row 9
-        x"30",  -- row 10
-        x"30",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x59 Y
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"30",  -- row 2
-        x"30",  -- row 3
-        x"19",  -- row 4
-        x"19",  -- row 5
-        x"0F",  -- row 6
-        x"0F",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x5A Z
-        x"7F",  -- row 0
-        x"7F",  -- row 1
-        x"00",  -- row 2
-        x"00",  -- row 3
-        x"01",  -- row 4
-        x"03",  -- row 5
-        x"06",  -- row 6
+        x"18",  -- row 5
+        x"0C",  -- row 6
         x"06",  -- row 7
         x"0C",  -- row 8
         x"18",  -- row 9
         x"30",  -- row 10
-        x"30",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
+        x"60",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
-  -- 0x5B [
-        x"1F",  -- row 0
-        x"1F",  -- row 1
-        x"18",  -- row 2
+  -- 0x3F ?
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"0C",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"00",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x40 @
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"00",  -- row 2
+        x"7C",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"DE",  -- row 6
+        x"DE",  -- row 7
+        x"DE",  -- row 8
+        x"DC",  -- row 9
+        x"C0",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x41 A
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"10",  -- row 2
+        x"38",  -- row 3
+        x"6C",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"FE",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x42 B
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FC",  -- row 2
+        x"66",  -- row 3
+        x"66",  -- row 4
+        x"66",  -- row 5
+        x"7C",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"FC",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x43 C
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3C",  -- row 2
+        x"66",  -- row 3
+        x"C2",  -- row 4
+        x"C0",  -- row 5
+        x"C0",  -- row 6
+        x"C0",  -- row 7
+        x"C0",  -- row 8
+        x"C2",  -- row 9
+        x"66",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x44 D
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"F8",  -- row 2
+        x"6C",  -- row 3
+        x"66",  -- row 4
+        x"66",  -- row 5
+        x"66",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"6C",  -- row 10
+        x"F8",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x45 E
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FE",  -- row 2
+        x"66",  -- row 3
+        x"62",  -- row 4
+        x"68",  -- row 5
+        x"78",  -- row 6
+        x"68",  -- row 7
+        x"60",  -- row 8
+        x"62",  -- row 9
+        x"66",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x46 F
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FE",  -- row 2
+        x"66",  -- row 3
+        x"62",  -- row 4
+        x"68",  -- row 5
+        x"78",  -- row 6
+        x"68",  -- row 7
+        x"60",  -- row 8
+        x"60",  -- row 9
+        x"60",  -- row 10
+        x"F0",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x47 G
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3C",  -- row 2
+        x"66",  -- row 3
+        x"C2",  -- row 4
+        x"C0",  -- row 5
+        x"C0",  -- row 6
+        x"DE",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"66",  -- row 10
+        x"3A",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x48 H
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"C6",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"FE",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x49 I
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3C",  -- row 2
         x"18",  -- row 3
         x"18",  -- row 4
         x"18",  -- row 5
@@ -1568,53 +1262,359 @@ package font_rom_pkg is
         x"18",  -- row 8
         x"18",  -- row 9
         x"18",  -- row 10
-        x"18",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x4A J
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"1E",  -- row 2
+        x"0C",  -- row 3
+        x"0C",  -- row 4
+        x"0C",  -- row 5
+        x"0C",  -- row 6
+        x"0C",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"78",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x4B K
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"E6",  -- row 2
+        x"66",  -- row 3
+        x"66",  -- row 4
+        x"6C",  -- row 5
+        x"78",  -- row 6
+        x"78",  -- row 7
+        x"6C",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"E6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x4C L
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"F0",  -- row 2
+        x"60",  -- row 3
+        x"60",  -- row 4
+        x"60",  -- row 5
+        x"60",  -- row 6
+        x"60",  -- row 7
+        x"60",  -- row 8
+        x"62",  -- row 9
+        x"66",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x4D M
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"C6",  -- row 2
+        x"EE",  -- row 3
+        x"FE",  -- row 4
+        x"FE",  -- row 5
+        x"D6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x4E N
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"C6",  -- row 2
+        x"E6",  -- row 3
+        x"F6",  -- row 4
+        x"FE",  -- row 5
+        x"DE",  -- row 6
+        x"CE",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x4F O
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x50 P
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FC",  -- row 2
+        x"66",  -- row 3
+        x"66",  -- row 4
+        x"66",  -- row 5
+        x"7C",  -- row 6
+        x"60",  -- row 7
+        x"60",  -- row 8
+        x"60",  -- row 9
+        x"60",  -- row 10
+        x"F0",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x51 Q
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"D6",  -- row 9
+        x"DE",  -- row 10
+        x"7C",  -- row 11
+        x"0C",  -- row 12
+        x"0E",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x52 R
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FC",  -- row 2
+        x"66",  -- row 3
+        x"66",  -- row 4
+        x"66",  -- row 5
+        x"7C",  -- row 6
+        x"6C",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"E6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x53 S
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7C",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"60",  -- row 5
+        x"38",  -- row 6
+        x"0C",  -- row 7
+        x"06",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x54 T
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7E",  -- row 2
+        x"7E",  -- row 3
+        x"5A",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x55 U
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"C6",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x56 V
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"C6",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"6C",  -- row 9
+        x"38",  -- row 10
+        x"10",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x57 W
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"C6",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"D6",  -- row 6
+        x"D6",  -- row 7
+        x"D6",  -- row 8
+        x"FE",  -- row 9
+        x"EE",  -- row 10
+        x"6C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x58 X
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"C6",  -- row 2
+        x"C6",  -- row 3
+        x"6C",  -- row 4
+        x"7C",  -- row 5
+        x"38",  -- row 6
+        x"38",  -- row 7
+        x"7C",  -- row 8
+        x"6C",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x59 Y
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"66",  -- row 2
+        x"66",  -- row 3
+        x"66",  -- row 4
+        x"66",  -- row 5
+        x"3C",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x5A Z
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"FE",  -- row 2
+        x"C6",  -- row 3
+        x"86",  -- row 4
+        x"0C",  -- row 5
+        x"18",  -- row 6
+        x"30",  -- row 7
+        x"60",  -- row 8
+        x"C2",  -- row 9
+        x"C6",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x5B [
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3C",  -- row 2
+        x"30",  -- row 3
+        x"30",  -- row 4
+        x"30",  -- row 5
+        x"30",  -- row 6
+        x"30",  -- row 7
+        x"30",  -- row 8
+        x"30",  -- row 9
+        x"30",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x5C \
         x"00",  -- row 0
-        x"40",  -- row 1
-        x"60",  -- row 2
-        x"70",  -- row 3
-        x"38",  -- row 4
-        x"1C",  -- row 5
-        x"0E",  -- row 6
-        x"07",  -- row 7
-        x"03",  -- row 8
-        x"01",  -- row 9
-        x"00",  -- row 10
-        x"00",  -- row 11
+        x"00",  -- row 1
+        x"00",  -- row 2
+        x"80",  -- row 3
+        x"C0",  -- row 4
+        x"E0",  -- row 5
+        x"70",  -- row 6
+        x"38",  -- row 7
+        x"1C",  -- row 8
+        x"0E",  -- row 9
+        x"06",  -- row 10
+        x"02",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x5D ]
-        x"1F",  -- row 0
-        x"1F",  -- row 1
-        x"01",  -- row 2
-        x"01",  -- row 3
-        x"01",  -- row 4
-        x"01",  -- row 5
-        x"01",  -- row 6
-        x"01",  -- row 7
-        x"01",  -- row 8
-        x"01",  -- row 9
-        x"01",  -- row 10
-        x"01",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3C",  -- row 2
+        x"0C",  -- row 3
+        x"0C",  -- row 4
+        x"0C",  -- row 5
+        x"0C",  -- row 6
+        x"0C",  -- row 7
+        x"0C",  -- row 8
+        x"0C",  -- row 9
+        x"0C",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x5E ^
-        x"02",  -- row 0
-        x"07",  -- row 1
-        x"0F",  -- row 2
-        x"1D",  -- row 3
-        x"38",  -- row 4
-        x"70",  -- row 5
-        x"60",  -- row 6
+        x"10",  -- row 0
+        x"38",  -- row 1
+        x"6C",  -- row 2
+        x"C6",  -- row 3
+        x"00",  -- row 4
+        x"00",  -- row 5
+        x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
         x"00",  -- row 9
@@ -1638,17 +1638,17 @@ package font_rom_pkg is
         x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
-        x"00",  -- row 13
-        x"7F",  -- row 14
-        x"7F",  -- row 15
+        x"FF",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
   -- 0x60 `
         x"00",  -- row 0
-        x"07",  -- row 1
-        x"07",  -- row 2
-        x"07",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"03",  -- row 6
+        x"30",  -- row 1
+        x"18",  -- row 2
+        x"0C",  -- row 3
+        x"00",  -- row 4
+        x"00",  -- row 5
+        x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
         x"00",  -- row 9
@@ -1664,32 +1664,32 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"00",  -- row 7
-        x"1F",  -- row 8
-        x"3F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"3F",  -- row 13
+        x"78",  -- row 5
+        x"0C",  -- row 6
+        x"7C",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x62 b
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"60",  -- row 2
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"E0",  -- row 2
         x"60",  -- row 3
         x"60",  -- row 4
-        x"6F",  -- row 5
-        x"7F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
+        x"78",  -- row 5
+        x"6C",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x63 c
@@ -1698,32 +1698,32 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"C0",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x64 d
         x"00",  -- row 0
         x"00",  -- row 1
-        x"00",  -- row 2
-        x"00",  -- row 3
-        x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"71",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"1C",  -- row 2
+        x"0C",  -- row 3
+        x"0C",  -- row 4
+        x"3C",  -- row 5
+        x"6C",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x65 e
@@ -1732,32 +1732,32 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"7F",  -- row 8
-        x"7F",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"FE",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x66 f
-        x"07",  -- row 0
-        x"0F",  -- row 1
+        x"00",  -- row 0
+        x"00",  -- row 1
         x"1C",  -- row 2
-        x"18",  -- row 3
-        x"18",  -- row 4
-        x"18",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"18",  -- row 8
-        x"18",  -- row 9
-        x"18",  -- row 10
-        x"18",  -- row 11
-        x"18",  -- row 12
-        x"18",  -- row 13
+        x"36",  -- row 3
+        x"32",  -- row 4
+        x"30",  -- row 5
+        x"78",  -- row 6
+        x"30",  -- row 7
+        x"30",  -- row 8
+        x"30",  -- row 9
+        x"30",  -- row 10
+        x"78",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x67 g
@@ -1766,100 +1766,100 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"70",  -- row 9
-        x"3F",  -- row 10
-        x"1F",  -- row 11
-        x"00",  -- row 12
-        x"00",  -- row 13
-        x"3F",  -- row 14
-        x"3F",  -- row 15
+        x"76",  -- row 5
+        x"CC",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"7C",  -- row 11
+        x"0C",  -- row 12
+        x"CC",  -- row 13
+        x"78",  -- row 14
+        x"00",  -- row 15
   -- 0x68 h
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"60",  -- row 2
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"E0",  -- row 2
         x"60",  -- row 3
         x"60",  -- row 4
-        x"6F",  -- row 5
-        x"7F",  -- row 6
-        x"71",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
+        x"6C",  -- row 5
+        x"76",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"E6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x69 i
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"00",  -- row 4
+        x"38",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x6A j
         x"00",  -- row 0
         x"00",  -- row 1
         x"06",  -- row 2
         x"06",  -- row 3
         x"00",  -- row 4
         x"0E",  -- row 5
-        x"0E",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x6A j
-        x"00",  -- row 0
-        x"00",  -- row 1
-        x"01",  -- row 2
-        x"01",  -- row 3
-        x"00",  -- row 4
-        x"03",  -- row 5
-        x"03",  -- row 6
-        x"01",  -- row 7
-        x"01",  -- row 8
-        x"01",  -- row 9
-        x"01",  -- row 10
-        x"01",  -- row 11
-        x"01",  -- row 12
-        x"19",  -- row 13
-        x"1F",  -- row 14
-        x"0F",  -- row 15
-  -- 0x6B k
-        x"30",  -- row 0
-        x"30",  -- row 1
-        x"30",  -- row 2
-        x"30",  -- row 3
-        x"30",  -- row 4
-        x"31",  -- row 5
-        x"33",  -- row 6
-        x"37",  -- row 7
-        x"3E",  -- row 8
-        x"3E",  -- row 9
-        x"37",  -- row 10
-        x"33",  -- row 11
-        x"31",  -- row 12
-        x"30",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x6C l
-        x"0E",  -- row 0
-        x"0E",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
         x"06",  -- row 6
         x"06",  -- row 7
         x"06",  -- row 8
         x"06",  -- row 9
         x"06",  -- row 10
         x"06",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"66",  -- row 12
+        x"66",  -- row 13
+        x"3C",  -- row 14
+        x"00",  -- row 15
+  -- 0x6B k
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"E0",  -- row 2
+        x"60",  -- row 3
+        x"60",  -- row 4
+        x"66",  -- row 5
+        x"6C",  -- row 6
+        x"78",  -- row 7
+        x"78",  -- row 8
+        x"6C",  -- row 9
+        x"66",  -- row 10
+        x"E6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x6C l
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"38",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x6D m
@@ -1868,15 +1868,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"59",  -- row 5
-        x"7F",  -- row 6
-        x"7F",  -- row 7
-        x"66",  -- row 8
-        x"66",  -- row 9
-        x"66",  -- row 10
-        x"66",  -- row 11
-        x"66",  -- row 12
-        x"66",  -- row 13
+        x"EC",  -- row 5
+        x"FE",  -- row 6
+        x"D6",  -- row 7
+        x"D6",  -- row 8
+        x"D6",  -- row 9
+        x"D6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x6E n
@@ -1885,15 +1885,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"3F",  -- row 5
-        x"3F",  -- row 6
-        x"30",  -- row 7
-        x"30",  -- row 8
-        x"30",  -- row 9
-        x"30",  -- row 10
-        x"30",  -- row 11
-        x"30",  -- row 12
-        x"30",  -- row 13
+        x"DC",  -- row 5
+        x"66",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"66",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x6F o
@@ -1902,15 +1902,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x70 p
@@ -1919,33 +1919,33 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"7F",  -- row 5
-        x"7F",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"70",  -- row 10
-        x"7F",  -- row 11
-        x"6F",  -- row 12
+        x"DC",  -- row 5
+        x"66",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"7C",  -- row 11
+        x"60",  -- row 12
         x"60",  -- row 13
-        x"60",  -- row 14
-        x"60",  -- row 15
+        x"F0",  -- row 14
+        x"00",  -- row 15
   -- 0x71 q
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"70",  -- row 10
-        x"3F",  -- row 11
-        x"1F",  -- row 12
-        x"00",  -- row 13
-        x"00",  -- row 14
+        x"76",  -- row 5
+        x"CC",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"7C",  -- row 11
+        x"0C",  -- row 12
+        x"0C",  -- row 13
+        x"1E",  -- row 14
         x"00",  -- row 15
   -- 0x72 r
         x"00",  -- row 0
@@ -1953,15 +1953,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"37",  -- row 5
-        x"3F",  -- row 6
-        x"38",  -- row 7
-        x"30",  -- row 8
-        x"30",  -- row 9
-        x"30",  -- row 10
-        x"30",  -- row 11
-        x"30",  -- row 12
-        x"30",  -- row 13
+        x"DC",  -- row 5
+        x"76",  -- row 6
+        x"66",  -- row 7
+        x"60",  -- row 8
+        x"60",  -- row 9
+        x"60",  -- row 10
+        x"F0",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x73 s
@@ -1970,32 +1970,32 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"3F",  -- row 5
-        x"7F",  -- row 6
+        x"7C",  -- row 5
+        x"C6",  -- row 6
         x"60",  -- row 7
-        x"7F",  -- row 8
-        x"3F",  -- row 9
-        x"01",  -- row 10
-        x"01",  -- row 11
-        x"7F",  -- row 12
-        x"3F",  -- row 13
+        x"38",  -- row 8
+        x"0C",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x74 t
         x"00",  -- row 0
-        x"18",  -- row 1
-        x"18",  -- row 2
-        x"18",  -- row 3
-        x"18",  -- row 4
-        x"7F",  -- row 5
-        x"7F",  -- row 6
-        x"18",  -- row 7
-        x"18",  -- row 8
-        x"18",  -- row 9
-        x"18",  -- row 10
-        x"18",  -- row 11
-        x"1F",  -- row 12
-        x"0F",  -- row 13
+        x"00",  -- row 1
+        x"10",  -- row 2
+        x"30",  -- row 3
+        x"30",  -- row 4
+        x"FC",  -- row 5
+        x"30",  -- row 6
+        x"30",  -- row 7
+        x"30",  -- row 8
+        x"30",  -- row 9
+        x"36",  -- row 10
+        x"1C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x75 u
@@ -2004,15 +2004,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"CC",  -- row 5
+        x"CC",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x76 v
@@ -2021,15 +2021,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"30",  -- row 7
-        x"30",  -- row 8
-        x"19",  -- row 9
-        x"19",  -- row 10
-        x"0F",  -- row 11
-        x"0F",  -- row 12
-        x"06",  -- row 13
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"6C",  -- row 10
+        x"38",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x77 w
@@ -2038,15 +2038,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"66",  -- row 5
-        x"66",  -- row 6
-        x"66",  -- row 7
-        x"66",  -- row 8
-        x"66",  -- row 9
-        x"6F",  -- row 10
-        x"3F",  -- row 11
-        x"39",  -- row 12
-        x"10",  -- row 13
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"D6",  -- row 7
+        x"D6",  -- row 8
+        x"D6",  -- row 9
+        x"FE",  -- row 10
+        x"6C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x78 x
@@ -2055,15 +2055,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"60",  -- row 5
-        x"71",  -- row 6
-        x"3B",  -- row 7
-        x"1F",  -- row 8
-        x"0E",  -- row 9
-        x"1F",  -- row 10
-        x"3B",  -- row 11
-        x"71",  -- row 12
-        x"60",  -- row 13
+        x"C6",  -- row 5
+        x"6C",  -- row 6
+        x"38",  -- row 7
+        x"38",  -- row 8
+        x"38",  -- row 9
+        x"6C",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x79 y
@@ -2072,91 +2072,91 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"30",  -- row 5
-        x"30",  -- row 6
-        x"19",  -- row 7
-        x"19",  -- row 8
-        x"0F",  -- row 9
-        x"0F",  -- row 10
-        x"06",  -- row 11
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7E",  -- row 11
         x"06",  -- row 12
         x"0C",  -- row 13
-        x"0C",  -- row 14
-        x"18",  -- row 15
+        x"F8",  -- row 14
+        x"00",  -- row 15
   -- 0x7A z
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"7F",  -- row 5
-        x"7F",  -- row 6
-        x"03",  -- row 7
-        x"06",  -- row 8
-        x"0C",  -- row 9
-        x"18",  -- row 10
-        x"30",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
+        x"FE",  -- row 5
+        x"CC",  -- row 6
+        x"18",  -- row 7
+        x"30",  -- row 8
+        x"60",  -- row 9
+        x"C6",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x7B {
-        x"03",  -- row 0
-        x"07",  -- row 1
+        x"00",  -- row 0
+        x"00",  -- row 1
         x"0E",  -- row 2
-        x"0C",  -- row 3
-        x"0C",  -- row 4
-        x"0C",  -- row 5
-        x"1C",  -- row 6
-        x"38",  -- row 7
-        x"1C",  -- row 8
-        x"0C",  -- row 9
-        x"0C",  -- row 10
-        x"0C",  -- row 11
-        x"0E",  -- row 12
-        x"07",  -- row 13
-        x"03",  -- row 14
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"70",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"0E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
         x"00",  -- row 15
   -- 0x7C |
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x7D }
-        x"3C",  -- row 0
-        x"3E",  -- row 1
-        x"07",  -- row 2
-        x"03",  -- row 3
-        x"03",  -- row 4
-        x"03",  -- row 5
-        x"03",  -- row 6
-        x"01",  -- row 7
-        x"03",  -- row 8
-        x"03",  -- row 9
-        x"03",  -- row 10
-        x"03",  -- row 11
-        x"07",  -- row 12
-        x"3E",  -- row 13
-        x"3C",  -- row 14
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"70",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"0E",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"70",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
         x"00",  -- row 15
   -- 0x7E ~
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"1C",  -- row 2
-        x"36",  -- row 3
-        x"63",  -- row 4
+        x"76",  -- row 1
+        x"DC",  -- row 2
+        x"00",  -- row 3
+        x"00",  -- row 4
         x"00",  -- row 5
         x"00",  -- row 6
         x"00",  -- row 7
@@ -2173,135 +2173,135 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"06",  -- row 4
-        x"0F",  -- row 5
-        x"19",  -- row 6
-        x"30",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"7F",  -- row 10
-        x"7F",  -- row 11
+        x"10",  -- row 4
+        x"38",  -- row 5
+        x"6C",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"FE",  -- row 10
+        x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x80 C-cedilla
-        x"0F",  -- row 0
-        x"1F",  -- row 1
-        x"38",  -- row 2
-        x"30",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"30",  -- row 9
-        x"38",  -- row 10
-        x"1F",  -- row 11
-        x"0F",  -- row 12
-        x"06",  -- row 13
-        x"1E",  -- row 14
-        x"1E",  -- row 15
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3C",  -- row 2
+        x"66",  -- row 3
+        x"C2",  -- row 4
+        x"C0",  -- row 5
+        x"C0",  -- row 6
+        x"C0",  -- row 7
+        x"C0",  -- row 8
+        x"C2",  -- row 9
+        x"66",  -- row 10
+        x"3C",  -- row 11
+        x"18",  -- row 12
+        x"70",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
   -- 0x81 u-umlaut
         x"00",  -- row 0
         x"00",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
+        x"CC",  -- row 2
+        x"00",  -- row 3
         x"00",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"CC",  -- row 5
+        x"CC",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x82 e-acute
         x"00",  -- row 0
-        x"01",  -- row 1
-        x"03",  -- row 2
-        x"06",  -- row 3
+        x"0C",  -- row 1
+        x"18",  -- row 2
+        x"30",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"7F",  -- row 8
-        x"7F",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"FE",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x83 a-circumflex
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"0F",  -- row 2
-        x"19",  -- row 3
+        x"10",  -- row 1
+        x"38",  -- row 2
+        x"6C",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"00",  -- row 7
-        x"1F",  -- row 8
-        x"3F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"3F",  -- row 13
+        x"78",  -- row 5
+        x"0C",  -- row 6
+        x"7C",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x84 a-umlaut
         x"00",  -- row 0
         x"00",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
+        x"CC",  -- row 2
+        x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"00",  -- row 7
-        x"1F",  -- row 8
-        x"3F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"3F",  -- row 13
+        x"78",  -- row 5
+        x"0C",  -- row 6
+        x"7C",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x85 a-grave
         x"00",  -- row 0
-        x"0C",  -- row 1
-        x"06",  -- row 2
-        x"03",  -- row 3
+        x"60",  -- row 1
+        x"30",  -- row 2
+        x"18",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"00",  -- row 7
-        x"1F",  -- row 8
-        x"3F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"3F",  -- row 13
+        x"78",  -- row 5
+        x"0C",  -- row 6
+        x"7C",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x86 a-ring
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"09",  -- row 2
-        x"06",  -- row 3
+        x"38",  -- row 1
+        x"6C",  -- row 2
+        x"38",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"00",  -- row 7
-        x"1F",  -- row 8
-        x"3F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"3F",  -- row 13
+        x"78",  -- row 5
+        x"0C",  -- row 6
+        x"7C",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x87 c-cedilla
@@ -2310,168 +2310,168 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
-        x"06",  -- row 14
-        x"1E",  -- row 15
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"C0",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"18",  -- row 12
+        x"70",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
   -- 0x88 e-circumflex
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"0F",  -- row 2
-        x"19",  -- row 3
+        x"10",  -- row 1
+        x"38",  -- row 2
+        x"6C",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"7F",  -- row 8
-        x"7F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"FE",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x89 e-umlaut
         x"00",  -- row 0
         x"00",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
+        x"C6",  -- row 2
+        x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"7F",  -- row 8
-        x"7F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"FE",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x8A e-grave
         x"00",  -- row 0
-        x"0C",  -- row 1
-        x"06",  -- row 2
-        x"03",  -- row 3
+        x"60",  -- row 1
+        x"30",  -- row 2
+        x"18",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"7F",  -- row 8
-        x"7F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"FE",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x8B i-diaeresis
         x"00",  -- row 0
         x"00",  -- row 1
-        x"1B",  -- row 2
-        x"1B",  -- row 3
+        x"66",  -- row 2
+        x"00",  -- row 3
         x"00",  -- row 4
-        x"0E",  -- row 5
-        x"0E",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"38",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x8C i-circumflex
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"0F",  -- row 2
-        x"19",  -- row 3
+        x"18",  -- row 1
+        x"3C",  -- row 2
+        x"66",  -- row 3
         x"00",  -- row 4
-        x"0E",  -- row 5
-        x"0E",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"38",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x8D i-umlaut
         x"00",  -- row 0
-        x"0C",  -- row 1
-        x"06",  -- row 2
-        x"03",  -- row 3
+        x"60",  -- row 1
+        x"30",  -- row 2
+        x"18",  -- row 3
         x"00",  -- row 4
-        x"0E",  -- row 5
-        x"0E",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
+        x"38",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x8E A-umlaut
-        x"19",  -- row 0
-        x"19",  -- row 1
+        x"00",  -- row 0
+        x"C6",  -- row 1
         x"00",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"0F",  -- row 5
-        x"0F",  -- row 6
-        x"19",  -- row 7
-        x"19",  -- row 8
-        x"30",  -- row 9
-        x"3F",  -- row 10
-        x"7F",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
+        x"10",  -- row 3
+        x"38",  -- row 4
+        x"6C",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"FE",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x8F A-ring
-        x"06",  -- row 0
-        x"09",  -- row 1
-        x"06",  -- row 2
-        x"00",  -- row 3
-        x"06",  -- row 4
-        x"0F",  -- row 5
-        x"0F",  -- row 6
-        x"19",  -- row 7
-        x"19",  -- row 8
-        x"30",  -- row 9
-        x"3F",  -- row 10
-        x"7F",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
+        x"38",  -- row 0
+        x"6C",  -- row 1
+        x"38",  -- row 2
+        x"10",  -- row 3
+        x"38",  -- row 4
+        x"6C",  -- row 5
+        x"C6",  -- row 6
+        x"FE",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x90 A-ring2
-        x"01",  -- row 0
-        x"03",  -- row 1
-        x"06",  -- row 2
-        x"7F",  -- row 3
-        x"7F",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"7F",  -- row 7
-        x"7F",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"7F",  -- row 13
+        x"0C",  -- row 0
+        x"18",  -- row 1
+        x"00",  -- row 2
+        x"FE",  -- row 3
+        x"66",  -- row 4
+        x"62",  -- row 5
+        x"68",  -- row 6
+        x"78",  -- row 7
+        x"68",  -- row 8
+        x"62",  -- row 9
+        x"66",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x91 neg
@@ -2480,420 +2480,420 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"3D",  -- row 6
-        x"66",  -- row 7
-        x"06",  -- row 8
-        x"3F",  -- row 9
-        x"66",  -- row 10
-        x"66",  -- row 11
-        x"66",  -- row 12
-        x"3B",  -- row 13
+        x"EC",  -- row 5
+        x"36",  -- row 6
+        x"36",  -- row 7
+        x"7E",  -- row 8
+        x"D8",  -- row 9
+        x"D8",  -- row 10
+        x"6E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x92 f-ord
-        x"07",  -- row 0
-        x"07",  -- row 1
-        x"0F",  -- row 2
-        x"0F",  -- row 3
-        x"1F",  -- row 4
-        x"1B",  -- row 5
-        x"1B",  -- row 6
-        x"33",  -- row 7
-        x"33",  -- row 8
-        x"3F",  -- row 9
-        x"7F",  -- row 10
-        x"63",  -- row 11
-        x"63",  -- row 12
-        x"63",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3E",  -- row 2
+        x"6C",  -- row 3
+        x"CC",  -- row 4
+        x"CC",  -- row 5
+        x"FE",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"CE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x93 neg2
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"0F",  -- row 2
-        x"19",  -- row 3
+        x"10",  -- row 1
+        x"38",  -- row 2
+        x"6C",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x94 neg3
         x"00",  -- row 0
         x"00",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
+        x"C6",  -- row 2
+        x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x95 neg4
         x"00",  -- row 0
-        x"0C",  -- row 1
-        x"06",  -- row 2
-        x"03",  -- row 3
+        x"60",  -- row 1
+        x"30",  -- row 2
+        x"18",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x96 OE
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"0F",  -- row 2
-        x"19",  -- row 3
+        x"30",  -- row 1
+        x"78",  -- row 2
+        x"CC",  -- row 3
         x"00",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"CC",  -- row 5
+        x"CC",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x97 oe
         x"00",  -- row 0
-        x"0C",  -- row 1
-        x"06",  -- row 2
-        x"03",  -- row 3
+        x"60",  -- row 1
+        x"30",  -- row 2
+        x"18",  -- row 3
         x"00",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"CC",  -- row 5
+        x"CC",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x98 neg5
         x"00",  -- row 0
         x"00",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
+        x"C6",  -- row 2
+        x"00",  -- row 3
         x"00",  -- row 4
-        x"30",  -- row 5
-        x"30",  -- row 6
-        x"30",  -- row 7
-        x"30",  -- row 8
-        x"30",  -- row 9
-        x"19",  -- row 10
-        x"0F",  -- row 11
-        x"07",  -- row 12
-        x"06",  -- row 13
-        x"3E",  -- row 14
-        x"3C",  -- row 15
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7E",  -- row 11
+        x"06",  -- row 12
+        x"0C",  -- row 13
+        x"78",  -- row 14
+        x"00",  -- row 15
   -- 0x99 neg6
-        x"31",  -- row 0
-        x"31",  -- row 1
+        x"00",  -- row 0
+        x"C6",  -- row 1
         x"00",  -- row 2
-        x"1F",  -- row 3
-        x"3F",  -- row 4
-        x"70",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7C",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x9A SHY
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
-        x"00",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"C6",  -- row 1
+        x"00",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x9B neg7
         x"00",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"0F",  -- row 3
-        x"1F",  -- row 4
-        x"3E",  -- row 5
-        x"36",  -- row 6
-        x"36",  -- row 7
-        x"36",  -- row 8
-        x"3E",  -- row 9
-        x"1F",  -- row 10
-        x"0F",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"7C",  -- row 3
+        x"C6",  -- row 4
+        x"C0",  -- row 5
+        x"C0",  -- row 6
+        x"C0",  -- row 7
+        x"C6",  -- row 8
+        x"7C",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0x9C O-slash
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"07",  -- row 2
-        x"0F",  -- row 3
-        x"0C",  -- row 4
-        x"0C",  -- row 5
-        x"0C",  -- row 6
-        x"1F",  -- row 7
-        x"0C",  -- row 8
-        x"0C",  -- row 9
-        x"18",  -- row 10
-        x"3F",  -- row 11
-        x"3B",  -- row 12
-        x"00",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x9D neg8
-        x"60",  -- row 0
-        x"60",  -- row 1
-        x"30",  -- row 2
-        x"30",  -- row 3
-        x"19",  -- row 4
-        x"19",  -- row 5
-        x"0F",  -- row 6
-        x"0F",  -- row 7
-        x"06",  -- row 8
-        x"3F",  -- row 9
-        x"06",  -- row 10
-        x"3F",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x9E neg9
-        x"00",  -- row 0
-        x"00",  -- row 1
-        x"00",  -- row 2
-        x"7C",  -- row 3
-        x"66",  -- row 4
-        x"66",  -- row 5
-        x"66",  -- row 6
-        x"7D",  -- row 7
-        x"61",  -- row 8
-        x"63",  -- row 9
-        x"61",  -- row 10
-        x"61",  -- row 11
-        x"61",  -- row 12
-        x"60",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0x9F Y-acute2
-        x"03",  -- row 0
-        x"07",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"1F",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"36",  -- row 12
-        x"3E",  -- row 13
-        x"1C",  -- row 14
-        x"00",  -- row 15
-  -- 0xA0 NBSP
-        x"00",  -- row 0
-        x"03",  -- row 1
-        x"06",  -- row 2
-        x"0C",  -- row 3
-        x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"00",  -- row 7
-        x"1F",  -- row 8
-        x"3F",  -- row 9
-        x"60",  -- row 10
-        x"60",  -- row 11
-        x"7F",  -- row 12
-        x"3F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0xA1 i-exclam
-        x"00",  -- row 0
-        x"03",  -- row 1
-        x"06",  -- row 2
-        x"0C",  -- row 3
-        x"00",  -- row 4
-        x"0E",  -- row 5
-        x"0E",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"1F",  -- row 12
-        x"1F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0xA2 cent
-        x"00",  -- row 0
-        x"03",  -- row 1
-        x"06",  -- row 2
-        x"0C",  -- row 3
-        x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"70",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
-        x"00",  -- row 14
-        x"00",  -- row 15
-  -- 0xA3 sterling
-        x"00",  -- row 0
-        x"03",  -- row 1
-        x"06",  -- row 2
-        x"0C",  -- row 3
-        x"00",  -- row 4
-        x"60",  -- row 5
+        x"38",  -- row 1
+        x"6C",  -- row 2
+        x"64",  -- row 3
+        x"60",  -- row 4
+        x"F0",  -- row 5
         x"60",  -- row 6
         x"60",  -- row 7
         x"60",  -- row 8
         x"60",  -- row 9
-        x"60",  -- row 10
+        x"E6",  -- row 10
+        x"FC",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x9D neg8
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"66",  -- row 2
+        x"66",  -- row 3
+        x"3C",  -- row 4
+        x"18",  -- row 5
+        x"7E",  -- row 6
+        x"18",  -- row 7
+        x"7E",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x9E neg9
+        x"00",  -- row 0
+        x"F8",  -- row 1
+        x"CC",  -- row 2
+        x"CC",  -- row 3
+        x"F8",  -- row 4
+        x"C4",  -- row 5
+        x"CC",  -- row 6
+        x"DE",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0x9F Y-acute2
+        x"00",  -- row 0
+        x"0E",  -- row 1
+        x"1B",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"7E",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"D8",  -- row 10
         x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0xA0 NBSP
+        x"00",  -- row 0
+        x"18",  -- row 1
+        x"30",  -- row 2
+        x"60",  -- row 3
+        x"00",  -- row 4
+        x"78",  -- row 5
+        x"0C",  -- row 6
+        x"7C",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0xA1 i-exclam
+        x"00",  -- row 0
+        x"0C",  -- row 1
+        x"18",  -- row 2
+        x"30",  -- row 3
+        x"00",  -- row 4
+        x"38",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0xA2 cent
+        x"00",  -- row 0
+        x"18",  -- row 1
+        x"30",  -- row 2
+        x"60",  -- row 3
+        x"00",  -- row 4
+        x"7C",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
+  -- 0xA3 sterling
+        x"00",  -- row 0
+        x"18",  -- row 1
+        x"30",  -- row 2
+        x"60",  -- row 3
+        x"00",  -- row 4
+        x"CC",  -- row 5
+        x"CC",  -- row 6
+        x"CC",  -- row 7
+        x"CC",  -- row 8
+        x"CC",  -- row 9
+        x"CC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xA4 yen
         x"00",  -- row 0
         x"00",  -- row 1
-        x"0E",  -- row 2
-        x"1B",  -- row 3
+        x"76",  -- row 2
+        x"DC",  -- row 3
         x"00",  -- row 4
-        x"3F",  -- row 5
-        x"3F",  -- row 6
-        x"30",  -- row 7
-        x"30",  -- row 8
-        x"30",  -- row 9
-        x"30",  -- row 10
-        x"30",  -- row 11
-        x"30",  -- row 12
-        x"30",  -- row 13
+        x"DC",  -- row 5
+        x"66",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"66",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xA5 yuan
-        x"0E",  -- row 0
-        x"1B",  -- row 1
+        x"76",  -- row 0
+        x"DC",  -- row 1
         x"00",  -- row 2
-        x"60",  -- row 3
-        x"70",  -- row 4
-        x"78",  -- row 5
-        x"7C",  -- row 6
-        x"6E",  -- row 7
-        x"67",  -- row 8
-        x"63",  -- row 9
-        x"61",  -- row 10
-        x"60",  -- row 11
-        x"60",  -- row 12
-        x"60",  -- row 13
+        x"C6",  -- row 3
+        x"E6",  -- row 4
+        x"F6",  -- row 5
+        x"FE",  -- row 6
+        x"DE",  -- row 7
+        x"CE",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xA6 broken-bar
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"00",  -- row 2
-        x"3F",  -- row 3
-        x"7F",  -- row 4
-        x"60",  -- row 5
-        x"7F",  -- row 6
-        x"3F",  -- row 7
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"3C",  -- row 2
+        x"6C",  -- row 3
+        x"6C",  -- row 4
+        x"3E",  -- row 5
+        x"00",  -- row 6
+        x"7E",  -- row 7
         x"00",  -- row 8
-        x"3F",  -- row 9
-        x"3F",  -- row 10
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xA7 section
-        x"1F",  -- row 0
-        x"3F",  -- row 1
-        x"70",  -- row 2
-        x"60",  -- row 3
-        x"60",  -- row 4
-        x"70",  -- row 5
-        x"3F",  -- row 6
-        x"1F",  -- row 7
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"38",  -- row 2
+        x"6C",  -- row 3
+        x"6C",  -- row 4
+        x"38",  -- row 5
+        x"00",  -- row 6
+        x"7C",  -- row 7
         x"00",  -- row 8
-        x"3F",  -- row 9
-        x"3F",  -- row 10
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xA8 diaeresis
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"00",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"0E",  -- row 6
-        x"1C",  -- row 7
-        x"38",  -- row 8
-        x"70",  -- row 9
-        x"60",  -- row 10
-        x"70",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"30",  -- row 2
+        x"30",  -- row 3
+        x"00",  -- row 4
+        x"30",  -- row 5
+        x"30",  -- row 6
+        x"60",  -- row 7
+        x"C0",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"7C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xA9 copyright
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"7F",  -- row 3
-        x"7F",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"00",  -- row 9
-        x"00",  -- row 10
+        x"00",  -- row 3
+        x"00",  -- row 4
+        x"00",  -- row 5
+        x"FE",  -- row 6
+        x"C0",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C0",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -2903,14 +2903,14 @@ package font_rom_pkg is
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"FF",  -- row 3
-        x"FF",  -- row 4
+        x"00",  -- row 3
+        x"00",  -- row 4
         x"00",  -- row 5
-        x"00",  -- row 6
-        x"00",  -- row 7
-        x"00",  -- row 8
-        x"00",  -- row 9
-        x"00",  -- row 10
+        x"FE",  -- row 6
+        x"06",  -- row 7
+        x"06",  -- row 8
+        x"06",  -- row 9
+        x"06",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -2918,53 +2918,53 @@ package font_rom_pkg is
         x"00",  -- row 15
   -- 0xAB laquo
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"30",  -- row 2
-        x"70",  -- row 3
-        x"30",  -- row 4
-        x"31",  -- row 5
-        x"7B",  -- row 6
-        x"06",  -- row 7
-        x"0D",  -- row 8
-        x"18",  -- row 9
-        x"30",  -- row 10
-        x"01",  -- row 11
-        x"01",  -- row 12
-        x"00",  -- row 13
+        x"60",  -- row 1
+        x"E0",  -- row 2
+        x"62",  -- row 3
+        x"66",  -- row 4
+        x"6C",  -- row 5
+        x"18",  -- row 6
+        x"30",  -- row 7
+        x"60",  -- row 8
+        x"DC",  -- row 9
+        x"86",  -- row 10
+        x"0C",  -- row 11
+        x"18",  -- row 12
+        x"3E",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xAC not-sign
         x"00",  -- row 0
-        x"00",  -- row 1
-        x"30",  -- row 2
-        x"70",  -- row 3
-        x"30",  -- row 4
-        x"31",  -- row 5
-        x"7B",  -- row 6
-        x"06",  -- row 7
-        x"0D",  -- row 8
-        x"1B",  -- row 9
-        x"33",  -- row 10
-        x"00",  -- row 11
-        x"00",  -- row 12
-        x"00",  -- row 13
+        x"60",  -- row 1
+        x"E0",  -- row 2
+        x"62",  -- row 3
+        x"66",  -- row 4
+        x"6C",  -- row 5
+        x"18",  -- row 6
+        x"30",  -- row 7
+        x"66",  -- row 8
+        x"CE",  -- row 9
+        x"9A",  -- row 10
+        x"3F",  -- row 11
+        x"06",  -- row 12
+        x"06",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xAD soft-hyphen
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"00",  -- row 2
-        x"00",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"0F",  -- row 7
-        x"0F",  -- row 8
-        x"0F",  -- row 9
-        x"0F",  -- row 10
-        x"0F",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"00",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"3C",  -- row 8
+        x"3C",  -- row 9
+        x"3C",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xAE registered
@@ -2973,11 +2973,11 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"18",  -- row 5
-        x"31",  -- row 6
-        x"63",  -- row 7
-        x"31",  -- row 8
-        x"18",  -- row 9
+        x"36",  -- row 5
+        x"6C",  -- row 6
+        x"D8",  -- row 7
+        x"6C",  -- row 8
+        x"36",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
@@ -2990,35 +2990,35 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"63",  -- row 5
-        x"31",  -- row 6
-        x"18",  -- row 7
-        x"31",  -- row 8
-        x"63",  -- row 9
+        x"D8",  -- row 5
+        x"6C",  -- row 6
+        x"36",  -- row 7
+        x"6C",  -- row 8
+        x"D8",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
-  -- 0xB0 degree
-        x"88",  -- row 0
-        x"22",  -- row 1
-        x"88",  -- row 2
-        x"22",  -- row 3
-        x"88",  -- row 4
-        x"22",  -- row 5
-        x"88",  -- row 6
-        x"22",  -- row 7
-        x"88",  -- row 8
-        x"22",  -- row 9
-        x"88",  -- row 10
-        x"22",  -- row 11
-        x"88",  -- row 12
-        x"22",  -- row 13
-        x"88",  -- row 14
-        x"22",  -- row 15
-  -- 0xB1 plus-minus
+  -- 0xB0 shade-light
+        x"11",  -- row 0
+        x"44",  -- row 1
+        x"11",  -- row 2
+        x"44",  -- row 3
+        x"11",  -- row 4
+        x"44",  -- row 5
+        x"11",  -- row 6
+        x"44",  -- row 7
+        x"11",  -- row 8
+        x"44",  -- row 9
+        x"11",  -- row 10
+        x"44",  -- row 11
+        x"11",  -- row 12
+        x"44",  -- row 13
+        x"11",  -- row 14
+        x"44",  -- row 15
+  -- 0xB1 shade-med
         x"55",  -- row 0
         x"AA",  -- row 1
         x"55",  -- row 2
@@ -3035,74 +3035,74 @@ package font_rom_pkg is
         x"AA",  -- row 13
         x"55",  -- row 14
         x"AA",  -- row 15
-  -- 0xB2 sup2
-        x"77",  -- row 0
-        x"DD",  -- row 1
-        x"77",  -- row 2
-        x"DD",  -- row 3
-        x"77",  -- row 4
-        x"DD",  -- row 5
-        x"77",  -- row 6
-        x"DD",  -- row 7
-        x"77",  -- row 8
-        x"DD",  -- row 9
-        x"77",  -- row 10
-        x"DD",  -- row 11
-        x"77",  -- row 12
-        x"DD",  -- row 13
-        x"77",  -- row 14
-        x"DD",  -- row 15
+  -- 0xB2 shade-dark
+        x"DD",  -- row 0
+        x"77",  -- row 1
+        x"DD",  -- row 2
+        x"77",  -- row 3
+        x"DD",  -- row 4
+        x"77",  -- row 5
+        x"DD",  -- row 6
+        x"77",  -- row 7
+        x"DD",  -- row 8
+        x"77",  -- row 9
+        x"DD",  -- row 10
+        x"77",  -- row 11
+        x"DD",  -- row 12
+        x"77",  -- row 13
+        x"DD",  -- row 14
+        x"77",  -- row 15
   -- 0xB3 sup3
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xB4 box-lr
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"FE",  -- row 7
-        x"FE",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"F8",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xB5 micro
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"FE",  -- row 6
-        x"FE",  -- row 7
-        x"06",  -- row 8
-        x"FE",  -- row 9
-        x"FE",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"F8",  -- row 5
+        x"18",  -- row 6
+        x"F8",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xB6 pilcrow
         x"36",  -- row 0
         x"36",  -- row 1
@@ -3112,7 +3112,7 @@ package font_rom_pkg is
         x"36",  -- row 5
         x"36",  -- row 6
         x"F6",  -- row 7
-        x"F6",  -- row 8
+        x"36",  -- row 8
         x"36",  -- row 9
         x"36",  -- row 10
         x"36",  -- row 11
@@ -3129,7 +3129,7 @@ package font_rom_pkg is
         x"00",  -- row 5
         x"00",  -- row 6
         x"FE",  -- row 7
-        x"FE",  -- row 8
+        x"36",  -- row 8
         x"36",  -- row 9
         x"36",  -- row 10
         x"36",  -- row 11
@@ -3143,29 +3143,29 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"FE",  -- row 6
-        x"FE",  -- row 7
-        x"06",  -- row 8
-        x"FE",  -- row 9
-        x"FE",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"F8",  -- row 5
+        x"18",  -- row 6
+        x"F8",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xB9 sup1
         x"36",  -- row 0
         x"36",  -- row 1
         x"36",  -- row 2
         x"36",  -- row 3
         x"36",  -- row 4
-        x"36",  -- row 5
-        x"F6",  -- row 6
+        x"F6",  -- row 5
+        x"06",  -- row 6
         x"F6",  -- row 7
-        x"06",  -- row 8
-        x"F6",  -- row 9
-        x"F6",  -- row 10
+        x"36",  -- row 8
+        x"36",  -- row 9
+        x"36",  -- row 10
         x"36",  -- row 11
         x"36",  -- row 12
         x"36",  -- row 13
@@ -3194,12 +3194,12 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"FE",  -- row 6
-        x"FE",  -- row 7
-        x"06",  -- row 8
-        x"F6",  -- row 9
-        x"F6",  -- row 10
+        x"FE",  -- row 5
+        x"06",  -- row 6
+        x"F6",  -- row 7
+        x"36",  -- row 8
+        x"36",  -- row 9
+        x"36",  -- row 10
         x"36",  -- row 11
         x"36",  -- row 12
         x"36",  -- row 13
@@ -3211,12 +3211,12 @@ package font_rom_pkg is
         x"36",  -- row 2
         x"36",  -- row 3
         x"36",  -- row 4
-        x"36",  -- row 5
-        x"F6",  -- row 6
-        x"F6",  -- row 7
-        x"06",  -- row 8
-        x"FE",  -- row 9
-        x"FE",  -- row 10
+        x"F6",  -- row 5
+        x"06",  -- row 6
+        x"FE",  -- row 7
+        x"00",  -- row 8
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -3231,7 +3231,7 @@ package font_rom_pkg is
         x"36",  -- row 5
         x"36",  -- row 6
         x"FE",  -- row 7
-        x"FE",  -- row 8
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -3240,17 +3240,17 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xBE 3/4
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"FE",  -- row 6
-        x"FE",  -- row 7
-        x"06",  -- row 8
-        x"FE",  -- row 9
-        x"FE",  -- row 10
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"F8",  -- row 5
+        x"18",  -- row 6
+        x"F8",  -- row 7
+        x"00",  -- row 8
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -3264,25 +3264,25 @@ package font_rom_pkg is
         x"00",  -- row 4
         x"00",  -- row 5
         x"00",  -- row 6
-        x"FE",  -- row 7
-        x"FE",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"F8",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xC0 box-bl
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"07",  -- row 7
-        x"07",  -- row 8
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"1F",  -- row 7
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -3291,15 +3291,15 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xC1 box-bt
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
         x"FF",  -- row 7
-        x"FF",  -- row 8
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -3316,31 +3316,31 @@ package font_rom_pkg is
         x"00",  -- row 5
         x"00",  -- row 6
         x"FF",  -- row 7
-        x"FF",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xC3 box-lt
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"07",  -- row 7
-        x"07",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"1F",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xC4 box-hz
         x"00",  -- row 0
         x"00",  -- row 1
@@ -3350,7 +3350,7 @@ package font_rom_pkg is
         x"00",  -- row 5
         x"00",  -- row 6
         x"FF",  -- row 7
-        x"FF",  -- row 8
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -3359,39 +3359,39 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xC5 box-x
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
         x"FF",  -- row 7
-        x"FF",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xC6 AE
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"07",  -- row 6
-        x"07",  -- row 7
-        x"06",  -- row 8
-        x"07",  -- row 9
-        x"07",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"1F",  -- row 5
+        x"18",  -- row 6
+        x"1F",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xC7 C-cedilla
         x"36",  -- row 0
         x"36",  -- row 1
@@ -3401,7 +3401,7 @@ package font_rom_pkg is
         x"36",  -- row 5
         x"36",  -- row 6
         x"37",  -- row 7
-        x"37",  -- row 8
+        x"36",  -- row 8
         x"36",  -- row 9
         x"36",  -- row 10
         x"36",  -- row 11
@@ -3415,12 +3415,12 @@ package font_rom_pkg is
         x"36",  -- row 2
         x"36",  -- row 3
         x"36",  -- row 4
-        x"36",  -- row 5
-        x"37",  -- row 6
-        x"37",  -- row 7
-        x"30",  -- row 8
-        x"3F",  -- row 9
-        x"3F",  -- row 10
+        x"37",  -- row 5
+        x"30",  -- row 6
+        x"3F",  -- row 7
+        x"00",  -- row 8
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -3432,12 +3432,12 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"3F",  -- row 6
-        x"3F",  -- row 7
-        x"30",  -- row 8
-        x"37",  -- row 9
-        x"37",  -- row 10
+        x"3F",  -- row 5
+        x"30",  -- row 6
+        x"37",  -- row 7
+        x"36",  -- row 8
+        x"36",  -- row 9
+        x"36",  -- row 10
         x"36",  -- row 11
         x"36",  -- row 12
         x"36",  -- row 13
@@ -3449,12 +3449,12 @@ package font_rom_pkg is
         x"36",  -- row 2
         x"36",  -- row 3
         x"36",  -- row 4
-        x"36",  -- row 5
-        x"F7",  -- row 6
-        x"F7",  -- row 7
+        x"F7",  -- row 5
+        x"00",  -- row 6
+        x"FF",  -- row 7
         x"00",  -- row 8
-        x"FF",  -- row 9
-        x"FF",  -- row 10
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -3466,12 +3466,12 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"FF",  -- row 6
-        x"FF",  -- row 7
-        x"00",  -- row 8
-        x"F7",  -- row 9
-        x"F7",  -- row 10
+        x"FF",  -- row 5
+        x"00",  -- row 6
+        x"F7",  -- row 7
+        x"36",  -- row 8
+        x"36",  -- row 9
+        x"36",  -- row 10
         x"36",  -- row 11
         x"36",  -- row 12
         x"36",  -- row 13
@@ -3483,12 +3483,12 @@ package font_rom_pkg is
         x"36",  -- row 2
         x"36",  -- row 3
         x"36",  -- row 4
-        x"36",  -- row 5
-        x"37",  -- row 6
+        x"37",  -- row 5
+        x"30",  -- row 6
         x"37",  -- row 7
-        x"30",  -- row 8
-        x"37",  -- row 9
-        x"37",  -- row 10
+        x"36",  -- row 8
+        x"36",  -- row 9
+        x"36",  -- row 10
         x"36",  -- row 11
         x"36",  -- row 12
         x"36",  -- row 13
@@ -3500,12 +3500,12 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"FF",  -- row 6
+        x"FF",  -- row 5
+        x"00",  -- row 6
         x"FF",  -- row 7
         x"00",  -- row 8
-        x"FF",  -- row 9
-        x"FF",  -- row 10
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -3517,29 +3517,29 @@ package font_rom_pkg is
         x"36",  -- row 2
         x"36",  -- row 3
         x"36",  -- row 4
-        x"36",  -- row 5
-        x"F7",  -- row 6
+        x"F7",  -- row 5
+        x"00",  -- row 6
         x"F7",  -- row 7
-        x"00",  -- row 8
-        x"F7",  -- row 9
-        x"F7",  -- row 10
+        x"36",  -- row 8
+        x"36",  -- row 9
+        x"36",  -- row 10
         x"36",  -- row 11
         x"36",  -- row 12
         x"36",  -- row 13
         x"36",  -- row 14
         x"36",  -- row 15
   -- 0xCF I-diaeresis
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"FF",  -- row 6
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"FF",  -- row 5
+        x"00",  -- row 6
         x"FF",  -- row 7
         x"00",  -- row 8
-        x"FF",  -- row 9
-        x"FF",  -- row 10
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -3554,7 +3554,7 @@ package font_rom_pkg is
         x"36",  -- row 5
         x"36",  -- row 6
         x"FF",  -- row 7
-        x"FF",  -- row 8
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -3568,17 +3568,17 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"FF",  -- row 6
+        x"FF",  -- row 5
+        x"00",  -- row 6
         x"FF",  -- row 7
-        x"00",  -- row 8
-        x"FF",  -- row 9
-        x"FF",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xD2 O-grave
         x"00",  -- row 0
         x"00",  -- row 1
@@ -3588,7 +3588,7 @@ package font_rom_pkg is
         x"00",  -- row 5
         x"00",  -- row 6
         x"FF",  -- row 7
-        x"FF",  -- row 8
+        x"36",  -- row 8
         x"36",  -- row 9
         x"36",  -- row 10
         x"36",  -- row 11
@@ -3605,7 +3605,7 @@ package font_rom_pkg is
         x"36",  -- row 5
         x"36",  -- row 6
         x"3F",  -- row 7
-        x"3F",  -- row 8
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -3614,17 +3614,17 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xD4 O-circumflex
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"07",  -- row 6
-        x"07",  -- row 7
-        x"06",  -- row 8
-        x"07",  -- row 9
-        x"07",  -- row 10
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"1F",  -- row 5
+        x"18",  -- row 6
+        x"1F",  -- row 7
+        x"00",  -- row 8
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -3636,17 +3636,17 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"07",  -- row 6
-        x"07",  -- row 7
-        x"06",  -- row 8
-        x"07",  -- row 9
-        x"07",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"1F",  -- row 5
+        x"18",  -- row 6
+        x"1F",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xD6 O-diaeresis
         x"00",  -- row 0
         x"00",  -- row 1
@@ -3656,7 +3656,7 @@ package font_rom_pkg is
         x"00",  -- row 5
         x"00",  -- row 6
         x"3F",  -- row 7
-        x"3F",  -- row 8
+        x"36",  -- row 8
         x"36",  -- row 9
         x"36",  -- row 10
         x"36",  -- row 11
@@ -3672,8 +3672,8 @@ package font_rom_pkg is
         x"36",  -- row 4
         x"36",  -- row 5
         x"36",  -- row 6
-        x"F7",  -- row 7
-        x"F7",  -- row 8
+        x"FF",  -- row 7
+        x"36",  -- row 8
         x"36",  -- row 9
         x"36",  -- row 10
         x"36",  -- row 11
@@ -3682,32 +3682,32 @@ package font_rom_pkg is
         x"36",  -- row 14
         x"36",  -- row 15
   -- 0xD8 O-slash
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"FF",  -- row 6
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"FF",  -- row 5
+        x"18",  -- row 6
         x"FF",  -- row 7
-        x"00",  -- row 8
-        x"FF",  -- row 9
-        x"FF",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xD9 box-br
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"FE",  -- row 7
-        x"FE",  -- row 8
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"F8",  -- row 7
+        x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
@@ -3723,15 +3723,15 @@ package font_rom_pkg is
         x"00",  -- row 4
         x"00",  -- row 5
         x"00",  -- row 6
-        x"07",  -- row 7
-        x"07",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"1F",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xDB full-block
         x"FF",  -- row 0
         x"FF",  -- row 1
@@ -3757,7 +3757,7 @@ package font_rom_pkg is
         x"00",  -- row 4
         x"00",  -- row 5
         x"00",  -- row 6
-        x"00",  -- row 7
+        x"FF",  -- row 7
         x"FF",  -- row 8
         x"FF",  -- row 9
         x"FF",  -- row 10
@@ -3767,39 +3767,39 @@ package font_rom_pkg is
         x"FF",  -- row 14
         x"FF",  -- row 15
   -- 0xDD Y-acute
-        x"FC",  -- row 0
-        x"FC",  -- row 1
-        x"FC",  -- row 2
-        x"FC",  -- row 3
-        x"FC",  -- row 4
-        x"FC",  -- row 5
-        x"FC",  -- row 6
-        x"FC",  -- row 7
-        x"FC",  -- row 8
-        x"FC",  -- row 9
-        x"FC",  -- row 10
-        x"FC",  -- row 11
-        x"FC",  -- row 12
-        x"FC",  -- row 13
-        x"FC",  -- row 14
-        x"FC",  -- row 15
+        x"F0",  -- row 0
+        x"F0",  -- row 1
+        x"F0",  -- row 2
+        x"F0",  -- row 3
+        x"F0",  -- row 4
+        x"F0",  -- row 5
+        x"F0",  -- row 6
+        x"F0",  -- row 7
+        x"F0",  -- row 8
+        x"F0",  -- row 9
+        x"F0",  -- row 10
+        x"F0",  -- row 11
+        x"F0",  -- row 12
+        x"F0",  -- row 13
+        x"F0",  -- row 14
+        x"F0",  -- row 15
   -- 0xDE THORN
-        x"03",  -- row 0
-        x"03",  -- row 1
-        x"03",  -- row 2
-        x"03",  -- row 3
-        x"03",  -- row 4
-        x"03",  -- row 5
-        x"03",  -- row 6
-        x"03",  -- row 7
-        x"03",  -- row 8
-        x"03",  -- row 9
-        x"03",  -- row 10
-        x"03",  -- row 11
-        x"03",  -- row 12
-        x"03",  -- row 13
-        x"03",  -- row 14
-        x"03",  -- row 15
+        x"0F",  -- row 0
+        x"0F",  -- row 1
+        x"0F",  -- row 2
+        x"0F",  -- row 3
+        x"0F",  -- row 4
+        x"0F",  -- row 5
+        x"0F",  -- row 6
+        x"0F",  -- row 7
+        x"0F",  -- row 8
+        x"0F",  -- row 9
+        x"0F",  -- row 10
+        x"0F",  -- row 11
+        x"0F",  -- row 12
+        x"0F",  -- row 13
+        x"0F",  -- row 14
+        x"0F",  -- row 15
   -- 0xDF sharp-s
         x"FF",  -- row 0
         x"FF",  -- row 1
@@ -3808,7 +3808,7 @@ package font_rom_pkg is
         x"FF",  -- row 4
         x"FF",  -- row 5
         x"FF",  -- row 6
-        x"FF",  -- row 7
+        x"00",  -- row 7
         x"00",  -- row 8
         x"00",  -- row 9
         x"00",  -- row 10
@@ -3823,83 +3823,83 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"00",  -- row 6
-        x"0C",  -- row 7
-        x"1E",  -- row 8
-        x"33",  -- row 9
-        x"21",  -- row 10
-        x"33",  -- row 11
-        x"1E",  -- row 12
-        x"0C",  -- row 13
+        x"76",  -- row 5
+        x"DC",  -- row 6
+        x"D8",  -- row 7
+        x"D8",  -- row 8
+        x"D8",  -- row 9
+        x"DC",  -- row 10
+        x"76",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xE1 a-acute
         x"00",  -- row 0
         x"00",  -- row 1
-        x"00",  -- row 2
-        x"00",  -- row 3
-        x"0F",  -- row 4
-        x"19",  -- row 5
-        x"30",  -- row 6
-        x"30",  -- row 7
-        x"3F",  -- row 8
-        x"31",  -- row 9
-        x"30",  -- row 10
-        x"30",  -- row 11
-        x"31",  -- row 12
-        x"3F",  -- row 13
-        x"30",  -- row 14
-        x"30",  -- row 15
+        x"78",  -- row 2
+        x"CC",  -- row 3
+        x"CC",  -- row 4
+        x"CC",  -- row 5
+        x"D8",  -- row 6
+        x"CC",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"CC",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
   -- 0xE2 a-circumflex
         x"00",  -- row 0
-        x"3F",  -- row 1
-        x"3F",  -- row 2
-        x"30",  -- row 3
-        x"30",  -- row 4
-        x"30",  -- row 5
-        x"30",  -- row 6
-        x"30",  -- row 7
-        x"30",  -- row 8
-        x"30",  -- row 9
-        x"30",  -- row 10
-        x"30",  -- row 11
-        x"30",  -- row 12
-        x"30",  -- row 13
+        x"00",  -- row 1
+        x"FE",  -- row 2
+        x"C6",  -- row 3
+        x"C6",  -- row 4
+        x"C0",  -- row 5
+        x"C0",  -- row 6
+        x"C0",  -- row 7
+        x"C0",  -- row 8
+        x"C0",  -- row 9
+        x"C0",  -- row 10
+        x"C0",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xE3 a-tilde
         x"00",  -- row 0
         x"00",  -- row 1
-        x"3F",  -- row 2
-        x"7F",  -- row 3
-        x"19",  -- row 4
-        x"19",  -- row 5
-        x"19",  -- row 6
-        x"19",  -- row 7
-        x"19",  -- row 8
-        x"19",  -- row 9
-        x"19",  -- row 10
-        x"19",  -- row 11
-        x"19",  -- row 12
-        x"19",  -- row 13
+        x"00",  -- row 2
+        x"00",  -- row 3
+        x"00",  -- row 4
+        x"FE",  -- row 5
+        x"6C",  -- row 6
+        x"6C",  -- row 7
+        x"6C",  -- row 8
+        x"6C",  -- row 9
+        x"6C",  -- row 10
+        x"6C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xE4 a-diaeresis
         x"00",  -- row 0
-        x"3F",  -- row 1
-        x"3F",  -- row 2
-        x"38",  -- row 3
-        x"1C",  -- row 4
-        x"0E",  -- row 5
-        x"07",  -- row 6
-        x"03",  -- row 7
-        x"07",  -- row 8
-        x"0E",  -- row 9
-        x"1C",  -- row 10
-        x"38",  -- row 11
-        x"3F",  -- row 12
-        x"3F",  -- row 13
+        x"00",  -- row 1
+        x"FE",  -- row 2
+        x"C6",  -- row 3
+        x"60",  -- row 4
+        x"30",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"30",  -- row 8
+        x"60",  -- row 9
+        x"C6",  -- row 10
+        x"FE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xE5 a-ring
@@ -3908,15 +3908,15 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"1F",  -- row 5
-        x"3F",  -- row 6
-        x"71",  -- row 7
-        x"60",  -- row 8
-        x"60",  -- row 9
-        x"60",  -- row 10
-        x"71",  -- row 11
-        x"3F",  -- row 12
-        x"1F",  -- row 13
+        x"7E",  -- row 5
+        x"D8",  -- row 6
+        x"D8",  -- row 7
+        x"D8",  -- row 8
+        x"D8",  -- row 9
+        x"D8",  -- row 10
+        x"70",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xE6 ae
@@ -3924,101 +3924,101 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"60",  -- row 4
-        x"60",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"60",  -- row 8
-        x"71",  -- row 9
-        x"7F",  -- row 10
-        x"7E",  -- row 11
+        x"00",  -- row 4
+        x"66",  -- row 5
+        x"66",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"7C",  -- row 11
         x"60",  -- row 12
         x"60",  -- row 13
-        x"60",  -- row 14
-        x"60",  -- row 15
+        x"C0",  -- row 14
+        x"00",  -- row 15
   -- 0xE7 c-cedilla
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"00",  -- row 4
-        x"18",  -- row 5
-        x"3C",  -- row 6
-        x"37",  -- row 7
-        x"07",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"0E",  -- row 11
-        x"0C",  -- row 12
-        x"0C",  -- row 13
+        x"76",  -- row 4
+        x"DC",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xE8 e-grave
-        x"1F",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"1F",  -- row 3
-        x"3F",  -- row 4
-        x"70",  -- row 5
-        x"60",  -- row 6
-        x"60",  -- row 7
-        x"70",  -- row 8
-        x"3F",  -- row 9
-        x"1F",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"1F",  -- row 13
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"7E",  -- row 2
+        x"18",  -- row 3
+        x"3C",  -- row 4
+        x"66",  -- row 5
+        x"66",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"3C",  -- row 9
+        x"18",  -- row 10
+        x"7E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xE9 e-acute
         x"00",  -- row 0
         x"00",  -- row 1
-        x"0F",  -- row 2
-        x"1F",  -- row 3
-        x"39",  -- row 4
-        x"30",  -- row 5
-        x"30",  -- row 6
-        x"3F",  -- row 7
-        x"3F",  -- row 8
-        x"30",  -- row 9
-        x"30",  -- row 10
-        x"39",  -- row 11
-        x"1F",  -- row 12
-        x"0F",  -- row 13
+        x"38",  -- row 2
+        x"6C",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"FE",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"6C",  -- row 10
+        x"38",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xEA e-circumflex
         x"00",  -- row 0
         x"00",  -- row 1
-        x"00",  -- row 2
-        x"07",  -- row 3
-        x"0F",  -- row 4
-        x"18",  -- row 5
-        x"30",  -- row 6
-        x"30",  -- row 7
-        x"30",  -- row 8
-        x"18",  -- row 9
-        x"0D",  -- row 10
-        x"0D",  -- row 11
-        x"3D",  -- row 12
-        x"38",  -- row 13
+        x"38",  -- row 2
+        x"6C",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"6C",  -- row 7
+        x"6C",  -- row 8
+        x"6C",  -- row 9
+        x"6C",  -- row 10
+        x"EE",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xEB e-diaeresis
         x"00",  -- row 0
         x"00",  -- row 1
-        x"0F",  -- row 2
-        x"1F",  -- row 3
+        x"1E",  -- row 2
+        x"30",  -- row 3
         x"18",  -- row 4
-        x"18",  -- row 5
-        x"1C",  -- row 6
-        x"0E",  -- row 7
-        x"07",  -- row 8
-        x"0F",  -- row 9
-        x"19",  -- row 10
-        x"19",  -- row 11
-        x"1F",  -- row 12
-        x"0F",  -- row 13
+        x"0C",  -- row 5
+        x"3E",  -- row 6
+        x"66",  -- row 7
+        x"66",  -- row 8
+        x"66",  -- row 9
+        x"66",  -- row 10
+        x"3C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xEC i-grave
@@ -4027,12 +4027,12 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"00",  -- row 5
-        x"39",  -- row 6
-        x"6F",  -- row 7
-        x"66",  -- row 8
-        x"6F",  -- row 9
-        x"39",  -- row 10
+        x"7E",  -- row 5
+        x"DB",  -- row 6
+        x"DB",  -- row 7
+        x"DB",  -- row 8
+        x"7E",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -4042,67 +4042,67 @@ package font_rom_pkg is
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"00",  -- row 3
-        x"00",  -- row 4
-        x"0F",  -- row 5
-        x"1F",  -- row 6
-        x"3B",  -- row 7
-        x"33",  -- row 8
-        x"36",  -- row 9
-        x"3E",  -- row 10
-        x"1F",  -- row 11
-        x"0F",  -- row 12
-        x"18",  -- row 13
-        x"18",  -- row 14
+        x"03",  -- row 3
+        x"06",  -- row 4
+        x"7E",  -- row 5
+        x"DB",  -- row 6
+        x"DB",  -- row 7
+        x"F3",  -- row 8
+        x"7E",  -- row 9
+        x"60",  -- row 10
+        x"C0",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
         x"00",  -- row 15
   -- 0xEE i-circumflex
-        x"03",  -- row 0
-        x"0F",  -- row 1
+        x"00",  -- row 0
+        x"00",  -- row 1
         x"1C",  -- row 2
-        x"18",  -- row 3
-        x"30",  -- row 4
-        x"30",  -- row 5
-        x"3F",  -- row 6
-        x"3F",  -- row 7
-        x"30",  -- row 8
-        x"30",  -- row 9
-        x"18",  -- row 10
+        x"30",  -- row 3
+        x"60",  -- row 4
+        x"60",  -- row 5
+        x"7C",  -- row 6
+        x"60",  -- row 7
+        x"60",  -- row 8
+        x"60",  -- row 9
+        x"30",  -- row 10
         x"1C",  -- row 11
-        x"0F",  -- row 12
-        x"03",  -- row 13
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xEF i-diaeresis
         x"00",  -- row 0
-        x"0E",  -- row 1
-        x"1F",  -- row 2
-        x"3B",  -- row 3
-        x"31",  -- row 4
-        x"31",  -- row 5
-        x"31",  -- row 6
-        x"31",  -- row 7
-        x"31",  -- row 8
-        x"31",  -- row 9
-        x"31",  -- row 10
-        x"31",  -- row 11
-        x"31",  -- row 12
-        x"31",  -- row 13
+        x"00",  -- row 1
+        x"00",  -- row 2
+        x"7C",  -- row 3
+        x"C6",  -- row 4
+        x"C6",  -- row 5
+        x"C6",  -- row 6
+        x"C6",  -- row 7
+        x"C6",  -- row 8
+        x"C6",  -- row 9
+        x"C6",  -- row 10
+        x"C6",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xF0 eth
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"3F",  -- row 3
-        x"3F",  -- row 4
+        x"00",  -- row 3
+        x"FE",  -- row 4
         x"00",  -- row 5
         x"00",  -- row 6
-        x"3F",  -- row 7
-        x"3F",  -- row 8
+        x"FE",  -- row 7
+        x"00",  -- row 8
         x"00",  -- row 9
-        x"00",  -- row 10
-        x"3F",  -- row 11
-        x"3F",  -- row 12
+        x"FE",  -- row 10
+        x"00",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
@@ -4111,99 +4111,99 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"1F",  -- row 6
-        x"1F",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"7E",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"00",  -- row 9
         x"00",  -- row 10
-        x"1F",  -- row 11
-        x"1F",  -- row 12
+        x"7E",  -- row 11
+        x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xF2 o-grave
         x"00",  -- row 0
-        x"30",  -- row 1
-        x"3C",  -- row 2
-        x"0F",  -- row 3
-        x"03",  -- row 4
-        x"00",  -- row 5
-        x"00",  -- row 6
-        x"03",  -- row 7
-        x"0F",  -- row 8
-        x"3C",  -- row 9
-        x"30",  -- row 10
-        x"00",  -- row 11
-        x"3F",  -- row 12
-        x"3F",  -- row 13
+        x"00",  -- row 1
+        x"00",  -- row 2
+        x"30",  -- row 3
+        x"18",  -- row 4
+        x"0C",  -- row 5
+        x"06",  -- row 6
+        x"0C",  -- row 7
+        x"18",  -- row 8
+        x"30",  -- row 9
+        x"00",  -- row 10
+        x"7E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xF3 o-acute
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
-        x"01",  -- row 3
-        x"07",  -- row 4
-        x"1E",  -- row 5
-        x"38",  -- row 6
-        x"1E",  -- row 7
-        x"07",  -- row 8
-        x"01",  -- row 9
+        x"0C",  -- row 3
+        x"18",  -- row 4
+        x"30",  -- row 5
+        x"60",  -- row 6
+        x"30",  -- row 7
+        x"18",  -- row 8
+        x"0C",  -- row 9
         x"00",  -- row 10
-        x"00",  -- row 11
-        x"3F",  -- row 12
-        x"3F",  -- row 13
+        x"7E",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xF4 o-circumflex
-        x"01",  -- row 0
-        x"03",  -- row 1
-        x"07",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
-        x"06",  -- row 12
-        x"06",  -- row 13
-        x"06",  -- row 14
-        x"06",  -- row 15
+        x"00",  -- row 0
+        x"00",  -- row 1
+        x"0E",  -- row 2
+        x"1B",  -- row 3
+        x"1B",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"18",  -- row 9
+        x"18",  -- row 10
+        x"18",  -- row 11
+        x"18",  -- row 12
+        x"18",  -- row 13
+        x"18",  -- row 14
+        x"18",  -- row 15
   -- 0xF5 o-tilde
-        x"06",  -- row 0
-        x"06",  -- row 1
-        x"06",  -- row 2
-        x"06",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
-        x"06",  -- row 6
-        x"06",  -- row 7
-        x"06",  -- row 8
-        x"06",  -- row 9
-        x"06",  -- row 10
-        x"C6",  -- row 11
-        x"C6",  -- row 12
-        x"EE",  -- row 13
-        x"7C",  -- row 14
-        x"38",  -- row 15
+        x"18",  -- row 0
+        x"18",  -- row 1
+        x"18",  -- row 2
+        x"18",  -- row 3
+        x"18",  -- row 4
+        x"18",  -- row 5
+        x"18",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"D8",  -- row 9
+        x"D8",  -- row 10
+        x"D8",  -- row 11
+        x"70",  -- row 12
+        x"00",  -- row 13
+        x"00",  -- row 14
+        x"00",  -- row 15
   -- 0xF6 o-diaeresis
         x"00",  -- row 0
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"06",  -- row 4
-        x"06",  -- row 5
+        x"00",  -- row 4
+        x"18",  -- row 5
         x"00",  -- row 6
-        x"3F",  -- row 7
-        x"3F",  -- row 8
-        x"00",  -- row 9
-        x"06",  -- row 10
-        x"06",  -- row 11
+        x"7E",  -- row 7
+        x"00",  -- row 8
+        x"18",  -- row 9
+        x"00",  -- row 10
+        x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
@@ -4213,25 +4213,25 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"18",  -- row 4
-        x"7E",  -- row 5
-        x"67",  -- row 6
-        x"01",  -- row 7
-        x"18",  -- row 8
-        x"7E",  -- row 9
-        x"67",  -- row 10
-        x"01",  -- row 11
+        x"00",  -- row 4
+        x"76",  -- row 5
+        x"DC",  -- row 6
+        x"00",  -- row 7
+        x"76",  -- row 8
+        x"DC",  -- row 9
+        x"00",  -- row 10
+        x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xF8 o-slash
-        x"0F",  -- row 0
-        x"1F",  -- row 1
-        x"19",  -- row 2
-        x"19",  -- row 3
-        x"1F",  -- row 4
-        x"0F",  -- row 5
+        x"00",  -- row 0
+        x"38",  -- row 1
+        x"6C",  -- row 2
+        x"6C",  -- row 3
+        x"38",  -- row 4
+        x"00",  -- row 5
         x"00",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
@@ -4248,12 +4248,12 @@ package font_rom_pkg is
         x"00",  -- row 2
         x"00",  -- row 3
         x"00",  -- row 4
-        x"0F",  -- row 5
-        x"1F",  -- row 6
-        x"1F",  -- row 7
-        x"1F",  -- row 8
-        x"1F",  -- row 9
-        x"0F",  -- row 10
+        x"00",  -- row 5
+        x"00",  -- row 6
+        x"18",  -- row 7
+        x"18",  -- row 8
+        x"00",  -- row 9
+        x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -4266,10 +4266,10 @@ package font_rom_pkg is
         x"00",  -- row 3
         x"00",  -- row 4
         x"00",  -- row 5
-        x"02",  -- row 6
-        x"07",  -- row 7
-        x"07",  -- row 8
-        x"02",  -- row 9
+        x"00",  -- row 6
+        x"18",  -- row 7
+        x"00",  -- row 8
+        x"00",  -- row 9
         x"00",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
@@ -4278,29 +4278,29 @@ package font_rom_pkg is
         x"00",  -- row 15
   -- 0xFB u-circumflex
         x"00",  -- row 0
-        x"03",  -- row 1
-        x"03",  -- row 2
-        x"03",  -- row 3
-        x"03",  -- row 4
-        x"03",  -- row 5
-        x"03",  -- row 6
-        x"03",  -- row 7
-        x"23",  -- row 8
-        x"33",  -- row 9
-        x"1B",  -- row 10
-        x"0F",  -- row 11
-        x"07",  -- row 12
-        x"03",  -- row 13
+        x"0F",  -- row 1
+        x"0C",  -- row 2
+        x"0C",  -- row 3
+        x"0C",  -- row 4
+        x"0C",  -- row 5
+        x"0C",  -- row 6
+        x"EC",  -- row 7
+        x"6C",  -- row 8
+        x"6C",  -- row 9
+        x"3C",  -- row 10
+        x"1C",  -- row 11
+        x"00",  -- row 12
+        x"00",  -- row 13
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xFC u-diaeresis
-        x"2C",  -- row 0
-        x"3E",  -- row 1
+        x"00",  -- row 0
+        x"6C",  -- row 1
         x"36",  -- row 2
         x"36",  -- row 3
         x"36",  -- row 4
-        x"00",  -- row 5
-        x"00",  -- row 6
+        x"36",  -- row 5
+        x"36",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
         x"00",  -- row 9
@@ -4311,13 +4311,13 @@ package font_rom_pkg is
         x"00",  -- row 14
         x"00",  -- row 15
   -- 0xFD y-acute
-        x"3C",  -- row 0
-        x"06",  -- row 1
-        x"1C",  -- row 2
-        x"30",  -- row 3
-        x"3E",  -- row 4
-        x"00",  -- row 5
-        x"00",  -- row 6
+        x"00",  -- row 0
+        x"3C",  -- row 1
+        x"66",  -- row 2
+        x"0C",  -- row 3
+        x"18",  -- row 4
+        x"32",  -- row 5
+        x"7E",  -- row 6
         x"00",  -- row 7
         x"00",  -- row 8
         x"00",  -- row 9
@@ -4332,13 +4332,13 @@ package font_rom_pkg is
         x"00",  -- row 1
         x"00",  -- row 2
         x"00",  -- row 3
-        x"0F",  -- row 4
-        x"0F",  -- row 5
-        x"0F",  -- row 6
-        x"0F",  -- row 7
-        x"0F",  -- row 8
-        x"0F",  -- row 9
-        x"00",  -- row 10
+        x"7E",  -- row 4
+        x"7E",  -- row 5
+        x"7E",  -- row 6
+        x"7E",  -- row 7
+        x"7E",  -- row 8
+        x"7E",  -- row 9
+        x"7E",  -- row 10
         x"00",  -- row 11
         x"00",  -- row 12
         x"00",  -- row 13
@@ -4360,6 +4360,6 @@ package font_rom_pkg is
         x"00",  -- row 12
         x"00",  -- row 13
         x"00",  -- row 14
-        x"00"   -- row 15
+        x"00"  -- row 15
     );
 end package font_rom_pkg;

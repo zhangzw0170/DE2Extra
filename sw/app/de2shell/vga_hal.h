@@ -62,6 +62,10 @@ int vga_row(void);
 /* Read one text cell character back from the visible VGA text buffer. */
 char vga_read_char(int col, int row);
 
+/* Enable/disable mirroring VGA text operations onto UART.
+ * LOCAL_BUILD keeps using stdout as its only display path, so this is a no-op there. */
+void vga_set_serial_mirror(int enabled);
+
 /* Restrict automatic scrolling/wrapping to a text window [top, bottom]. */
 void vga_set_scroll_region(int top, int bottom);
 

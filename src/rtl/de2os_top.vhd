@@ -731,7 +731,7 @@ begin
     -- ================================================================
     -- JTAG UART -- CPU 输出通过 JTAG 在 PC 端查看
     -- ================================================================
-    UART_TXD <= exp_uart_txd when expdemo_active = '1' else uart_txd_int;
+    UART_TXD <= uart_txd_int;
 
     u_jtag_uart : component jtag_uart_0
     port map (
@@ -755,6 +755,7 @@ begin
         clk_i          => clk_50m,
         rst_n_i        => rst_n,
         uart_tx_i      => uart_txd_int,
+        uart_rx_o      => open,
         av_chipselect  => jtag_av_cs,
         av_address     => jtag_av_addr,
         av_read_n      => jtag_av_read_n,

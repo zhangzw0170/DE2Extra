@@ -53,6 +53,9 @@ void fb_present(void);
 /* Clear entire framebuffer to given color */
 void fb_clear(uint8_t color);
 
+/* Enable/disable pixel-controller internal test pattern when supported. */
+void fb_set_debug_pattern(int enabled);
+
 /* Shut down framebuffer backend */
 void fb_shutdown(void);
 

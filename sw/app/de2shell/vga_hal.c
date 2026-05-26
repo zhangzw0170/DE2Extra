@@ -105,6 +105,10 @@
       return ' ';
   }
 
+  void vga_set_serial_mirror(int enabled) {
+      (void)enabled;
+  }
+
   void vga_set_scroll_region(int top, int bottom) {
       if (top < 0) top = 0;
       if (bottom >= VGA_ROWS) bottom = VGA_ROWS - 1;
@@ -165,6 +169,7 @@
   static uint32_t clear_epoch = 0;
   static int scroll_top = 0;
   static int scroll_bottom = VGA_ROWS - 1;
+  static int serial_mirror_enabled = 1;
 
   static void hw_write_cell(int col, int row, char c, uint16_t color);
 
@@ -222,6 +227,9 @@
   }
 
   static void serial_putc(char c) {
+      if (serial_mirror_enabled == 0) {
+          return;
+      }
       neorv32_uart0_putc(c);
   }
 
@@ -245,6 +253,9 @@
   }
 
   static void serial_goto(int col, int row) {
+      if (serial_mirror_enabled == 0) {
+          return;
+      }
       neorv32_uart0_puts("\033[");
       serial_putu((unsigned)(row + 1));
       serial_putc(';');
@@ -275,12 +286,16 @@
       scroll_top = 0;
       scroll_bottom = VGA_ROWS - 1;
       hw_cursor_sync();
-      neorv32_uart0_puts("\033[2J\033[H\033[?25h");
+      if (serial_mirror_enabled != 0) {
+          neorv32_uart0_puts("\033[2J\033[H\033[?25h");
+      }
   }
 
   void vga_putc(char c, uint16_t color) {
       if (c == '\n') {
-          neorv32_uart0_puts("\r\n");
+          if (serial_mirror_enabled != 0) {
+              neorv32_uart0_puts("\r\n");
+          }
           cur_col = 0;
           cur_row++;
           if (cur_row > scroll_bottom) {
@@ -300,7 +315,9 @@
           if (cur_col > 0) {
               cur_col--;
               hw_write_cell(cur_col, cur_row, ' ', VGA_BLACK);
-              neorv32_uart0_puts("\b \b");
+              if (serial_mirror_enabled != 0) {
+                  neorv32_uart0_puts("\b \b");
+              }
               hw_cursor_sync();
           }
           return;
@@ -335,7 +352,9 @@
       cur_row = scroll_top;
       clear_epoch++;
       hw_cursor_sync();
-      neorv32_uart0_puts("\033[2J\033[H");
+      if (serial_mirror_enabled != 0) {
+          neorv32_uart0_puts("\033[2J\033[H");
+      }
   }
 
   void vga_clear_line(int row, uint16_t color) {
@@ -359,7 +378,9 @@
       }
       vga_buf[VGA_CTRL_CONTROL / 4] = ctrl;
 #endif
-      neorv32_uart0_puts(show ? "\033[?25h" : "\033[?25l");
+      if (serial_mirror_enabled != 0) {
+          neorv32_uart0_puts(show ? "\033[?25h" : "\033[?25l");
+      }
   }
 
   int vga_col(void) { return cur_col; }
@@ -376,6 +397,10 @@
       (void)row;
       return ' ';
 #endif
+  }
+
+  void vga_set_serial_mirror(int enabled) {
+      serial_mirror_enabled = (enabled != 0);
   }
 
   void vga_set_scroll_region(int top, int bottom) {

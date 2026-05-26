@@ -26,7 +26,7 @@ MEMMANG_DIR   = $(FREERTOS_DIR)/portable/MemMang
 DE2SHELL_DIR = ../de2shell
 
 # This app's own sources
-APP_SRC  = $(wildcard ./*.c) $(wildcard ./*.S)
+APP_SRC  = $(filter-out ./chroma.c,$(wildcard ./*.c)) $(wildcard ./*.S)
 
 # FreeRTOS kernel
 APP_SRC += $(FREERTOS_DIR)/tasks.c
@@ -40,7 +40,6 @@ APP_SRC += $(MEMMANG_DIR)/heap_4.c
 
 # de2shell programs
 APP_SRC += $(DE2SHELL_DIR)/hello.c
-APP_SRC += $(DE2SHELL_DIR)/memtest.c
 APP_SRC += $(DE2SHELL_DIR)/crypto.c
 APP_SRC += $(DE2SHELL_DIR)/ps2.c
 APP_SRC += $(DE2SHELL_DIR)/snake.c
@@ -48,13 +47,15 @@ APP_SRC += $(DE2SHELL_DIR)/life.c
 APP_SRC += $(DE2SHELL_DIR)/info.c
 APP_SRC += $(DE2SHELL_DIR)/monitor.c
 APP_SRC += $(DE2SHELL_DIR)/demo.c
+APP_SRC += $(DE2SHELL_DIR)/conway_hw.c
+APP_SRC += $(DE2SHELL_DIR)/pong_hw.c
 
 # GUI + pixel mode (for Win 3.0 desktop)
 APP_SRC += $(DE2SHELL_DIR)/fb_hal.c
 APP_SRC += $(DE2SHELL_DIR)/gfx.c
 APP_SRC += $(DE2SHELL_DIR)/gui.c
 APP_SRC += $(DE2SHELL_DIR)/gui_widgets.c
-APP_SRC += $(DE2SHELL_DIR)/win30_desk.c
+APP_SRC += $(DE2SHELL_DIR)/twm.c
 APP_SRC += $(DE2SHELL_DIR)/ps2_decoder.c
 
 # de2shell HAL layer

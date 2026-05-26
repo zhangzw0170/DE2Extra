@@ -76,6 +76,7 @@ architecture rtl of vga_pixel_ctrl is
 
     -- Registers (50 MHz domain)
     signal mode_en : std_logic;
+    signal testpat_en : std_logic;
     signal fb_base : unsigned(24 downto 0);
 
     -- Line buffers: 160 x 32-bit, one word = 4 RGB332 pixels
@@ -102,13 +103,14 @@ architecture rtl of vga_pixel_ctrl is
     signal fetch_state    : fetch_state_t;
     signal fetch_line     : integer range 0 to V_ACTIVE + 1;  -- can go past V_ACTIVE briefly
     signal fetch_word_cnt : integer range 0 to LINE_WORDS - 1;
-    signal burst_cnt      : integer range 0 to BURST_LEN - 1;
-    signal fill_buf_sel   : std_logic;
+    signal fetch_buf_sel  : std_logic;
 
     -- Synchronized VGA timing from 25 MHz → 50 MHz domain
     signal v_count_sync : integer range 0 to V_TOTAL - 1;
     signal v_count_d1   : integer range 0 to V_TOTAL - 1;
     signal new_line_pulse : std_logic;
+    signal buf_sel_meta   : std_logic;
+    signal buf_sel_sync   : std_logic;
 
     -- Register ack
     signal reg_ack_ff : std_logic;
@@ -136,6 +138,7 @@ begin
     begin
         if rst_n_i = '0' then
             mode_en    <= '0';
+            testpat_en <= '0';
             fb_base    <= (others => '0');
             reg_ack_ff <= '0';
         elsif rising_edge(clk_50m_i) then
@@ -145,7 +148,9 @@ begin
                 adr := to_integer(unsigned(reg_adr_i(15 downto 2)));
                 if reg_we_i = '1' then
                     case adr is
-                        when 0 => mode_en <= reg_dat_i(0);
+                        when 0 =>
+                            mode_en    <= reg_dat_i(0);
+                            testpat_en <= reg_dat_i(1);
                         when 1 => fb_base <= unsigned(reg_dat_i(26 downto 2));
                         when others => null;
                     end case;
@@ -162,7 +167,9 @@ begin
         reg_dat_o <= (others => '0');
         adr := to_integer(unsigned(reg_adr_i(15 downto 2)));
         case adr is
-            when 0 => reg_dat_o(0) <= mode_en;
+            when 0 =>
+                reg_dat_o(0) <= mode_en;
+                reg_dat_o(1) <= testpat_en;
             when 1 => reg_dat_o(26 downto 2) <= std_logic_vector(fb_base);
             when 2 => reg_dat_o(0) <= not video_on;
             when others => null;
@@ -177,7 +184,6 @@ begin
         if rst_n_i = '0' then
             h_count  <= 0;
             v_count  <= 0;
-            video_on <= '0';
         elsif rising_edge(clk_25m) then
             if h_count = H_TOTAL - 1 then
                 h_count <= 0;
@@ -189,12 +195,13 @@ begin
             else
                 h_count <= h_count + 1;
             end if;
-            video_on <= '0';
-            if h_count < H_ACTIVE and v_count < V_ACTIVE then
-                video_on <= '1';
-            end if;
         end if;
     end process;
+
+    video_on <= '1' when
+        h_count >= (H_SYNC + H_BP) and h_count < (H_SYNC + H_BP + H_ACTIVE) and
+        v_count >= (V_SYNC + V_BP) and v_count < (V_SYNC + V_BP + V_ACTIVE)
+        else '0';
 
     vga_hs_o   <= '0' when h_count < H_SYNC else '1';
     vga_vs_o   <= '0' when v_count < V_SYNC else '1';
@@ -209,7 +216,7 @@ begin
         if rst_n_i = '0' then
             buf_sel <= '0';
         elsif rising_edge(clk_25m) then
-            if h_count = 0 and v_count < V_ACTIVE then
+            if h_count = 0 and v_count >= (V_SYNC + V_BP) and v_count < (V_SYNC + V_BP + V_ACTIVE) then
                 buf_sel <= not buf_sel;
             end if;
         end if;
@@ -221,6 +228,9 @@ begin
     -- ================================================================
     p_pixel_out : process(clk_25m, rst_n_i)
         variable word_idx : integer range 0 to LINE_WORDS - 1;
+        variable pat_color : std_logic_vector(7 downto 0);
+        variable px_vis    : integer range 0 to H_ACTIVE - 1;
+        variable py_vis    : integer range 0 to V_ACTIVE - 1;
     begin
         if rst_n_i = '0' then
             px_shift     <= (others => '0');
@@ -231,7 +241,36 @@ begin
             vga_g_o      <= (others => '0');
             vga_b_o      <= (others => '0');
         elsif rising_edge(clk_25m) then
-            if video_on = '1' and mode_en = '1' then
+            if video_on = '1' and mode_en = '1' and testpat_en = '1' then
+                px_vis := h_count - (H_SYNC + H_BP);
+                py_vis := v_count - (V_SYNC + V_BP);
+                pat_color := x"12";
+
+                if py_vis < 96 then
+                    case px_vis / 80 is
+                        when 0 => pat_color := x"E0";
+                        when 1 => pat_color := x"F8";
+                        when 2 => pat_color := x"FC";
+                        when 3 => pat_color := x"1C";
+                        when 4 => pat_color := x"1F";
+                        when 5 => pat_color := x"03";
+                        when 6 => pat_color := x"E3";
+                        when others => pat_color := x"FF";
+                    end case;
+                elsif (px_vis < 8) or (px_vis >= H_ACTIVE - 8) or
+                      (py_vis < 8) or (py_vis >= V_ACTIVE - 8) then
+                    pat_color := x"FF";
+                elsif ((px_vis / 32) mod 2) = ((py_vis / 32) mod 2) then
+                    pat_color := x"49";
+                else
+                    pat_color := x"12";
+                end if;
+
+                px_phase     <= 0;
+                px_word_addr <= 0;
+                px_shift     <= (others => '0');
+                pixel_color  <= pat_color;
+            elsif video_on = '1' and mode_en = '1' then
                 -- Shift register: load new word every 4 pixels
                 if px_phase = 0 then
                     px_word_addr <= px_word_addr;
@@ -261,8 +300,8 @@ begin
                 end if;
             else
                 -- During blanking or disabled, reset counters
-                if h_count = H_ACTIVE then
-                    -- Just entered blanking: reset for next line
+                if h_count = (H_SYNC + H_BP + H_ACTIVE) then
+                    -- Just left the active display area: reset for next visible line
                     px_phase     <= 0;
                     px_word_addr <= 0;
                 end if;
@@ -297,8 +336,6 @@ begin
         end if;
     end process;
 
-    fill_buf_sel <= not buf_sel;  -- opposite of display buffer
-
     -- ================================================================
     -- SDRAM fetch FSM (50 MHz domain)
     -- Prefetches the NEXT scanline into the fill buffer.
@@ -310,26 +347,31 @@ begin
             fetch_state    <= F_IDLE;
             fetch_line     <= 0;
             fetch_word_cnt <= 0;
-            burst_cnt      <= 0;
+            fetch_buf_sel  <= '0';
             vga_rd_req_o   <= '0';
             vga_rd_adr_o   <= (others => '0');
+            buf_sel_meta   <= '0';
+            buf_sel_sync   <= '0';
         elsif rising_edge(clk_50m_i) then
             vga_rd_req_o <= '0';
+            buf_sel_meta <= buf_sel;
+            buf_sel_sync <= buf_sel_meta;
 
             case fetch_state is
                 when F_IDLE =>
                     if new_line_pulse = '1' and mode_en = '1'
-                       and v_count_sync < V_ACTIVE then
+                       and v_count_sync >= (V_SYNC + V_BP)
+                       and v_count_sync < (V_SYNC + V_BP + V_ACTIVE) then
                         -- Fetch the scanline that will be displayed next
-                        -- Current display line = v_count_sync
+                        -- Current display line = v_count_sync - visible top margin
                         -- Next line to fill = v_count_sync + 1 (or 0 if wrapping)
-                        if v_count_sync < V_ACTIVE - 1 then
-                            fetch_line <= v_count_sync + 1;
+                        if (v_count_sync - (V_SYNC + V_BP)) < V_ACTIVE - 1 then
+                            fetch_line <= (v_count_sync - (V_SYNC + V_BP)) + 1;
                         else
                             fetch_line <= 0;
                         end if;
                         fetch_word_cnt <= 0;
-                        burst_cnt      <= 0;
+                        fetch_buf_sel  <= not buf_sel_sync;
                         fetch_state    <= F_REQ;
                     end if;
 
@@ -340,23 +382,24 @@ begin
                         to_unsigned(fetch_line * LINE_WORDS + fetch_word_cnt, 25)
                     );
                     vga_rd_req_o <= '1';
-                    burst_cnt    <= 0;
                     fetch_state  <= F_POP;
 
                 when F_POP =>
                     if vga_rd_valid_i = '1' then
                         -- Write one word into fill buffer
-                        if fill_buf_sel = '0' then
+                        if fetch_buf_sel = '0' then
                             linebuf_a(fetch_word_cnt) <= vga_rd_data_i;
                         else
                             linebuf_b(fetch_word_cnt) <= vga_rd_data_i;
                         end if;
 
-                        fetch_word_cnt <= fetch_word_cnt + 1;
-                        burst_cnt      <= burst_cnt + 1;
-
-                        if burst_cnt = BURST_LEN - 1 then
-                            fetch_state <= F_NEXT_BURST;
+                        if fetch_word_cnt = LINE_WORDS - 1 then
+                            fetch_state <= F_LINE_DONE;
+                        else
+                            fetch_word_cnt <= fetch_word_cnt + 1;
+                            if vga_rd_done_i = '1' then
+                                fetch_state <= F_NEXT_BURST;
+                            end if;
                         end if;
                     end if;
 
