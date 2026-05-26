@@ -99,6 +99,11 @@
   int vga_col(void) { return cur_col; }
   int vga_row(void) { return cur_row; }
   uint32_t vga_clear_epoch(void) { return clear_epoch; }
+  char vga_read_char(int col, int row) {
+      (void)col;
+      (void)row;
+      return ' ';
+  }
 
   void vga_set_scroll_region(int top, int bottom) {
       if (top < 0) top = 0;
@@ -360,6 +365,18 @@
   int vga_col(void) { return cur_col; }
   int vga_row(void) { return cur_row; }
   uint32_t vga_clear_epoch(void) { return clear_epoch; }
+  char vga_read_char(int col, int row) {
+#if VGA_MMIO_ENABLED
+      if ((col < 0) || (col >= VGA_COLS) || (row < 0) || (row >= VGA_ROWS)) {
+          return ' ';
+      }
+      return (char)((vga_buf[row * VGA_COLS + col] >> 24) & 0xffu);
+#else
+      (void)col;
+      (void)row;
+      return ' ';
+#endif
+  }
 
   void vga_set_scroll_region(int top, int bottom) {
       if (top < 0) top = 0;

@@ -113,7 +113,7 @@ static uint16_t ntt_b[NTT_N];
 #endif
 
 static void ntt_prompt(void) {
-    vga_puts("ntt > ", VGA_GREEN);
+    vga_puts("ntt  > ", VGA_GREEN);
 }
 
 static void ntt_put_hex(uint16_t v) {
@@ -276,7 +276,7 @@ static void ntt_init(void) {
 #ifdef LOCAL_BUILD
     vga_puts("Mode: SW reference\n", VGA_GRAY);
 #else
-    vga_puts("Mode: HW @ 0xF000C000\n", VGA_GRAY);
+    vga_puts("Mode: HW @ 0xF000F000\n", VGA_GRAY);
 #endif
     vga_putc('\n', VGA_WHITE);
     cmd_show_help();

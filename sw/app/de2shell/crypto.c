@@ -208,7 +208,7 @@ void trng_bytes(uint8_t *buf, int n) {
 #endif
 
 static void prompt(void) {
-    vga_puts("crypto > ", VGA_GREEN);
+    vga_puts("crypto  > ", VGA_GREEN);
 }
 
 static void redraw_input_line(int old_len) {
@@ -325,7 +325,7 @@ static void show_info(void) {
     vga_puts("Target: NEORV32 RISC-V @ 50 MHz\n", VGA_WHITE);
     vga_puts("ISA:    RV32IMC + Zicsr + Zicntr + Zifencei\n", VGA_WHITE);
     vga_puts("        Zbkb + Zbkc + Zbkx + Zkne + Zknd + Zknh + Zksed + Zksh\n", VGA_WHITE);
-    vga_puts("Memory: IMEM 64KB, DMEM 16KB\n", VGA_WHITE);
+    vga_puts("Memory: IMEM 16KB, DMEM 16KB\n", VGA_WHITE);
     vga_puts("Build:  " __DATE__ " " __TIME__ "\n", VGA_WHITE);
 #ifdef LOCAL_BUILD
     vga_puts("Mode:   LOCAL_BUILD\n", VGA_WHITE);

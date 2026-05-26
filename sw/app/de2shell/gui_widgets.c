@@ -1,297 +1,323 @@
-/* gui_widgets.c — Render and key handlers for each widget type */
+/* gui_widgets.c -- Panel content renderers for tiling WM
+ *
+ * Each leaf node calls panel_render() with its content area.
+ * The renderer dispatches based on tile->id.
+ * New splits auto-cycle panel type via tile->id assignment in gui.c.
+ */
 #include "gui.h"
 #include "gfx.h"
-#include "gfx_font.h"
 #include <string.h>
 
-/* ── Window ─────────────────────────────────────────────────────── */
+/* ── Panel types ────────────────────────────────────────────────── */
 
-static void render_window(widget_t *self) {
-    int bx = self->x, by = self->y, bw = self->w, bh = self->h;
-    const char *title = self->text;
-    int active = self->active;
+#define PANEL_SHELL   1
+#define PANEL_MONITOR 2
+#define PANEL_INFO    3
+#define PANEL_MAX     3
 
-    /* Shadow */
-    gfx_fill_rect(bx + 4, by + 4, bw, bh, FB_DKGRAY);
+static int next_panel_id = PANEL_SHELL;
 
-    /* Outer bevel */
-    gfx_bevel(bx, by, bw, bh, 1);
-
-    /* Title bar (20px) */
-    uint8_t title_bg = active ? FB_BLUE : FB_GRAY;
-    gfx_fill_rect(bx + 3, by + 3, bw - 6, 18, title_bg);
-
-    /* Title text */
-    if (title) {
-        int tx = bx + 6;
-        int max_w = bw - 6 - 24;
-        int avail = max_w / FONT_W;
-        int len = 0;
-        while (title[len]) len++;
-        int draw = len < avail ? len : avail;
-        for (int i = 0; i < draw; i++)
-            gfx_char(tx + i * FONT_W, by + 4, title[i], FB_WHITE, 0xFF);
-    }
-
-    /* Close button [X] */
-    int cbx = bx + bw - 20;
-    int cby = by + 4;
-    gfx_fill_rect(cbx, cby, 16, 14, FB_LTGRAY);
-    gfx_bevel(cbx, cby, 16, 14, 1);
-    gfx_char(cbx + 4, cby, 'x', FB_BLACK, 0xFF);
-
-    /* Client area */
-    gfx_fill_rect(bx + 3, by + 21, bw - 6, bh - 24, FB_LTGRAY);
-
-    /* Render children */
-    widget_t *c = self->children;
-    while (c) {
-        if (c->visible && c->render) c->render(c);
-        c = c->next;
-    }
+int gui_widgets_next_id(void) {
+    int id = next_panel_id;
+    next_panel_id = (next_panel_id >= PANEL_MAX) ? PANEL_SHELL : next_panel_id + 1;
+    return id;
 }
 
-static int key_window(widget_t *self, const gui_event_t *ev) {
-    if (!ev->is_press) return 0;
+/* ── Helpers ──────────────────────────────────────────────────────── */
 
-    /* ESC closes the window */
-    if (ev->ascii == 0x1b) {
-        self->visible = 0;
-        return 1;
-    }
-    /* Route to children */
-    widget_t *c = self->children;
-    while (c) {
-        if (c->focused && c->key) {
-            if (c->key(c, ev)) return 1;
-        }
-        c = c->next;
-    }
-    return 0;
+static int text_rows(int ch) { return ch / 16; }
+static int text_cols(int cw) { return cw / 8; }
+
+static void label(int x, int y, const char *lbl, const char *val,
+                  uint8_t lbl_color, uint8_t val_color) {
+    gfx_text(x, y, lbl, lbl_color, 0xFF);
+    int lx = x + (int)strlen(lbl) * 8;
+    gfx_text(lx, y, val, val_color, 0xFF);
 }
 
-/* ── Button ─────────────────────────────────────────────────────── */
-
-static void render_button(widget_t *self) {
-    int bx = self->x, by = self->y, bw = self->w, bh = self->h;
-
-    if (self->pressed) {
-        gfx_bevel(bx, by, bw, bh, 0);
-    } else {
-        gfx_bevel(bx, by, bw, bh, 1);
-    }
-    gfx_fill_rect(bx + 3, by + 3, bw - 6, bh - 6, FB_LTGRAY);
-
-    /* Focus highlight */
-    if (self->focused) {
-        gfx_rect(bx + 1, by + 1, bw - 2, bh - 2, FB_BLACK);
-    }
-
-    /* Centered text */
-    if (self->text) {
-        int len = 0;
-        while (self->text[len]) len++;
-        int tw = len * FONT_W;
-        int tx = bx + (bw - tw) / 2;
-        int ty = by + (bh - FONT_H) / 2;
-        for (int i = 0; i < len; i++)
-            gfx_char(tx + i * FONT_W, ty, self->text[i], FB_BLACK, 0xFF);
-    }
+static void draw_bar(int x, int y, int w, int pct, uint8_t fg, uint8_t bg) {
+    if (w < 4) return;
+    gfx_fill_rect(x, y, w, 12, bg);
+    int fill = (w * pct) / 100;
+    if (fill > 0 && pct > 0)
+        gfx_fill_rect(x, y, fill < w ? fill : w, 12, fg);
+    gfx_rect(x, y, w, 12, FB_DKGRAY);
 }
 
-static int key_button(widget_t *self, const gui_event_t *ev) {
-    if (!ev->is_press) return 0;
-    if (ev->ascii == ' ' || ev->ascii == 0x0d) {
-        /* Press animation */
-        self->pressed = 1;
-        gui_render_all();
-        /* Short delay for visual feedback */
-        for (volatile int i = 0; i < 100000; i++) {}
-        self->pressed = 0;
-        return 1;
-    }
-    return 0;
-}
+/* ── Shell panel ─────────────────────────────────────────────────── */
 
-/* ── Label ──────────────────────────────────────────────────────── */
+static const char *shell_lines[] = {
+    "NEORV32 RISC-V DE2Extra Shell",
+    "FreeRTOS V11  SDRAM exec",
+    "",
+    "Available commands:",
+    "  hello     LED chaser",
+    "  crypto    AES/SHA/SM4 CLI",
+    "  ps2       PS/2 keyboard test",
+    "  snake     Snake game",
+    "  life      Conway's Game of Life",
+    "  info      System dashboard",
+    "  expdemo   11 course experiments",
+    "  twm       Tiling window manager",
+    "  stats     Task list + stack HWM",
+    "",
+    "Key bindings (inside twm):",
+    "  Alt+Enter  Auto-split",
+    "  Alt+H/V    Force H/V split",
+    "  Alt+Arrow  Move focus",
+    "  Alt+Shift+Arrow  Resize",
+    "  Alt+F      Fullscreen toggle",
+    "  Alt+W      Close pane",
+    "  Esc        Exit desktop",
+};
+#define SHELL_LINE_COUNT (sizeof(shell_lines) / sizeof(shell_lines[0]))
 
-static void render_label(widget_t *self) {
-    if (!self->text) return;
-    gfx_text(self->x, self->y, self->text, FB_BLACK, 0xFF);
-}
+static void render_shell(tile_t *t, int cx, int cy, int cw, int ch) {
+    (void)t;
+    int rows = text_rows(ch);
+    int cols = text_cols(cw);
+    int max_lines = rows > 1 ? rows - 1 : 0;
 
-/* ── TextInput ──────────────────────────────────────────────────── */
+    /* Scrollable log */
+    int visible = SHELL_LINE_COUNT;
+    if (visible > max_lines && max_lines > 0)
+        visible = max_lines;
 
-static void render_textinput(widget_t *self) {
-    int bx = self->x, by = self->y, bw = self->w, bh = self->h;
-
-    /* White background */
-    gfx_fill_rect(bx, by, bw, bh, FB_WHITE);
-    gfx_bevel(bx, by, bw, bh, 0);
-
-    /* Text */
-    int tx = bx + 3;
-    int ty = by + (bh - FONT_H) / 2;
-    int max_chars = (bw - 6) / FONT_W;
     int start = 0;
-    if (self->textpos > max_chars) start = self->textpos - max_chars;
+    if (SHELL_LINE_COUNT > visible && visible > 0)
+        start = SHELL_LINE_COUNT - visible;
 
-    for (int i = start; i < self->textlen && (i - start) < max_chars; i++)
-        gfx_char(tx + (i - start) * FONT_W, ty, self->textbuf[i], FB_BLACK, 0xFF);
-
-    /* Blinking cursor (drawn when focused) */
-    if (self->focused) {
-        int cx = tx + (self->textpos - start) * FONT_W;
-        gfx_vline(cx, ty, FONT_H, FB_BLACK);
+    for (int i = 0; i < visible; i++) {
+        const char *line = shell_lines[start + i];
+        uint8_t color = FB_LTGRAY;
+        if (i == 0) color = FB_GREEN;
+        else if (line[0] == ' ') color = FB_LTGRAY;
+        gfx_text(cx + 4, cy + 2 + i * 16, line, color, 0xFF);
     }
-}
 
-static int key_textinput(widget_t *self, const gui_event_t *ev) {
-    if (!ev->is_press) return 0;
-    uint8_t ch = ev->ascii;
+    /* Prompt at bottom */
+    if (rows > 0) {
+        int py = cy + 2 + max_lines * 16;
+        gfx_text(cx + 4, py, "shell > _", FB_GREEN, 0xFF);
+    }
 
-    if (ch == 0x08 || ch == 0x7f) {
-        /* Backspace */
-        if (self->textpos > 0) {
-            self->textpos--;
-            for (int i = self->textpos; i < self->textlen; i++)
-                self->textbuf[i] = self->textbuf[i + 1];
-            self->textlen--;
+    /* Right-side decoration: mini logo */
+    if (cw > 300 && ch > 200) {
+        int lx = cx + cw - 120;
+        int ly = cy + 4;
+        gfx_rect(lx, ly, 112, 48, FB_DKGRAY);
+        gfx_fill_rect(lx + 1, ly + 1, 110, 46, FB_BLACK);
+        gfx_text(lx + 8, ly + 4, "NEORV32", FB_CYAN, 0xFF);
+        gfx_text(lx + 8, ly + 20, "RV32IMC", FB_LTGRAY, 0xFF);
+        gfx_text(lx + 8, ly + 36, "50 MHz", FB_YELLOW, 0xFF);
+
+        /* Freq bar */
+        if (ch > 260) {
+            gfx_text(lx, ly + 56, "CPU Load:", FB_GRAY, 0xFF);
+            draw_bar(lx, ly + 72, 112, 23, FB_GREEN, (1 << 5) | (1 << 2));
+            gfx_text(lx, ly + 88, "Memory:", FB_GRAY, 0xFF);
+            draw_bar(lx, ly + 104, 112, 45, FB_CYAN, (1 << 5) | (1 << 2));
         }
-        return 1;
     }
-    if (ev->is_extended && ev->scancode == 0x6b) {
-        /* Left arrow */
-        if (self->textpos > 0) self->textpos--;
-        return 1;
-    }
-    if (ev->is_extended && ev->scancode == 0x74) {
-        /* Right arrow */
-        if (self->textpos < self->textlen) self->textpos++;
-        return 1;
-    }
-    if (ev->is_extended && ev->scancode == 0x6c) {
-        /* Home */
-        self->textpos = 0;
-        return 1;
-    }
-    if (ev->is_extended && ev->scancode == 0x69) {
-        /* End */
-        self->textpos = self->textlen;
-        return 1;
-    }
-    if (ch >= 0x20 && ch < 0x7f && self->textlen < GUI_TEXTINPUT_MAX - 1) {
-        /* Insert character */
-        for (int i = self->textlen; i > self->textpos; i--)
-            self->textbuf[i] = self->textbuf[i - 1];
-        self->textbuf[self->textpos] = (char)ch;
-        self->textpos++;
-        self->textlen++;
-        self->textbuf[self->textlen] = '\0';
-        return 1;
-    }
-    return 0;
+    (void)cols;
 }
 
-/* ── Taskbar ────────────────────────────────────────────────────── */
+/* ── Monitor panel ──────────────────────────────────────────────── */
 
-static void render_taskbar(widget_t *self) {
-    int bx = self->x, by = self->y, bw = self->w, bh = self->h;
+static const char *task_names[] = {
+    "uart_input", "shell", "active", "status"
+};
+static const int task_cpu[] = { 8, 12, 35, 3 };
+static const int task_stack[] = { 128, 256, 512, 128 };
+static const int task_hwm[] = { 45, 82, 210, 18 };
+#define TASK_COUNT 4
 
-    /* Background */
-    gfx_fill_rect(bx, by, bw, bh, FB_DKGRAY);
-    gfx_bevel(bx, by, bw, bh, 1);
+static void render_monitor(tile_t *t, int cx, int cy, int cw, int ch) {
+    (void)t;
+    int rows = text_rows(ch);
 
-    /* "DE2Extra" label */
-    gfx_text(bx + 4, by + (bh - FONT_H) / 2, "DE2Extra", FB_WHITE, 0xFF);
+    /* Title */
+    gfx_text(cx + 4, cy + 4, "System Monitor", FB_CYAN, 0xFF);
+    gfx_hline(cx + 4, cy + 22, cw - 8, FB_DKGRAY);
 
-    /* Separator */
-    int sep_x = bx + 8 * FONT_W + 12;
-    gfx_vline(sep_x, by + 2, bh - 4, FB_LTGRAY);
-    gfx_vline(sep_x + 1, by + 2, bh - 4, FB_BLACK);
-}
+    if (rows < 4) return;
 
-/* ── Icon ───────────────────────────────────────────────────────── */
+    /* Task list header */
+    int y = cy + 28;
+    gfx_text(cx + 4, y, "TASK", FB_YELLOW, 0xFF);
+    gfx_text(cx + 120, y, "CPU", FB_YELLOW, 0xFF);
+    gfx_text(cx + 170, y, "STACK", FB_YELLOW, 0xFF);
+    gfx_text(cx + 230, y, "HWM", FB_YELLOW, 0xFF);
+    y += 18;
 
-static void render_icon(widget_t *self) {
-    int bx = self->x, by = self->y;
+    /* Task rows */
+    for (int i = 0; i < TASK_COUNT && y + 16 < cy + ch; i++) {
+        uint8_t name_c = (i < 2) ? FB_LTGRAY : FB_GREEN;
+        gfx_text(cx + 4, y, task_names[i], name_c, 0xFF);
 
-    /* Focus highlight */
-    if (self->focused) {
-        gfx_fill_rect(bx - 2, by - 2, 36, 36, FB_BLUE);
+        /* CPU bar inline */
+        draw_bar(cx + 110, y + 2, 48, task_cpu[i],
+                 task_cpu[i] < 30 ? FB_GREEN : FB_YELLOW,
+                 (1 << 5) | (1 << 2));
+
+        /* Stack bar */
+        int pct = (task_stack[i] > 0) ? (task_hwm[i] * 100 / task_stack[i]) : 0;
+        draw_bar(cx + 170, y + 2, 48, pct,
+                 pct < 70 ? FB_GREEN : (pct < 90 ? FB_YELLOW : FB_RED),
+                 (1 << 5) | (1 << 2));
+
+        gfx_text(cx + 230, y, "OK", FB_GREEN, 0xFF);
+        y += 20;
     }
 
-    /* 32x32 icon area — placeholder pattern */
-    if (self->icon_bitmap) {
-        for (int row = 0; row < 32; row++) {
-            for (int col = 0; col < 32; col++) {
-                int byte_idx = row * 4 + col / 8;
-                int bit_idx = 7 - (col % 8);
-                if (self->icon_bitmap[byte_idx] & (1 << bit_idx))
-                    fb_set_pixel(bx + col, by + row, FB_WHITE);
-                else
-                    fb_set_pixel(bx + col, by + row, FB_BLUE);
-            }
+    y += 8;
+    if (y + 40 < cy + ch) {
+        gfx_hline(cx + 4, y, cw - 8, FB_DKGRAY);
+        y += 8;
+        gfx_text(cx + 4, y, "Overall CPU:", FB_LTGRAY, 0xFF);
+        draw_bar(cx + 4, y + 18, cw - 8, 18, FB_GREEN, (1 << 5) | (1 << 2));
+        y += 38;
+        gfx_text(cx + 4, y, "Heap:", FB_LTGRAY, 0xFF);
+        draw_bar(cx + 4, y + 18, cw - 8, 42, FB_CYAN, (1 << 5) | (1 << 2));
+        y += 38;
+        gfx_text(cx + 4, y, "Uptime: 00:42", FB_YELLOW, 0xFF);
+    }
+
+    /* Bottom graph area if tall enough */
+    if (ch > 350 && cw > 180) {
+        int gy = cy + ch - 80;
+        gfx_hline(cx + 4, gy, cw - 8, FB_DKGRAY);
+        gfx_text(cx + 4, gy + 4, "CPU History", FB_GRAY, 0xFF);
+
+        /* Fake sparkline */
+        static const int spark[] = {
+            15, 22, 18, 35, 28, 20, 45, 38, 25, 30,
+            22, 18, 40, 32, 20, 25, 35, 28, 15, 20
+        };
+        int gw = cw - 16;
+        int gh = 40;
+        int gx = cx + 8;
+        int g_y = gy + 22;
+        gfx_fill_rect(gx, g_y, gw, gh, (1 << 5));
+        for (int i = 0; i < 20; i++) {
+            int bx = gx + i * gw / 20;
+            int bw = gw / 20 - 1;
+            int bh = spark[i] * gh / 50;
+            uint8_t c = spark[i] > 35 ? FB_RED : (spark[i] > 20 ? FB_YELLOW : FB_GREEN);
+            gfx_fill_rect(bx, g_y + gh - bh, bw > 0 ? bw : 1, bh, c);
         }
-    } else {
-        /* Default icon: blue square with white border */
-        gfx_fill_rect(bx, by, 32, 32, FB_BLUE);
-        gfx_rect(bx, by, 32, 32, FB_WHITE);
-    }
-
-    /* Label below icon, centered under icon, may extend beyond icon width */
-    if (self->text) {
-        int len = 0;
-        while (self->text[len]) len++;
-        int tw = len * FONT_W;
-        int tx = bx + (32 - tw) / 2;
-        int ty = by + 34;
-        gfx_text(tx, ty, self->text, FB_WHITE, FB_TEAL);
     }
 }
 
-static int key_icon(widget_t *self, const gui_event_t *ev) {
-    if (!ev->is_press) return 0;
-    if (ev->ascii == 0x0d || ev->ascii == ' ') {
-        /* "Open" the icon — just visual feedback for now */
-        return 1;
+/* ── Info panel ─────────────────────────────────────────────────── */
+
+static void render_info(tile_t *t, int cx, int cy, int cw, int ch) {
+    (void)t;
+    gfx_text(cx + 4, cy + 4, "System Information", FB_YELLOW, 0xFF);
+    gfx_hline(cx + 4, cy + 22, cw - 8, FB_DKGRAY);
+
+    if (text_rows(ch) < 3) return;
+
+    int y = cy + 30;
+    int lh = 18;
+
+    /* SoC section */
+    gfx_text(cx + 4, y, "[SoC]", FB_CYAN, 0xFF);
+    y += lh;
+    label(cx + 8, y, "Core:    ", "NEORV32 V1.13.1", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "ISA:     ", "RV32IMC Zicsr Zicntr", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "Freq:    ", "50 MHz", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "XLEN:    ", "32-bit", FB_GRAY, FB_LTGRAY);
+    y += lh + 6;
+
+    /* Memory section */
+    gfx_text(cx + 4, y, "[Memory]", FB_CYAN, 0xFF);
+    y += lh;
+    label(cx + 8, y, "IMEM:    ", "64 KB (bootloader)", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "DMEM:    ", "16 KB", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "SDRAM:   ", "128 MB", FB_GRAY, FB_LTGRAY);
+    y += lh + 6;
+
+    /* Peripherals */
+    gfx_text(cx + 4, y, "[Peripherals]", FB_CYAN, 0xFF);
+    y += lh;
+    label(cx + 8, y, "VGA:     ", "640x480 60Hz RGB332", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "PS/2:    ", "Keyboard (scancode set 2)", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "LCD:     ", "HD44780 16x2", FB_GRAY, FB_LTGRAY);
+    y += lh;
+    label(cx + 8, y, "UART:    ", "115200 8N1", FB_GRAY, FB_LTGRAY);
+    y += lh + 6;
+
+    /* Board */
+    if (y + lh < cy + ch) {
+        gfx_text(cx + 4, y, "[Board]", FB_CYAN, 0xFF);
+        y += lh;
+        label(cx + 8, y, "Board:   ", "Terasic DE2-115", FB_GRAY, FB_LTGRAY);
+        y += lh;
+        label(cx + 8, y, "FPGA:    ", "Cyclone IV E EP4CE115", FB_GRAY, FB_LTGRAY);
+        y += lh;
+        label(cx + 8, y, "LEs:     ", "8,125 / 114,480 (7%)", FB_GRAY, FB_LTGRAY);
     }
-    return 0;
+
+    /* Right column if wide enough */
+    if (cw > 360 && ch > 200) {
+        int rx = cx + cw / 2 + 8;
+        int ry = cy + 30;
+
+        /* Color palette showcase */
+        gfx_text(rx, ry, "[Palette]", FB_CYAN, 0xFF);
+        ry += lh;
+        uint8_t colors[] = {
+            FB_BLACK, FB_RED, FB_GREEN, FB_BLUE,
+            FB_YELLOW, FB_CYAN, FB_MAGENTA, FB_WHITE,
+            FB_GRAY, FB_DKGRAY, FB_LTGRAY, FB_ORANGE,
+            FB_BROWN, FB_TEAL
+        };
+        const char *cnames[] = {
+            "BLACK", "RED", "GREEN", "BLUE",
+            "YELLOW", "CYAN", "MAGENTA", "WHITE",
+            "GRAY", "DKGRAY", "LTGRAY", "ORANGE",
+            "BROWN", "TEAL"
+        };
+        for (int i = 0; i < 14 && ry + 16 < cy + ch; i++) {
+            gfx_fill_rect(rx, ry + 2, 14, 14, colors[i]);
+            if (colors[i] == FB_BLACK)
+                gfx_rect(rx, ry + 2, 14, 14, FB_DKGRAY);
+            gfx_text(rx + 20, ry + 2, cnames[i], FB_LTGRAY, 0xFF);
+            ry += 18;
+        }
+
+        /* CP437 box drawing demo */
+        if (ch > 360) {
+            ry += 8;
+            gfx_text(rx, ry, "[Box Drawing]", FB_CYAN, 0xFF);
+            ry += lh;
+            /* Draw a box using CP437 chars directly */
+            const char *box_top    = "+--+\n";
+            const char *box_mid    = "|  |\n";
+            const char *box_bottom = "+--+";
+            gfx_text(rx + 4, ry, box_top, FB_LTGRAY, 0xFF);
+            gfx_text(rx + 4, ry + 16, box_mid, FB_LTGRAY, 0xFF);
+            gfx_text(rx + 4, ry + 32, box_mid, FB_LTGRAY, 0xFF);
+            gfx_text(rx + 4, ry + 48, box_bottom, FB_LTGRAY, 0xFF);
+        }
+    }
 }
 
-/* ── Widget setup — assign render/key based on type ─────────────── */
+/* ── Dispatcher ─────────────────────────────────────────────────── */
 
-void gui_widget_setup(widget_t *w) {
-    if (!w) return;
-    switch (w->type) {
-        case WIDGET_WINDOW:
-            w->render = render_window;
-            w->key    = key_window;
-            break;
-        case WIDGET_BUTTON:
-            w->render = render_button;
-            w->key    = key_button;
-            break;
-        case WIDGET_LABEL:
-            w->render = render_label;
-            w->key    = NULL;
-            break;
-        case WIDGET_TEXTINPUT:
-            w->render = render_textinput;
-            w->key    = key_textinput;
-            w->textbuf[0] = '\0';
-            w->textpos = 0;
-            w->textlen = 0;
-            break;
-        case WIDGET_TASKBAR:
-            w->render = render_taskbar;
-            w->key    = NULL;
-            break;
-        case WIDGET_ICON:
-            w->render = render_icon;
-            w->key    = key_icon;
-            break;
-        default:
-            break;
+void panel_render(tile_t *t, int cx, int cy, int cw, int ch) {
+    if (!t) return;
+    switch (t->id) {
+        case PANEL_MONITOR: render_monitor(t, cx, cy, cw, ch); break;
+        case PANEL_INFO:    render_info(t, cx, cy, cw, ch);    break;
+        default:            render_shell(t, cx, cy, cw, ch);   break;
     }
 }

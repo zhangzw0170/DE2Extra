@@ -32,7 +32,11 @@ static void draw_header(void);
 
 /* ── Register Snapshot ────────────────────────────────────────── */
 
-static uint32_t snap_x[32];
+static uint32_t snap_x[32]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
 static const char *reg_names[32] = {
     "zero","ra","sp","gp","tp","t0","t1","t2",
     "s0","s1","a0","a1","a2","a3","a4","a5",
@@ -242,10 +246,22 @@ static void cmd_regs(void) {
 /* ── Monitor Shell ─────────────────────────────────────────────── */
 
 static int active = 0;
-static char line[64];
+static char line[64]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
 static int  pos = 0;
-static char saved_line[64];
-static char history[8][64];
+static char saved_line[64]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
+static char history[8][64]
+#ifdef DE2SHELL_RTOS
+    __attribute__((section(".sdram_bss")))
+#endif
+    ;
 static int history_count = 0;
 static int history_nav = -1;
 static int esc_state = 0;
@@ -259,7 +275,7 @@ static void draw_header(void) {
 }
 
 static void prompt(void) {
-    vga_puts("riscvasm > ", VGA_GREEN);
+    vga_puts("riscvasm  > ", VGA_GREEN);
 }
 
 static void ensure_output_room(void) {

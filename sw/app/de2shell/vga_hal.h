@@ -59,6 +59,9 @@ int vga_col(void);
 /* Get current cursor row */
 int vga_row(void);
 
+/* Read one text cell character back from the visible VGA text buffer. */
+char vga_read_char(int col, int row);
+
 /* Restrict automatic scrolling/wrapping to a text window [top, bottom]. */
 void vga_set_scroll_region(int top, int bottom);
 
