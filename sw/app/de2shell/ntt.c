@@ -163,8 +163,9 @@ static void cmd_ntt(int inverse) {
     ntt_dump(ntt_a, 32);
     vga_puts("...\n", VGA_WHITE);
 #else
-    ntt_hw_exec(ntt_a, inverse);
-    vga_puts(inverse ? "HW INTT done (readback)\n" : "HW NTT done (readback)\n", VGA_CYAN);
+    ntt_hw_start(inverse);
+    while (!(ntt_hw_status() & 0x2)) ;
+    vga_puts(inverse ? "HW INTT done\n" : "HW NTT done\n", VGA_CYAN);
 #endif
 }
 

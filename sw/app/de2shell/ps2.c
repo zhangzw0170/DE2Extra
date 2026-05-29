@@ -568,6 +568,14 @@ static void update(void) {
         win_held = win_l || win_r;
 
         print_event(code, is_extended, is_release, ev_ptr, shift_held, ctrl_held, alt_held, win_held);
+        if ((is_release == 0) && (ev_ptr != NULL) && (ev_ptr->has_ascii != 0u)) {
+            if ((ev_ptr->ascii == 'q') || (ev_ptr->ascii == 'Q')) {
+                done = 1;
+            } else if ((ev_ptr->ascii == 'c') || (ev_ptr->ascii == 'C')) {
+                init();
+                return;
+            }
+        }
         break_prefix = 0;
         ext_prefix = 0;
     }

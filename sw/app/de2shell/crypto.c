@@ -702,29 +702,33 @@ static int cmd_bench(void) {
     }
 #endif
 
-    vga_puts("TRNG statistics (256 bytes)\n", VGA_CYAN);
-    trng_bytes(trng_buf, (int)sizeof(trng_buf));
-    for (i = 0; i < (int)sizeof(trng_buf); i++) {
-        uint8_t b = trng_buf[i];
-        while (b != 0u) {
-            trng_ones += (uint32_t)(b & 1u);
-            b >>= 1;
+    if (trng_available()) {
+        vga_puts("TRNG statistics (256 bytes)\n", VGA_CYAN);
+        trng_bytes(trng_buf, (int)sizeof(trng_buf));
+        for (i = 0; i < (int)sizeof(trng_buf); i++) {
+            uint8_t b = trng_buf[i];
+            while (b != 0u) {
+                trng_ones += (uint32_t)(b & 1u);
+                b >>= 1;
+            }
         }
+        vga_puts("Total bits : 2048\n", VGA_WHITE);
+        vga_puts("1-bits/0-bits : ", VGA_WHITE);
+        put_dec(trng_ones, VGA_YELLOW);
+        vga_puts(" / ", VGA_WHITE);
+        put_dec(2048u - trng_ones, VGA_YELLOW);
+        vga_putc('\n', VGA_WHITE);
+        vga_puts("One ratio  : ", VGA_WHITE);
+        {
+            uint32_t ratio_bp = (trng_ones * 10000u) / 2048u;
+            put_dec(ratio_bp / 100u, VGA_YELLOW);
+            vga_putc('.', VGA_WHITE);
+            put_dec_padded(ratio_bp % 100u, 2u, VGA_YELLOW);
+        }
+        vga_puts("%\n", VGA_WHITE);
+    } else {
+        vga_puts("TRNG: not available, skipped\n", VGA_RED);
     }
-    vga_puts("Total bits : 2048\n", VGA_WHITE);
-    vga_puts("1-bits/0-bits : ", VGA_WHITE);
-    put_dec(trng_ones, VGA_YELLOW);
-    vga_puts(" / ", VGA_WHITE);
-    put_dec(2048u - trng_ones, VGA_YELLOW);
-    vga_putc('\n', VGA_WHITE);
-    vga_puts("One ratio  : ", VGA_WHITE);
-    {
-        uint32_t ratio_bp = (trng_ones * 10000u) / 2048u;
-        put_dec(ratio_bp / 100u, VGA_YELLOW);
-        vga_putc('.', VGA_WHITE);
-        put_dec_padded(ratio_bp % 100u, 2u, VGA_YELLOW);
-    }
-    vga_puts("%\n", VGA_WHITE);
 
     return 0;
 }
@@ -788,7 +792,13 @@ static void init(void) {
     saved_cmd[0] = '\0';
     cmd_history_nav = -1;
     esc_state = 0;
+#ifndef LOCAL_BUILD
+    if (trng_available()) {
+        trng_init();
+    }
+#else
     trng_init();
+#endif
     redraw();
 }
 

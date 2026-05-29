@@ -114,15 +114,16 @@
   static void fb_hw_mode_set(uint32_t enable) {
       /* vga_pixel_ctrl expects the same absolute SDRAM word address [26:2]
        * that the CPU/XBUS uses, not an offset from ADDR_SDRAM_BASE. */
-      vga_regs[VGA_PX_FB_BASE / 4u] = FRAMEBUFFER_BASE >> 2;
+      vga_regs[VGA_PX_FB_BASE / 4u] = FRAMEBUFFER_BASE;
       vga_regs[VGA_PX_MODE / 4u] = enable ? fb_mode_flags : 0u;
   }
 
   void fb_init(void) {
-      /* SDRAM should already be initialized by bootloader.
-       * Just clear the framebuffer. */
+      /* Start with test pattern to verify VGA signal path.
+       * If test pattern doesn't show, issue is in VGA sync/mux/clk.
+       * Call fb_set_debug_pattern(0) after init to switch to real data. */
+      fb_mode_flags = 1u | VGA_PX_TESTPAT;
       fb_hw_mode_set(1u);
-      fb_clear(FB_BLACK);
   }
 
   void fb_set_pixel(int x, int y, uint8_t color) {
@@ -155,6 +156,7 @@
   }
 
   void fb_shutdown(void) {
+      fb_mode_flags = 1u;
       fb_hw_mode_set(0u);
   }
 

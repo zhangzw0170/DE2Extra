@@ -53,18 +53,10 @@
 
 static int running;
 static int alt_held;
-static uint32_t frame_count;
-static int splash_hold_active;
 
 /* Helpers */
 
 #ifndef LOCAL_BUILD
-static void uart_hex8(uint8_t value) {
-    static const char hex[] = "0123456789ABCDEF";
-    neorv32_uart0_putc(hex[(value >> 4) & 0x0f]);
-    neorv32_uart0_putc(hex[value & 0x0f]);
-}
-
 static void uart_hex32(uint32_t value) {
     static const char hex[] = "0123456789ABCDEF";
     int shift;
@@ -106,26 +98,6 @@ static void twm_dump_px_regs(void) {
 
 static int is_alt(uint8_t sc) {
     return sc == SC_ALT || sc == SC_ALT_BRK;
-}
-
-static void draw_debug_splash(void) {
-    int i;
-    static const uint8_t bars[8] = {
-        FB_RED, FB_ORANGE, FB_YELLOW, FB_GREEN,
-        FB_CYAN, FB_BLUE, FB_MAGENTA, FB_WHITE
-    };
-
-    gfx_clear(FB_TEAL);
-    for (i = 0; i < 8; i++) {
-        gfx_fill_rect(i * (FB_W / 8), 0, FB_W / 8, 96, bars[i]);
-    }
-
-    gfx_rect(8, 104, FB_W - 16, FB_H - 136, FB_WHITE);
-    gfx_rect(16, 112, FB_W - 32, FB_H - 152, FB_DKGRAY);
-    gfx_text(28, 132, "TWM PIXEL DEBUG", FB_WHITE, 0xFF);
-    gfx_text(28, 156, "If you can read this, framebuffer mode is alive.", FB_YELLOW, 0xFF);
-    gfx_text(28, 180, "Next step: normal TWM windows should appear within 1 second.", FB_LTGRAY, 0xFF);
-    gfx_text(28, 204, "Esc exits back to shell.", FB_CYAN, 0xFF);
 }
 
 /* Key handling */
@@ -217,29 +189,18 @@ static void process_key(uint8_t ascii, uint8_t scancode,
 
 static void tiling_init(void) {
     fb_init();
-    fb_set_debug_pattern(1);
-    draw_debug_splash();
+    fb_set_debug_pattern(0);
 #ifndef LOCAL_BUILD
-    neorv32_uart0_puts("TWM: splash drawn\n");
-    neorv32_uart0_puts("TWM: fb sample ");
-    uart_hex8(fb_get_pixel(0, 0));
-    neorv32_uart0_putc(' ');
-    uart_hex8(fb_get_pixel(40, 40));
-    neorv32_uart0_putc(' ');
-    uart_hex8(fb_get_pixel(120, 120));
-    neorv32_uart0_putc(' ');
-    uart_hex8(fb_get_pixel(320, 200));
-    neorv32_uart0_putc('\n');
+    neorv32_uart0_puts("TWM: framebuffer init\n");
     twm_dump_px_regs();
 #endif
     ps2_dec_init();
     tile_init();
     tile_set_panel_render(panel_render);
     tile_layout();
+    tile_render_all();
     running = 1;
     alt_held = 0;
-    frame_count = 0;
-    splash_hold_active = 1;
 }
 
 static void tiling_update(void) {
@@ -291,25 +252,6 @@ static void tiling_update(void) {
     }
 #endif
 
-    frame_count++;
-    if (frame_count == 5u) {
-        fb_set_debug_pattern(0);
-#ifndef LOCAL_BUILD
-        neorv32_uart0_puts("TWM: test pattern disabled\n");
-        twm_dump_px_regs();
-#endif
-    }
-    if (splash_hold_active != 0) {
-        if (frame_count >= 6u) {
-            splash_hold_active = 0;
-#ifndef LOCAL_BUILD
-            neorv32_uart0_puts("TWM: entering tiled render\n");
-            twm_dump_px_regs();
-#endif
-        } else {
-            return;
-        }
-    }
     tile_layout();
     tile_render_all();
 }

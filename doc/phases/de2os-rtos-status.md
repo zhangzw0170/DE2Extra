@@ -1,30 +1,22 @@
 # de2os FreeRTOS 集成状态
 
-> 日期: 2026-05-26
-> 状态: 软件侧已收敛到可构建基线，待 Quartus 复编译和上板验证
-> 更新: 2026-05-26 — TWM 替代 win30, Snake 全屏+vblank, ntt CLI 待接入
+> 日期: 2026-05-29
+> 状态: 软件编译通过，Quartus RTL 编译通过 (timing clean)，待上板验证
+> 更新: 2026-05-29 — NTT/PONG/Conway RTL 已集成，CLI 全部注册，pxtest 诊断工具，crypto/twm 修复
 > 硬件工程: `par/de2os/` (top entity: `de2os_top`)
 > 目标固件: `sw/app/de2shell_rtos/`
 
 ## 当前结论
 
-`de2os` 这条线当前已经不再受 `IMEM 64KB` 约束。`sw/app/de2shell_rtos/` 的 `.text/.rodata` 运行在 SDRAM `0x01000000`，最新构建产物为：
+`de2os` 已完成软件编译和 Quartus RTL 编译的闭环。当前构建产物：
 
-- `Executable (EXE): 73500 bytes @ 0x01000000`
-- `.text = 73424`
-- `.data = 76`
-- `.bss = 32640`
+- 固件: `text=140456  data=1856  bss=81504  total=223816` (~142KB)
+- RTL: `par/de2os/de2os.sof` (3.4MB, 2026-05-29 02:55)
+- Quartus: 0 errors, 262 warnings, all timing constraints met
+  - Worst setup slack: +2.394 ns
+  - Worst hold slack: +0.153 ns
 
-其中 `.bss` 大不是因为 DMEM 爆了，而是因为 FreeRTOS heap 已经迁到 SDRAM：
-
-- `.freertos_heap` at `0x01900000`, size `0x4000`
-- `ucHeap` at `0x01900000`
-- `__de2_framebuffer_base = 0x01800000`
-
-因此当前主瓶颈已经从“代码放不下”转成：
-
-1. 共享 RTL 改动是否都能在 `par/de2os/` 下重新通过 Quartus。
-2. 板上运行时，ICACHE burst + SDRAM + VGA 像素模式这条链是否稳定。
+当前主瓶颈：**上板验证**。板子在队友手中。
 
 ## 已完成
 
@@ -38,8 +30,6 @@
 
 FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/ext/`），FreeRTOS+CLI 作为本地源文件集成在 `sw/app/de2shell_rtos/FreeRTOS_CLI.c` / `FreeRTOS_CLI.h`，不使用子模块。
 
-原先的运行时炸弹是 `configTOTAL_HEAP_SIZE` 只能缩到 2KB 才能链接，但 4 个任务 + 队列运行时一定不够。
-
 当前修复：
 
 - `configAPPLICATION_ALLOCATED_HEAP = 1`
@@ -47,223 +37,117 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 - 新增 `sw/app/de2shell_rtos/rtos_memory.c`
 - 链接脚本新增 `.freertos_heap` 段，放到 `0x01900000`
 
-结果：
-
-- FreeRTOS 任务/队列的动态分配不再挤占 DMEM
-- `de2os` 当前的内存约束重点变回全局变量、RTOS 内核小对象和主数据段，而不是 `ucHeap[]`
-
 ### 3. framebuffer 已与代码区分离
-
-原先 `fb_hal.c` 使用 `0x01000000` 作为 framebuffer 基址，这与 SDRAM 代码入口重叠，Win30 写像素时会覆盖程序自身。
-
-当前修复：
 
 - framebuffer 移到 `0x01800000`
 - FreeRTOS heap 放在 `0x01900000`
 
-这至少消除了“GUI 一启动就自毁代码段”的硬冲突。
-
 ### 4. VGA 像素模式已接通软件控制
-
-旧状态里 `vga_pixel_mode <= '0'` 是硬编码，Win30 即使初始化 framebuffer 也无法真正切到像素模式。
-
-当前已改为：
 
 - `vga_text_terminal` 和 `vga_pixel_ctrl` 共享同一 VGA Wishbone 窗口
 - 文本控制寄存器移到 `0x1F40..0x1F54`
 - 像素控制寄存器使用 `0x1F80..`
-- `mode_en_o => vga_pixel_mode`
-- 顶层 VGA 输出由 `vga_pixel_mode` 选择 text/pixel
-
-软件侧对应改动：
-
-- `sw/app/de2shell/fb_hal.c` 写 `0xF0000000 + 0x1F80/0x1F84`
-- `fb_shutdown()` 会关闭像素模式
+- `fb_hal.c` 已改为启动时默认开启 test pattern (bit 1)，用于诊断 VGA 信号路径
+- **注意: VGA 像素模式从未在物理显示器上成功显示过**
 
 ### 5. PS/2 已接入 RTOS 输入队列（主输入源）
 
-当前 `t_uart_input()` 已同时轮询：
+- `t_uart_input()` 同时轮询 UART + PS/2 MMIO
+- 排除机制: PROG_PS2 / PROG_WIN30 / PROG_PONG_HW 的 PS/2 轮询由各自程序负责，不经过 t_uart_input
 
-- UART 输入
-- PS/2 MMIO (`0xF0008000`)，优先级与 UART 相同
+### 6. RTOS 版本的程序集已完成集成
 
-并将可解码为 ASCII 的按键送入 `xInputQueue`。PS/2 键盘现在是主要输入方式（板上无 UART 终端时唯一输入源）。
+所有程序已注册 CLI 命令，makefile 已同步：
 
-这意味着：
+| CLI 命令 | 程序 | 说明 |
+|----------|------|------|
+| hello | prog_hello | LED chaser |
+| memtest | — | SDRAM diagnostic (built-in) |
+| crypto | prog_crypto | AES/SHA/SM4 CLI + bench |
+| ps2 (kbd) | prog_ps2 | PS/2 keyboard test |
+| snake | prog_snake | Snake game (全屏 78x27 + CP437 + vblank) |
+| life (conwaylife) | prog_life | Conway software implementation |
+| info | prog_info | System dashboard |
+| monitor (riscvasm) | prog_monitor | Memory/register monitor |
+| expdemo (demo) | prog_demo | 11 course labs |
+| twm | prog_twm | Tiling window manager (像素模式 GUI) |
+| conwayhw | prog_conway_hw | Conway 硬件引擎 |
+| ponghw | prog_pong_hw | PONG 硬件引擎 + VGA |
+| ntt | prog_ntt | NTT 加速器 CLI |
+| pxtest | — | VGA 像素模式诊断 (5-phase) |
+| vgadump | — | VGA framebuffer dump |
+| vgam | — | VGA mode query |
+| stats | — | Task list + stack HWM |
+| heapstat | — | Heap usage |
+| cpustat | — | CPU usage per task |
+| clear | — | Clear VGA screen |
 
-- shell 不再是纯 UART 输入
-- Win30 至少具备基础字符键输入路径
+### 7. RTL 外设已全部集成 (2026-05-29)
 
-### 6. RTOS 版本的程序集已重新拉平
+以下外设在 `de2os_top.vhd` 中已从 stub 升级为实际实例化：
 
-随着 `de2shell` 最近增加了更多程序，`de2shell_rtos` 一度因为 makefile 未同步而链接失败。
+| 外设 | 状态 | 说明 |
+|------|------|------|
+| ntt_sdf | ☑ 实例化 | Wishbone slave s4 @ 0xF000F000 |
+| pong_engine | ☑ 实例化 | Wishbone slave s9 + VGA 输出信号 |
+| conway_engine | ☑ 实例化 | Wishbone slave s10 |
+| INTC s7 | ☑ 修复 | ack loopback (不再挂死总线) |
 
-当前已修复：
+### 8. Bug 修复 (2026-05-29)
 
-- 补入 `crypto.c`, `ps2.c`, `info.c`, `monitor.c`, `demo.c`
-- 补入 `crypto_cli/crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`
-- `de2shell_rtos/main.c` 已同步注册并暴露 12 个程序：
-  - `hello`, `memtest`, `crypto`, `ps2`, `snake`, `life`, `info`, `monitor`, `demo`, `twm`, `conway_hw`, `pong_hw`
-
-其中 `conway_hw` 和 `pong_hw` 为硬件加速程序（Conway 生命游戏硬件引擎、Pong 硬件引擎），尚未注册 CLI 命令，只能通过未来 CLI 命令扩展访问。
-
-注意: `ntt.c` (NTT 加速器驱动) 尚未加入 makefile 和 CLI 注册。
-
-`win30` / `startui` / `gui` 已被 `twm` (tiling window manager) 替代。
-
-CLI 命令共 16 条（15 条注册 + 1 条 FreeRTOS+CLI 内置 `help`）：
-
-| 主命令 | 功能 |
-|--------|------|
-| hello | LED chaser |
-| memtest | SDRAM diagnostics |
-| crypto | AES/SHA/SM4 CLI |
-| ps2 | PS/2 keyboard test |
-| snake | Snake game (全屏 78x27 + CP437 边框 + vblank 同步) |
-| info | System dashboard |
-| expdemo | 11 course labs |
-| twm | Tiling window manager (像素模式 GUI, 替代 win30) |
-| vgadump | VGA framebuffer diagnostics |
-| vgam | VGA mode query |
-| stats | Task list + stack HWM |
-| heapstat | Heap usage |
-| cpustat | CPU usage per task |
-
-| 别名 | 等价于 |
-|------|--------|
-| kbd | ps2 |
-| conwaylife | life (程序存在，但无独立 CLI 命令) |
-| riscvasm | monitor (程序存在，但无独立 CLI 命令) |
-
-注意：`life` 和 `monitor` 程序有回调（`cli_life`, `cli_monitor`），但只通过别名 `conwaylife` / `riscvasm` 注册，没有主命令名。`demo` 程序映射到 `expdemo` 主命令。
-
-## 当前已验证事实
-
-### 软件构建
-
-已成功在 Docker 中重新构建：
-
-```text
-docker run --rm -v "E:\Main\JuniorII\NonExam\FPGA\DE2Extra:/project" de2extra-builder \
-  bash -lc 'export PATH=/opt/riscv/bin:$PATH && \
-  cd /project/sw/app/de2shell_rtos && \
-  make clean NEORV32_HOME=/project/neorv32 && \
-  mkdir -p build && \
-  make exe NEORV32_HOME=/project/neorv32'
-```
-
-最新结果：
-
-```text
-Memory utilization:
-   text   data    bss    dec    hex
-  73424     76  32640 106140  19e9c
-
-Executable (EXE): 73500 bytes @ 0x01000000
-```
-
-### ELF 布局
-
-关键 section / symbol：
-
-- `.text` at `0x01000000`
-- `.data` at `0x80000000`
-- `.bss`  at `0x80000050`
-- `.freertos_heap` at `0x01900000`, size `0x4000`
-- `ucHeap` at `0x01900000`
-- `__de2_framebuffer_base = 0x01800000`
-
-### ISR 栈路径
-
-当前 `FreeRTOSConfig.h` 已定义：
-
-- `configISR_STACK_SIZE_WORDS = 256`
-
-因此 RISC-V port 现在使用 `port.c` 内部静态 `xISRStack[]`，而不是依赖“复用 main 启动栈”的旧路径。`de2shell_rtos.ld` 中保留的 `__freertos_irq_stack_top` 目前不再是主路径。
+| 问题 | 修复 | 文件 |
+|------|------|------|
+| crypto bench 卡死 | `trng_bytes()` 无 `trng_available()` 检查 → 无限 busy-loop | `crypto.c` |
+| twm 卡死 | PS/2 竞争: t_uart_input 和 tiling_update 同时轮询 PS/2 MMIO | `main.c` 排除列表 |
+| ntt.c NEORV32 编译失败 | `ntt_a[]` 仅在 LOCAL_BUILD 下声明，NEORV32 路径改用直接 MMIO | `ntt.c` |
+| INTC 0xF000A000 访问挂死 | s7_ack_i = '0' → 总线无响应；改为 ack loopback | `de2os_top.vhd` |
 
 ## 当前剩余问题
 
-### P0. 部署流程
+### P0. VGA 像素模式从未成功显示 (最高优先级)
 
-V3 使用 bootloader-first 上传流程，不再需要每次改动软件都重跑 Quartus。
+这是当前最关键的未解决问题。可能的原因：
 
-部署脚本 `run/deploy_de2shell_rtos.sh`：
+1. VGA 信号路径问题 (sync/blank 信号未正确连接)
+2. SDRAM 帧缓冲区读取路径问题 (VGA fetch FSM 或带宽)
+3. VGA 输出 mux 问题 (text/pixel 切换)
 
-```bash
-./run/deploy_de2shell_rtos.sh inc        # 推荐: 增量 = 重编 app + 串口上传
-./run/deploy_de2shell_rtos.sh app        # 等价于 inc
-./run/deploy_de2shell_rtos.sh upload     # 仅上传当前 bin
-./run/deploy_de2shell_rtos.sh fpga       # 重编 bootloader + Quartus + 烧录
-./run/deploy_de2shell_rtos.sh full       # fpga + app upload
-```
+诊断计划:
+- `pxtest` 命令 Phase 1: test pattern 模式 (绕过 SDRAM) → 如果能看到色条 → 信号路径 OK，问题在 SDRAM
+- `pxtest` Phase 3-4: SDRAM 模式 + debug 寄存器 → 定位具体失败点
+- 如果 test pattern 都不显示 → VGA signal path 问题
 
-流程：
-1. Docker cross-compile `sw/app/de2shell_rtos/` -> `neorv32_exe.bin`
-2. `run/upload_de2os.py` 通过 UART 发送到 NEORV32 bootloader
-3. Bootloader 写入 SDRAM `0x01000000` 并跳转执行
+### P1. 上板验证
 
-正常改 app 代码只需 `inc`。只有改 bootloader / CPU IMEM 配置 / 顶层 RTL 时才需要 `fpga` 或 `full`。
+所有以下项目需要上板确认：
 
-注意：旧的 `run/deploy_de2os.sh` 已删除。统一使用 `run/deploy_de2shell_rtos.sh`。
+- [ ] bootloader 上传 + SDRAM 执行
+- [ ] FreeRTOS 4 任务调度正常
+- [ ] shell PS/2 + UART 双路输入
+- [ ] crypto bench (TRNG 修复后不再卡死)
+- [ ] twm 进入/退出正常 (PS/2 修复后不再卡死)
+- [ ] conwayhw / ponghw / ntt 基本功能
+- [ ] pxtest 诊断 VGA 像素模式
+- [ ] ExpDemo 11 个实验
 
-### P1. Quartus / RTL 还没对这批最终改动做闭环验证
+### P2. PS/2 目前主要是 ASCII 路径
 
-虽然软件已能构建，但以下 RTL 改动仍需在 `par/de2os/` 下重新跑一遍：
+方向键、功能键、组合键不一定完整穿透到 GUI。如果后面要让 GUI 的键盘体验完整，最好改成 richer event。
 
-- `src/rtl/de2os_top.vhd`
-- `src/rtl/periph/vga_text_terminal.vhd`
-- `src/rtl/periph/vga_pixel_ctrl.vhd`
-- `src/rtl/periph/sdram_ctrl.vhd`
-
-当前还不能宣称“de2os_pixel_rtos 最终 bitstream 已稳定可复现”。
-
-补充：
-
-- 已确认旧的 `de2os.sta.rpt` 基本无效，原因是 `par/de2os/de2os.qsf` 引用的 `../constraints/de2extra.sdc` 在工程路径下原先缺失
-- 因此旧报告只分析到了 `altera_reserved_tck`
-- 现已把 `par/constraints/de2extra.sdc` 补回为仓库内已有的共享基线版本
-- 下一次 Quartus / STA 必须重新生成，不能继续参考旧 `de2os.sta.rpt`
-
-### P2. 板上稳定性未验证
-
-尤其是以下组合尚未重新实测：
-
-- ICACHE burst refill
-- SDRAM CPU path
-- VGA pixel fetch path
-- FreeRTOS 多任务调度
-- Win30 切像素模式
-
-这部分必须以上板结果为准。
-
-### P3. PS/2 目前主要是 ASCII 路径
-
-现在 RTOS 输入队列只稳定传递“可解码为 ASCII 的键”。这对 shell 和一部分 GUI 交互够用，但还不等于完整键盘事件系统。
-
-受限点：
-
-- 方向键、功能键、组合键不一定完整穿透到 Win30
-- `win30_desk.c` 当前 RTOS 路径主要消费 `char`
-
-如果后面要让 GUI 的键盘体验完整，最好改成 richer event 而不是单字节字符。
-
-### P4. 无双缓冲
+### P3. 无双缓冲
 
 像素模式仍是单 framebuffer。理论上会有撕裂风险，但这不是当前启动阻塞项。
 
+### P4. Audio synth 未集成
+
+RTL 完成 (DDS + FM, 仿真 7/7 PASS)，但需要 wb_intercon 新增 s11 端口 @ 0xF0013000。
+
 ## 下一步
 
-1. 增量部署测试：`./run/deploy_de2shell_rtos.sh inc`，验证 bootloader 上传链路。
-2. 等共享 RTL 不再被其他编译占用后，重新跑 `par/de2os/` Quartus 编译（`./run/deploy_de2shell_rtos.sh fpga`）。
-3. 若 Quartus 通过，上板验证 `de2shell_rtos/neorv32_exe.bin`：
-   - scheduler 是否正常启动
-   - shell 是否可交互
-   - `crypto/info/monitor/expdemo/startui` 是否能进入
-   - Win30 是否真能切像素模式
-   - PS/2 是否可用
-4. 补 `conway_hw` / `pong_hw` 的 CLI 命令注册（当前只有程序回调，没有 CLI 入口）。
-5. 考虑为 `life` / `monitor` 添加独立主命令名（当前仅通过别名 `conwaylife` / `riscvasm` 访问）。
-6. 根据板测结果再决定是否需要：
-   - 补 richer PS/2 事件通道
-   - 做双缓冲
-   - 继续收敛 ICACHE/SDRAM 稳定性
+1. **板子到手后立即执行**:
+   - `./run/deploy_de2shell_rtos.sh full` — 烧录新 RTL + 上传新固件
+   - 运行 `pxtest` 诊断 VGA 像素模式
+   - 验证 crypto/twm/conwayhw/ponghw/ntt 基本功能
+2. 根据 pxtest 结果决定 VGA 像素模式的修复方案
+3. 考虑 Audio synth 集成 (wb_intercon s11 端口)
+4. ChromaShader (P4 最低优先级，暂缓)

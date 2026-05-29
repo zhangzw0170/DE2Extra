@@ -15,12 +15,34 @@ end entity adapt_exp5;
 
 architecture rtl of adapt_exp5 is
     signal e_ledr0, e_ledr1 : std_logic;
+    signal key2_meta        : std_logic := '1';
+    signal key2_sync        : std_logic := '1';
+    signal key2_prev        : std_logic := '1';
+    signal step_pulse       : std_logic := '0';
 begin
+    process(clk_50)
+    begin
+        if rising_edge(clk_50) then
+            if rst_n = '0' then
+                key2_meta  <= '1';
+                key2_sync  <= '1';
+                key2_prev  <= '1';
+                step_pulse <= '0';
+            else
+                key2_meta  <= key_n(2);
+                key2_sync  <= key2_meta;
+                step_pulse <= key2_prev and (not key2_sync);
+                key2_prev  <= key2_sync;
+            end if;
+        end if;
+    end process;
+
     u_exp5 : entity work.exp5_top
         port map (
             clk     => clk_50,
             reset   => key_n(1),   -- exp5_top reset is active-low
-            w       => sw(0),
+            step    => step_pulse,
+            w       => sw(1),
             fsm_sel => sw(17 downto 16),
             ledg    => exp_out.ledg,
             ledr0   => e_ledr0,

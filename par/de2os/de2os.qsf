@@ -50,6 +50,8 @@ set_global_assignment -name VHDL_FILE ../../src/rtl/de2os_top.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/de2os_imem_top.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/ntt_sdf.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/vga_pixel_ctrl.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/pong_engine.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/conway_engine.vhd
 
 # ExpDemo RTL
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp1.vhd

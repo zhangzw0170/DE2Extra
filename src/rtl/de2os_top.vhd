@@ -238,6 +238,9 @@ architecture rtl of de2os_top is
     signal conway_wb_stb   : std_logic;
     signal conway_wb_ack   : std_logic;
 
+    -- INTC slave 7 stub: tie ack to stb to prevent bus hang
+    signal intc_stub_stb : std_logic;
+
     -- ExpDemo Wishbone
     signal expdemo_wb_adr   : std_logic_vector(2 downto 0);
     signal expdemo_wb_dat_o : std_logic_vector(31 downto 0);
@@ -307,9 +310,18 @@ begin
     vga_reg_dat_i    <= vga_px_reg_dat_i when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_dat_i;
     vga_reg_ack      <= vga_px_reg_ack when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_ack;
 
-    -- Bring-up build: disable NTT accelerator while preserving bus responsiveness.
-    ntt_wb_dat_i <= (others => '0');
-    ntt_wb_ack   <= ntt_wb_stb;
+    -- NTT accelerator (Number Theoretic Transform)
+    u_ntt : entity work.ntt_sdf
+    port map (
+        clk_i     => clk_50m,
+        rst_n_i   => rst_n,
+        wb_adr_i  => ntt_wb_adr,
+        wb_dat_i  => ntt_wb_dat_o,
+        wb_dat_o  => ntt_wb_dat_i,
+        wb_we_i   => ntt_wb_we,
+        wb_stb_i  => ntt_wb_stb,
+        wb_ack_o  => ntt_wb_ack
+    );
 
     -- ================================================================
     -- Clock and Reset Generation
@@ -359,7 +371,7 @@ begin
         ICACHE_BLOCKS   => 64,
         ICACHE_BLOCK_SZ => 32,
         ICACHE_BURSTS   => true,
-        TRNG_EN         => false
+        TRNG_EN         => true
     )
     port map (
         clk_i       => clk_50m,
@@ -450,8 +462,8 @@ begin
         s7_dat_i => (others => '0'),
         s7_dat_o => open,
         s7_we_o  => open,
-        s7_stb_o => open,
-        s7_ack_i => '0',
+        s7_stb_o => intc_stub_stb,
+        s7_ack_i => intc_stub_stb,
         s8_adr_o => expdemo_wb_adr,
         s8_dat_i => expdemo_wb_dat_i,
         s8_dat_o => expdemo_wb_dat_o,
@@ -765,21 +777,40 @@ begin
         av_waitrequest => jtag_av_waitreq
     );
 
-    -- Bring-up build: park optional demo engines so shell/UI validation is isolated.
-    pong_wb_dat_i   <= (others => '0');
-    pong_wb_ack     <= pong_wb_stb;
-    pong_vga_r      <= (others => '0');
-    pong_vga_g      <= (others => '0');
-    pong_vga_b      <= (others => '0');
-    pong_vga_hs     <= '1';
-    pong_vga_vs     <= '1';
-    pong_vga_blank  <= '1';
-    pong_vga_sync   <= '1';
-    pong_vga_clk    <= '0';
-    pong_vga_en     <= '0';
+    -- PONG engine (hardware-accelerated PONG with direct VGA output)
+    u_pong : entity work.pong_engine
+    port map (
+        clk_50m_i   => clk_50m,
+        rst_n_i     => rst_n,
+        wb_adr_i    => pong_wb_adr,
+        wb_dat_i    => pong_wb_dat_o,
+        wb_dat_o    => pong_wb_dat_i,
+        wb_we_i     => pong_wb_we,
+        wb_stb_i    => pong_wb_stb,
+        wb_ack_o    => pong_wb_ack,
+        vga_r_o     => pong_vga_r,
+        vga_g_o     => pong_vga_g,
+        vga_b_o     => pong_vga_b,
+        vga_hs_o    => pong_vga_hs,
+        vga_vs_o    => pong_vga_vs,
+        vga_blank_o => pong_vga_blank,
+        vga_sync_o  => pong_vga_sync,
+        vga_clk_o   => pong_vga_clk,
+        vga_en_o    => pong_vga_en
+    );
 
-    conway_wb_dat_i <= (others => '0');
-    conway_wb_ack   <= conway_wb_stb;
+    -- Conway's Game of Life engine (CPU reads grid via Wishbone)
+    u_conway : entity work.conway_engine
+    port map (
+        clk_i     => clk_50m,
+        rst_n_i   => rst_n,
+        wb_adr_i  => conway_wb_adr,
+        wb_dat_i  => conway_wb_dat_o,
+        wb_dat_o  => conway_wb_dat_i,
+        wb_we_i   => conway_wb_we,
+        wb_stb_i  => conway_wb_stb,
+        wb_ack_o  => conway_wb_ack
+    );
 
     -- ================================================================
     -- LCD -- SW16=0 保持 Phase 1/2a 状态显示; SW16=1 切到 2b 调试显示

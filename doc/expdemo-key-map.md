@@ -28,7 +28,7 @@
 | 2 | Exp2 `LED Patterns` | 未使用 | 未使用 | 切换彩灯模式 | 板级复位 | 原 `KEY0 -> KEY1` |
 | 3 | Exp3 `7-Segment Scan` | `digital_clock` 子模式下写时 | `digital_clock` 子模式下写分 | `digital_clock` 子模式下复位 | 板级复位 | 删除原 `KEY0` 写秒功能 |
 | 4 | Exp4 `Dual-Port RAM` | 未使用 | 未使用 | 写模式下一次写入脉冲 | 板级复位 | 原 `KEY0 -> KEY1` |
-| 5 | Exp5 `FSM Detector` | 未使用 | 未使用 | FSM 复位 | 板级复位 | 原 `KEY0 -> KEY1` |
+| 5 | Exp5 `FSM Detector` | 未使用 | 手动步进采样 | FSM 复位 | 板级复位 | `KEY2` 采样，`KEY1` 复位 |
 | 8 | Exp8 `PS/2 Scan Codes` | 未使用 | 未使用 | 未使用 | 板级复位 | 退出靠键盘 `Del` |
 | 9 | Exp9 `UART` | 未使用 | 未使用 | 发送当前 `SW[7:0]` | 板级复位 | 原 `KEY0 -> KEY1` |
 | 10 | Exp10 `IR NEC` | 未使用 | 未使用 | 清空/复位红外显示状态 | 板级复位 | 原 `KEY0 -> KEY1` |
@@ -40,10 +40,10 @@
 
 ### Exp1
 
-- `SW2:0`：输入 `A/B/C`
+- `SW2:0`：输入 `A/B/C`（SW0=A, SW1=B, SW2=C）
 - `SW5`：`G1`
-- `SW4`：`G2A`
-- `SW3`：`G2B`
+- `SW3`：`G2A`
+- `SW4`：`G2B`
 - `KEY`：无实验内功能，`KEY0` 仍为板级复位
 - `LEDR7:0`：译码输出
 
@@ -79,9 +79,13 @@
 
 ### Exp5
 
-- `SW0`：输入 `w`
+- `SW1`：输入 `w`
 - `SW17:16`：选择不同 FSM
 - `KEY1`：复位
+- `KEY2`：手动步进采样
+- `LEDR1`：回显当前 `w`
+- `LEDG8`：检测输出 `z`
+- `LEDG7:0`：最近 8 次输入历史
 
 ### Exp8
 
@@ -102,8 +106,9 @@
 ### Exp11
 
 - `SW7:0`：`fword`
-- `SW8`：模式切换
+- `SW17`：时钟模式（0=LED 慢速观察，1=SignalTap 快速捕获）
 - `KEY1`：复位 DDS
+- `LEDR[9:0]`：正弦波幅度采样值
 
 ### Exp12
 

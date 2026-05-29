@@ -82,13 +82,13 @@ de2_115_top.vhd (only entity that knows board pins)
 │   ├── s1: vga_text_terminal  0xF0000000 (32KB, 80×30 text mode + pixel mode via SDRAM FB)
 │   ├── s2: ps2_controller    0xF0008000 (scancode + IRQ)
 │   ├── s3: ir_nec_wb         0xF000C000 (NEC IR decoder)
-│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator, stubbed)
+│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator)
 │   ├── s5: lcd_wb            0xF000B000 (LCD Wishbone controller)
 │   ├── s6: build_info_wb      0xF0009000 (build info ROM; timer address reused)
-│   ├── s7: (unconnected)     0xF000A000 (INTC address reserved, tied off)
+│   ├── s7: (stub ack)        0xF000A000 (INTC address reserved, ack loopback)
 │   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 11 experiments)
-│   ├── s9: pong_engine      0xF0011000 (PONG engine, stubbed)
-│   └── s10: conway_engine   0xF0012000 (Conway engine, stubbed)
+│   ├── s9: pong_engine      0xF0011000 (PONG engine + VGA output)
+│   └── s10: conway_engine   0xF0012000 (Conway engine)
 │   Note: DDS (0xF000D000) and SD card (0xF000E000) have address constants
 │         in de2extra_pkg.vhd but no slave ports in wb_intercon.
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
@@ -119,11 +119,15 @@ de2_115_top.vhd (only entity that knows board pins)
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
 
-Note: **NTT accelerator** (`ntt_sdf.vhd`) is instantiated in `wb_intercon` + both top entities, with pin assignments in both QSF files. The C driver (`sw/app/de2shell/ntt.c`) exists with dual-mode (LOCAL_BUILD SW reference / NEORV32 HW MMIO), verified in LOCAL_BUILD. Board verification pending in V3.
+Note: **NTT accelerator** (`ntt_sdf.vhd`) is instantiated in `de2os_top.vhd` (RTL integrated, Quartus pass). The C driver (`sw/app/de2shell/ntt.c`) has dual-mode (LOCAL_BUILD SW reference / NEORV32 HW MMIO). NEORV32 path fixed: `cmd_ntt()` uses direct MMIO instead of software buffer. Board verification pending.
+
+Note: **PONG engine** (`pong_engine.vhd`) is instantiated in `de2os_top.vhd` with full port map (Wishbone + VGA output). C driver (`pong_hw.c`) registered as `ponghw` CLI command. Board verification pending.
+
+Note: **Conway engine** (`conway_engine.vhd`) is instantiated in `de2os_top.vhd`. C driver (`conway_hw.c`) registered as `conwayhw` CLI command. Board verification pending.
 
 Note: **ExpDemo** is instantiated in `de2_115_top.vhd` (not in de2os_top.vhd). It wraps 11 experiment adapters with output/peripheral multiplexing. Board verified in V2.
 
-Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text_terminal`. It reads a framebuffer from SDRAM and displays 640×480@60Hz RGB332. Used by TWM (`twm` command) and screenshot tools. SDL2-verified; deferred to V3 for VGA cable board test.
+Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text_terminal`. It reads a framebuffer from SDRAM and displays 640×480@60Hz RGB332. Used by TWM (`twm` command) and screenshot tools. SDL2-verified. **Has never successfully displayed on physical monitor** — `pxtest` diagnostic command added to debug. `fb_hal.c` starts with test pattern enabled to verify VGA signal path.
 
 ### Software Apps
 
@@ -142,9 +146,9 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text
 
 **de2shell (frozen)**: `makefile` links crypto_cli sources directly (`crypto_aes.c`, `crypto_sha.c`, `crypto_sm.c`). GUI-related files (`gfx.c`, `gui.c`, `gui_widgets.c`, `twm.c`, `fb_hal.c`) exist — they compile via `make local` (SDL2 host build) and are also included in the RTOS build.
 
-**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis. CLI commands: hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, vgadump, vgam, stats, heapstat, cpustat. Not yet registered: conway_hw, pong_hw, ntt.
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE + burst enabled via async FIFO CDC. PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: 142KB (text 140KB). See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis.
 
-**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE + burst enabled via async FIFO CDC. PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis.
+CLI commands (20 total + help): hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear. Aliases: kbd→ps2, conwaylife→life, riscvasm→monitor.
 
 ### NEORV32 ISA Extensions
 
@@ -202,4 +206,4 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 **V3 is active** — all work on de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/phase5-sdram-gui.md` for plan. See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 16+ commands, VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode wired (640x480 RGB332 framebuffer in SDRAM), TWM (tiling window manager replacing Win 3.0), Snake full-screen with CP437 border + vblank sync, ExpDemo fully integrated (CLI registered), Conway/PONG/NTT VHDL + C done but **not integrated** (QSF missing, de2os_top stubbed, NTT not in RTOS makefile), Audio synth RTL complete (DDS + FM, simulation 7/7 PASS) but not integrated (needs s11 wb_intercon port). See `doc/phases/v3p*.md` for per-phase acceptance tables.
+V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 20 commands, VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode wired (640x480 RGB332 framebuffer in SDRAM) but **never displayed on physical monitor** (pxtest diagnostic added), TWM (tiling window manager), Snake full-screen with CP437 border + vblank sync, ExpDemo fully integrated. **Conway/PONG/NTT RTL integrated** in de2os_top (Quartus pass, timing clean, 262 warnings), CLI commands registered, C drivers fixed for NEORV32 build. Audio synth RTL complete (DDS + FM, simulation 7/7 PASS) but not integrated (needs s11 wb_intercon port). Latest Quartus build: 2026-05-29, 38min, all timing constraints met.

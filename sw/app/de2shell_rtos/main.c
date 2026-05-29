@@ -56,6 +56,9 @@ extern const program_t prog_info;
 extern const program_t prog_monitor;
 extern const program_t prog_demo;
 extern const program_t prog_twm;
+extern const program_t prog_conway_hw;
+extern const program_t prog_pong_hw;
+extern const program_t prog_ntt;
 
 uint8_t last_ir_cmd = 0;
 
@@ -73,6 +76,9 @@ typedef enum {
     PROG_MONITOR,
     PROG_DEMO,
     PROG_WIN30,
+    PROG_CONWAY_HW,
+    PROG_PONG_HW,
+    PROG_NTT,
     PROG_COUNT
 } prog_id_t;
 
@@ -90,7 +96,10 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_INFO]    = &prog_info,
     [PROG_MONITOR] = &prog_monitor,
     [PROG_DEMO]    = &prog_demo,
-    [PROG_WIN30]   = &prog_twm
+    [PROG_WIN30]   = &prog_twm,
+    [PROG_CONWAY_HW] = &prog_conway_hw,
+    [PROG_PONG_HW]  = &prog_pong_hw,
+    [PROG_NTT]      = &prog_ntt
 };
 
 static volatile prog_id_t active_prog = PROG_SHELL;
@@ -298,6 +307,7 @@ static configSTACK_DEPTH_TYPE active_prog_stack_words(prog_id_t pid) {
         case PROG_CRYPTO:
         case PROG_INFO:
         case PROG_MONITOR:
+        case PROG_NTT:
             return 640;
         case PROG_DEMO:
             return 896;
@@ -379,7 +389,10 @@ PROG_CMD(life,    PROG_LIFE)
 PROG_CMD(info,    PROG_INFO)
 PROG_CMD(monitor, PROG_MONITOR)
 PROG_CMD(expdemo, PROG_DEMO)
-PROG_CMD(twm,     PROG_WIN30)
+PROG_CMD(win30,   PROG_WIN30)
+PROG_CMD(conwayhw, PROG_CONWAY_HW)
+PROG_CMD(ponghw,  PROG_PONG_HW)
+PROG_CMD(ntt,     PROG_NTT)
 
 static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
     (void)cmd;
@@ -406,6 +419,15 @@ static BaseType_t cli_cpustat(char *buf, size_t len, const char *cmd) {
     (void)cmd;
     (void)len;
     vTaskGetRunTimeStats(buf);
+    return pdFALSE;
+}
+
+static BaseType_t cli_clear(char *buf, size_t len, const char *cmd) {
+    (void)cmd;
+    (void)len;
+    vga_clear();
+    vga_goto(0, 0);
+    buf[0] = '\0';
     return pdFALSE;
 }
 
@@ -472,12 +494,22 @@ static const CLI_Command_Definition_t cmd_info_def =
 static const CLI_Command_Definition_t cmd_expdemo_def =
     {"expdemo", "expdemo:  11 course labs\r\n", cli_expdemo, 0};
 
+static const CLI_Command_Definition_t cmd_life_def =
+    {"life", "life:     Conway's Game of Life\r\n", cli_life, 0};
 static const CLI_Command_Definition_t cmd_conway_def =
     {"conwaylife", "conwaylife: Conway's Game of Life (alias)\r\n", cli_life, 0};
+static const CLI_Command_Definition_t cmd_monitor_def =
+    {"monitor", "monitor:  RISC-V monitor / asm\r\n", cli_monitor, 0};
 static const CLI_Command_Definition_t cmd_riscvasm_def =
     {"riscvasm", "riscvasm:  monitor alias\r\n", cli_monitor, 0};
 static const CLI_Command_Definition_t cmd_twm_def =
-    {"twm", "twm:       Tiling window manager\r\n", cli_twm, 0};
+    {"twm", "twm:      Tiling window manager\r\n", cli_win30, 0};
+static const CLI_Command_Definition_t cmd_conwayhw_def =
+    {"conwayhw", "conwayhw: Hardware Conway (FPGA)\r\n", cli_conwayhw, 0};
+static const CLI_Command_Definition_t cmd_ponghw_def =
+    {"ponghw", "ponghw:   Hardware PONG (FPGA)\r\n", cli_ponghw, 0};
+static const CLI_Command_Definition_t cmd_ntt_def =
+    {"ntt", "ntt:      NTT accelerator CLI\r\n", cli_ntt, 0};
 
 static const CLI_Command_Definition_t cmd_stats_def =
     {"stats", "stats:    Task list + stack HWM\r\n", cli_stats, 0};
@@ -485,6 +517,130 @@ static const CLI_Command_Definition_t cmd_heapstat_def =
     {"heapstat", "heapstat: Heap usage\r\n", cli_heapstat, 0};
 static const CLI_Command_Definition_t cmd_cpustat_def =
     {"cpustat", "cpustat:  CPU usage per task\r\n", cli_cpustat, 0};
+/* ── Pixel mode diagnostic (pxtest) ─────────────────────────────── */
+#define PX_BASE       ((volatile uint32_t *)0xF0000000u)
+#define PX_REG_MODE   (0x7000u / 4u)
+#define PX_REG_FBBASE (0x7004u / 4u)
+#define PX_REG_STATUS (0x7008u / 4u)
+#define PX_REG_DBG0   (0x700Cu / 4u)
+#define PX_REG_DBG1   (0x7010u / 4u)
+#define PX_REG_DBG2   (0x7014u / 4u)
+#define PX_REG_DBG3   (0x7018u / 4u)
+#define PX_REG_SAMP0  (0x701Cu / 4u)
+#define PX_REG_SAMP1  (0x7020u / 4u)
+#define PX_REG_SAMP2  (0x7024u / 4u)
+#define PX_REG_SAMP3  (0x7028u / 4u)
+#define PX_FB         ((volatile uint8_t *)0x01800000u)
+#define PX_FB_W       640
+#define PX_FB_H       480
+
+static void px_uart_hex(uint32_t v) {
+    static const char hex[] = "0123456789ABCDEF";
+    for (int s = 28; s >= 0; s -= 4)
+        neorv32_uart0_putc(hex[(v >> s) & 0xf]);
+}
+
+static void px_dump(const char *label) {
+    neorv32_uart0_puts(label);
+    neorv32_uart0_puts(" MODE=");  px_uart_hex(PX_BASE[PX_REG_MODE]);
+    neorv32_uart0_puts(" FB=");    px_uart_hex(PX_BASE[PX_REG_FBBASE]);
+    neorv32_uart0_puts(" ST=");    px_uart_hex(PX_BASE[PX_REG_STATUS]);
+    neorv32_uart0_puts("\n  D0=");  px_uart_hex(PX_BASE[PX_REG_DBG0]);
+    neorv32_uart0_puts(" D1=");    px_uart_hex(PX_BASE[PX_REG_DBG1]);
+    neorv32_uart0_puts(" D2=");    px_uart_hex(PX_BASE[PX_REG_DBG2]);
+    neorv32_uart0_puts(" D3=");    px_uart_hex(PX_BASE[PX_REG_DBG3]);
+    neorv32_uart0_puts("\n  S0=");  px_uart_hex(PX_BASE[PX_REG_SAMP0]);
+    neorv32_uart0_puts(" S1=");    px_uart_hex(PX_BASE[PX_REG_SAMP1]);
+    neorv32_uart0_puts(" S2=");    px_uart_hex(PX_BASE[PX_REG_SAMP2]);
+    neorv32_uart0_puts(" S3=");    px_uart_hex(PX_BASE[PX_REG_SAMP3]);
+    neorv32_uart0_putc('\n');
+}
+
+static BaseType_t cli_pxtest(char *buf, size_t len, const char *cmd) {
+    (void)cmd; (void)len;
+    char *p = buf;
+
+    neorv32_uart0_puts("\n=== PXTEST: VGA pixel mode diagnostic ===\n");
+
+    /* Phase 1: Test pattern (bypasses SDRAM) */
+    neorv32_uart0_puts("\n-- Phase 1: test pattern (no SDRAM) --\n");
+    PX_BASE[PX_REG_FBBASE] = 0x01800000u;
+    PX_BASE[PX_REG_MODE]   = 0x00000003u;  /* mode_en=1, testpat=1 */
+    px_dump("  after enable");
+    neorv32_uart0_puts("  => Check monitor: should see color bars.\n");
+    neorv32_uart0_puts("  => Waiting 3 s...\n");
+    vTaskDelay(pdMS_TO_TICKS(3000));
+
+    /* Phase 2: Read debug registers after 3s of test pattern */
+    neorv32_uart0_puts("\n-- Phase 2: debug regs after test pattern --\n");
+    px_dump("  ");
+    {
+        uint32_t d0 = PX_BASE[PX_REG_DBG0];
+        uint32_t fsm = d0 & 0x7;
+        uint32_t line_evt = d0 >> 16;
+        neorv32_uart0_puts("  FSM=");
+        neorv32_uart0_putc('0' + (char)fsm);
+        neorv32_uart0_puts(" line_events=");
+        px_uart_hex(line_evt);
+        neorv32_uart0_puts(fsm == 0 ? " (IDLE)" :
+                           fsm == 1 ? " (REQ)" :
+                           fsm == 2 ? " (POP)" :
+                           fsm == 3 ? " (NEXT_BURST)" :
+                           fsm == 4 ? " (LINE_DONE)" : " (?)");
+        neorv32_uart0_putc('\n');
+    }
+
+    /* Phase 3: Switch to SDRAM mode, write gradient */
+    neorv32_uart0_puts("\n-- Phase 3: SDRAM framebuffer with gradient --\n");
+    PX_BASE[PX_REG_MODE] = 0x00000001u;  /* mode_en=1, testpat=0 */
+    for (int y = 0; y < PX_FB_H; y++) {
+        for (int x = 0; x < PX_FB_W; x++) {
+            uint8_t r = (uint8_t)(x * 7u / PX_FB_W);
+            uint8_t g = (uint8_t)(y * 7u / PX_FB_H);
+            uint8_t b = (uint8_t)((x + y) & 0x3);
+            PX_FB[y * PX_FB_W + x] = (uint8_t)((r << 5) | (g << 2) | b);
+        }
+    }
+    px_dump("  after gradient write");
+    neorv32_uart0_puts("  => Check monitor: should see color gradient.\n");
+    neorv32_uart0_puts("  => Waiting 3 s...\n");
+    vTaskDelay(pdMS_TO_TICKS(3000));
+
+    /* Phase 4: Debug regs after SDRAM mode */
+    neorv32_uart0_puts("\n-- Phase 4: debug regs after SDRAM mode --\n");
+    px_dump("  ");
+    {
+        uint32_t d2 = PX_BASE[PX_REG_DBG2];
+        uint32_t d3 = PX_BASE[PX_REG_DBG3];
+        neorv32_uart0_puts("  req_count=");   px_uart_hex(d2);
+        neorv32_uart0_puts(" valid_count=");  px_uart_hex(d3);
+        if (d2 == 0) {
+            neorv32_uart0_puts(" *** NO SDRAM REQUESTS — fetch FSM never triggered!\n");
+        } else if (d3 == 0) {
+            neorv32_uart0_puts(" *** NO VALID DATA — SDRAM not returning data!\n");
+        } else if (d3 < d2) {
+            neorv32_uart0_puts(" *** DROPPED REQUESTS — SDRAM bandwidth issue?\n");
+        } else {
+            neorv32_uart0_puts(" (SDRAM reads active)\n");
+        }
+    }
+
+    /* Phase 5: Restore text mode */
+    neorv32_uart0_puts("\n-- Phase 5: restore text mode --\n");
+    PX_BASE[PX_REG_MODE] = 0x00000000u;
+    vga_cursor_show(1);
+    neorv32_uart0_puts("  pixel mode disabled.\n");
+    neorv32_uart0_puts("=== PXTEST done ===\n\n");
+
+    p += strcpy_local(p, "pxtest:  see UART for full results\r\n");
+    return pdFALSE;
+}
+
+static const CLI_Command_Definition_t cmd_pxtest_def =
+    {"pxtest", "pxtest:   VGA pixel mode diagnostic\r\n", cli_pxtest, 0};
+
+static const CLI_Command_Definition_t cmd_clear_def =
+    {"clear", "clear:    Clear VGA screen\r\n", cli_clear, 0};
 static const CLI_Command_Definition_t cmd_vgadump_def =
     {"vgadump", "vgadump:  dump current VGA text screen to UART\r\n", cli_vgadump, 0};
 static const CLI_Command_Definition_t cmd_vgamon_def =
@@ -497,12 +653,19 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_snake_def);
     FreeRTOS_CLIRegisterCommand(&cmd_info_def);
     FreeRTOS_CLIRegisterCommand(&cmd_expdemo_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_life_def);
     FreeRTOS_CLIRegisterCommand(&cmd_conway_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_monitor_def);
     FreeRTOS_CLIRegisterCommand(&cmd_riscvasm_def);
     FreeRTOS_CLIRegisterCommand(&cmd_twm_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_conwayhw_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_ponghw_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_heapstat_def);
     FreeRTOS_CLIRegisterCommand(&cmd_cpustat_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_clear_def);
     FreeRTOS_CLIRegisterCommand(&cmd_vgadump_def);
     FreeRTOS_CLIRegisterCommand(&cmd_vgamon_def);
 }
@@ -639,18 +802,20 @@ static void t_uart_input(void *pv) {
 
         {
             uint32_t budget = PS2_POLL_BUDGET;
-            while (((ps2[PS2_REG_STAT] & PS2_STAT_READY) != 0u) && (budget != 0u)) {
-                uint8_t raw = (uint8_t)ps2[PS2_REG_DATA];
-                budget--;
-                if (ps2_dec_feed(raw, &key)) {
-                    uint8_t lock_mask = ps2_lock_mask();
-                    if (lock_mask != last_lock_mask) {
-                        (void)ps2_sync_leds(ps2);
-                        last_lock_mask = ps2_lock_mask();
-                    }
-                    if (key.is_press && key.has_ascii) {
-                        c = (char)key.ascii;
-                        (void)xQueueSend(xInputQueue, &c, 0);
+            if (active_prog != PROG_PS2 && active_prog != PROG_WIN30 && active_prog != PROG_PONG_HW) {
+                while (((ps2[PS2_REG_STAT] & PS2_STAT_READY) != 0u) && (budget != 0u)) {
+                    uint8_t raw = (uint8_t)ps2[PS2_REG_DATA];
+                    budget--;
+                    if (ps2_dec_feed(raw, &key)) {
+                        uint8_t lock_mask = ps2_lock_mask();
+                        if (lock_mask != last_lock_mask) {
+                            (void)ps2_sync_leds(ps2);
+                            last_lock_mask = ps2_lock_mask();
+                        }
+                        if (key.is_press && key.has_ascii) {
+                            c = (char)key.ascii;
+                            (void)xQueueSend(xInputQueue, &c, 0);
+                        }
                     }
                 }
             }

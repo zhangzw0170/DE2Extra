@@ -277,7 +277,7 @@ static void input(char c) {
     if (ndx != -dir_x || ndy != -dir_y) { dir_x = ndx; dir_y = ndy; }
 }
 
-static int finish(void) { return !initialized; }
+static int finish(void) { return (!initialized) && (!choosing); }
 
 const program_t prog_snake = {
     "Snake", "Snake Game — eat the red food!",
