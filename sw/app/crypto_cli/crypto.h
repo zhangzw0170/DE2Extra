@@ -35,6 +35,19 @@ void aes128_dec_block(const uint8_t ct[AES_BLOCK_SIZE],
                       const uint32_t rk[4 * (AES128_NR + 1)],
                       uint8_t pt[AES_BLOCK_SIZE]);
 
+/* AES internals (exposed for visualization) */
+extern const uint8_t sbox[256];
+extern const uint8_t inv_sbox[256];
+extern const uint8_t rcon[11];
+uint8_t aes_gfmul(uint8_t a, uint8_t b);
+void aes_sub_bytes(uint8_t state[16]);
+void aes_inv_sub_bytes(uint8_t state[16]);
+void aes_shift_rows(uint8_t state[16]);
+void aes_inv_shift_rows(uint8_t state[16]);
+void aes_mix_columns(uint8_t state[16]);
+void aes_inv_mix_columns(uint8_t state[16]);
+void aes_add_round_key(uint8_t state[16], const uint32_t rk[4]);
+
 /* ── SHA-256 ─────────────────────────────────────────────────── */
 
 #define SHA256_DIGEST_SIZE 32
@@ -51,6 +64,11 @@ void sha256_init(sha256_ctx_t *ctx);
 void sha256_update(sha256_ctx_t *ctx, const uint8_t *data, size_t len);
 void sha256_final(sha256_ctx_t *ctx, uint8_t digest[SHA256_DIGEST_SIZE]);
 void sha256_hash(const uint8_t *data, size_t len, uint8_t digest[SHA256_DIGEST_SIZE]);
+
+/* SHA-256 internals (exposed for visualization) */
+extern const uint32_t sha256_k[64];
+void sha256_prepare_w(const uint8_t block[64], uint32_t w[64]);
+void sha256_round(const uint32_t w[64], uint32_t wh[8], int t);
 
 /* ── SHA-512 ─────────────────────────────────────────────────── */
 

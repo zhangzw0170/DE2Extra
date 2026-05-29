@@ -101,6 +101,61 @@ int gfx_text(int x, int y, const char *s, uint8_t fg, uint8_t bg) {
     return cx - x;
 }
 
+/* ── Crypto visualization helpers ────────────────────────────────── */
+
+static int isqrt(int n) {
+    if (n <= 0) return 0;
+    int x = n, y = (x + 1) / 2;
+    while (y < x) { x = y; y = (x + n / x) / 2; }
+    return x;
+}
+
+void gfx_rounded_rect(int x, int y, int w, int h, int r, uint8_t color) {
+    if (r <= 0) { gfx_fill_rect(x, y, w, h, color); return; }
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+    gfx_fill_rect(x + r, y, w - 2*r, h, color);
+    gfx_fill_rect(x, y + r, w, h - 2*r, color);
+    int r2 = r * r;
+    for (int dy = 0; dy < r; dy++) {
+        for (int dx = 0; dx < r; dx++) {
+            if ((r - 1 - dx) * (r - 1 - dx) + (r - 1 - dy) * (r - 1 - dy) < r2) {
+                fb_set_pixel(x + dx, y + dy, color);
+                fb_set_pixel(x + w - 1 - dx, y + dy, color);
+                fb_set_pixel(x + dx, y + h - 1 - dy, color);
+                fb_set_pixel(x + w - 1 - dx, y + h - 1 - dy, color);
+            }
+        }
+    }
+}
+
+void gfx_arrow(int x0, int y0, int x1, int y1, uint8_t color) {
+    gfx_line(x0, y0, x1, y1, color);
+    int dx = x1 - x0, dy = y1 - y0;
+    int len = isqrt(dx * dx + dy * dy);
+    if (len < 4) return;
+    int sz = len < 16 ? len / 2 : 8;
+    int bx = sz * dx / len;
+    int by = sz * dy / len;
+    gfx_line(x1, y1, x1 - bx - by/2, y1 - by + bx/2, color);
+    gfx_line(x1, y1, x1 - bx + by/2, y1 - by - bx/2, color);
+}
+
+void gfx_hex_cell(int x, int y, uint8_t value, uint8_t fg, uint8_t bg) {
+    gfx_fill_rect(x, y, 16, 16, bg);
+    gfx_rect(x, y, 16, 16, fg);
+    static const char hx[] = "0123456789ABCDEF";
+    gfx_char(x, y, hx[value >> 4], fg, 0xFF);
+    gfx_char(x + 8, y, hx[value & 0xF], fg, 0xFF);
+}
+
+void gfx_progress_bar(int x, int y, int w, int h, int cur, int total, uint8_t fg, uint8_t bg) {
+    gfx_fill_rect(x, y, w, h, bg);
+    int fill = (total > 0) ? (cur * w / total) : 0;
+    if (fill > w) fill = w;
+    if (fill > 0) gfx_fill_rect(x, y, fill, h, fg);
+}
+
 /* ── Win 3.0 specific ───────────────────────────────────────────── */
 
 void gfx_bevel(int x, int y, int w, int h, int raised) {

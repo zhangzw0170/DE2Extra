@@ -21,6 +21,7 @@
 #include "gpio_hal.h"
 #include "board_status.h"
 #include "ps2_decoder.h"
+#include "crypto_viz.h"
 
 #define BAUD_RATE 115200
 #define APP_BOOT_ADDR 0x01000000u
@@ -81,6 +82,7 @@ typedef enum {
     PROG_PONG_HW,
     PROG_NTT,
     PROG_SYNTH,
+    PROG_CRYPTOVIZ,
     PROG_COUNT
 } prog_id_t;
 
@@ -102,7 +104,8 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_CONWAY_HW] = &prog_conway_hw,
     [PROG_PONG_HW]  = &prog_pong_hw,
     [PROG_NTT]      = &prog_ntt,
-    [PROG_SYNTH]    = &prog_synth
+    [PROG_SYNTH]    = &prog_synth,
+    [PROG_CRYPTOVIZ] = &prog_cryptoviz
 };
 
 static volatile prog_id_t active_prog = PROG_SHELL;
@@ -316,6 +319,8 @@ static configSTACK_DEPTH_TYPE active_prog_stack_words(prog_id_t pid) {
             return 896;
         case PROG_WIN30:
             return 1280;
+        case PROG_CRYPTOVIZ:
+            return 896;
         default:
             return 512;
     }
@@ -485,6 +490,35 @@ static BaseType_t cli_vgamon(char *buf, size_t len, const char *cmd) {
     return pdFALSE;
 }
 
+static BaseType_t cli_cryptoviz(char *buf, size_t len, const char *cmd) {
+    const char *p = cmd;
+    char *p_out = buf;
+    (void)len;
+
+    /* skip "cryptoviz" */
+    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
+    while ((*p == ' ') || (*p == '\t')) p++;
+    const char *algo = p;
+    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
+    char algo_buf[16];
+    { int i = 0; const char *s = algo; while (s < p && i < 15) algo_buf[i++] = *s++; algo_buf[i] = '\0'; }
+    while ((*p == ' ') || (*p == '\t')) p++;
+    const char *a1 = p;
+    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
+    char a1_buf[128];
+    { int i = 0; const char *s = a1; while (s < p && i < 127) a1_buf[i++] = *s++; a1_buf[i] = '\0'; }
+    while ((*p == ' ') || (*p == '\t')) p++;
+    const char *a2 = p;
+    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
+    char a2_buf[128];
+    { int i = 0; const char *s = a2; while (s < p && i < 127) a2_buf[i++] = *s++; a2_buf[i] = '\0'; }
+
+    crypto_viz_set_args(algo_buf, a1_buf, a2_buf);
+    p_out += strcpy_local(p_out, "Starting cryptoviz...\r\n");
+    cli_launch_req = PROG_CRYPTOVIZ;
+    return pdFALSE;
+}
+
 static const CLI_Command_Definition_t cmd_hello_def =
     {"hello", "hello:    LED chaser\r\n", cli_hello, 0};
 static const CLI_Command_Definition_t cmd_crypto_def =
@@ -516,6 +550,8 @@ static const CLI_Command_Definition_t cmd_ntt_def =
     {"ntt", "ntt:      NTT accelerator CLI\r\n", cli_ntt, 0};
 static const CLI_Command_Definition_t cmd_synth_def =
     {"synth", "synth:    Audio synth (PS/2 piano)\r\n", cli_synth, 0};
+static const CLI_Command_Definition_t cmd_cryptoviz_def =
+    {"cryptoviz", "cryptoviz: AES/SHA step-through viz\r\n", cli_cryptoviz, 0};
 
 static const CLI_Command_Definition_t cmd_stats_def =
     {"stats", "stats:    Task list + stack HWM\r\n", cli_stats, 0};
@@ -668,6 +704,7 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_ponghw_def);
     FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
     FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_cryptoviz_def);
     FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_heapstat_def);

@@ -15,7 +15,7 @@
 
 /* ── AES S-box (forward) ──────────────────────────────────────── */
 
-static const uint8_t sbox[256] = {
+const uint8_t sbox[256] = {
     0x63,0x7C,0x77,0x7B,0xF2,0x6B,0x6F,0xC5,0x30,0x01,0x67,0x2B,0xFE,0xD7,0xAB,0x76,
     0xCA,0x82,0xC9,0x7D,0xFA,0x59,0x47,0xF0,0xAD,0xD4,0xA2,0xAF,0x9C,0xA4,0x72,0xC0,
     0xB7,0xFD,0x93,0x26,0x36,0x3F,0xF7,0xCC,0x34,0xA5,0xE5,0xF1,0x71,0xD8,0x31,0x15,
@@ -36,7 +36,7 @@ static const uint8_t sbox[256] = {
 
 /* ── AES Inverse S-box ────────────────────────────────────────── */
 
-static const uint8_t inv_sbox[256] = {
+const uint8_t inv_sbox[256] = {
     0x52,0x09,0x6A,0xD5,0x30,0x36,0xA5,0x38,0xBF,0x40,0xA3,0x9E,0x81,0xF3,0xD7,0xFB,
     0x7C,0xE3,0x39,0x82,0x9B,0x2F,0xFF,0x87,0x34,0x8E,0x43,0x44,0xC4,0xDE,0xE9,0xCB,
     0x54,0x7B,0x94,0x32,0xA6,0xC2,0x23,0x3D,0xEE,0x4C,0x95,0x0B,0x42,0xFA,0xC3,0x4E,
@@ -57,7 +57,7 @@ static const uint8_t inv_sbox[256] = {
 
 /* ── GF(2^8) multiplication ───────────────────────────────────── */
 
-static uint8_t gfmul(uint8_t a, uint8_t b) {
+uint8_t aes_gfmul(uint8_t a, uint8_t b) {
     uint8_t p = 0;
     for (int i = 0; i < 8; i++) {
         if (b & 1) p ^= a;
@@ -71,7 +71,7 @@ static uint8_t gfmul(uint8_t a, uint8_t b) {
 
 /* ── Rcon ─────────────────────────────────────────────────────── */
 
-static const uint8_t rcon[11] = {
+const uint8_t rcon[11] = {
     0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
 };
 
@@ -107,19 +107,19 @@ void aes128_key_expand(const uint8_t key[AES128_KEY_SIZE],
 
 /* ── SubBytes ─────────────────────────────────────────────────── */
 
-static void sub_bytes(uint8_t state[16]) {
+void aes_sub_bytes(uint8_t state[16]) {
     for (int i = 0; i < 16; i++)
         state[i] = sbox[state[i]];
 }
 
-static void inv_sub_bytes(uint8_t state[16]) {
+void aes_inv_sub_bytes(uint8_t state[16]) {
     for (int i = 0; i < 16; i++)
         state[i] = inv_sbox[state[i]];
 }
 
 /* ── ShiftRows ────────────────────────────────────────────────── */
 
-static void shift_rows(uint8_t state[16]) {
+void aes_shift_rows(uint8_t state[16]) {
     uint8_t t;
 
     /* row 1: shift left 1 */
@@ -145,7 +145,7 @@ static void shift_rows(uint8_t state[16]) {
     state[3]  = t;
 }
 
-static void inv_shift_rows(uint8_t state[16]) {
+void aes_inv_shift_rows(uint8_t state[16]) {
     uint8_t t;
 
     /* row 1: shift right 1 */
@@ -173,31 +173,31 @@ static void inv_shift_rows(uint8_t state[16]) {
 
 /* ── MixColumns ───────────────────────────────────────────────── */
 
-static void mix_columns(uint8_t state[16]) {
+void aes_mix_columns(uint8_t state[16]) {
     for (int c = 0; c < 4; c++) {
         int i = c * 4;
         uint8_t a0 = state[i], a1 = state[i+1], a2 = state[i+2], a3 = state[i+3];
-        state[i]   = gfmul(a0, 2) ^ gfmul(a1, 3) ^ a2 ^ a3;
-        state[i+1] = a0 ^ gfmul(a1, 2) ^ gfmul(a2, 3) ^ a3;
-        state[i+2] = a0 ^ a1 ^ gfmul(a2, 2) ^ gfmul(a3, 3);
-        state[i+3] = gfmul(a0, 3) ^ a1 ^ a2 ^ gfmul(a3, 2);
+        state[i]   = aes_gfmul(a0, 2) ^ aes_gfmul(a1, 3) ^ a2 ^ a3;
+        state[i+1] = a0 ^ aes_gfmul(a1, 2) ^ aes_gfmul(a2, 3) ^ a3;
+        state[i+2] = a0 ^ a1 ^ aes_gfmul(a2, 2) ^ aes_gfmul(a3, 3);
+        state[i+3] = aes_gfmul(a0, 3) ^ a1 ^ a2 ^ aes_gfmul(a3, 2);
     }
 }
 
-static void inv_mix_columns(uint8_t state[16]) {
+void aes_inv_mix_columns(uint8_t state[16]) {
     for (int c = 0; c < 4; c++) {
         int i = c * 4;
         uint8_t a0 = state[i], a1 = state[i+1], a2 = state[i+2], a3 = state[i+3];
-        state[i]   = gfmul(a0, 14) ^ gfmul(a1, 11) ^ gfmul(a2, 13) ^ gfmul(a3,  9);
-        state[i+1] = gfmul(a0,  9) ^ gfmul(a1, 14) ^ gfmul(a2, 11) ^ gfmul(a3, 13);
-        state[i+2] = gfmul(a0, 13) ^ gfmul(a1,  9) ^ gfmul(a2, 14) ^ gfmul(a3, 11);
-        state[i+3] = gfmul(a0, 11) ^ gfmul(a1, 13) ^ gfmul(a2,  9) ^ gfmul(a3, 14);
+        state[i]   = aes_gfmul(a0, 14) ^ aes_gfmul(a1, 11) ^ aes_gfmul(a2, 13) ^ aes_gfmul(a3,  9);
+        state[i+1] = aes_gfmul(a0,  9) ^ aes_gfmul(a1, 14) ^ aes_gfmul(a2, 11) ^ aes_gfmul(a3, 13);
+        state[i+2] = aes_gfmul(a0, 13) ^ aes_gfmul(a1,  9) ^ aes_gfmul(a2, 14) ^ aes_gfmul(a3, 11);
+        state[i+3] = aes_gfmul(a0, 11) ^ aes_gfmul(a1, 13) ^ aes_gfmul(a2,  9) ^ aes_gfmul(a3, 14);
     }
 }
 
 /* ── AddRoundKey ──────────────────────────────────────────────── */
 
-static void add_round_key(uint8_t state[16], const uint32_t rk[4]) {
+void aes_add_round_key(uint8_t state[16], const uint32_t rk[4]) {
     for (int c = 0; c < 4; c++) {
         uint32_t w = rk[c];
         state[c*4]   ^= (w >> 24) & 0xFF;
@@ -216,20 +216,20 @@ void aes128_enc_block(const uint8_t pt[AES_BLOCK_SIZE],
     for (int i = 0; i < 16; i++) state[i] = pt[i];
 
     /* Initial round */
-    add_round_key(state, &rk[0]);
+    aes_add_round_key(state, &rk[0]);
 
     /* Rounds 1..9 */
     for (int r = 1; r < AES128_NR; r++) {
-        sub_bytes(state);
-        shift_rows(state);
-        mix_columns(state);
-        add_round_key(state, &rk[r * 4]);
+        aes_sub_bytes(state);
+        aes_shift_rows(state);
+        aes_mix_columns(state);
+        aes_add_round_key(state, &rk[r * 4]);
     }
 
     /* Final round (no MixColumns) */
-    sub_bytes(state);
-    shift_rows(state);
-    add_round_key(state, &rk[AES128_NR * 4]);
+    aes_sub_bytes(state);
+    aes_shift_rows(state);
+    aes_add_round_key(state, &rk[AES128_NR * 4]);
 
     for (int i = 0; i < 16; i++) ct[i] = state[i];
 }
@@ -243,20 +243,20 @@ void aes128_dec_block(const uint8_t ct[AES_BLOCK_SIZE],
     for (int i = 0; i < 16; i++) state[i] = ct[i];
 
     /* Initial round */
-    add_round_key(state, &rk[AES128_NR * 4]);
+    aes_add_round_key(state, &rk[AES128_NR * 4]);
 
     /* Rounds 9..1 */
     for (int r = AES128_NR - 1; r >= 1; r--) {
-        inv_shift_rows(state);
-        inv_sub_bytes(state);
-        add_round_key(state, &rk[r * 4]);
-        inv_mix_columns(state);
+        aes_inv_shift_rows(state);
+        aes_inv_sub_bytes(state);
+        aes_add_round_key(state, &rk[r * 4]);
+        aes_inv_mix_columns(state);
     }
 
     /* Final round (no InvMixColumns) */
-    inv_shift_rows(state);
-    inv_sub_bytes(state);
-    add_round_key(state, &rk[0]);
+    aes_inv_shift_rows(state);
+    aes_inv_sub_bytes(state);
+    aes_add_round_key(state, &rk[0]);
 
     for (int i = 0; i < 16; i++) pt[i] = state[i];
 }

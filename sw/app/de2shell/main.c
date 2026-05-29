@@ -16,6 +16,7 @@
 #include "lcd_hal.h"
 #include "vga_hal.h"
 #include "gpio_hal.h"
+#include "crypto_viz.h"
 
 #ifdef LOCAL_BUILD
   #include <stdio.h>
@@ -85,6 +86,7 @@ typedef enum {
     PROG_MONITOR,
     PROG_DEMO,
     PROG_TWM,
+    PROG_CRYPTOVIZ,
     PROG_COUNT
 } prog_id_t;
 
@@ -104,6 +106,7 @@ extern const program_t prog_info;
 extern const program_t prog_monitor;
 extern const program_t prog_demo;
 extern const program_t prog_twm;
+extern const program_t prog_cryptoviz;
 
 /* Dummy strcmp for NEORV32 target (no libc) */
 #ifndef LOCAL_BUILD
@@ -130,6 +133,7 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_MONITOR]   = &prog_monitor,
     [PROG_DEMO]      = &prog_demo,
     [PROG_TWM]       = &prog_twm,
+    [PROG_CRYPTOVIZ] = &prog_cryptoviz,
 };
 
 static prog_id_t active_prog = PROG_SHELL;
@@ -441,6 +445,23 @@ static void shell_input(char c) {
             enter_program(PROG_DEMO);
         } else if (strcmp(shell_line, "twm") == 0) {
             enter_program(PROG_TWM);
+        } else if (strncmp(shell_line, "cryptoviz", 9) == 0) {
+            /* Parse: cryptoviz <algo> [arg1] [arg2] */
+            {
+                char *p = shell_line + 9;
+                while (*p == ' ') p++;
+                char *algo = p;
+                while (*p && *p != ' ') p++;
+                if (*p) { *p++ = '\0'; while (*p == ' ') p++; }
+                char *a1 = p;
+                while (*p && *p != ' ') p++;
+                if (*p) { *p++ = '\0'; while (*p == ' ') p++; }
+                char *a2 = p;
+                while (*p && *p != ' ') p++;
+                *p = '\0';
+                crypto_viz_set_args(algo, a1, a2);
+                enter_program(PROG_CRYPTOVIZ);
+            }
         } else if (strcmp(shell_line, "lcdmon") == 0) {
             shell_show_lcd_shadow();
         } else if (strcmp(shell_line, "cls") == 0) {

@@ -26,6 +26,13 @@ void gfx_char(int x, int y, char c, uint8_t fg, uint8_t bg);
 /* Render a string. Handles '\n'. Returns pixel width consumed. */
 int gfx_text(int x, int y, const char *s, uint8_t fg, uint8_t bg);
 
+/* ── Crypto visualization helpers ────────────────────────────────── */
+
+void gfx_rounded_rect(int x, int y, int w, int h, int r, uint8_t color);
+void gfx_arrow(int x0, int y0, int x1, int y1, uint8_t color);
+void gfx_hex_cell(int x, int y, uint8_t value, uint8_t fg, uint8_t bg);
+void gfx_progress_bar(int x, int y, int w, int h, int cur, int total, uint8_t fg, uint8_t bg);
+
 /* ── Win 3.0 specific ───────────────────────────────────────────── */
 
 /* 3D beveled rectangle: raised=1 → highlighted top-left, shadow bottom-right.

@@ -28,7 +28,7 @@ SDL2_LIB  ?= $(SDL2_ROOT)/lib
 .PHONY: local clean-local
 
 local:
-	gcc -DLOCAL_BUILD -Wall -O2 -I . -I ../crypto_cli -I "$(SDL2_INC)" -o de2shell main.c board_status.c lcd_hal.c vga_hal.c gpio_hal.c ps2_decoder.c hello.c memtest.c crypto.c ps2.c snake.c life.c dashboard.c info.c monitor.c demo.c fb_hal.c gfx.c gui.c gui_widgets.c twm.c ../crypto_cli/crypto_aes.c ../crypto_cli/crypto_sha.c ../crypto_cli/crypto_sm.c -L "$(SDL2_LIB)" -lmingw32 -lSDL2main -lSDL2
+	gcc -DLOCAL_BUILD -Wall -O2 -I . -I ../crypto_cli -I "$(SDL2_INC)" -o de2shell main.c board_status.c lcd_hal.c vga_hal.c gpio_hal.c ps2_decoder.c hello.c memtest.c crypto.c ps2.c snake.c life.c dashboard.c info.c monitor.c demo.c fb_hal.c gfx.c gui.c gui_widgets.c twm.c crypto_viz.c ../crypto_cli/crypto_aes.c ../crypto_cli/crypto_sha.c ../crypto_cli/crypto_sm.c -L "$(SDL2_LIB)" -lmingw32 -lSDL2main -lSDL2
 
 clean-local:
 	rm -f de2shell de2shell.exe

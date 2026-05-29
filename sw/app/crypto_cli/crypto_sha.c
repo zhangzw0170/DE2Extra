@@ -21,7 +21,7 @@
  * SHA-256
  * ═══════════════════════════════════════════════════════════════ */
 
-static const uint32_t sha256_k[64] = {
+const uint32_t sha256_k[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -102,6 +102,38 @@ static void sha256_transform(uint32_t state[8], const uint8_t block[64]) {
 
     state[0] += a;  state[1] += b;  state[2] += c;  state[3] += d;
     state[4] += e;  state[5] += f;  state[6] += g;  state[7] += h;
+}
+
+void sha256_prepare_w(const uint8_t block[64], uint32_t w[64]) {
+    int t;
+    for (t = 0; t < 16; t++) {
+        w[t] = ((uint32_t)block[t*4]   << 24) |
+               ((uint32_t)block[t*4+1] << 16) |
+               ((uint32_t)block[t*4+2] <<  8) |
+               ((uint32_t)block[t*4+3]);
+    }
+    for (t = 16; t < 64; t++) {
+        uint32_t s0 = rotr32(w[t-15],  7) ^ rotr32(w[t-15], 18) ^ (w[t-15] >>  3);
+        uint32_t s1 = rotr32(w[t-2],  17) ^ rotr32(w[t-2],  19) ^ (w[t-2]  >> 10);
+        w[t] = w[t-16] + s0 + w[t-7] + s1;
+    }
+}
+
+void sha256_round(const uint32_t w[64], uint32_t wh[8], int t) {
+    uint32_t a = wh[0], b = wh[1], c = wh[2], d = wh[3];
+    uint32_t e = wh[4], f = wh[5], g = wh[6], h = wh[7];
+
+    uint32_t S1    = rotr32(e, 6) ^ rotr32(e, 11) ^ rotr32(e, 25);
+    uint32_t ch    = (e & f) ^ ((~e) & g);
+    uint32_t temp1 = h + S1 + ch + sha256_k[t] + w[t];
+    uint32_t S0    = rotr32(a, 2) ^ rotr32(a, 13) ^ rotr32(a, 22);
+    uint32_t maj   = (a & b) ^ (a & c) ^ (b & c);
+    uint32_t temp2 = S0 + maj;
+
+    wh[7] = g;  wh[6] = f;  wh[5] = e;
+    wh[4] = d + temp1;
+    wh[3] = c;  wh[2] = b;  wh[1] = a;
+    wh[0] = temp1 + temp2;
 }
 
 void sha256_update(sha256_ctx_t *ctx, const uint8_t *data, size_t len) {
