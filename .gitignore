@@ -38,6 +38,7 @@ sw/app/*/neorv32_raw_exe.*
 sw/app/*/neorv32_imem_image.vhd
 sw/app/**/*.o
 sw/app/**/*.d
+sw/app/*/*.map
 *.asm
 
 # SDL2 runtime DLL
@@ -54,6 +55,7 @@ logs/
 
 # Run-time artifacts
 run/*.pid
+run/nios2_terminal_capture.*
 
 # Simulation
 *.wlf

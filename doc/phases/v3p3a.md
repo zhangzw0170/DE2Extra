@@ -49,7 +49,7 @@
 | 像素模式性能 | 逐像素写入 300KB 帧缓冲, 无脏区域追踪, clear 全屏约 307200 次 byte 写 |
 | 文本/像素模式切换 | fb_hw_mode_set() 写 VGA 寄存器; 切换回文本模式无软件 API |
 | de2shell makefile 排除 | fb_hal/gfx/gui/gui_widgets/win30_desk 被 filter-out 排除 (de2shell V2 frozen) |
-| de2shell `make local` 排除 | `make local` 目标未包含 GUI 相关源文件 |
+| de2shell `make local` 已修复 | `make local` 目标已包含 GUI 相关源文件 (fb_hal/gfx/gui/gui_widgets/twm) |
 
 ---
 

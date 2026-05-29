@@ -496,7 +496,7 @@ static const CLI_Command_Definition_t cmd_snake_def =
 static const CLI_Command_Definition_t cmd_info_def =
     {"info", "info:     System dashboard\r\n", cli_info, 0};
 static const CLI_Command_Definition_t cmd_expdemo_def =
-    {"expdemo", "expdemo:  11 course labs\r\n", cli_expdemo, 0};
+    {"expdemo", "expdemo:  13 course labs\r\n", cli_expdemo, 0};
 
 static const CLI_Command_Definition_t cmd_life_def =
     {"life", "life:     Conway's Game of Life\r\n", cli_life, 0};
