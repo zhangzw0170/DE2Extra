@@ -76,7 +76,8 @@ begin
                 buf_left  <= sample_left_i;
                 buf_right <= sample_right_i;
             end if;
-        end process;
+        end if;
+    end process;
 
     -- Shift out on BCLK falling edge, defer LRCK load by one cycle
     p_shift : process(clk_50m_i, rst_n_i)

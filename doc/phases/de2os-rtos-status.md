@@ -2,7 +2,7 @@
 
 > 日期: 2026-05-29
 > 状态: 软件编译通过，Quartus RTL 编译通过 (timing clean)，待上板验证
-> 更新: 2026-05-29 — NTT/PONG/Conway RTL 已集成，CLI 全部注册，pxtest 诊断工具，crypto/twm 修复
+> 更新: 2026-05-29 — Audio synth 已集成 (s11 @ 0xF0013000), Quartus 0 errors, 62% LEs
 > 硬件工程: `par/de2os/` (top entity: `de2os_top`)
 > 目标固件: `sw/app/de2shell_rtos/`
 
@@ -10,11 +10,12 @@
 
 `de2os` 已完成软件编译和 Quartus RTL 编译的闭环。当前构建产物：
 
-- 固件: `text=140456  data=1856  bss=81504  total=223816` (~142KB)
-- RTL: `par/de2os/de2os.sof` (3.4MB, 2026-05-29 02:55)
-- Quartus: 0 errors, 262 warnings, all timing constraints met
+- 固件: `text=140456  data=1856  bss=81504  total=223816` (~142KB, +synth pending rebuild)
+- RTL: `par/de2os/de2os.sof` (2026-05-29 15:38)
+- Quartus: 0 errors, 271 warnings, all timing constraints met
   - Worst setup slack: +2.394 ns
   - Worst hold slack: +0.153 ns
+  - LEs: 71,299/114,480 (62%), 31 EMUL, 592KB mem, 1 PLL
 
 当前主瓶颈：**上板验证**。板子在队友手中。
 
@@ -74,6 +75,7 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 | conwayhw | prog_conway_hw | Conway 硬件引擎 |
 | ponghw | prog_pong_hw | PONG 硬件引擎 + VGA |
 | ntt | prog_ntt | NTT 加速器 CLI |
+| synth | prog_synth | Audio synth (PS/2 钢琴键盘) |
 | pxtest | — | VGA 像素模式诊断 (5-phase) |
 | vgadump | — | VGA framebuffer dump |
 | vgam | — | VGA mode query |
@@ -82,7 +84,11 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 | cpustat | — | CPU usage per task |
 | clear | — | Clear VGA screen |
 
-### 7. RTL 外设已全部集成 (2026-05-29)
+### 7. C 驱动完成 (synth.c)
+
+Audio synth C 驱动 (`sw/app/de2shell/synth.c`): 88 音符 tuning table, PS/2 双轨钢琴键盘映射, 3xOSC/DX7 模式切换, 预设加载, Tab/Caps/NumLock 八度切换, Q/ESC 退出静音。CLI 命令 `synth` 已注册 (第 21 个命令)。待固件重编译 + 上板验证。
+
+### 8. RTL 外设已全部集成 (2026-05-29)
 
 以下外设在 `de2os_top.vhd` 中已从 stub 升级为实际实例化：
 
@@ -92,8 +98,9 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 | pong_engine | ☑ 实例化 | Wishbone slave s9 + VGA 输出信号 |
 | conway_engine | ☑ 实例化 | Wishbone slave s10 |
 | INTC s7 | ☑ 修复 | ack loopback (不再挂死总线) |
+| synth_engine | ☑ 实例化 | Wishbone slave s11 @ 0xF0013000, AUD/I2C pins |
 
-### 8. Bug 修复 (2026-05-29)
+### 9. Bug 修复 (2026-05-29)
 
 | 问题 | 修复 | 文件 |
 |------|------|------|
@@ -138,9 +145,11 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 
 像素模式仍是单 framebuffer。理论上会有撕裂风险，但这不是当前启动阻塞项。
 
-### P4. Audio synth 未集成
+### P4. Audio synth 已集成 RTL，待 C 驱动
 
-RTL 完成 (DDS + FM, 仿真 7/7 PASS)，但需要 wb_intercon 新增 s11 端口 @ 0xF0013000。
+RTL 完成 + Quartus 编译通过 (synth_engine @ s11)。需要：
+1. C 驱动 (`synth.c`) — MIDI 音符表 + PS/2 键盘映射 + CLI 命令
+2. 上板验证: I2C 配置 WM8731 → I2S 输出 → 耳机可听
 
 ## 下一步
 
@@ -149,5 +158,5 @@ RTL 完成 (DDS + FM, 仿真 7/7 PASS)，但需要 wb_intercon 新增 s11 端口
    - 运行 `pxtest` 诊断 VGA 像素模式
    - 验证 crypto/twm/conwayhw/ponghw/ntt 基本功能
 2. 根据 pxtest 结果决定 VGA 像素模式的修复方案
-3. 考虑 Audio synth 集成 (wb_intercon s11 端口)
-4. ChromaShader (P4 最低优先级，暂缓)
+3. Audio synth C 驱动 (synth.c + PS/2 键盘映射)
+4. ChromaShader (P5 最低优先级，暂缓)

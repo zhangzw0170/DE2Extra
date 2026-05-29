@@ -48,7 +48,15 @@ entity de2os_imem_top is
         VGA_VS      : out std_logic;
         VGA_CLK     : out std_logic;
         VGA_SYNC_N  : out std_logic;
-        VGA_BLANK_N : out std_logic
+        VGA_BLANK_N : out std_logic;
+
+        -- Audio codec (WM8731) — unused in IMEM bring-up mode
+        AUD_XCK     : out std_logic;
+        AUD_BCLK    : in  std_logic;
+        AUD_DACLRCK : in  std_logic;
+        AUD_DACDAT  : out std_logic;
+        I2C_SCLK    : out std_logic;
+        I2C_SDAT    : out std_logic
     );
 end entity de2os_imem_top;
 
@@ -102,7 +110,13 @@ begin
         VGA_VS      => VGA_VS,
         VGA_CLK     => VGA_CLK,
         VGA_SYNC_N  => VGA_SYNC_N,
-        VGA_BLANK_N => VGA_BLANK_N
+        VGA_BLANK_N => VGA_BLANK_N,
+        AUD_XCK     => AUD_XCK,
+        AUD_BCLK    => AUD_BCLK,
+        AUD_DACLRCK => AUD_DACLRCK,
+        AUD_DACDAT  => AUD_DACDAT,
+        I2C_SCLK    => I2C_SCLK,
+        I2C_SDAT    => I2C_SDAT
     );
 
 end architecture rtl;

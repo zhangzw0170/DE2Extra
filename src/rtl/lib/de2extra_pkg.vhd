@@ -26,6 +26,7 @@ package de2extra_pkg is
     constant ADDR_EXPDEMO_BASE : std_logic_vector(31 downto 0) := x"F0010000"; -- 4KB
     constant ADDR_PONG_BASE    : std_logic_vector(31 downto 0) := x"F0011000"; -- 4KB
     constant ADDR_CONWAY_BASE  : std_logic_vector(31 downto 0) := x"F0012000"; -- 4KB
+    constant ADDR_SYNTH_BASE   : std_logic_vector(31 downto 0) := x"F0013000"; -- 4KB
 
     -- ================================================================
     -- ExpDemo: unified experiment output type

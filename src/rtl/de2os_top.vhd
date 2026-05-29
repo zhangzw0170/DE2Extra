@@ -78,7 +78,15 @@ entity de2os_top is
         VGA_VS      : out std_logic;
         VGA_CLK     : out std_logic;
         VGA_SYNC_N  : out std_logic;
-        VGA_BLANK_N : out std_logic
+        VGA_BLANK_N : out std_logic;
+
+        -- Audio codec (WM8731)
+        AUD_XCK     : out std_logic;
+        AUD_BCLK    : in  std_logic;
+        AUD_DACLRCK : in  std_logic;
+        AUD_DACDAT  : out std_logic;
+        I2C_SCLK    : out std_logic;
+        I2C_SDAT    : out std_logic
     );
 end entity de2os_top;
 
@@ -237,6 +245,14 @@ architecture rtl of de2os_top is
     signal conway_wb_we    : std_logic;
     signal conway_wb_stb   : std_logic;
     signal conway_wb_ack   : std_logic;
+
+    -- Audio synth Wishbone
+    signal synth_wb_adr   : std_logic_vector(4 downto 0);
+    signal synth_wb_dat_o : std_logic_vector(31 downto 0);
+    signal synth_wb_dat_i : std_logic_vector(31 downto 0);
+    signal synth_wb_we    : std_logic;
+    signal synth_wb_stb   : std_logic;
+    signal synth_wb_ack   : std_logic;
 
     -- INTC slave 7 stub: tie ack to stb to prevent bus hang
     signal intc_stub_stb : std_logic;
@@ -481,7 +497,13 @@ begin
         s10_dat_o => conway_wb_dat_o,
         s10_we_o  => conway_wb_we,
         s10_stb_o => conway_wb_stb,
-        s10_ack_i => conway_wb_ack
+        s10_ack_i => conway_wb_ack,
+        s11_adr_o => synth_wb_adr,
+        s11_dat_i => synth_wb_dat_i,
+        s11_dat_o => synth_wb_dat_o,
+        s11_we_o  => synth_wb_we,
+        s11_stb_o => synth_wb_stb,
+        s11_ack_i => synth_wb_ack
     );
 
     -- ================================================================
@@ -810,6 +832,25 @@ begin
         wb_we_i   => conway_wb_we,
         wb_stb_i  => conway_wb_stb,
         wb_ack_o  => conway_wb_ack
+    );
+
+    -- Audio synthesizer (dual-track 3xOSC + DX7 FM)
+    u_synth : entity work.synth_engine
+    port map (
+        clk_i         => clk_50m,
+        rst_n_i       => rst_n,
+        wb_adr_i      => synth_wb_adr,
+        wb_dat_i      => synth_wb_dat_o,
+        wb_dat_o      => synth_wb_dat_i,
+        wb_we_i       => synth_wb_we,
+        wb_stb_i      => synth_wb_stb,
+        wb_ack_o      => synth_wb_ack,
+        aud_xck_o     => AUD_XCK,
+        aud_bclk_i    => AUD_BCLK,
+        aud_daclrck_i => AUD_DACLRCK,
+        aud_dacdat_o  => AUD_DACDAT,
+        i2c_sclk_o    => I2C_SCLK,
+        i2c_sdat_o    => I2C_SDAT
     );
 
     -- ================================================================

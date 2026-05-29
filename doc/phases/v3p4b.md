@@ -1,7 +1,7 @@
 # V3 Phase 4b: 音频合成器 -- 双轨 PS/2 键盘合成器 (3xOSC + DX7 FM)
 
-> 日期: 2026-05-25 | 状态: RTL 完成，仿真通过，待接入工程
-> 更新: 2026-05-26 -- Step 1-6 RTL 完成, 仿真 7/7 PASS, 修复 4 个 bug
+> 日期: 2026-05-25 | 状态: RTL 完成，Quartus 编译通过，待 C 驱动 + 上板验证
+> 更新: 2026-05-29 -- 已接入 de2os 工程 (wb_intercon s11, de2os_top, QSF), Quartus 0 errors; 修复 7 个综合 bug
 > 目标板: DE2-115 (Cyclone IV E EP4CE115F29C7), WM8731 音频编解码器
 > 集成: NEORV32 Wishbone 外设 @ 0xF0013000 (新地址)
 > 参考: `doc/audio-synth-design.md` (完整设计文档)
@@ -655,28 +655,29 @@ void synth_set_mute(uint8_t mute);        // 1=mute, 0=unmute
 | V3P4B.S1.3 | 上板播放 440Hz 正弦波测试音 (WM8731 初始化成功, 耳机/示波器可验证) | -- | 待接入 |
 | V3P4B.S2.1 | dds_core.vhd 单 DDS 振荡器仿真: 相位累加器 + 波表输出正确 | **PASS** | 仿真: A4=440Hz 周期~109样本, 峰值32640, vol缩放/倍频/相位偏移均通过 |
 | V3P4B.S2.2 | CPU 写频率寄存器播放不同音高 (C 大调音阶, 频率准确) | -- | 待接入 |
-| V3P4B.S3.1 | PS/2 主键盘区扫描码 -> MIDI 音符映射正确 (Tab/CapsLock 八度切换) | -- | 待 C 驱动 |
-| V3P4B.S3.2 | Break code (0xF0) 正确释放音符 (写 0 到音符寄存器) | -- | 待 C 驱动 |
+| V3P4B.S3.1 | PS/2 主键盘区扫描码 -> MIDI 音符映射正确 (Tab/CapsLock 八度切换) | C代码 | synth.c t1_keys[16], Tab/CapsLock 八度切换 |
+| V3P4B.S3.2 | Break code (0xF0) 正确释放音符 (写 0 到音符寄存器) | C代码 | synth.c ps2_dec_feed + note_off on release |
 | V3P4B.S4.1 | 双轨分轨: Track 1 -> 左声道, Track 2 -> 右声道 | RTL | synth_engine 双轨已连线 |
-| V3P4B.S4.2 | 数字小键盘区扫描码 -> MIDI 音符映射正确 | -- | 待 C 驱动 |
+| V3P4B.S4.2 | 数字小键盘区扫描码 -> MIDI 音符映射正确 | C代码 | synth.c t2_keys[10], NumLock 八度切换 |
 | V3P4B.S4.3 | 双轨同时按键, 左右声道独立音高 | -- | 待上板验证 |
 | V3P4B.S5.1 | 3xOSC 模式: 每轨 3 个振荡器独立波形/八度/音量控制 | RTL | dds_core x6 已实例化 |
 | V3P4B.S5.2 | 混音器饱和加法, 无溢出爆音 | RTL | synth_engine mode_mux 饱和逻辑 |
 | V3P4B.S6.1 | fm_operator.vhd 仿真: 对数域 FM 调制波形正确 | **PASS** | 仿真: 载波输出±32768, 139过零, FM调制增加过零率; 修复 4 个 bug |
 | V3P4B.S6.2 | DX7 FM 模式: ADSR 包络可调 (AR/DR/SL/RR 寄存器有效) | **PASS** | 仿真: AR=15 快速攻击(~10ms), release 衰减可观测; 修复 calc_rate 反转 + gate_prev 时序 bug |
 | V3P4B.S6.3 | DX7 FM 模式: 调制指数/ratio 参数有效 (听感差异可辨) | **PASS** | 仿真: FM idx=64 过零率从 139 增至 127 |
-| V3P4B.S6.4 | 软件可切换 3xOSC / DX7 模式 | RTL | synth_engine mode_mux 已实现, ctrl_reg[2:1] 选择 |
+| V3P4B.S6.4 | 软件可切换 3xOSC / DX7 模式 | C代码 | synth.c M键切换, SYNTH_CTRL[2:1] + preset 重新加载 |
 | V3P4B.S7.1 | 波形正确性: 正弦波 THD < 5% (仿真 FFT 分析) | -- | 待量化分析 |
 | V3P4B.S7.2 | 频率精度: A4=440Hz 误差 < 0.1% (仿真频率计) | **PASS** | 仿真: 256 样本 4 个过零, 符合 109.1 样本/周期 |
 | V3P4B.S7.3 | 主音量控制有效 (4 档) | -- | 待上板验证 |
 | V3P4B.S7.4 | 全局静音功能有效 | -- | 待上板验证 |
-| V3P4B.S8.1 | de2os 编译通过 (无新增时序违例) | -- | 待接入 Quartus 编译 |
-| V3P4B.S8.2 | 资源占用: LEs < 1,500, M9K < 5 | -- | 待 Quartus 编译报告 |
+| V3P4B.S8.1 | de2os 编译通过 (无新增时序违例) | **PASS** | 2026-05-29: 0 errors, 271 warnings, timing clean |
+| V3P4B.S8.2 | 资源占用: LEs < 1,500, M9K < 5 | **PASS** | 71,299/114,480 LEs (62%), 31 EMUL, 592KB mem, 1 PLL |
 
 ### 状态说明
 - **PASS**: 已通过仿真或上板验证
 - **RTL**: VHDL 代码已写好，待仿真/上板
-- **--**: 尚未开始 (依赖 C 驱动或工程接入)
+- **C代码**: C 驱动已写好，待上板验证
+- **--**: 尚未开始 (依赖上板验证)
 
 ---
 
@@ -695,3 +696,21 @@ void synth_set_mute(uint8_t mute);        // 1=mute, 0=unmute
 - `fm_operator.vhd` (生产版): bug 1 + 2 + 3
 - `fm_operator_sim.vhd` (仿真版): bug 1 + 2 + 3
 - `synth_sim_tb.vhd` (测试台): bug 4, release 测试逻辑修正
+
+---
+
+## 11. 集成 Bug 修复记录 (2026-05-29)
+
+接入 de2os 工程时发现并修复了 7 个综合/类型错误:
+
+| # | Bug | 文件 | 修复 |
+|---|-----|------|------|
+| 5 | synth_engine.vhd `shift_left` 缺右括号: `std_logic_vector(` 未关闭 | synth_engine.vhd | 重排括号, t1/t2 两处 |
+| 6 | i2s_tx.vhd p_capture 进程缺 `end if;` | i2s_tx.vhd | 添加外层 rising_edge 对应的 end if |
+| 7 | dds_core.vhd `unsigned & std_logic_vector` 类型不匹配 | dds_core.vhd | 统一为 unsigned 运算 |
+| 8 | dds_core.vhd `sample_o <= sample_raw` signed→slv 隐式转换 | dds_core.vhd | 添加 `std_logic_vector()` 显式转换 |
+| 9 | dds_core.vhd MIF 路径 "wavetable_4wave.mif" 找不到 | dds_core.vhd | 改为 "../../src/rtl/periph/wavetable_4wave.mif" |
+| 10 | fm_operator.vhd `prod` 变量 16-bit 太小 (16×9=25-bit) | fm_operator.vhd | 扩展为 `signed(24 downto 0)` |
+| 11 | de2os_imem_top.vhd 缺少 AUD/I2C 端口声明 | de2os_imem_top.vhd | 添加匹配的端口和 port map |
+
+Quartus 编译结果: 0 errors, 271 warnings, timing clean.

@@ -265,13 +265,13 @@ begin
                 when x"00"   => t1_mod_tw <= std_logic_vector(shift_right(unsigned(t1_tw), 1));
                 when x"01"   => t1_mod_tw <= t1_tw;
                 when others   => t1_mod_tw <= std_logic_vector(
-                    shift_left(unsigned(t1_tw), to_integer(unsigned(t1_dx7_ri(1 downto 0)) - 1));
+                    shift_left(unsigned(t1_tw), to_integer(unsigned(t1_dx7_ri(1 downto 0))) - 1));
             end case;
             case t2_dx7_ri(7 downto 0) is
                 when x"00"   => t2_mod_tw <= std_logic_vector(shift_right(unsigned(t2_tw), 1));
                 when x"01"   => t2_mod_tw <= t2_tw;
                 when others   => t2_mod_tw <= std_logic_vector(
-                    shift_left(unsigned(t2_tw), to_integer(unsigned(t2_dx7_ri(1 downto 0)) - 1));
+                    shift_left(unsigned(t2_tw), to_integer(unsigned(t2_dx7_ri(1 downto 0))) - 1));
             end case;
         end if;
     end process;

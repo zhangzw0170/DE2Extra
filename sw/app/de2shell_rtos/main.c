@@ -59,6 +59,7 @@ extern const program_t prog_twm;
 extern const program_t prog_conway_hw;
 extern const program_t prog_pong_hw;
 extern const program_t prog_ntt;
+extern const program_t prog_synth;
 
 uint8_t last_ir_cmd = 0;
 
@@ -79,6 +80,7 @@ typedef enum {
     PROG_CONWAY_HW,
     PROG_PONG_HW,
     PROG_NTT,
+    PROG_SYNTH,
     PROG_COUNT
 } prog_id_t;
 
@@ -99,7 +101,8 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_WIN30]   = &prog_twm,
     [PROG_CONWAY_HW] = &prog_conway_hw,
     [PROG_PONG_HW]  = &prog_pong_hw,
-    [PROG_NTT]      = &prog_ntt
+    [PROG_NTT]      = &prog_ntt,
+    [PROG_SYNTH]    = &prog_synth
 };
 
 static volatile prog_id_t active_prog = PROG_SHELL;
@@ -393,6 +396,7 @@ PROG_CMD(win30,   PROG_WIN30)
 PROG_CMD(conwayhw, PROG_CONWAY_HW)
 PROG_CMD(ponghw,  PROG_PONG_HW)
 PROG_CMD(ntt,     PROG_NTT)
+PROG_CMD(synth,   PROG_SYNTH)
 
 static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
     (void)cmd;
@@ -510,6 +514,8 @@ static const CLI_Command_Definition_t cmd_ponghw_def =
     {"ponghw", "ponghw:   Hardware PONG (FPGA)\r\n", cli_ponghw, 0};
 static const CLI_Command_Definition_t cmd_ntt_def =
     {"ntt", "ntt:      NTT accelerator CLI\r\n", cli_ntt, 0};
+static const CLI_Command_Definition_t cmd_synth_def =
+    {"synth", "synth:    Audio synth (PS/2 piano)\r\n", cli_synth, 0};
 
 static const CLI_Command_Definition_t cmd_stats_def =
     {"stats", "stats:    Task list + stack HWM\r\n", cli_stats, 0};
@@ -661,6 +667,7 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_conwayhw_def);
     FreeRTOS_CLIRegisterCommand(&cmd_ponghw_def);
     FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
     FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_heapstat_def);
@@ -802,7 +809,7 @@ static void t_uart_input(void *pv) {
 
         {
             uint32_t budget = PS2_POLL_BUDGET;
-            if (active_prog != PROG_PS2 && active_prog != PROG_WIN30 && active_prog != PROG_PONG_HW) {
+            if (active_prog != PROG_PS2 && active_prog != PROG_WIN30 && active_prog != PROG_PONG_HW && active_prog != PROG_SYNTH) {
                 while (((ps2[PS2_REG_STAT] & PS2_STAT_READY) != 0u) && (budget != 0u)) {
                     uint8_t raw = (uint8_t)ps2[PS2_REG_DATA];
                     budget--;

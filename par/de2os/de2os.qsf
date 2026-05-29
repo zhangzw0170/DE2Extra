@@ -52,6 +52,11 @@ set_global_assignment -name VHDL_FILE ../../src/rtl/periph/ntt_sdf.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/vga_pixel_ctrl.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/pong_engine.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/conway_engine.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/synth_engine.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/dds_core.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/fm_operator.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/wm8731_ctrl.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/i2s_tx.vhd
 
 # ExpDemo RTL
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp1.vhd
@@ -387,6 +392,14 @@ set_location_assignment PIN_A12 -to VGA_CLK
 set_location_assignment PIN_C10 -to VGA_SYNC_N
 set_location_assignment PIN_F11 -to VGA_BLANK_N
 
+# Audio codec (WM8731)
+set_location_assignment PIN_E1 -to AUD_XCK
+set_location_assignment PIN_F2 -to AUD_BCLK
+set_location_assignment PIN_E3 -to AUD_DACLRCK
+set_location_assignment PIN_D1 -to AUD_DACDAT
+set_location_assignment PIN_B7 -to I2C_SCLK
+set_location_assignment PIN_A8 -to I2C_SDAT
+
 # I/O Standard
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_TXD
@@ -436,6 +449,12 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_VS
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_CLK
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_SYNC_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_BLANK_N
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUD_XCK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUD_BCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUD_DACLRCK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUD_DACDAT
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to I2C_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to I2C_SDAT
 
 # Slide switches (Bank 5, 2.5V)
 set_location_assignment PIN_AB28 -to SW[0]
@@ -460,6 +479,7 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to SW[*]
 
 # Partition
 set_global_assignment -name MIF_FILE ../src/rtl/exp/sin_data.mif
+set_global_assignment -name MIF_FILE ../../src/rtl/periph/wavetable_4wave.mif
 
 # Partition
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top

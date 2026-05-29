@@ -108,7 +108,15 @@ entity wb_intercon is
         s10_dat_o  : out std_logic_vector(31 downto 0);
         s10_we_o   : out std_logic;
         s10_stb_o  : out std_logic;
-        s10_ack_i  : in  std_logic
+        s10_ack_i  : in  std_logic;
+
+        -- Slave 11: Audio synth @ 0xF0013000
+        s11_adr_o  : out std_logic_vector(4 downto 0);
+        s11_dat_i  : in  std_logic_vector(31 downto 0);
+        s11_dat_o  : out std_logic_vector(31 downto 0);
+        s11_we_o   : out std_logic;
+        s11_stb_o  : out std_logic;
+        s11_ack_i  : in  std_logic
     );
 end entity wb_intercon;
 
@@ -124,6 +132,7 @@ architecture rtl of wb_intercon is
     signal cs_expdemo: std_logic;
     signal cs_pong    : std_logic;
     signal cs_conway  : std_logic;
+    signal cs_synth   : std_logic;
     constant SDRAM_END_C : unsigned(31 downto 0) := unsigned(ADDR_SDRAM_BASE) + to_unsigned(16#08000000#, 32);
     constant VGA_END_C   : unsigned(31 downto 0) := unsigned(ADDR_VGA_BASE)   + to_unsigned(16#00008000#, 32);
     constant PS2_END_C   : unsigned(31 downto 0) := unsigned(ADDR_PS2_BASE)   + to_unsigned(16#00001000#, 32);
@@ -135,6 +144,7 @@ architecture rtl of wb_intercon is
     constant EXPDEMO_END_C: unsigned(31 downto 0) := unsigned(ADDR_EXPDEMO_BASE) + to_unsigned(16#00001000#, 32);
     constant PONG_END_C   : unsigned(31 downto 0) := unsigned(ADDR_PONG_BASE)   + to_unsigned(16#00001000#, 32);
     constant CONWAY_END_C  : unsigned(31 downto 0) := unsigned(ADDR_CONWAY_BASE) + to_unsigned(16#00001000#, 32);
+    constant SYNTH_END_C   : unsigned(31 downto 0) := unsigned(ADDR_SYNTH_BASE)  + to_unsigned(16#00001000#, 32);
 begin
 
     -- SDRAM byte address window: 0x01000000 - 0x08FFFFFF (128MB)
@@ -160,6 +170,8 @@ begin
                          (unsigned(m_adr_i) <  PONG_END_C) else '0';
     cs_conway  <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_CONWAY_BASE)) and
                          (unsigned(m_adr_i) <  CONWAY_END_C) else '0';
+    cs_synth   <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_SYNTH_BASE)) and
+                         (unsigned(m_adr_i) <  SYNTH_END_C) else '0';
 
     -- XBUS address is a full BYTE address. SDRAM controller expects a 25-bit
     -- WORD address, so drop byte-lane bits [1:0] and keep [26:2].
@@ -231,6 +243,12 @@ begin
     s10_we_o  <= m_we_i;
     s10_stb_o <= m_stb_i and m_cyc_i and cs_conway;
 
+    -- Audio synth: word-aligned register block
+    s11_adr_o <= m_adr_i(6 downto 2);
+    s11_dat_o <= m_dat_i;
+    s11_we_o  <= m_we_i;
+    s11_stb_o <= m_stb_i and m_cyc_i and cs_synth;
+
     -- Response mux
     process(all)
     begin
@@ -270,9 +288,12 @@ begin
         elsif cs_conway = '1' then
             m_dat_o <= s10_dat_i;
             m_ack_o <= s10_ack_i;
+        elsif cs_synth = '1' then
+            m_dat_o <= s11_dat_i;
+            m_ack_o <= s11_ack_i;
         end if;
     end process;
 
-    m_err_o <= m_stb_i and m_cyc_i and not (cs_sdram or cs_vga or cs_ps2 or cs_ir or cs_ntt or cs_lcd or cs_tmr or cs_intc or cs_expdemo or cs_pong or cs_conway);
+    m_err_o <= m_stb_i and m_cyc_i and not (cs_sdram or cs_vga or cs_ps2 or cs_ir or cs_ntt or cs_lcd or cs_tmr or cs_intc or cs_expdemo or cs_pong or cs_conway or cs_synth);
 
 end architecture rtl;

@@ -137,7 +137,7 @@ begin
     -- Use: (modulation[15:8]) * mod_index, approximately
     -- This is a simple 8x8 multiply feeding into 23-bit phase addition
     p_mod_scale : process(clk_i)
-        variable prod : signed(15 downto 0);
+        variable prod : signed(24 downto 0);
     begin
         if rising_edge(clk_i) then
             if mod_index_reg = 0 or gate_reg = '0' then

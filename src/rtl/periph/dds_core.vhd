@@ -43,7 +43,7 @@ architecture rtl of dds_core is
     type wavetable_t is array(0 to 1023) of signed(15 downto 0);
     attribute ram_init_file : string;
     signal wavetable : wavetable_t;
-    attribute ram_init_file of wavetable : signal is "wavetable_4wave.mif";
+    attribute ram_init_file of wavetable : signal is "../../src/rtl/periph/wavetable_4wave.mif";
 
     signal rom_addr    : unsigned(9 downto 0);
     signal rom_data    : signed(15 downto 0);
@@ -100,8 +100,7 @@ begin
     end process;
 
     -- Wave table address: [9:8]=waveform, [7:0]=phase top bits + offset
-    rom_addr <= unsigned(wave_reg) & std_logic_vector(
-        unsigned(phase_acc(31 downto 24)) + to_unsigned(PHASE_OFFSET, 8));
+    rom_addr <= unsigned(wave_reg) & (unsigned(phase_acc(31 downto 24)) + to_unsigned(PHASE_OFFSET, 8));
 
     -- ROM read (combinatorial)
     rom_data <= wavetable(to_integer(rom_addr));
@@ -120,7 +119,7 @@ begin
             -- Take bits [23:8] to divide by 256
             sample_raw <= prod(23 downto 8);
             -- One cycle latency for pipeline
-            sample_o <= sample_raw;
+            sample_o <= std_logic_vector(sample_raw);
         end if;
     end process;
 

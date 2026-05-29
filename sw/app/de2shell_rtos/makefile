@@ -50,6 +50,7 @@ APP_SRC += $(DE2SHELL_DIR)/demo.c
 APP_SRC += $(DE2SHELL_DIR)/conway_hw.c
 APP_SRC += $(DE2SHELL_DIR)/pong_hw.c
 APP_SRC += $(DE2SHELL_DIR)/ntt.c
+APP_SRC += $(DE2SHELL_DIR)/synth.c
 
 # GUI + pixel mode (for Win 3.0 desktop)
 APP_SRC += $(DE2SHELL_DIR)/fb_hal.c
