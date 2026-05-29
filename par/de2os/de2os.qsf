@@ -64,6 +64,9 @@ set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp2.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp3.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp4.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp5.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp6.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp7.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/exp/vga_test_pattern.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp8.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp9.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/exp/adapt_exp10.vhd

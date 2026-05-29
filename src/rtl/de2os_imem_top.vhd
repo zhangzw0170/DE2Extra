@@ -56,7 +56,7 @@ entity de2os_imem_top is
         AUD_DACLRCK : in  std_logic;
         AUD_DACDAT  : out std_logic;
         I2C_SCLK    : out std_logic;
-        I2C_SDAT    : out std_logic
+        I2C_SDAT    : inout std_logic
     );
 end entity de2os_imem_top;
 

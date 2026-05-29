@@ -29,6 +29,15 @@
 - PS/2 解码器提取 (`ps2_decoder.c/h`) — 可复用模块
 - 帧缓冲 HAL (`fb_hal.c`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
 
+本轮新增模块/改动 (2026-05-30)：
+
+- Exp6 VGA 静态测试图案 (`adapt_exp6.vhd` + `vga_test_pattern.vhd`) — RTL 完成，待 Quartus 编译 + 上板
+- Exp7 VGA 动画测试图案 (`adapt_exp7.vhd`) — RTL 完成，待 Quartus 编译 + 上板
+- Exp6/7 expdemo 集成 — `expdemo_top.vhd` 输出 mux + VGA mux，`de2os_top.vhd` VGA 输出优先级 mux
+- Exp6/7 C 驱动 — `demo.c` 添加 Exp 6/7 条目 + draw_exp6/7_page 函数
+- I2C SDA 三态修复 — `wm8731_ctrl.vhd`/`synth_engine.vhd`/`de2os_top.vhd`/`de2os_imem_top.vhd` I2C_SDAT 从 `out` 改为 `inout`
+- Exp8/10 expdemo 重新接入 — RTL 适配器已有，C 驱动从"重定向到 shell 命令"改为直接实验入口
+
 已通过串口 smoke test 的模块：
 
 | 模块 | 进入 | 退出 | 备注 |
@@ -323,7 +332,7 @@
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
 | D1.1 | `expdemo` 命令进入 | 输入 `expdemo` 显示 Home 页与实验列表 | ✅ |
-| D1.2 | 实验列表显示 | 显示 11 个实验: Exp1/2/3/4/5/8/9/10/11/12/13，标注 6/7 保留 | ✅ |
+| D1.2 | 实验列表显示 | 显示 13 个实验: Exp1/2/3/4/5/6/7/8/9/10/11/12/13，全部可用 | 🟡 待上板验证 |
 | D1.3 | 数字键 + Enter 选择 | 输入 `1` + Enter 切换到 Exp1，并进入”实验说明 + Live Monitor”页 | ✅ |
 | D1.4 | `+`/`-` 浏览实验 | 按 `+`/`-` 顺序切换 selected_channel | ✅ 串口实测通过 |
 | D1.5 | `q` / `MENU` 两级退出 | 实验页 `q/MENU` 回 Home；Home 页 `q/MENU` 退回 shell | ✅ |
@@ -350,8 +359,28 @@
 | R7 | 所有实验始终运行 (无复位) | 次要 | 可选修复 |
 | R8 | KEY0 共享复位 | 次要 | ✅ 上板通过 |
 | R9 | Exp2/3 自生时钟 Timing Warning | 次要 | 可选修复 |
-| R10 | 保留通道 6/7 意外激活输出 mux | 重要 | ✅ 上板验证：poke 6/7 读回 0，mux 未被激活 |
+| R10 | 保留通道 6/7 意外激活输出 mux | 重要 | 🟡 通道 6/7 已接 VGA 实验适配器，需上板验证 VGA 输出 mux 优先级正确 |
 | R11 | Exp10 irda_top 未单独验证 | 重要 | N/A Exp10 改用 shell 内置 IR 功能代替 |
+| R12 | I2C SDA 总线竞争 | 关键 | 🟡 wm8731_ctrl I2C_SDAT 从 out 改为 inout 三态，需上板验证音频 codec 初始化 |
+
+### D3. Exp6/7 VGA 测试图案适配器
+
+> 新增 RTL: `vga_test_pattern.vhd` (VGA 同步+图案发生器), `adapt_exp6.vhd` (静态), `adapt_exp7.vhd` (动画)
+> 集成: `expdemo_top.vhd` 输出 mux + `de2os_top.vhd` VGA 输出优先级 mux (exp > pong > pixel > text)
+
+| # | 验收项 | 预期行为 | 状态 |
+|---|---|---|---|
+| D3.1 | VGA 同步时序 | 640×480@60Hz，25MHz 像素时钟 (50MHz/2)，HS/VS 极性正确 | 🟡 RTL 完成，待上板验证 |
+| D3.2 | 8 色彩条模式 (mode=1) | 8 条垂直色带: 黑蓝绿青红品黄白 | 🟡 |
+| D3.3 | 灰度渐变模式 (mode=2) | 8 级灰度垂直条 | 🟡 |
+| D3.4 | 棋盘格模式 (mode=3) | 8×8 像素黑白棋盘格 | 🟡 |
+| D3.5 | 网格线模式 (mode=4) | 每 64 像素一条白色网格线 | 🟡 |
+| D3.6 | 纯色模式 (mode=5/6/7) | 纯红/纯绿/纯白填充 | 🟡 |
+| D3.7 | Exp6 HEX/LED 调试显示 | HEX7:6=帧计数, HEX5=模式, HEX4:3=V, HEX2:1=H, LEDR=HC, LEDG8=frame | 🟡 |
+| D3.8 | Exp7 动画偏移 | SW[17]=1 时图案水平滚动，SW[6:4] 控制速度 | 🟡 |
+| D3.9 | Exp7 HEX/LED 调试显示 | HEX7:6=帧, HEX5:4=偏移, HEX3:2=V, HEX1:0=H, HEX0=速度 | 🟡 |
+| D3.10 | VGA 输出 mux 优先级 | de2os_top: exp_vga_en > pong > pixel > text，退出 Exp6/7 后 VGA 恢复文本 | 🟡 |
+| D3.11 | Quartus 综合 | adapt_exp6/7 + vga_test_pattern 加入 de2os.qsf，综合无错误 | 🟡 待 Quartus 编译 |
 
 ---
 
@@ -525,19 +554,19 @@
 | B. 核心应用 (B1-B4) | 38 | 32 | 0 | 4 | 1 |
 | B. 核心应用 (B5 startui) | 11 | 6 | 5 | 0 | 0 |
 | C. 游戏 | 26 | 26 | 0 | 0 | 0 |
-| D. 实验模块 (expdemo) | 21 | 21 | 0 | 0 | 0 |
+| D. 实验模块 (expdemo) | 33 | 21 | 12 | 0 | 0 |
 | E. 系统工具 | 25 | 22 | 0 | 3 | 0 |
 | F. 硬件外设 (F1-F5) | 22 | 22 | 0 | 0 | 0 |
 | F. 硬件外设 (F6 VGA pixel) | 8 | 3 | 5 | 0 | 0 |
 | F. 硬件外设 (F7 LCD WB) | 3 | 3 | 0 | 0 | 0 |
 | G. 跨切面 | 7 | 7 | 0 | 0 | 0 |
-| **合计** | **213** | **192** | **11** | **7** | **1** |
+| **合计** | **225** | **192** | **23** | **7** | **1** |
 
 **主要阻塞**:
 1. ❌ NTT 硬件加速器 — C 驱动就绪，真实 NTT 盒子未并回 bitstream
 2. 🟡 startui (Win 3.0 GUI) — 需要 SDRAM 像素模式，推迟到 V3
-3. ☐ Exp6/7 画廊 — 需补代码
-4. 🟡 LCD 修复待目视确认 — busy-polling 已改为固定延时，需上板看 LCD 实际显示
+3. 🟡 Exp6/7 VGA 测试图案 — RTL + C 驱动完成，需 Quartus 编译 + 上板验证
+4. 🟡 I2C SDA 三态修复 — wm8731_ctrl/synth_engine/de2os_top/de2os_imem_top 已改 inout，需上板验证音频 codec
 
 ## V2 剩余项
 
@@ -546,10 +575,12 @@
 - **snake Game Over 显示** (H2.9) — 撞自身卡住但未显示 GAME OVER 文字
 - **startui** (B5, H2.15-19) — 需要 SDRAM 资源
 - **NTT 硬件** (E4.7, E4.8) — 真实 NTT 盒子未并回
-- **Exp6/7 画廊** (H2.13) — 需补代码
+- **Exp6/7 画廊** (H2.13) — RTL+C 驱动完成 (vga_test_pattern + adapt_exp6/7)，待 Quartus 编译 + 上板验证 VGA 输出
 - **VGA 像素模式实板** (F6.2-6.5) — 与 startui 同期
 
-已关闭：LCD 目视 ✅、R3 ✅、R10 ✅。
+已关闭：LCD 目视 ✅、R3 ✅。
+R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux 正确性。
+新增：R12 I2C SDA 三态修复、D3 Exp6/7 VGA 测试图案适配器。
 
 ---
 
@@ -605,7 +636,7 @@
 | H2.10 | life VGA 渲染 | 运行 `life` | VGA 显示 40×20 细胞网格 | ✅ |
 | H2.11 | ps2 VGA 事件日志 | 运行 `ps2` | VGA 显示每次按键的 scan code + 键名 | ✅ |
 | H2.12 | dashboard VGA 实时状态 | 运行 `dash` | VGA 显示 SW/KEY/IR/uptime 实时刷新 | ✅ |
-| H2.13 | Exp6/7 画廊入口 | (需补代码) | 从 shell 进入 Exp6/7 并显示内容 | ☐ |
+| H2.13 | Exp6/7 VGA 测试图案入口 | 输入 `expdemo` → 选择 `6` Enter | VGA 显示对应测试图案 (SW[2:0] 切换)，HEX/LED 显示调试信息 | 🟡 RTL+C 驱动完成，待上板 |
 | H2.14 | hello VGA LED 跑马灯 | 运行 `hello` | VGA 显示 `*`/`.` 模拟 LED 跑马灯 | ✅ |
 | H2.15 | startui 桌面显示 | 运行 `startui` | VGA 切换到像素模式，显示 Win 3.0 风格桌面 (青色背景 + 图标 + 任务栏) | ☐ |
 | H2.16 | startui 窗口渲染 | 观察 startui 桌面 | 可见 2 个演示窗口 (Calculator + About)，标题栏 + 3D 边框 | ☐ |
@@ -615,4 +646,4 @@
 
 ---
 
-*最后更新: 2026-05-25 — VGA 上板验收通过 (H2.1-12, H2.14)；A2 VGA HAL / F2 VGA 文字终端 / B1 hello / B4 ps2 / C1 snake / C2 life 全部升为 ✅；startui 推迟到 V3 (需要 SDRAM)；V2 剩余：NTT 硬件、Exp6/7 画廊、LCD 目视确认、VGA 像素模式。*
+*最后更新: 2026-05-30 — 新增 D3 Exp6/7 VGA 测试图案 (11 项 🟡)，R12 I2C SDA 三态修复；D1.2 更新为 13 实验全可用；R10 重开 (6/7 改 VGA 输出)；总计 225 项 (192✅ 23🟡 7❌ 1N/A)。*

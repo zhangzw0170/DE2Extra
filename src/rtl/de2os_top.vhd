@@ -86,7 +86,7 @@ entity de2os_top is
         AUD_DACLRCK : in  std_logic;
         AUD_DACDAT  : out std_logic;
         I2C_SCLK    : out std_logic;
-        I2C_SDAT    : out std_logic
+        I2C_SDAT    : inout std_logic
     );
 end entity de2os_top;
 
@@ -237,6 +237,17 @@ architecture rtl of de2os_top is
     signal pong_vga_sync    : std_logic;
     signal pong_vga_clk     : std_logic;
     signal pong_vga_en      : std_logic;
+
+    -- ExpDemo VGA outputs
+    signal exp_vga_r       : std_logic_vector(7 downto 0);
+    signal exp_vga_g       : std_logic_vector(7 downto 0);
+    signal exp_vga_b       : std_logic_vector(7 downto 0);
+    signal exp_vga_hs      : std_logic;
+    signal exp_vga_vs      : std_logic;
+    signal exp_vga_blank   : std_logic;
+    signal exp_vga_sync    : std_logic;
+    signal exp_vga_clk     : std_logic;
+    signal exp_vga_en      : std_logic;
 
     -- Conway engine Wishbone
     signal conway_wb_adr   : std_logic_vector(4 downto 0);
@@ -593,28 +604,36 @@ begin
         vga_rd_done_i  => vga_sdram_rd_done
     );
 
-    VGA_R       <= pong_vga_r     when pong_vga_en = '1' else
+    VGA_R       <= exp_vga_r      when exp_vga_en = '1' else
+                   pong_vga_r     when pong_vga_en = '1' else
                    vga_pixel_r    when vga_pixel_mode = '1' else
                    vga_r_int;
-    VGA_G       <= pong_vga_g     when pong_vga_en = '1' else
+    VGA_G       <= exp_vga_g      when exp_vga_en = '1' else
+                   pong_vga_g     when pong_vga_en = '1' else
                    vga_pixel_g    when vga_pixel_mode = '1' else
                    vga_g_int;
-    VGA_B       <= pong_vga_b     when pong_vga_en = '1' else
+    VGA_B       <= exp_vga_b      when exp_vga_en = '1' else
+                   pong_vga_b     when pong_vga_en = '1' else
                    vga_pixel_b    when vga_pixel_mode = '1' else
                    vga_b_int;
-    VGA_HS      <= pong_vga_hs    when pong_vga_en = '1' else
+    VGA_HS      <= exp_vga_hs     when exp_vga_en = '1' else
+                   pong_vga_hs    when pong_vga_en = '1' else
                    vga_pixel_hs   when vga_pixel_mode = '1' else
                    vga_hs_int;
-    VGA_VS      <= pong_vga_vs    when pong_vga_en = '1' else
+    VGA_VS      <= exp_vga_vs     when exp_vga_en = '1' else
+                   pong_vga_vs    when pong_vga_en = '1' else
                    vga_pixel_vs   when vga_pixel_mode = '1' else
                    vga_vs_int;
-    VGA_CLK     <= pong_vga_clk   when pong_vga_en = '1' else
+    VGA_CLK     <= exp_vga_clk    when exp_vga_en = '1' else
+                   pong_vga_clk   when pong_vga_en = '1' else
                    vga_pixel_clk  when vga_pixel_mode = '1' else
                    vga_clk_int;
-    VGA_SYNC_N  <= pong_vga_sync  when pong_vga_en = '1' else
+    VGA_SYNC_N  <= exp_vga_sync   when exp_vga_en = '1' else
+                   pong_vga_sync  when pong_vga_en = '1' else
                    vga_pixel_sync when vga_pixel_mode = '1' else
                    vga_sync_int;
-    VGA_BLANK_N <= pong_vga_blank when pong_vga_en = '1' else
+    VGA_BLANK_N <= exp_vga_blank  when exp_vga_en = '1' else
+                   pong_vga_blank when pong_vga_en = '1' else
                    vga_pixel_blank when vga_pixel_mode = '1' else
                    vga_blank_int;
 
@@ -690,6 +709,15 @@ begin
         lcd_en_o    => exp_lcd_en,
         active_o    => expdemo_active,
         channel_o   => expdemo_channel,
+        vga_r_o     => exp_vga_r,
+        vga_g_o     => exp_vga_g,
+        vga_b_o     => exp_vga_b,
+        vga_hs_o    => exp_vga_hs,
+        vga_vs_o    => exp_vga_vs,
+        vga_clk_o   => exp_vga_clk,
+        vga_blank_o => exp_vga_blank,
+        vga_sync_o  => exp_vga_sync,
+        vga_en_o    => exp_vga_en,
         wb_adr_i    => expdemo_wb_adr,
         wb_dat_i    => expdemo_wb_dat_o,
         wb_dat_o    => expdemo_wb_dat_i,

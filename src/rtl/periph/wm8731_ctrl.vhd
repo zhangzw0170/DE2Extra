@@ -12,7 +12,7 @@ entity wm8731_ctrl is
         clk_i      : in  std_logic;
         rst_n_i    : in  std_logic;
         i2c_sclk_o : out std_logic;
-        i2c_sdat_o : out std_logic;
+        i2c_sdat   : inout std_logic;
         ready_o    : out std_logic
     );
 end entity wm8731_ctrl;
@@ -47,7 +47,7 @@ architecture rtl of wm8731_ctrl is
 begin
 
     i2c_sclk_o <= scl_r;
-    i2c_sdat_o <= sda_r;
+    i2c_sdat   <= '0' when sda_r = '0' else 'Z';
     ready_o    <= ready_r;
 
     p_main : process(clk_i, rst_n_i)

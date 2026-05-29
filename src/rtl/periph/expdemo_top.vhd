@@ -10,8 +10,8 @@
 --   3 = Exp3 (7-seg display)
 --   4 = Exp4 (RAM)
 --   5 = Exp5 (FSM)
---   6 = (reserved — VGA)
---   7 = (reserved — VGA)
+--   6 = Exp6 (VGA static test patterns)
+--   7 = Exp7 (VGA animated test patterns)
 --   8 = Exp8 (PS/2 keyboard)
 --   9 = Exp9 (UART)
 --  10 = Exp10 (IR NEC)
@@ -52,6 +52,17 @@ entity expdemo_top is
         active_o    : out std_logic;
         channel_o   : out integer range 0 to 13;
 
+        -- VGA output (active when channel = 6 or 7)
+        vga_r_o     : out std_logic_vector(7 downto 0);
+        vga_g_o     : out std_logic_vector(7 downto 0);
+        vga_b_o     : out std_logic_vector(7 downto 0);
+        vga_hs_o    : out std_logic;
+        vga_vs_o    : out std_logic;
+        vga_clk_o   : out std_logic;
+        vga_blank_o : out std_logic;
+        vga_sync_o  : out std_logic;
+        vga_en_o    : out std_logic;
+
         -- Wishbone slave
         wb_adr_i    : in  std_logic_vector(2 downto 0);
         wb_dat_i    : in  std_logic_vector(31 downto 0);
@@ -71,7 +82,8 @@ architecture rtl of expdemo_top is
 
     -- experiment outputs
     signal out_1, out_2, out_3, out_4, out_5   : exp_out_t;
-    signal out_8, out_9, out_10, out_11         : exp_out_t;
+    signal out_6, out_7, out_8, out_9, out_10  : exp_out_t;
+    signal out_11                               : exp_out_t;
     signal out_12, out_13a                      : exp_out_t;
     signal exp12_pc    : std_logic_vector(7 downto 0);
     signal exp12_ac    : std_logic_vector(15 downto 0);
@@ -82,6 +94,16 @@ architecture rtl of expdemo_top is
     signal exp12_detail : std_logic;
     signal exp13_msg_sel : std_logic_vector(1 downto 0);
     signal exp13_scroll  : std_logic_vector(5 downto 0);
+
+    -- Exp6/7 VGA signals
+    signal vga6_r, vga6_g, vga6_b   : std_logic_vector(7 downto 0);
+    signal vga6_hs, vga6_vs         : std_logic;
+    signal vga6_clk, vga6_blank     : std_logic;
+    signal vga6_sync                : std_logic;
+    signal vga7_r, vga7_g, vga7_b   : std_logic_vector(7 downto 0);
+    signal vga7_hs, vga7_vs         : std_logic;
+    signal vga7_clk, vga7_blank     : std_logic;
+    signal vga7_sync                : std_logic;
 
     -- Exp9 UART TXD
     signal exp9_txd : std_logic;
@@ -210,6 +232,26 @@ begin
     u_e5 : entity work.adapt_exp5
         port map (clk_50 => clk_i, rst_n => rst_n_i, sw => sw, key_n => key_n, exp_out => out_5);
 
+    -- Exp6: VGA static test patterns
+    u_e6 : entity work.adapt_exp6
+        port map (
+            clk_50 => clk_i, rst_n => rst_n_i, sw => sw, key_n => key_n,
+            exp_out => out_6,
+            vga_r => vga6_r, vga_g => vga6_g, vga_b => vga6_b,
+            vga_hs => vga6_hs, vga_vs => vga6_vs,
+            vga_clk => vga6_clk, vga_blank => vga6_blank, vga_sync => vga6_sync
+        );
+
+    -- Exp7: VGA animated test patterns
+    u_e7 : entity work.adapt_exp7
+        port map (
+            clk_50 => clk_i, rst_n => rst_n_i, sw => sw, key_n => key_n,
+            exp_out => out_7,
+            vga_r => vga7_r, vga_g => vga7_g, vga_b => vga7_b,
+            vga_hs => vga7_hs, vga_vs => vga7_vs,
+            vga_clk => vga7_clk, vga_blank => vga7_blank, vga_sync => vga7_sync
+        );
+
     -- Exp8: PS/2 keyboard
     u_e8 : entity work.adapt_exp8
         port map (clk_50 => clk_i, rst_n => rst_n_i, sw => sw, key_n => key_n,
@@ -265,7 +307,8 @@ begin
 
     -- Output mux
     p_mux : process(channel, out_1, out_2, out_3, out_4, out_5,
-                   out_8, out_9, out_10, out_11, out_12, out_13a)
+                   out_6, out_7, out_8, out_9, out_10, out_11,
+                   out_12, out_13a)
     begin
         -- default: shell mode (all outputs zeroed)
         hex_o      <= (others => '1');
@@ -282,7 +325,8 @@ begin
             when 3  => hex_o <= out_3.hex;  ledr_o <= out_3.ledr; ledg_o <= out_3.ledg;
             when 4  => hex_o <= out_4.hex;  ledr_o <= out_4.ledr; ledg_o <= out_4.ledg;
             when 5  => hex_o <= out_5.hex;  ledr_o <= out_5.ledr; ledg_o <= out_5.ledg;
-            -- 6, 7: VGA experiments (reserved/skipped)
+            when 6  => hex_o <= out_6.hex;  ledr_o <= out_6.ledr; ledg_o <= out_6.ledg;
+            when 7  => hex_o <= out_7.hex;  ledr_o <= out_7.ledr; ledg_o <= out_7.ledg;
             when 8  => hex_o <= out_8.hex;  ledr_o <= out_8.ledr; ledg_o <= out_8.ledg;
             when 9  => hex_o <= out_9.hex;  ledr_o <= out_9.ledr; ledg_o <= out_9.ledg;
             when 10 => hex_o <= out_10.hex; ledr_o <= out_10.ledr; ledg_o <= out_10.ledg;
@@ -303,5 +347,25 @@ begin
                 null;  -- channel=0: shell pass-through
         end case;
     end process;
+
+    -- VGA output mux: route Exp6 or Exp7 VGA signals based on channel
+    vga_en_o <= '1' when (channel = 6 or channel = 7) else '0';
+
+    vga_r_o     <= vga6_r     when channel = 6 else
+                   vga7_r     when channel = 7 else (others => '0');
+    vga_g_o     <= vga6_g     when channel = 6 else
+                   vga7_g     when channel = 7 else (others => '0');
+    vga_b_o     <= vga6_b     when channel = 6 else
+                   vga7_b     when channel = 7 else (others => '0');
+    vga_hs_o    <= vga6_hs    when channel = 6 else
+                   vga7_hs    when channel = 7 else '1';
+    vga_vs_o    <= vga6_vs    when channel = 6 else
+                   vga7_vs    when channel = 7 else '1';
+    vga_clk_o   <= vga6_clk   when channel = 6 else
+                   vga7_clk   when channel = 7 else '0';
+    vga_blank_o <= vga6_blank when channel = 6 else
+                   vga7_blank when channel = 7 else '0';
+    vga_sync_o  <= vga6_sync  when channel = 6 else
+                   vga7_sync  when channel = 7 else '0';
 
 end architecture rtl;

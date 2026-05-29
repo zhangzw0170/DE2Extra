@@ -90,10 +90,26 @@ static const exp_entry_t exp_entries[] = {
      "SW1 = input w, SW17:16 choose FSM",
      "KEY1 = reset, KEY2 = manual step",
      "LEDG8 is detect z, LEDG7:0 is input history, LEDR1 mirrors w"},
+    {6,  "Exp6",  "VGA Static Patterns",
+     "SW[2:0] selects pattern (0=off 1=8color 2=gray 3=check 4=cross 5=red 6=green 7=white)",
+     "KEY1 = reset frame counter",
+     "HEX7:6=frames HEX5=mode HEX4:3=V HEX2:1=H HEX0=dash; LEDR=HC LEDG8=frame"},
+    {7,  "Exp7",  "VGA Animated Patterns",
+     "SW[2:0] pattern mode, SW[6:4] speed, SW[17] animate enable",
+     "KEY1 = reset frame counter",
+     "HEX7:6=frames HEX5:4=shift HEX3:2=V HEX1:0=H HEX0=speed; LEDR=HC+ctrl LEDG8=frame"},
+    {8,  "Exp8",  "PS/2 Scan Codes",
+     "PS/2 keyboard exclusive (SW/KEY unused)",
+     "Press Del on PS/2 to return to menu",
+     "HEX shows current scan code (all 8 digits)"},
     {9,  "Exp9",  "UART",
      "SW7:0 choose TX byte",
      "KEY1 = send the current SW byte",
      "HEX5:4 RX, HEX1:0 TX, LEDR RX, LEDG TX"},
+    {10, "Exp10", "IR NEC Decode",
+     "SW0 = debug display mode",
+     "KEY1 = clear/reset; MENU on remote = return to menu",
+     "HEX7:6=counter HEX5:4=cur HEX3:2=prev HEX1:0=prev2; LEDR7:0=cmd"},
     {11, "Exp11", "Sine DDS",
      "SW17 selects LED/SignalTap mode, SW7:0 is sine DDS fword",
      "KEY1 = DDS reset",
@@ -594,9 +610,6 @@ static void draw_menu_page(void) {
             vga_puts(entry->name, VGA_GREEN);
             vga_puts(" - ", VGA_WHITE);
             vga_puts(entry->detail, VGA_GREEN);
-        } else if ((typed_value == 8) || (typed_value == 10)) {
-            vga_puts("  redirected to shell command ", VGA_WHITE);
-            vga_puts((typed_value == 8) ? "ps2" : "info", VGA_GREEN);
         } else if ((typed_value >= 0) && !valid_channel((uint8_t)typed_value)) {
             vga_puts("  invalid/reserved", VGA_RED);
         }
@@ -615,13 +628,7 @@ static void draw_menu_page(void) {
         vga_puts(entry->detail, VGA_GRAY);
         vga_puts("\n", VGA_BLACK);
     }
-    vga_puts("\nUse shell command ", VGA_WHITE);
-    vga_puts("ps2", VGA_GREEN);
-    vga_puts(" for former Exp8 keyboard scan-code demo.\n", VGA_GRAY);
-    vga_puts("Use shell command ", VGA_WHITE);
-    vga_puts("info", VGA_GREEN);
-    vga_puts(" for former Exp10 IR/system live monitor.\n", VGA_GRAY);
-    vga_puts("Reserved channels: 6, 7\n", VGA_RED);
+    vga_puts("\nAll 13 experiments available (1-5, 6-7 VGA, 8-13).\n", VGA_GREEN);
 }
 
 static void draw_exp12_page(const exp_entry_t *entry, const expdemo_monitor_t *mon) {
@@ -976,6 +983,160 @@ static void draw_exp9_page(const exp_entry_t *entry, const expdemo_monitor_t *mo
     vga_puts("  (KEY0 = board reset)\n", VGA_GRAY);
 }
 
+static void draw_exp8_page(const exp_entry_t *entry, const expdemo_monitor_t *mon) {
+    vga_puts("expdemo - ", VGA_CYAN);
+    vga_puts(entry->name, VGA_CYAN);
+    vga_puts("\n", VGA_WHITE);
+    vga_puts("====================\n", VGA_WHITE);
+    vga_puts(entry->detail, VGA_GREEN);
+    vga_puts("\n\n", VGA_BLACK);
+    vga_puts("PS/2 keyboard is exclusive to this experiment.\n", VGA_YELLOW);
+    vga_puts("Physical HEX displays show the scan code.\n", VGA_WHITE);
+    vga_puts("Press Del on PS/2 keyboard to return to menu.\n", VGA_WHITE);
+    vga_puts("Press q on UART terminal to return to menu.\n\n", VGA_GRAY);
+
+    vga_puts("Exit: Del (PS/2) or q (UART) -> home\n\n", VGA_GRAY);
+
+    vga_puts("Live Monitor\n", VGA_CYAN);
+    vga_puts("------------\n", VGA_WHITE);
+    vga_puts("HW channel : ", VGA_WHITE);
+    put_dec_u8(mon->hw_channel, VGA_YELLOW);
+    vga_puts("  STATUS=0x", VGA_WHITE);
+    put_hex32(mon->status, VGA_CYAN);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("SW[17:0]   : ", VGA_WHITE);
+    put_bits(mon->gpio_in & 0x3ffffu, 18, VGA_YELLOW);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("KEY[3:1]   : ", VGA_WHITE);
+    put_bits(mon->key_bits, 3, VGA_YELLOW);
+    vga_puts("  (KEY0 = board reset)\n", VGA_GRAY);
+    vga_puts("Uptime     : 0x", VGA_WHITE);
+    put_hex32(mon->uptime, VGA_CYAN);
+    vga_puts(" s\n", VGA_GREEN);
+}
+
+static void draw_exp10_page(const exp_entry_t *entry, const expdemo_monitor_t *mon) {
+    vga_puts("expdemo - ", VGA_CYAN);
+    vga_puts(entry->name, VGA_CYAN);
+    vga_puts("\n", VGA_WHITE);
+    vga_puts("====================\n", VGA_WHITE);
+    vga_puts(entry->detail, VGA_GREEN);
+    vga_puts("\n\n", VGA_BLACK);
+    vga_puts("IR receiver is exclusive to this experiment.\n", VGA_YELLOW);
+    vga_puts("Physical HEX/LEDR show decoded NEC commands.\n", VGA_WHITE);
+    vga_puts("Press MENU on IR remote to return to menu.\n", VGA_WHITE);
+    vga_puts("Press q on UART terminal to return to menu.\n\n", VGA_GRAY);
+
+    vga_puts("SW : ", VGA_WHITE);
+    vga_puts(entry->sw_desc, VGA_GRAY);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("KEY: ", VGA_WHITE);
+    vga_puts(entry->key_desc, VGA_GRAY);
+    vga_puts("\n\n", VGA_BLACK);
+
+    vga_puts("Exit: MENU (IR) or q (UART) -> home\n\n", VGA_GRAY);
+
+    vga_puts("Live Monitor\n", VGA_CYAN);
+    vga_puts("------------\n", VGA_WHITE);
+    vga_puts("HW channel : ", VGA_WHITE);
+    put_dec_u8(mon->hw_channel, VGA_YELLOW);
+    vga_puts("  STATUS=0x", VGA_WHITE);
+    put_hex32(mon->status, VGA_CYAN);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("SW[17:0]   : ", VGA_WHITE);
+    put_bits(mon->gpio_in & 0x3ffffu, 18, VGA_YELLOW);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("KEY[3:1]   : ", VGA_WHITE);
+    put_bits(mon->key_bits, 3, VGA_YELLOW);
+    vga_puts("  (KEY0 = board reset)\n", VGA_GRAY);
+    vga_puts("Uptime     : 0x", VGA_WHITE);
+    put_hex32(mon->uptime, VGA_CYAN);
+    vga_puts(" s\n", VGA_GREEN);
+}
+
+static void draw_exp6_page(const exp_entry_t *entry, const expdemo_monitor_t *mon) {
+    vga_puts("expdemo - ", VGA_CYAN);
+    vga_puts(entry->name, VGA_CYAN);
+    vga_puts("\n", VGA_WHITE);
+    vga_puts("====================\n", VGA_WHITE);
+    vga_puts(entry->detail, VGA_GREEN);
+    vga_puts("\n\n", VGA_BLACK);
+    vga_puts("VGA output: static test patterns (640x480@60Hz)\n", VGA_YELLOW);
+    vga_puts("Monitor should show selected color pattern.\n", VGA_WHITE);
+    vga_puts("Physical HEX/LEDR show sync timing debug info.\n", VGA_WHITE);
+    vga_puts("Press q on UART terminal to return to menu.\n\n", VGA_GRAY);
+
+    vga_puts("SW : ", VGA_WHITE);
+    vga_puts(entry->sw_desc, VGA_GRAY);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("KEY: ", VGA_WHITE);
+    vga_puts(entry->key_desc, VGA_GRAY);
+    vga_puts("\n\n", VGA_BLACK);
+
+    vga_puts("Pattern Modes:\n", VGA_CYAN);
+    vga_puts("  0=off  1=8-color bars  2=gray ramp  3=checkerboard\n", VGA_GRAY);
+    vga_puts("  4=crosshatch  5=solid red  6=solid green  7=white\n\n", VGA_GRAY);
+
+    vga_puts("Exit: q (UART) -> home\n\n", VGA_GRAY);
+
+    vga_puts("Live Monitor\n", VGA_CYAN);
+    vga_puts("------------\n", VGA_WHITE);
+    vga_puts("HW channel : ", VGA_WHITE);
+    put_dec_u8(mon->hw_channel, VGA_YELLOW);
+    vga_puts("  STATUS=0x", VGA_WHITE);
+    put_hex32(mon->status, VGA_CYAN);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("SW[17:0]   : ", VGA_WHITE);
+    put_bits(mon->gpio_in & 0x3ffffu, 18, VGA_YELLOW);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("KEY[3:1]   : ", VGA_WHITE);
+    put_bits(mon->key_bits, 3, VGA_YELLOW);
+    vga_puts("  (KEY0 = board reset)\n", VGA_GRAY);
+    vga_puts("Uptime     : 0x", VGA_WHITE);
+    put_hex32(mon->uptime, VGA_CYAN);
+    vga_puts(" s\n", VGA_GREEN);
+}
+
+static void draw_exp7_page(const exp_entry_t *entry, const expdemo_monitor_t *mon) {
+    vga_puts("expdemo - ", VGA_CYAN);
+    vga_puts(entry->name, VGA_CYAN);
+    vga_puts("\n", VGA_WHITE);
+    vga_puts("====================\n", VGA_WHITE);
+    vga_puts(entry->detail, VGA_GREEN);
+    vga_puts("\n\n", VGA_BLACK);
+    vga_puts("VGA output: animated test patterns (640x480@60Hz)\n", VGA_YELLOW);
+    vga_puts("Enable SW[17] to start horizontal animation.\n", VGA_WHITE);
+    vga_puts("SW[6:4] controls animation speed.\n", VGA_WHITE);
+    vga_puts("Physical HEX/LEDR show sync + animation debug.\n", VGA_WHITE);
+    vga_puts("Press q on UART terminal to return to menu.\n\n", VGA_GRAY);
+
+    vga_puts("SW : ", VGA_WHITE);
+    vga_puts(entry->sw_desc, VGA_GRAY);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("KEY: ", VGA_WHITE);
+    vga_puts(entry->key_desc, VGA_GRAY);
+    vga_puts("\n\n", VGA_BLACK);
+
+    vga_puts("Exit: q (UART) -> home\n\n", VGA_GRAY);
+
+    vga_puts("Live Monitor\n", VGA_CYAN);
+    vga_puts("------------\n", VGA_WHITE);
+    vga_puts("HW channel : ", VGA_WHITE);
+    put_dec_u8(mon->hw_channel, VGA_YELLOW);
+    vga_puts("  STATUS=0x", VGA_WHITE);
+    put_hex32(mon->status, VGA_CYAN);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("SW[17:0]   : ", VGA_WHITE);
+    put_bits(mon->gpio_in & 0x3ffffu, 18, VGA_YELLOW);
+    vga_puts("\n", VGA_BLACK);
+    vga_puts("KEY[3:1]   : ", VGA_WHITE);
+    put_bits(mon->key_bits, 3, VGA_YELLOW);
+    vga_puts("  (KEY0 = board reset)\n", VGA_GRAY);
+    vga_puts("Uptime     : 0x", VGA_WHITE);
+    put_hex32(mon->uptime, VGA_CYAN);
+    vga_puts(" s\n", VGA_GREEN);
+}
+
 static void draw_active_page(void) {
     expdemo_monitor_t mon;
     const exp_entry_t *entry;
@@ -999,8 +1160,24 @@ static void draw_active_page(void) {
         draw_exp11_page(entry, &mon);
         return;
     }
+    if (mon.hw_channel == 10u) {
+        draw_exp10_page(entry, &mon);
+        return;
+    }
     if (mon.hw_channel == 9u) {
         draw_exp9_page(entry, &mon);
+        return;
+    }
+    if (mon.hw_channel == 8u) {
+        draw_exp8_page(entry, &mon);
+        return;
+    }
+    if (mon.hw_channel == 6u) {
+        draw_exp6_page(entry, &mon);
+        return;
+    }
+    if (mon.hw_channel == 7u) {
+        draw_exp7_page(entry, &mon);
         return;
     }
     if (mon.hw_channel == 13u) {

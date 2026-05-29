@@ -42,7 +42,7 @@ entity synth_engine is
         aud_daclrck_i: in  std_logic;    -- WM8731 slave mode: input
         aud_dacdat_o : out std_logic;
         i2c_sclk_o   : out std_logic;
-        i2c_sdat_o   : out std_logic
+        i2c_sdat_o   : inout std_logic
     );
 end entity synth_engine;
 
@@ -55,7 +55,6 @@ architecture rtl of synth_engine is
 
     -- ── WM8731 I2C controller ──────────────────────────────────
     signal i2c_sclk : std_logic;
-    signal i2c_sdat : std_logic;
     signal codec_ready : std_logic;
 
     -- ── Wishbone registers ────────────────────────────────────
@@ -174,11 +173,10 @@ begin
             clk_i     => clk_i,
             rst_n_i   => rst_n_i,
             i2c_sclk_o => i2c_sclk,
-            i2c_sdat_o => i2c_sdat,
+            i2c_sdat   => i2c_sdat_o,
             ready_o   => codec_ready
         );
     i2c_sclk_o <= i2c_sclk;
-    i2c_sdat_o <= i2c_sdat;
 
     -- ── Status register ───────────────────────────────────────
     status_reg <= (0 => codec_ready, others => '0');
