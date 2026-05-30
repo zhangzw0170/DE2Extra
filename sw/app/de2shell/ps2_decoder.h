@@ -23,6 +23,32 @@ typedef struct {
     const char *name;    /* human-readable: "Enter", "A", "LEFT", etc. */
 } ps2_key_t;
 
+/* Virtual keycodes for non-ASCII keys (0x80+).
+ * Use with (uint8_t)c == PS2_VK_xxx in program input handlers. */
+#define PS2_VK_F1    0x80
+#define PS2_VK_F2    0x81
+#define PS2_VK_F3    0x82
+#define PS2_VK_F4    0x83
+#define PS2_VK_F5    0x84
+#define PS2_VK_F6    0x85
+#define PS2_VK_F7    0x86
+#define PS2_VK_F8    0x87
+#define PS2_VK_F9    0x88
+#define PS2_VK_F10   0x89
+#define PS2_VK_F11   0x8A
+#define PS2_VK_F12   0x8B
+
+#define PS2_VK_UP    0x90
+#define PS2_VK_DOWN  0x91
+#define PS2_VK_LEFT  0x92
+#define PS2_VK_RIGHT 0x93
+#define PS2_VK_HOME  0x94
+#define PS2_VK_END   0x95
+#define PS2_VK_PGUP  0x96
+#define PS2_VK_PGDN  0x97
+#define PS2_VK_INS   0x98
+#define PS2_VK_MENU  0x99
+
 void ps2_dec_init(void);
 
 /* Feed one raw scancode byte. Returns 1 when a complete key event

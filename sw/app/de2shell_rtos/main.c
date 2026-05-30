@@ -61,6 +61,7 @@ extern const program_t prog_conway_hw;
 extern const program_t prog_pong_hw;
 extern const program_t prog_ntt;
 extern const program_t prog_synth;
+extern const program_t prog_chroma;
 
 uint8_t last_ir_cmd = 0;
 
@@ -83,6 +84,7 @@ typedef enum {
     PROG_NTT,
     PROG_SYNTH,
     PROG_CRYPTOVIZ,
+    PROG_CHROMA,
     PROG_COUNT
 } prog_id_t;
 
@@ -105,7 +107,8 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_PONG_HW]  = &prog_pong_hw,
     [PROG_NTT]      = &prog_ntt,
     [PROG_SYNTH]    = &prog_synth,
-    [PROG_CRYPTOVIZ] = &prog_cryptoviz
+    [PROG_CRYPTOVIZ] = &prog_cryptoviz,
+    [PROG_CHROMA]    = &prog_chroma
 };
 
 static volatile prog_id_t active_prog = PROG_SHELL;
@@ -321,6 +324,8 @@ static configSTACK_DEPTH_TYPE active_prog_stack_words(prog_id_t pid) {
             return 1280;
         case PROG_CRYPTOVIZ:
             return 896;
+        case PROG_CHROMA:
+            return 640;
         default:
             return 512;
     }
@@ -553,6 +558,15 @@ static const CLI_Command_Definition_t cmd_synth_def =
 static const CLI_Command_Definition_t cmd_cryptoviz_def =
     {"cryptoviz", "cryptoviz: AES/SHA step-through viz\r\n", cli_cryptoviz, 0};
 
+/* ── chroma (HW terrain) ──────────────────────────────────────────── */
+static BaseType_t cli_chroma(char *buf, size_t len, const char *cmd) {
+    (void)buf; (void)len; (void)cmd;
+    cli_launch_req = PROG_CHROMA;
+    return pdFALSE;
+}
+static const CLI_Command_Definition_t cmd_chroma_def =
+    {"chroma", "chroma:   HW terrain sandbox\r\n", cli_chroma, 0};
+
 static const CLI_Command_Definition_t cmd_stats_def =
     {"stats", "stats:    Task list + stack HWM\r\n", cli_stats, 0};
 static const CLI_Command_Definition_t cmd_heapstat_def =
@@ -705,6 +719,7 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
     FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
     FreeRTOS_CLIRegisterCommand(&cmd_cryptoviz_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_chroma_def);
     FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_heapstat_def);
@@ -856,7 +871,7 @@ static void t_uart_input(void *pv) {
                             (void)ps2_sync_leds(ps2);
                             last_lock_mask = ps2_lock_mask();
                         }
-                        if (key.is_press && key.has_ascii) {
+                        if (key.is_press && (key.has_ascii || key.ascii != 0)) {
                             c = (char)key.ascii;
                             (void)xQueueSend(xInputQueue, &c, 0);
                         }

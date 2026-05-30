@@ -53,6 +53,7 @@ set_global_assignment -name VHDL_FILE ../../src/rtl/periph/vga_pixel_ctrl.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/pong_engine.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/conway_engine.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/synth_engine.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/chroma_shader.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/dds_core.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/fm_operator.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/wm8731_ctrl.vhd
@@ -495,3 +496,4 @@ set_global_assignment -name VHDL_SHOW_LMF_MAPPING_MESSAGES OFF
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name VHDL_FILE ../../neorv32/rtl/core/neorv32_imem_image.vhd
 set_global_assignment -name VHDL_FILE ../../src/rtl/periph/lcd_wb.vhd
+set_global_assignment -name VHDL_FILE ../../src/rtl/periph/chroma_dp_ram.vhd

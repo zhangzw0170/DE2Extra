@@ -1,7 +1,7 @@
 # ChromaShader — 程序化地形探索游戏
 
-> 状态: Draft | 日期: 2026-05-25 | 依赖: V2 文字终端
-> 硬件: 纯 FPGA 噪声网络 + BRAM 帧缓冲 | 软件: PS/2 键盘 + UART
+> 状态: **RTL + 仿真完成** | 日期: 2026-05-30 | 实现: `src/rtl/periph/chroma_shader.vhd`
+> 硬件: FPGA 噪声哈希 + BRAM + VGA 终端覆盖 | 软件: MMIO C 驱动 (`chroma.c`)
 
 ## 概述
 
@@ -108,7 +108,7 @@ return h
 
 ## 5. 寄存器映射
 
-基地址 `0xF000E000` — NOTE: This address is now occupied by SD card SPI. ChromaShader needs a new address assignment when implemented.
+基地址 `0xF0014000` (Wishbone slave s12, 5-bit 字偏移)
 
 | 偏移 | R/W | 名称 | 位段 |
 |------|-----|------|------|
@@ -118,8 +118,8 @@ return h
 | `0x0C` | R/W | OFF_Y | [15:0] 世界偏移 Y |
 | `0x10` | R/W | PLAYER_X | [6:0] 玩家 X (0-79) |
 | `0x14` | R/W | PLAYER_Y | [4:0] 玩家 Y (0-24) |
-| `0x18` | R | CELL | [2:0]=地形类型, [3]=has_gold, [15:8]=前景色, [23:16]=背景色 |
-| `0x1C` | W | PAINT | [2:0]=地形类型, [7]=has_gold, [15:8]=前景色, [23:16]=背景色, [24]=触发 |
+| `0x18` | R | CELL | [2:0]=地形类型, [3]=has_gold, [11:4]=前景色(RGB332), [19:12]=背景色(RGB332) |
+| `0x1C` | W | PAINT | [2:0]=地形类型, [7]=has_gold, [15:8]=前景色(RGB332), [23:16]=背景色(RGB332) |
 | `0x20` | R | STATUS | [0]=busy, [1]=frame_ready |
 
 CELL 返回 PLAYER_X/Y 所指格子的当前数据（优先修改层）。

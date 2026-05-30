@@ -90,6 +90,20 @@ static int decode_main(uint8_t sc, int sh, int caps, int ctrl, int num, ps2_key_
         case 0x4a: out->name="SLASH";   out->ascii=(uint8_t)(sh?'?':'/'); out->has_ascii=1; return 1;
         case 0x29: out->name="SPACE";   out->ascii=0x20; out->has_ascii=1; return 1;
         case 0x76: out->name="ESC";     out->ascii=0x1b; out->has_ascii=1; return 1;
+        /* Function keys F1-F10 */
+        case 0x05: out->name="F1";  out->ascii=PS2_VK_F1;  out->has_ascii=0; return 1;
+        case 0x06: out->name="F2";  out->ascii=PS2_VK_F2;  out->has_ascii=0; return 1;
+        case 0x04: out->name="F3";  out->ascii=PS2_VK_F3;  out->has_ascii=0; return 1;
+        case 0x0C: out->name="F4";  out->ascii=PS2_VK_F4;  out->has_ascii=0; return 1;
+        case 0x03: out->name="F5";  out->ascii=PS2_VK_F5;  out->has_ascii=0; return 1;
+        case 0x0B: out->name="F6";  out->ascii=PS2_VK_F6;  out->has_ascii=0; return 1;
+        case 0x83: out->name="F7";  out->ascii=PS2_VK_F7;  out->has_ascii=0; return 1;
+        case 0x0A: out->name="F8";  out->ascii=PS2_VK_F8;  out->has_ascii=0; return 1;
+        case 0x01: out->name="F9";  out->ascii=PS2_VK_F9;  out->has_ascii=0; return 1;
+        case 0x09: out->name="F10"; out->ascii=PS2_VK_F10; out->has_ascii=0; return 1;
+        /* Function keys F11-F12 */
+        case 0x78: out->name="F11"; out->ascii=PS2_VK_F11; out->has_ascii=0; return 1;
+        case 0x07: out->name="F12"; out->ascii=PS2_VK_F12; out->has_ascii=0; return 1;
         /* numpad keys (when num lock on) */
         case 0x70: out->name="KP0"; out->ascii='0'; out->has_ascii=(uint8_t)num; return 1;
         case 0x69: out->name="KP1"; out->ascii='1'; out->has_ascii=(uint8_t)num; return 1;
@@ -111,16 +125,16 @@ static int decode_main(uint8_t sc, int sh, int caps, int ctrl, int num, ps2_key_
 
 static int decode_extended(uint8_t sc, ps2_key_t *out) {
     switch (sc) {
-        case 0x69: out->name="END";   out->ascii=0; out->has_ascii=0; return 1;
-        case 0x6b: out->name="LEFT";  out->ascii=0; out->has_ascii=0; return 1;
-        case 0x6c: out->name="HOME";  out->ascii=0; out->has_ascii=0; return 1;
-        case 0x70: out->name="INS";   out->ascii=0; out->has_ascii=0; return 1;
+        case 0x69: out->name="END";   out->ascii=PS2_VK_END;   out->has_ascii=0; return 1;
+        case 0x6b: out->name="LEFT";  out->ascii=PS2_VK_LEFT;  out->has_ascii=0; return 1;
+        case 0x6c: out->name="HOME";  out->ascii=PS2_VK_HOME;  out->has_ascii=0; return 1;
+        case 0x70: out->name="INS";   out->ascii=PS2_VK_INS;   out->has_ascii=0; return 1;
         case 0x71: out->name="DEL";   out->ascii=0x7f; out->has_ascii=1; return 1;
-        case 0x72: out->name="DOWN";  out->ascii=0; out->has_ascii=0; return 1;
-        case 0x74: out->name="RIGHT"; out->ascii=0; out->has_ascii=0; return 1;
-        case 0x75: out->name="UP";    out->ascii=0; out->has_ascii=0; return 1;
-        case 0x7a: out->name="PGDN";  out->ascii=0; out->has_ascii=0; return 1;
-        case 0x7d: out->name="PGUP";  out->ascii=0; out->has_ascii=0; return 1;
+        case 0x72: out->name="DOWN";  out->ascii=PS2_VK_DOWN;  out->has_ascii=0; return 1;
+        case 0x74: out->name="RIGHT"; out->ascii=PS2_VK_RIGHT; out->has_ascii=0; return 1;
+        case 0x75: out->name="UP";    out->ascii=PS2_VK_UP;    out->has_ascii=0; return 1;
+        case 0x7a: out->name="PGDN";  out->ascii=PS2_VK_PGDN;  out->has_ascii=0; return 1;
+        case 0x7d: out->name="PGUP";  out->ascii=PS2_VK_PGUP;  out->has_ascii=0; return 1;
         case 0x5a: out->name="KPENT"; out->ascii=0x0d; out->has_ascii=1; return 1;
         case 0x4a: out->name="KP/";   out->ascii='/'; out->has_ascii=1; return 1;
         default: return 0;
@@ -166,7 +180,7 @@ int ps2_dec_feed(uint8_t raw, ps2_key_t *out) {
         if (raw == 0x11u) { alt_r = is_release ? 0 : 1; out->name = "RALT"; return 1; }
         if (raw == 0x1fu) { win_l = is_release ? 0 : 1; out->name = "LWIN"; return 1; }
         if (raw == 0x27u) { win_r = is_release ? 0 : 1; out->name = "RWIN"; return 1; }
-        if (raw == 0x2fu) { out->name = "MENU"; return 1; }
+        if (raw == 0x2fu) { out->ascii = PS2_VK_MENU; out->name = "MENU"; return 1; }
         return decode_extended(raw, out);
     }
 

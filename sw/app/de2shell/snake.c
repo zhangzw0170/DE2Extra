@@ -2,6 +2,7 @@
  * Adapted from sw/app/game_snake/main.c
  */
 #include "vga_hal.h"
+#include "ps2_decoder.h"
 #include <stdint.h>
 
 #define GRID_W 78
@@ -268,11 +269,15 @@ static void input(char c) {
     }
 
     int ndx = dir_x, ndy = dir_y;
-    switch (c) {
+    switch ((uint8_t)c) {
         case 'w': case 'W': ndx =  0; ndy = -1; break;
         case 's': case 'S': ndx =  0; ndy =  1; break;
         case 'a': case 'A': ndx = -1; ndy =  0; break;
         case 'd': case 'D': ndx =  1; ndy =  0; break;
+        case PS2_VK_UP:    ndx =  0; ndy = -1; break;
+        case PS2_VK_DOWN:  ndx =  0; ndy =  1; break;
+        case PS2_VK_LEFT:  ndx = -1; ndy =  0; break;
+        case PS2_VK_RIGHT: ndx =  1; ndy =  0; break;
     }
     if (ndx != -dir_x || ndy != -dir_y) { dir_x = ndx; dir_y = ndy; }
 }

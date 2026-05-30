@@ -26,7 +26,7 @@ MEMMANG_DIR   = $(FREERTOS_DIR)/portable/MemMang
 DE2SHELL_DIR = ../de2shell
 
 # This app's own sources
-APP_SRC  = $(filter-out ./chroma.c,$(wildcard ./*.c)) $(wildcard ./*.S)
+APP_SRC  = $(wildcard ./*.c) $(wildcard ./*.S)
 
 # FreeRTOS kernel
 APP_SRC += $(FREERTOS_DIR)/tasks.c

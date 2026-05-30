@@ -31,7 +31,17 @@ entity vga_text_terminal is
         reg_dat_o   : out std_logic_vector(31 downto 0);
         reg_we_i    : in  std_logic;
         reg_stb_i   : in  std_logic;
-        reg_ack_o   : out std_logic
+        reg_ack_o   : out std_logic;
+
+        -- ChromaShader override (25MHz domain, aligned with bram_q)
+        chroma_en_i    : in  std_logic := '0';
+        chroma_char_i  : in  std_logic_vector(7 downto 0) := x"20";
+        chroma_fg_i    : in  std_logic_vector(15 downto 0) := x"FFFF";
+        chroma_bg_i    : in  std_logic_vector(15 downto 0) := x"0000";
+
+        -- Exposed 25MHz clock and BRAM read address for ChromaShader
+        clk_25m_o      : out std_logic;
+        brm_rd_addr_o  : out integer range 0 to 2399
     );
 end entity vga_text_terminal;
 
@@ -121,6 +131,7 @@ begin
         end if;
     end process;
     vga_clk_o <= clk_25m;
+    clk_25m_o <= clk_25m;
 
     ----------------------------------------------------------------
     -- VGA timing (25MHz)
@@ -186,6 +197,7 @@ begin
         end if;
         bram_rd_addr <= char_row * COLS + char_col;
         sub_row     <= pixel_y mod CHAR_H;
+        brm_rd_addr_o <= char_row * COLS + char_col;
     end process;
 
     ----------------------------------------------------------------
@@ -217,26 +229,33 @@ begin
         variable cursor_at  : std_logic;
     begin
         if rising_edge(clk_25m) then
+            -- ChromaShader override: replace char/fg/bg when active
+            if chroma_en_i = '1' then
+                ascii_char := to_integer(unsigned(chroma_char_i));
+                fg_rgb := chroma_fg_i;
+                bg_rgb := chroma_bg_i;
+            else
+                ascii_char := to_integer(unsigned(bram_q(31 downto 24)));
+                fg_rgb := bram_q(15 downto 0);
+                bg_rgb := bg_color;
+            end if;
+
             -- Font ROM: use variable for immediate use in this process
-            ascii_char := to_integer(unsigned(bram_q(31 downto 24)));
             font_byte := font_rom_data(ascii_char * 16 + sub_row_d);
 
             -- Pixel on: select bit from font data (MSB = leftmost pixel)
             pixel_bit := font_byte(7 - (px_d mod CHAR_W));
 
             -- Cursor detection (full character cell)
+            -- Suppress cursor in chroma region
             cursor_at := '0';
-            if ctrl_enable = '1' then
+            if ctrl_enable = '1' and chroma_en_i = '0' then
                 if py_d >= (cursor_y * CHAR_H) and py_d < ((cursor_y + 1) * CHAR_H) then
                     if px_d >= (cursor_x * CHAR_W) and px_d < ((cursor_x + 1) * CHAR_W) then
                         cursor_at := '1';
                     end if;
                 end if;
             end if;
-
-            -- fg from per-cell, bg from global register
-            fg_rgb := bram_q(15 downto 0);
-            bg_rgb := bg_color;
 
             if pixel_bit = '1' then
                 color_rgb := fg_rgb;

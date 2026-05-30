@@ -265,6 +265,20 @@ architecture rtl of de2os_top is
     signal synth_wb_stb   : std_logic;
     signal synth_wb_ack   : std_logic;
 
+    -- ChromaShader
+    signal chroma_wb_adr    : std_logic_vector(4 downto 0);
+    signal chroma_wb_dat_o  : std_logic_vector(31 downto 0);
+    signal chroma_wb_dat_i  : std_logic_vector(31 downto 0);
+    signal chroma_wb_we     : std_logic;
+    signal chroma_wb_stb    : std_logic;
+    signal chroma_wb_ack    : std_logic;
+    signal chroma_en        : std_logic;
+    signal chroma_char      : std_logic_vector(7 downto 0);
+    signal chroma_fg        : std_logic_vector(15 downto 0);
+    signal chroma_bg        : std_logic_vector(15 downto 0);
+    signal chroma_clk_25m   : std_logic;
+    signal chroma_rd_addr   : integer range 0 to 2399;
+
     -- INTC slave 7 stub: tie ack to stb to prevent bus hang
     signal intc_stub_stb : std_logic;
 
@@ -514,7 +528,15 @@ begin
         s11_dat_o => synth_wb_dat_o,
         s11_we_o  => synth_wb_we,
         s11_stb_o => synth_wb_stb,
-        s11_ack_i => synth_wb_ack
+        s11_ack_i => synth_wb_ack,
+
+        -- s12: ChromaShader
+        s12_adr_o => chroma_wb_adr,
+        s12_dat_i => chroma_wb_dat_i,
+        s12_dat_o => chroma_wb_dat_o,
+        s12_we_o  => chroma_wb_we,
+        s12_stb_o => chroma_wb_stb,
+        s12_ack_i => chroma_wb_ack
     );
 
     -- ================================================================
@@ -575,7 +597,15 @@ begin
         reg_dat_o   => vga_txt_reg_dat_i,
         reg_we_i    => vga_reg_we,
         reg_stb_i   => vga_txt_reg_stb,
-        reg_ack_o   => vga_txt_reg_ack
+        reg_ack_o   => vga_txt_reg_ack,
+
+        -- ChromaShader override
+        chroma_en_i    => chroma_en,
+        chroma_char_i  => chroma_char,
+        chroma_fg_i    => chroma_fg,
+        chroma_bg_i    => chroma_bg,
+        clk_25m_o      => chroma_clk_25m,
+        brm_rd_addr_o  => chroma_rd_addr
     );
 
     u_vga_px : entity work.vga_pixel_ctrl
@@ -879,6 +909,25 @@ begin
         aud_dacdat_o  => AUD_DACDAT,
         i2c_sclk_o    => I2C_SCLK,
         i2c_sdat_o    => I2C_SDAT
+    );
+
+    -- ChromaShader (hardware terrain generator)
+    u_chroma : entity work.chroma_shader
+    port map (
+        clk_i       => clk_50m,
+        rst_n_i     => rst_n,
+        wb_adr_i    => chroma_wb_adr,
+        wb_dat_i    => chroma_wb_dat_o,
+        wb_dat_o    => chroma_wb_dat_i,
+        wb_we_i     => chroma_wb_we,
+        wb_stb_i    => chroma_wb_stb,
+        wb_ack_o    => chroma_wb_ack,
+        clk_25m_i   => chroma_clk_25m,
+        rd_addr_i   => chroma_rd_addr,
+        rd_char_o   => chroma_char,
+        rd_fg_o     => chroma_fg,
+        rd_bg_o     => chroma_bg,
+        chroma_en_o => chroma_en
     );
 
     -- ================================================================

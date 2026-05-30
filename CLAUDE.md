@@ -89,7 +89,8 @@ de2_115_top.vhd (only entity that knows board pins)
 │   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 11 experiments)
 │   ├── s9: pong_engine      0xF0011000 (PONG engine + VGA output)
 │   ├── s10: conway_engine   0xF0012000 (Conway engine)
-│   └── s11: synth_engine    0xF0013000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S)
+│   ├── s11: synth_engine    0xF0013000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S)
+│   └── s12: chroma_shader   0xF0014000 (HW noise terrain + VGA terminal override)
 │   Note: DDS (0xF000D000) and SD card (0xF000E000) have address constants
 │         in de2extra_pkg.vhd but no slave ports in wb_intercon.
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
@@ -117,6 +118,7 @@ de2_115_top.vhd (only entity that knows board pins)
 | 0xF0010000 | ExpDemo | 4KB | 32-bit |
 | 0xF0011000 | PONG engine | 4KB | 32-bit |
 | 0xF0012000 | Conway engine | 4KB | 32-bit |
+| 0xF0014000 | ChromaShader (HW terrain) | 4KB | 32-bit |
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
 
@@ -207,4 +209,4 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 **V3 is active** — all work on de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/phase5-sdram-gui.md` for plan. See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 20 commands, VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode wired (640x480 RGB332 framebuffer in SDRAM) but **never displayed on physical monitor** (pxtest diagnostic added), TWM (tiling window manager), Snake full-screen with CP437 border + vblank sync, ExpDemo fully integrated. **Conway/PONG/NTT/Audio synth RTL all integrated** in de2os_top (Quartus pass, 0 errors, 271 warnings, timing clean, 62% LEs). Audio synth needs C driver (`synth.c`) for PS/2 keyboard mapping. Latest Quartus build: 2026-05-29, 11min, all timing constraints met.
+V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 22 commands (incl. chroma), VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode wired (640x480 RGB332 framebuffer in SDRAM) but **never displayed on physical monitor** (pxtest diagnostic added), TWM (tiling window manager), Snake full-screen with CP437 border + vblank sync, ExpDemo fully integrated. **Conway/PONG/NTT/Audio synth/ChromaShader RTL all integrated** in de2os_top. ChromaShader (P5): RTL + QuestaSim 10/10 pass + C MMIO driver + bus integration complete, pending Quartus compile + board test. Audio synth C driver done. Latest Quartus build: 2026-05-29, 11min, all timing constraints met.
