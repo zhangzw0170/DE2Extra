@@ -560,8 +560,9 @@
 | F. 硬件外设 (F6 VGA pixel) | 8 | 3 | 5 | 0 | 0 |
 | F. 硬件外设 (F7 LCD WB) | 3 | 3 | 0 | 0 | 0 |
 | G. 跨切面 | 7 | 7 | 0 | 0 | 0 |
-| I. V3P3b Crypto Viz | 10 | 10 | 0 | 0 | 0 |
-| **合计** | **235** | **202** | **23** | **7** | **1** |
+| I. V3P6 PS/2 TUI + Snake 2P | 13 | 0 | 13 | 0 | 0 |
+| J. V3P3b Crypto Viz | 10 | 10 | 0 | 0 | 0 |
+| **合计** | **248** | **212** | **36** | **7** | **1** |
 
 **主要阻塞**:
 1. ❌ NTT 硬件加速器 — C 驱动就绪，真实 NTT 盒子未并回 bitstream
@@ -645,7 +646,28 @@ R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux
 | H2.18 | startui 返回文本模式 | 顶层 Escape | VGA 恢复文本终端，shell 提示符正常显示 | ☐ |
 | H2.19 | VGA 像素模式切回文本 | startui 退出后 | VGA 文本终端无花屏，字符正常显示 | ☐ |
 
-## I. V3P3b Crypto Visualization (crypto_viz.c/h)
+## I. V3P6 PS/2 TUI Enhancement + Snake 2P
+
+> 适用范围: `sw/app/de2shell/` (共享源) + `sw/app/de2shell_rtos/` (V3 目标)
+> Q 退出已全面移除，改为 F10 全局退出。V2 冻结，以下项仅 V3 (RTOS) 上下文验收。
+
+| # | 验收项 | 预期行为 | 状态 |
+|---|---|---|---|
+| I.1 | PS/2 VK F1-F12 解码 | F1(0x05)→0x80, F2(0x06)→0x81, ..., F10(0x09)→0x89, F11(0x78)→0x8A, F12(0x07)→0x8B | 🟡 待上板 |
+| I.2 | PS/2 VK 方向键解码 | UP(0x75)→0x90, DOWN(0x72)→0x91, LEFT(0x6B)→0x92, RIGHT(0x74)→0x93 | 🟡 待上板 |
+| I.3 | 输入门控穿透 VK | `has_ascii=0, ascii≠0` 的虚拟键码可通过门控到达程序 | 🟡 待上板 |
+| I.4 | 全局 F1 帮助 | F1 在 `prog->input()` 之前拦截，输出 `[Help] progname: help` 到 UART | 🟡 待上板 |
+| I.5 | 全局 F10 退出 | F10 在 `prog->input()` 之后检查，程序可先做清理 | 🟡 待上板 |
+| I.6 | 全局 ESC 退出 | ESC 与 F10 同级退出当前程序 | 🟡 待上板 |
+| I.7 | Q 不再退出程序 | 所有 13 个程序 Q 键无退出效果 (twm 的 Q 是关闭窗口，非退出) | 🟡 待上板 |
+| I.8 | 直读 PS/2 程序 F10 | ps2/pong_hw/synth 在自己 PS/2 轮询中处理 F10 退出 | 🟡 待上板 |
+| I.9 | Snake 2P 模式选择 | 先选 1P/2P → 再选难度 (两页选择) | 🟡 待上板 |
+| I.10 | Snake 2P 独立控制 | P1: WASD (绿 o), P2: 方向键 (青 =)，1P 模式 WASD+方向键均可 | 🟡 待上板 |
+| I.11 | Snake 2P 碰撞检测 | 自撞/互撞/头碰头 (双死=平局) | 🟡 待上板 |
+| I.12 | Snake F10 退出 | F10 退出 snake (替代 Q) | 🟡 待上板 |
+| I.13 | Chroma 方向键 + F10 | 方向键滚动地形，F10 退出并禁用 HW | 🟡 待上板 |
+
+## J. V3P3b Crypto Visualization (crypto_viz.c/h)
 
 > 新增模块: AES-128 / SHA-256 内部运算逐步可视化
 > 纯 C 软件，无 RTL 改动，LOCAL_BUILD (SDL2) 验证
@@ -665,4 +687,4 @@ R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux
 
 ---
 
-*最后更新: 2026-05-30 — 新增 I. V3P3b Crypto Visualization (10 项 ✅)；总计 235 项 (202✅ 23🟡 7❌ 1N/A)。*
+*最后更新: 2026-05-30 — 新增 I. V3P6 PS/2 TUI + Snake 2P (13 项 🟡)；J. V3P3b Crypto Visualization (10 项 ✅)；总计 248 项 (212✅ 36🟡 7❌ 1N/A)。*
