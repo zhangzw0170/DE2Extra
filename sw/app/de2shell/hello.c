@@ -81,7 +81,7 @@ static void update(void) {
 }
 
 static void input(char c) {
-    if (c == 'q' || c == 'Q') done = 1;
+    (void)c;
 }
 
 static int finish(void) { return done; }

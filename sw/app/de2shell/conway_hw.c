@@ -198,10 +198,6 @@ static void input(char c) {
     if (!initialized) return;
 
     switch (c) {
-        case 'q': case 'Q':
-            if (hw_auto_run()) hw_auto_toggle();
-            initialized = 0;
-            return;
         case '\r': case '\n':
             edit_mode = !edit_mode;
             break;

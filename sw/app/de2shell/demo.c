@@ -1347,7 +1347,7 @@ static void update(void) {
 }
 
 static void input(char c) {
-    if (c == 'q' || c == 'Q' || c == 27) {
+    if (c == 27) {
         if (running) {
             enter_menu();
         } else {

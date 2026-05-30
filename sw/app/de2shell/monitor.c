@@ -422,7 +422,6 @@ static void usage_dump(void) {
 
 static void input(char c) {
     if (!active) return;
-    if (c == 'q' || c == 'Q') { active = 0; return; }
 
     if (esc_state == 1) {
         esc_state = (c == '[') ? 2 : 0;

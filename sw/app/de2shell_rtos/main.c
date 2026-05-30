@@ -899,13 +899,21 @@ static void t_active_prog(void *pv) {
         }
 
         if (xQueueReceive(xInputQueue, &c, 0) == pdTRUE) {
-            if (c == 27) {
-                exit_active_program();
+            /* F1 = show help (intercepted before program) */
+            if ((uint8_t)c == PS2_VK_F1) {
+                if ((prog != NULL) && (prog->help != NULL)) {
+                    neorv32_uart0_printf("[Help] %s: %s\r\n", prog->name, prog->help);
+                }
             }
+            /* Deliver to program first (allows cleanup on F10/ESC) */
             if ((prog != NULL) && (prog->input != NULL)) {
                 xSemaphoreTake(xVgaMutex, portMAX_DELAY);
                 prog->input(c);
                 xSemaphoreGive(xVgaMutex);
+            }
+            /* F10 or ESC = quit (after program had chance to clean up) */
+            if (c == 27 || (uint8_t)c == PS2_VK_F10) {
+                exit_active_program();
             }
         }
 

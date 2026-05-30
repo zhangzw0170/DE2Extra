@@ -462,7 +462,7 @@ static void chroma_task_input(char c) {
                 T_MOUNT | ((uint32_t)C_WALL_CLR << 8) | ((uint32_t)C_WALL_CLR << 16));
             break;
         }
-        case 'q': case 'Q':
+        case PS2_VK_F10:
             g_done = 1;
             /* Disable ChromaShader */
             chroma_write(CHROMA_CTRL, 0x00);

@@ -114,7 +114,7 @@ static void update(void) {
                     PONG_CONTROL = ctl;
                 }
                 /* Quit */
-                if (key.ascii == 'q' || key.ascii == 'Q') {
+                if (key.ascii == 'q' || key.ascii == 'Q' || key.ascii == PS2_VK_F10) {
                     PONG_CONTROL = 0;  /* disable PONG, return to text terminal */
                     initialized = 0;
                     return;
@@ -137,10 +137,6 @@ static void input(char c) {
 
     /* UART fallback paddle control */
     switch (c) {
-        case 'q': case 'Q':
-            PONG_CONTROL = 0;
-            initialized = 0;
-            return;
         case 'w': case 'W':
             paddle_l_y -= 12; hw_set_paddles(); break;
         case 's': case 'S':

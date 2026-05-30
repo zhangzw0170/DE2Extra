@@ -228,7 +228,6 @@ static void input(char c) {
     }
 
     switch (c) {
-        case 'q': case 'Q': initialized = 0; return;
         case '\r': case '\n':
             edit_mode = !edit_mode;
             break;

@@ -1,4 +1,5 @@
 #include "vga_hal.h"
+#include "ps2_decoder.h"
 
 #include <stdint.h>
 
@@ -16,9 +17,7 @@ static void init(void) {
 static void update(void) {}
 
 static void input(char c) {
-    if ((c == 'q') || (c == 'Q')) {
-        done = 1;
-    }
+    (void)c;
 }
 
 static int finish(void) {
@@ -568,8 +567,8 @@ static void update(void) {
         win_held = win_l || win_r;
 
         print_event(code, is_extended, is_release, ev_ptr, shift_held, ctrl_held, alt_held, win_held);
-        if ((is_release == 0) && (ev_ptr != NULL) && (ev_ptr->has_ascii != 0u)) {
-            if ((ev_ptr->ascii == 'q') || (ev_ptr->ascii == 'Q')) {
+        if ((is_release == 0) && (ev_ptr != NULL) && (ev_ptr->has_ascii != 0u || ev_ptr->ascii == PS2_VK_F10)) {
+            if ((ev_ptr->ascii == 'q') || (ev_ptr->ascii == 'Q') || (ev_ptr->ascii == PS2_VK_F10)) {
                 done = 1;
             } else if ((ev_ptr->ascii == 'c') || (ev_ptr->ascii == 'C')) {
                 init();

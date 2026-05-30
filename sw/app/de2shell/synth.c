@@ -254,8 +254,8 @@ static void update(void) {
             continue;
         }
 
-        /* Quit */
-        if (key.ascii == 'q' || key.ascii == 'Q') {
+        /* Quit (F10 or Q) */
+        if (key.ascii == 'q' || key.ascii == 'Q' || key.ascii == PS2_VK_F10) {
             SYNTH_CTRL = 1;  /* mute */
             SYNTH_T1_NOTE = 0;
             SYNTH_T2_NOTE = 0;

@@ -66,7 +66,7 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 | memtest | — | SDRAM diagnostic (built-in) |
 | crypto | prog_crypto | AES/SHA/SM4 CLI + bench |
 | ps2 (kbd) | prog_ps2 | PS/2 keyboard test |
-| snake | prog_snake | Snake game (全屏 78x27 + CP437 + vblank) |
+| snake | prog_snake | Snake game (1P/2P, WASD+箭头, F10退出) |
 | life (conwaylife) | prog_life | Conway software implementation |
 | info | prog_info | System dashboard |
 | monitor (riscvasm) | prog_monitor | Memory/register monitor |
@@ -129,6 +129,21 @@ RTL 噪声地形生成器 (`chroma_shader.vhd`, ~450 行) + C MMIO 驱动 (`chro
 | ntt.c NEORV32 编译失败 | `ntt_a[]` 仅在 LOCAL_BUILD 下声明，NEORV32 路径改用直接 MMIO | `ntt.c` |
 | INTC 0xF000A000 访问挂死 | s7_ack_i = '0' → 总线无响应；改为 ack loopback | `de2os_top.vhd` |
 | I2C SDA 总线竞争 | I2C_SDAT 从 out 改为 inout 三态缓冲，防止 FPGA 拉高与 slave ACK 冲突 | `wm8731_ctrl.vhd`, `synth_engine.vhd`, `de2os_top.vhd`, `de2os_imem_top.vhd` |
+
+### 11. PS/2 TUI 增强 + Snake 2P + 全局 Fn 键 (2026-05-30)
+
+PS/2 虚拟键码系统：22 个 VK 常量 (F1-F12, 方向键, 导航键)，门控条件修改使非 ASCII 键到达程序。全局 Fn 键绑定：F1=帮助、F10=退出。所有程序 Q 键退出已移除。Snake 支持双人模式 (WASD + 方向键)。详见 `doc/phases/v3p6.md`。
+
+| 组件 | 状态 |
+|------|------|
+| PS/2 VK 常量 + F1-F12 解码 | ✅ ps2_decoder.h/c |
+| 输入门控修改 | ✅ main.c |
+| 全局 F1 帮助 + F10 退出 | ✅ main.c t_active_prog |
+| Snake 2P 模式 | ✅ snake.c 完全重写 |
+| Chroma 方向键 + F10 | ✅ chroma.c |
+| Q 退出全面移除 | ✅ 13 个程序 |
+| 编译 | ✅ bin |
+| 上板验证 | ⏳ 待验证 |
 
 ## 当前剩余问题
 

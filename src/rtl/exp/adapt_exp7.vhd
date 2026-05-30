@@ -56,8 +56,8 @@ begin
     key1_fall <= '1' when key1_prev = '1' and key_n(1) = '0' else '0';
 
     -- Speed: SW[6:4] × 2 (avoid speed=0)
-    anim_spd <= x"2" when sw(6 downto 4) = "000" else
-                std_logic_vector(unsigned("0" & sw(6 downto 4)) & "0");
+    anim_spd <= "0010" when sw(6 downto 4) = "000" else
+                sw(6 downto 4) & '0';
 
     -- Frame counter
     p_cnt : process(clk_50, rst_n)
