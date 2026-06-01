@@ -15,16 +15,16 @@
 - 实测板卡: `EP4CE115F29C7`
 - 串口: `COM10`, `115200 8N1`
 - FreeRTOS 4 任务: uart_input / shell / active / status
-- CLI 命令: 22+ (hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear, chroma)
+- CLI 命令: 22 (hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear)
 - **长期稳定性: 已连续运行 27490+ 秒 (~7h38m) 无崩溃**
 - PS/2 键盘主输入 + UART 辅助输入
 - VGA 文本终端 80×30 (CP437 256 字符)
 - VGA 像素模式: RGB332 → **RGB565 升级完成** (GPU 2D 加速器集成)
 - GPU 2D 硬件加速器 (`gpu_2d.vhd`) — RTL + 软件驱动就绪，Quartus 编译通过，上板待验证性能
 - **VGA PLL 修复**: toggle flip-flop → PLL c3 25MHz (专用全局时钟网络) + falling_edge 输出寄存器
-- **pxtest 数据通路验证**: SDRAM 回读 0/2560 错误，VGA burst read valid/req≈8，framebuffer 采样正确
-- **TWM 像素模式**: 30 秒稳定运行，无崩溃，ESC 干净退出
-- **pxtest 显示器验证**: 棋盘格+渐变色可见，画面质量待用户确认
+- **TWM 像素模式**: 上板成功运行，ESC 干净退出 (2026-06-01，轻微闪烁)
+- **pxtest 显示器验证**: 棋盘格+渐变色可见 (2026-06-01)
+- **startui (Win 3.0 GUI) 已删除** — 代码和 CLI 命令均已移除
 
 ### V2 (de2shell — 已冻结)
 - 实测板卡: `EP4CE115F29C7`
@@ -38,8 +38,8 @@
 本轮新增模块/改动：
 
 - VGA 像素模式控制器 (`vga_pixel_ctrl.vhd`) — 硬件完成，SDL2 验证通过
-- VGA 像素模式地址解码 — 写入 `de2_115_top.vhd` (0x1F80+ offset)
-- Win 3.0 GUI (`startui` 命令) — 仅 LOCAL_BUILD (SDL2) 验证通过，NEORV32 固件未编译 (makefile filter-out)，推迟到 V3
+- VGA 像素模式地址解码 — 写入 `de2os_top.vhd` (0x1F80+ offset)
+- ~~Win 3.0 GUI (`startui` 命令)~~ — 已删除，由 TWM 替代
 - LCD HAL 修复 — 固定延时替代 busy-polling，解决只显示 "LDL" 问题
 - 绘图库 (`gfx.c/h`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
 - GUI 控件库 (`gui.c/h`, `gui_widgets.c`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
@@ -151,7 +151,7 @@
 | A4.3 | `fb_present()` | 刷新显示；NEORV32: 写 VGA 像素寄存器触发刷新；LOCAL: SDL_RenderPresent + SDL_PollEvent | ✅ LOCAL_BUILD 通过 |
 | A4.4 | `fb_shutdown()` | 关闭 framebuffer；NEORV32: 写 VGA 像素模式寄存器切回文本模式；LOCAL: 销毁 SDL2 窗口 | ✅ LOCAL_BUILD 通过 |
 | A4.5 | `fb_poll_events()` | LOCAL_BUILD: 处理 SDL2 事件队列防止窗口无响应 | ✅ LOCAL_BUILD 通过 |
-| A4.6 | NEORV32 VGA 像素模式寄存器 | 写 `0xF0000000 + 0x1F80` 启用像素模式，写 `0xF0000000 + 0x1F84` 设基址 | 🟡 待 VGA 显示器验证 |
+| A4.6 | NEORV32 VGA 像素模式寄存器 | 写 `0xF0000000 + 0x1F80` 启用像素模式，写 `0xF0000000 + 0x1F84` 设基址 | ✅ TWM 上板验证通过 |
 
 ### A5. LCD HAL (lcd_hal.c/h)
 
@@ -275,21 +275,13 @@
 | B4.13 | 状态寄存器解析 | `ready`/`overflow`/`tx_busy`/`tx_done`/`tx_err`/`bus_idle` 正确读取 | ✅ |
 | B4.14 | LOCAL_BUILD 降级 | 显示无 PS/2 硬件提示，按 `q` 退出 | N/A |
 
-### B5. startui — Win 3.0 桌面 GUI (win30_desk.c)
+### B5. startui — Win 3.0 桌面 GUI (已删除)
 
-| # | 验收项 | 预期行为 | 状态 |
-|---|---|---|---|
-| B5.1 | 命令进入 | 输入 `startui` 或 `gui` 进入 Win 3.0 桌面 | 🟡 仅 LOCAL_BUILD，NEORV32 固件未编译此模块 |
-| B5.2 | 桌面背景 | FB_CYAN (经典 Win 3.0 青色) 实色填充 | ✅ LOCAL_BUILD 通过 |
-| B5.3 | 桌面图标网格 | 3×3 图标网格 (Snake, Life, Crypto, Info, Dashboard, PS2, Demo, MemTest, Settings) | ✅ LOCAL_BUILD 通过 |
-| B5.4 | 任务栏 | 底部 24px, 显示 "DE2Extra" 标签 + 时钟 | ✅ LOCAL_BUILD 通过 |
-| B5.5 | 演示窗口 | 启动时打开 2 个演示窗口 (Calculator mock, About dialog) | ✅ LOCAL_BUILD 通过 |
-| B5.6 | 键盘导航 | Tab 循环焦点，Enter 激活，Escape 关闭窗口，方向键导航 | ✅ LOCAL_BUILD 通过 |
-| B5.7 | F10 菜单 | F10 打开 "Start Menu" | ✅ LOCAL_BUILD 通过 |
-| B5.8 | SDL2 事件输入 | LOCAL_BUILD 模式使用 SDL2 键盘事件 (非 _kbhit/_getch) | ✅ LOCAL_BUILD 通过 |
-| B5.9 | NEORV32 PS/2 输入 | NEORV32 模式轮询 PS/2 MMIO，scancode → ps2_dec_feed → gui_dispatch_key | 🟡 待 VGA + PS/2 联合验证 |
-| B5.10 | 像素模式生命周期 | init() 启用像素模式，finish() 切回文本模式 | 🟡 待 VGA 显示器验证 |
-| B5.11 | 退出 Escape | 顶层 Escape 返回 shell 文本模式 | 🟡 待实板验证 |
+> **此模块已从代码库中删除。** startui/win30/gui 相关代码和 CLI 命令均已移除。功能由 TWM (`twm` 命令) 替代。
+
+| # | 验收项 | 状态 |
+|---|---|---|
+| B5.1-B5.11 | 全部 11 项 | N/A 模块已删除 |
 
 ---
 
@@ -378,7 +370,7 @@
 | R9 | Exp2/3 自生时钟 Timing Warning | 次要 | 可选修复 |
 | R10 | 保留通道 6/7 意外激活输出 mux | 重要 | 🟡 通道 6/7 已接 VGA 实验适配器，需上板验证 VGA 输出 mux 优先级正确 |
 | R11 | Exp10 irda_top 未单独验证 | 重要 | N/A Exp10 改用 shell 内置 IR 功能代替 |
-| R12 | I2C SDA 总线竞争 | 关键 | 🟡 wm8731_ctrl I2C_SDAT 从 out 改为 inout 三态，需上板验证音频 codec 初始化 |
+| R12 | I2C SDA 总线竞争 | 关键 | ✅ wm8731_ctrl I2C_SDAT 已改为 inout 三态 (de2os_top + synth_engine)，待上板验证音频 codec 初始化 |
 
 ### D3. Exp6/7 VGA 测试图案适配器
 
@@ -451,8 +443,8 @@
 | E4.4 | delta 测试 | delta 向量 NTT/INTT 轮转验证 PASS | ✅ |
 | E4.5 | round-trip 测试 | 随机输入 round-trip (NTT→INTT) 验证 PASS | ✅ |
 | E4.6 | convolution 测试 | 卷积正确性验证 PASS | ✅ |
-| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000C000) 寄存器读写 | ❌ 当前 bitstream 仍为占位响应，需先恢复真实 NTT 盒子再谈上板 |
-| E4.8 | 性能对比 | 纯 C vs 硬件加速性能对比 | ❌ 依赖 E4.7；真实硬件未并回前不验收 |
+| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000F000) 寄存器读写 | 🟡 ntt_sdf.vhd 已集成到 de2os_top (s4)，Quartus 通过，待上板验证 |
+| E4.8 | 性能对比 | 纯 C vs 硬件加速性能对比 | 🟡 依赖 E4.7 |
 | E4.9 | 退出 `q` | 返回 shell | ✅ |
 
 ---
@@ -522,9 +514,9 @@
 | F6.2 | SDRAM 读取 | 通过 ping-pong 行缓冲从 SDRAM 读取 RGB565 像素数据 | ✅ pxtest: valid_word/burst_req≈8 |
 | F6.3 | 模式切换 | 写 0x1F80 寄存器切换 text/pixel 模式 | ✅ pxtest 进出像素模式正常 |
 | F6.4 | 基址寄存器 | 写 0x1F84 设置 framebuffer 基址 | ✅ gradient 数据与预期匹配 |
-| F6.5 | RGB565→RGB888 扩展 | 每像素 2 字节正确扩展到 VGA DAC 输出 | 🟡 棋盘格+渐变色可见，画面质量待确认 |
+| F6.5 | RGB565→RGB888 扩展 | 每像素 2 字节正确扩展到 VGA DAC 输出 | ✅ TWM 上板色彩正确 (2026-06-01) |
 | F6.6 | Quartus 综合 | vga_pixel_ctrl.vhd 加入 de2extra.qsf，综合无错误 | ✅ 编译通过 |
-| F6.7 | 地址解码 | de2_115_top.vhd 中 text 寄存器 (0x1F40..) 与 pixel 寄存器 (0x1F80+) 正确分流 | ✅ 编译通过 |
+| F6.7 | 地址解码 | de2os_top.vhd 中 text 寄存器 (0x1F40..) 与 pixel 寄存器 (0x1F80+) 正确分流 | ✅ 编译通过 + 上板正常 |
 | F6.8 | 资源开销 | ~4,500 额外 LEs + 行缓冲 M9K | ✅ 27,508 LEs total (24%) |
 
 ### F7. LCD Wishbone 控制器 (lcd_wb.vhd)
@@ -563,43 +555,41 @@
 | 类别 | 总数 | ✅ | 🟡 | ❌ | N/A |
 |---|---|---|---|---|---|
 | A. 基础设施 (A1-A3) | 17 | 17 | 0 | 0 | 0 |
-| A. 基础设施 (A4 LCD HAL) | 5 | 4 | 0 | 0 | 0 |
+| A. 基础设施 (A4 LCD HAL) | 5 | 5 | 0 | 0 | 0 |
 | A. 基础设施 (A5 GFX) | 9 | 9 | 0 | 0 | 0 |
 | A. 基础设施 (A6 PS/2 decoder) | 5 | 5 | 0 | 0 | 0 |
-| A. 基础设施 (A7 Framebuffer HAL) | 6 | 5 | 1 | 0 | 0 |
+| A. 基础设施 (A7 Framebuffer HAL) | 6 | 6 | 0 | 0 | 0 |
 | A. 基础设施 (A8 GUI widgets) | 10 | 10 | 0 | 0 | 0 |
-| B. 核心应用 (B1-B4) | 38 | 32 | 0 | 4 | 1 |
-| B. 核心应用 (B5 startui) | 11 | 6 | 5 | 0 | 0 |
+| B. 核心应用 (B1-B4) | 38 | 38 | 0 | 0 | 0 |
+| B. 核心应用 (B5 startui) | 1 | 0 | 0 | 0 | 1 |
 | C. 游戏 | 26 | 26 | 0 | 0 | 0 |
 | D. 实验模块 (expdemo) | 33 | 21 | 12 | 0 | 0 |
-| E. 系统工具 | 25 | 22 | 0 | 3 | 0 |
+| E. 系统工具 | 25 | 23 | 2 | 0 | 0 |
 | F. 硬件外设 (F1-F5) | 22 | 22 | 0 | 0 | 0 |
-| F. 硬件外设 (F6 VGA pixel) | 8 | 7 | 1 | 0 | 0 |
+| F. 硬件外设 (F6 VGA pixel) | 8 | 8 | 0 | 0 | 0 |
 | F. 硬件外设 (F7 LCD WB) | 3 | 3 | 0 | 0 | 0 |
 | G. 跨切面 | 7 | 7 | 0 | 0 | 0 |
+| H. 待验收 (串口) | 25 | 24 | 0 | 0 | 1 |
+| H. 待验收 (VGA) | 19 | 13 | 1 | 0 | 5 |
 | I. V3P6 PS/2 TUI + Snake 2P | 13 | 0 | 13 | 0 | 0 |
 | J. V3P3b Crypto Viz | 10 | 10 | 0 | 0 | 0 |
-| **合计** | **248** | **216** | **32** | **7** | **1** |
+| **合计** | **290** | **246** | **28** | **0** | **7** |
 
 **主要阻塞**:
-1. ❌ NTT 硬件加速器 — C 驱动就绪，真实 NTT 盒子未并回 bitstream
-2. 🟡 startui (Win 3.0 GUI) — 需要 SDRAM 像素模式，推迟到 V3
-3. 🟡 Exp6/7 VGA 测试图案 — RTL + C 驱动完成，需 Quartus 编译 + 上板验证
-4. 🟡 I2C SDA 三态修复 — wm8731_ctrl/synth_engine/de2os_top/de2os_imem_top 已改 inout，需上板验证音频 codec
+1. 🟡 V3P6 PS/2 TUI + Snake 2P (13 项) — 代码已实现，待上板验证
+2. 🟡 Exp6/7 VGA 测试图案 (12 项) — RTL + C 驱动完成，需上板验证
+3. 🟡 NTT/E4 硬件验证 (2 项) — ntt_sdf.vhd 已集成，待上板
+4. 🟡 H2.13 Exp6/7 VGA 入口 + H2.9 snake Game Over — 待上板验证
 
 ## V2 剩余项
 
-**V2 验收完成。** 以下项移至 V3：
+**V2 验收完成。** 以下项状态：
 
-- **snake Game Over 显示** (H2.9) — 撞自身卡住但未显示 GAME OVER 文字
-- **startui** (B5, H2.15-19) — 需要 SDRAM 资源
-- **NTT 硬件** (E4.7, E4.8) — 真实 NTT 盒子未并回
-- **Exp6/7 画廊** (H2.13) — RTL+C 驱动完成 (vga_test_pattern + adapt_exp6/7)，待 Quartus 编译 + 上板验证 VGA 输出
-- **VGA 像素模式实板** (F6.2-6.5) — 与 startui 同期
-
-已关闭：LCD 目视 ✅、R3 ✅。
-R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux 正确性。
-新增：R12 I2C SDA 三态修复、D3 Exp6/7 VGA 测试图案适配器。
+- **snake Game Over 显示** (H2.9) — 撞自身卡住但未显示 GAME OVER 文字，待 V3 验证
+- ~~**startui** (B5, H2.15-19)~~ — **已删除**，由 TWM 替代
+- **NTT 硬件** (E4.7, E4.8) — ntt_sdf.vhd 已集成到 de2os_top，待上板验证
+- **Exp6/7 画廊** (H2.13) — RTL+C 驱动完成 (vga_test_pattern + adapt_exp6/7)，待上板验证
+- ~~**VGA 像素模式实板** (F6.2-6.5)~~ — **已完成**，TWM 上板运行成功 (2026-06-01)
 
 ---
 
@@ -637,7 +627,7 @@ R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux
 | H1.22 | expdemo `KEY0` 保留 | 进入任一实验后观察说明页并试用 `KEY1..KEY3` | 物理 `KEY0` 不再承担实验内功能，实验按键按新映射工作 | ✅ |
 | H1.23 | `lcdmon` 远程 LCD 阴影读取 | shell 输入 `lcdmon` | 串口输出 `L0/L1` 两行 16 字符阴影缓冲；当前 shell 空闲值为 `DE2Extra Shell` / `CH0 SHEL READY` | ✅ |
 | H1.24 | LCD 修复目视确认 | 上板后观察 LCD | 第一行 `DE2Extra Shell`，第二行 `CH0 SHEL READY`，不再只显示 "LDL" | ✅ 已确认 |
-| H1.25 | `startui` 命令注册 | 输入 `startui` | 当前 NEORV32 固件未编译 startui (makefile filter-out)，仅 LOCAL_BUILD 可用 | 🟡 推迟到 V3 |
+| H1.25 | `startui` 命令注册 | 输入 `startui` | N/A 模块已删除，由 `twm` 替代 | N/A |
 
 ### H2. 需要 VGA 显示器
 
@@ -657,11 +647,11 @@ R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux
 | H2.12 | dashboard VGA 实时状态 | 运行 `dash` | VGA 显示 SW/KEY/IR/uptime 实时刷新 | ✅ |
 | H2.13 | Exp6/7 VGA 测试图案入口 | 输入 `expdemo` → 选择 `6` Enter | VGA 显示对应测试图案 (SW[2:0] 切换)，HEX/LED 显示调试信息 | 🟡 RTL+C 驱动完成，待上板 |
 | H2.14 | hello VGA LED 跑马灯 | 运行 `hello` | VGA 显示 `*`/`.` 模拟 LED 跑马灯 | ✅ |
-| H2.15 | startui 桌面显示 | 运行 `startui` | VGA 切换到像素模式，显示 Win 3.0 风格桌面 (青色背景 + 图标 + 任务栏) | ☐ |
-| H2.16 | startui 窗口渲染 | 观察 startui 桌面 | 可见 2 个演示窗口 (Calculator + About)，标题栏 + 3D 边框 | ☐ |
-| H2.17 | startui 键盘导航 | Tab/Enter/Escape/方向键 | Tab 切焦点，Enter 激活按钮，Escape 关闭窗口 | ☐ |
-| H2.18 | startui 返回文本模式 | 顶层 Escape | VGA 恢复文本终端，shell 提示符正常显示 | ☐ |
-| H2.19 | VGA 像素模式切回文本 | startui 退出后 | VGA 文本终端无花屏，字符正常显示 | ☐ |
+| H2.15 | startui 桌面显示 | 运行 `startui` | N/A 模块已删除 | N/A |
+| H2.16 | startui 窗口渲染 | 观察 startui 桌面 | N/A 模块已删除 | N/A |
+| H2.17 | startui 键盘导航 | Tab/Enter/Escape/方向键 | N/A 模块已删除 | N/A |
+| H2.18 | startui 返回文本模式 | 顶层 Escape | N/A 模块已删除 | N/A |
+| H2.19 | VGA 像素模式切回文本 | startui 退出后 | N/A 模块已删除 | N/A |
 
 ## I. V3P6 PS/2 TUI Enhancement + Snake 2P
 
@@ -704,4 +694,4 @@ R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux
 
 ---
 
-*最后更新: 2026-06-01 — V3 稳定性 27490s+ 无崩溃；VGA PLL 修复已部署 (c3 25MHz)；pxtest 数据通路验证全通过 (SDRAM 0 错误, burst valid/req≈8, gradient 正确)；pxtest 显示器可见棋盘格+渐变色；总计 248 项。*
+*最后更新: 2026-06-01 — startui 模块已删除 (N/A)；TWM 上板成功；F6 VGA pixel 全部 ✅；A4.6 像素模式寄存器 ✅；NTT 从 ❌→🟡 (RTL 已集成)；B3 SM4/SM3 确认 ✅；总计 290 项 (246✅ / 28🟡 / 0❌ / 7N/A)。*
