@@ -123,6 +123,7 @@ static const key_map_t t2_keys[] = {
 
 /* ── State ───────────────────────────────────────────────── */
 static int initialized;
+static int help_open;
 static int t1_base;       /* base MIDI note (default 60=C4) */
 static int t2_base;
 static int mode;          /* 0=3xOSC, 1=DX7 */
@@ -203,6 +204,56 @@ static void preset_dx7(void) {
 }
 
 /* ── Program interface ───────────────────────────────────── */
+static void redraw_synth(void) {
+    vga_clear();
+    vga_goto(0, 0);
+    vga_puts("SYNTH ", VGA_CYAN);
+    vga_puts(mode ? "DX7 FM" : "3xOSC", VGA_WHITE);
+    vga_goto(70, 0);
+    vga_puts("F1=Help", VGA_GRAY);
+}
+
+static void draw_help(void) {
+    int bx = 18, by = 5, bw = 44, bh = 18;
+
+    for (int r = by; r < by + bh; r++) {
+        vga_goto(bx, r);
+        for (int c = 0; c < bw; c++) vga_putc(' ', VGA_BLACK);
+    }
+    vga_goto(bx, by);
+    vga_putc('+', VGA_YELLOW);
+    for (int i = 0; i < bw - 2; i++) vga_putc('-', VGA_YELLOW);
+    vga_putc('+', VGA_YELLOW);
+    vga_goto(bx, by + bh - 1);
+    vga_putc('+', VGA_YELLOW);
+    for (int i = 0; i < bw - 2; i++) vga_putc('-', VGA_YELLOW);
+    vga_putc('+', VGA_YELLOW);
+    for (int r = by + 1; r < by + bh - 1; r++) {
+        vga_goto(bx, r); vga_putc('|', VGA_YELLOW);
+        vga_goto(bx + bw - 1, r); vga_putc('|', VGA_YELLOW);
+    }
+
+    vga_goto(bx + 13, by + 1);
+    vga_puts("SYNTH HELP", VGA_CYAN);
+
+    vga_goto(bx + 2, by + 3);
+    vga_puts("A-; : Track 1 piano", VGA_WHITE);
+    vga_goto(bx + 2, by + 4);
+    vga_puts("Numpad: Track 2 piano", VGA_WHITE);
+    vga_goto(bx + 2, by + 6);
+    vga_puts("Tab: Octave down (T1)", VGA_WHITE);
+    vga_goto(bx + 2, by + 7);
+    vga_puts("CapsLock: Octave up (T1)", VGA_WHITE);
+    vga_goto(bx + 2, by + 8);
+    vga_puts("NumLock: Octave up (T2)", VGA_WHITE);
+    vga_goto(bx + 2, by + 10);
+    vga_puts("M: Toggle 3xOSC / DX7 FM", VGA_WHITE);
+    vga_goto(bx + 2, by + 12);
+    vga_puts("F1:  Close help", VGA_GRAY);
+    vga_goto(bx + 2, by + 13);
+    vga_puts("F10: Quit to shell", VGA_GRAY);
+}
+
 static void init(void) {
     board_status_set_program(13u, BOARD_STATE_RUN, 0u, 0u);
     t1_base = 60;  /* C4 */
@@ -210,17 +261,13 @@ static void init(void) {
     mode = 0;
     t1_held = -1;
     t2_held = -1;
+    help_open = 0;
 
     SYNTH_CTRL = 0;   /* unmute, 3xOSC, max volume */
     preset_3xosc();
     initialized = 1;
 
-    vga_clear();
-    vga_puts("=== Audio Synth ===\n", VGA_CYAN);
-    vga_puts("Mode: 3xOSC / DX7 FM (M toggle)\n", VGA_WHITE);
-    vga_puts("T1: A-; piano  Tab/Caps octave\n", VGA_WHITE);
-    vga_puts("T2: Numpad     NumLock octave\n", VGA_WHITE);
-    vga_puts("Q/F10=quit\n", VGA_YELLOW);
+    redraw_synth();
 }
 
 static void update(void) {
@@ -232,16 +279,42 @@ static void update(void) {
         if (!ps2_dec_feed(sc, &key)) continue;
 
         if (!key.is_press) {
-            if (t1_held >= 0) {
-                int semi = lookup_semi(t1_keys, (int)T1_COUNT, key.scancode);
-                if (semi == t1_held) { note_off(1); t1_held = -1; }
-            }
-            if (t2_held >= 0) {
-                int semi = lookup_semi(t2_keys, (int)T2_COUNT, key.scancode);
-                if (semi == t2_held) { note_off(2); t2_held = -1; }
+            if (!help_open) {
+                if (t1_held >= 0) {
+                    int semi = lookup_semi(t1_keys, (int)T1_COUNT, key.scancode);
+                    if (semi == t1_held) { note_off(1); t1_held = -1; }
+                }
+                if (t2_held >= 0) {
+                    int semi = lookup_semi(t2_keys, (int)T2_COUNT, key.scancode);
+                    if (semi == t2_held) { note_off(2); t2_held = -1; }
+                }
             }
             continue;
         }
+
+        /* F1: toggle help */
+        if (key.ascii == PS2_VK_F1) {
+            help_open = !help_open;
+            if (help_open) draw_help();
+            else redraw_synth();
+            continue;
+        }
+
+        /* F10: close help or quit */
+        if (key.ascii == PS2_VK_F10) {
+            if (help_open) {
+                help_open = 0;
+                redraw_synth();
+                continue;
+            }
+            SYNTH_CTRL = 1;  /* mute */
+            SYNTH_T1_NOTE = 0;
+            SYNTH_T2_NOTE = 0;
+            initialized = 0;
+            return;
+        }
+
+        if (help_open) continue;
 
         /* Octave shift */
         if (key.scancode == 0x0D) { /* Tab */
@@ -257,21 +330,13 @@ static void update(void) {
             continue;
         }
 
-        /* Quit (F10 or Q) */
-        if (key.ascii == 'q' || key.ascii == 'Q' || key.ascii == PS2_VK_F10) {
-            SYNTH_CTRL = 1;  /* mute */
-            SYNTH_T1_NOTE = 0;
-            SYNTH_T2_NOTE = 0;
-            initialized = 0;
-            return;
-        }
-
         /* Mode toggle */
         if (key.ascii == 'm' || key.ascii == 'M') {
             mode = 1 - mode;
             SYNTH_CTRL = (SYNTH_CTRL & ~0x06u) | ((uint32_t)mode << 1);
             if (mode == 0) preset_3xosc();
             else           preset_dx7();
+            redraw_synth();
             continue;
         }
 
@@ -298,7 +363,32 @@ static void update(void) {
 }
 
 static void input(char c) {
-    (void)c;
+    uint8_t k = (uint8_t)c;
+
+    if (k == PS2_VK_F1) {
+        help_open = !help_open;
+        if (help_open) draw_help();
+        else redraw_synth();
+        return;
+    }
+    if (k == PS2_VK_F10) {
+        if (help_open) {
+            help_open = 0;
+            redraw_synth();
+            return;
+        }
+        SYNTH_CTRL = 1;
+        SYNTH_T1_NOTE = 0;
+        SYNTH_T2_NOTE = 0;
+        initialized = 0;
+        return;
+    }
+    if (k == 'q' || k == 'Q') {
+        SYNTH_CTRL = 1;
+        SYNTH_T1_NOTE = 0;
+        SYNTH_T2_NOTE = 0;
+        initialized = 0;
+    }
 }
 
 static int finish(void) { return !initialized; }

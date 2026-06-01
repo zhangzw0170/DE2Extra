@@ -5,8 +5,8 @@
 -- Hardware computes next generation; CPU reads grid for VGA display.
 --
 -- Slave registers (word-aligned, 4-byte stride):
---   0x00 [W] cmd: bit0=clear, bit1=randomize, bit2=step, bit3=auto_run
---   0x04 [W] control/data: bits[15:8]=row_index, bits[7:0]=seed(used by randomize)
+--   0x00 [W] cmd: bit0=clear, bit1=randomize, bit2=step, bit3=auto_run, bit4=toggle_cell
+--   0x04 [W] control/data: bits[15:8]=row_index, bits[6:0]=col_index (for toggle)
 --   0x08 [R] status: bit0=busy, bit1=auto_run, bits[17:2]=generation[15:0]
 --   0x0C [R] population count [15:0]
 --   0x10 [R] grid_row: returns 80-bit row data (read row_index set by last write to 0x04)
@@ -60,6 +60,7 @@ architecture rtl of conway_engine is
 
     -- Row read register (set by write to 0x04, read at 0x10)
     signal row_idx    : integer range 0 to ROWS - 1 := 0;
+    signal col_idx    : integer range 0 to COLS - 1 := 0;
 
     -- LFSR
     signal lfsr : unsigned(15 downto 0) := x"A59B";
@@ -83,6 +84,7 @@ begin
         variable v_clear_req : std_logic;
         variable v_rand_req  : std_logic;
         variable v_step_req  : std_logic;
+        variable v_toggle_req : std_logic;
         variable v_rand_seed : unsigned(15 downto 0);
         variable auto_run   : std_logic := '0';
         variable y, x, di : integer;
@@ -116,6 +118,7 @@ begin
                 v_clear_req := '0';
                 v_rand_req  := '0';
                 v_step_req  := '0';
+                v_toggle_req := '0';
                 v_rand_seed := rand_seed;
 
                 -- Wishbone slave handling (process every clock stb is asserted)
@@ -139,11 +142,16 @@ begin
                                 if wb_dat_i(3) = '1' then
                                     auto_run := not auto_run;
                                 end if;
-                            when 1 =>  -- control: set row_index
+                                if wb_dat_i(4) = '1' then
+                                    v_toggle_req := '1';
+                                end if;
+                            when 1 =>  -- control: set row_index, col_idx
                                 row_idx_v := to_integer(unsigned(wb_dat_i(12 downto 8)));
                                 if row_idx_v < ROWS then
                                     row_idx <= row_idx_v;
                                 end if;
+                                col_idx <= to_integer(unsigned(wb_dat_i(6 downto 0)))
+                                           mod COLS;
                             when others => null;
                         end case;
                     else
@@ -154,10 +162,34 @@ begin
                                 wb_dat_o(17 downto 2) <= std_logic_vector(generation);
                             when 3 =>  -- population
                                 wb_dat_o(15 downto 0) <= std_logic_vector(pop_count);
-                            when 4 =>  -- grid_row
+                            when 4 =>  -- grid_row lo: cols 0-31
                                 rd_idx := row_idx * COLS;
                                 row_data := (others => '0');
                                 for c in 0 to 31 loop
+                                    if buf_sel = '0' then
+                                        row_data(c) := grid_a(rd_idx);
+                                    else
+                                        row_data(c) := grid_b(rd_idx);
+                                    end if;
+                                    rd_idx := rd_idx + 1;
+                                end loop;
+                                wb_dat_o <= row_data;
+                            when 5 =>  -- grid_row mid: cols 32-63
+                                rd_idx := row_idx * COLS + 32;
+                                row_data := (others => '0');
+                                for c in 0 to 31 loop
+                                    if buf_sel = '0' then
+                                        row_data(c) := grid_a(rd_idx);
+                                    else
+                                        row_data(c) := grid_b(rd_idx);
+                                    end if;
+                                    rd_idx := rd_idx + 1;
+                                end loop;
+                                wb_dat_o <= row_data;
+                            when 6 =>  -- grid_row hi: cols 64-79
+                                rd_idx := row_idx * COLS + 64;
+                                row_data := (others => '0');
+                                for c in 0 to 15 loop
                                     if buf_sel = '0' then
                                         row_data(c) := grid_a(rd_idx);
                                     else
@@ -187,6 +219,13 @@ begin
                             buf_sel <= '0';
                             grid_a <= (others => '0');
                             grid_b <= (others => '0');
+                        elsif v_toggle_req = '1' then
+                            di := row_idx * COLS + col_idx;
+                            if buf_sel = '0' then
+                                grid_a(di) <= not grid_a(di);
+                            else
+                                grid_b(di) <= not grid_b(di);
+                            end if;
                         elsif v_rand_req = '1' then
                             busy <= '1';
                             fsm_idx <= 0;

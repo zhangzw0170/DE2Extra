@@ -4,8 +4,8 @@
  * CPU reads grid rows via MMIO and writes to VGA text terminal.
  *
  * Registers:
- *   0x00 [W] cmd: bit0=clear, bit1=randomize, bit2=step, bit3=auto_run
- *   0x04 [W] control: bits[15:8]=row_index
+ *   0x00 [W] cmd: bit0=clear, bit1=randomize, bit2=step, bit3=auto_run, bit4=toggle_cell
+ *   0x04 [W] control: bits[15:8]=row_index, bits[6:0]=col_index (for toggle)
  *   0x08 [R] status: bit0=busy, bit1=auto_run, bits[17:2]=generation
  *   0x0C [R] population [15:0]
  *   0x10 [R] grid_row: 80-bit row data
@@ -21,10 +21,12 @@
 #define CONWAY_CTRL     (*(CONWAY_BASE + 1))  /* W */
 #define CONWAY_STATUS   (*(CONWAY_BASE + 2))  /* R */
 #define CONWAY_POP      (*(CONWAY_BASE + 3))  /* R */
-#define CONWAY_GRID_LO  (*(CONWAY_BASE + 4))  /* R, bits[31:0] */
-#define CONWAY_GRID_HI  (*(CONWAY_BASE + 5))  /* R, bits[79:32] */
+#define CONWAY_GRID_LO   (*(CONWAY_BASE + 4))  /* R, cols 0-31 */
+#define CONWAY_GRID_MID  (*(CONWAY_BASE + 5))  /* R, cols 32-63 */
+#define CONWAY_GRID_HI2  (*(CONWAY_BASE + 6))  /* R, cols 64-79 */
 
 static int initialized;
+static int help_open;
 static int edit_mode;
 static int cursor_x, cursor_y;
 static int frame_count;
@@ -36,11 +38,11 @@ static void hw_set_row(int row) {
     CONWAY_CTRL = (uint32_t)((row & 0x1F) << 8);
 }
 
-static void hw_read_row(int row, uint32_t *lo, uint32_t *hi) {
+static void hw_read_row(int row, uint32_t *lo, uint32_t *mid, uint32_t *hi) {
     hw_set_row(row);
-    /* Read both words after setting row index */
     *lo = CONWAY_GRID_LO;
-    *hi = CONWAY_GRID_HI;
+    *mid = CONWAY_GRID_MID;
+    *hi = CONWAY_GRID_HI2;
 }
 
 #define HW_TIMEOUT 1000000  /* ~20ms @50MHz */
@@ -85,14 +87,21 @@ static void hw_auto_toggle(void) {
     CONWAY_CMD = 8u;
 }
 
+static void hw_toggle_cell(int row, int col) {
+    CONWAY_CTRL = (uint32_t)((row & 0x1F) << 8) | (col & 0x7F);
+    CONWAY_CMD = 16u;
+}
+
 /* ── Display ──────────────────────────────────────────────────────── */
 
-static void draw_cell(int x, int y, uint32_t lo, uint32_t hi) {
-    int bit;
-    if (x < 32) bit = (lo >> x) & 1;
-    else if (x < 64) bit = (lo >> x) & 1;
-    else bit = (hi >> (x - 64)) & 1;
+static int cell_bit(int x, uint32_t lo, uint32_t mid, uint32_t hi) {
+    if (x < 32) return (int)((lo >> x) & 1u);
+    if (x < 64) return (int)((mid >> (x - 32)) & 1u);
+    return (int)((hi >> (x - 64)) & 1u);
+}
 
+static void draw_cell(int x, int y, uint32_t lo, uint32_t mid, uint32_t hi) {
+    int bit = cell_bit(x, lo, mid, hi);
     char ch = bit ? '#' : '.';
     uint16_t color = bit ? VGA_WHITE : VGA_DKGRAY;
     if (edit_mode && x == cursor_x && y == cursor_y) {
@@ -107,34 +116,16 @@ static void draw_cell(int x, int y, uint32_t lo, uint32_t hi) {
 
 static void draw_grid(void) {
     for (int y = 0; y < 25; y++) {
-        uint32_t lo, hi;
-        hw_read_row(y, &lo, &hi);
+        uint32_t lo, mid, hi;
+        hw_read_row(y, &lo, &mid, &hi);
 
         vga_goto(1, y + 3);
-        for (int x = 0; x < 32 && x < CONWAY_DISP_COLS; x++) {
-            char ch = (lo >> x) & 1 ? '#' : '.';
-            uint16_t color = (lo >> x) & 1 ? VGA_WHITE : VGA_DKGRAY;
+        for (int x = 0; x < CONWAY_DISP_COLS; x++) {
+            int bit = cell_bit(x, lo, mid, hi);
+            char ch = bit ? '#' : '.';
+            uint16_t color = bit ? VGA_WHITE : VGA_DKGRAY;
             if (edit_mode && x == cursor_x && y == cursor_y) {
-                ch = (lo >> x) & 1 ? 'O' : '+';
-                color = VGA_YELLOW;
-            }
-            vga_putc(ch, color);
-        }
-        for (int x = 32; x < 64 && x < CONWAY_DISP_COLS; x++) {
-            char ch = (lo >> x) & 1 ? '#' : '.';
-            uint16_t color = (lo >> x) & 1 ? VGA_WHITE : VGA_DKGRAY;
-            if (edit_mode && x == cursor_x && y == cursor_y) {
-                ch = (lo >> x) & 1 ? 'O' : '+';
-                color = VGA_YELLOW;
-            }
-            vga_putc(ch, color);
-        }
-        for (int x = 64; x < CONWAY_DISP_COLS; x++) {
-            int shift = x - 64;
-            char ch = (hi >> shift) & 1 ? '#' : '.';
-            uint16_t color = (hi >> shift) & 1 ? VGA_WHITE : VGA_DKGRAY;
-            if (edit_mode && x == cursor_x && y == cursor_y) {
-                ch = (hi >> shift) & 1 ? 'O' : '+';
+                ch = bit ? 'O' : '+';
                 color = VGA_YELLOW;
             }
             vga_putc(ch, color);
@@ -151,17 +142,16 @@ static void draw_hud(void) {
                              (uint16_t)(((cursor_y & 0xffu) << 8) | (cursor_x & 0xffu)));
 
     vga_goto(0, 0);
-    vga_puts("ConwayHW Gen:", VGA_CYAN);
+    vga_puts("Conway Gen:", VGA_CYAN);
     vga_puthex32(gen);
     vga_puts(" Pop:", VGA_WHITE);
     vga_puthex32(pop);
     vga_puts(" ", VGA_WHITE);
     vga_puts(edit_mode ? "STOP" : "RUN ", VGA_YELLOW);
-    vga_puts("SPD:", VGA_WHITE);
+    vga_puts(" SPD:", VGA_WHITE);
     vga_puthex32((uint32_t)speed_ms);
-
-    vga_goto(0, 1);
-    vga_puts("Arrows move  ENTER run/stop  R random  C clear  Q quit (read-only)", VGA_GRAY);
+    vga_goto(70, 0);
+    vga_puts("F1=Help", VGA_GRAY);
 }
 
 static void move_cursor(int dx, int dy) {
@@ -169,11 +159,11 @@ static void move_cursor(int dx, int dy) {
     cursor_x = (cursor_x + dx + 80) % 80;
     cursor_y = (cursor_y + dy + 25) % 25;
     /* Redraw only old and new cell */
-    uint32_t lo, hi;
-    hw_read_row(old_y, &lo, &hi);
-    draw_cell(old_x, old_y, lo, hi);
-    hw_read_row(cursor_y, &lo, &hi);
-    draw_cell(cursor_x, cursor_y, lo, hi);
+    uint32_t lo, mid, hi;
+    hw_read_row(old_y, &lo, &mid, &hi);
+    draw_cell(old_x, old_y, lo, mid, hi);
+    hw_read_row(cursor_y, &lo, &mid, &hi);
+    draw_cell(cursor_x, cursor_y, lo, mid, hi);
 }
 
 /* ── Callbacks ───────────────────────────────────────────────────── */
@@ -207,7 +197,7 @@ static void init(void) {
 }
 
 static void update(void) {
-    if (!initialized) return;
+    if (!initialized || help_open) return;
     if (++frame_count < speed_ms / 10) return;
     frame_count = 0;
 
@@ -218,8 +208,72 @@ static void update(void) {
     }
 }
 
+/* ── Help Overlay ──────────────────────────────────────────────── */
+
+static void draw_help(void) {
+    int bx = 18, by = 5, bw = 44, bh = 18;
+
+    for (int r = by; r < by + bh; r++) {
+        vga_goto(bx, r);
+        for (int c = 0; c < bw; c++) vga_putc(' ', VGA_BLACK);
+    }
+    vga_goto(bx, by);
+    vga_putc('+', VGA_YELLOW);
+    for (int i = 0; i < bw - 2; i++) vga_putc('-', VGA_YELLOW);
+    vga_putc('+', VGA_YELLOW);
+    vga_goto(bx, by + bh - 1);
+    vga_putc('+', VGA_YELLOW);
+    for (int i = 0; i < bw - 2; i++) vga_putc('-', VGA_YELLOW);
+    vga_putc('+', VGA_YELLOW);
+    for (int r = by + 1; r < by + bh - 1; r++) {
+        vga_goto(bx, r); vga_putc('|', VGA_YELLOW);
+        vga_goto(bx + bw - 1, r); vga_putc('|', VGA_YELLOW);
+    }
+
+    vga_goto(bx + 13, by + 1);
+    vga_puts("CONWAY HELP", VGA_CYAN);
+
+    vga_goto(bx + 2, by + 3);
+    vga_puts("Arrows/WASD: Move cursor", VGA_WHITE);
+    vga_goto(bx + 2, by + 4);
+    vga_puts("Space: Toggle cell (edit mode)", VGA_WHITE);
+    vga_goto(bx + 2, by + 5);
+    vga_puts("Enter: Run/Stop simulation", VGA_WHITE);
+    vga_goto(bx + 2, by + 7);
+    vga_puts("R: Randomize grid", VGA_WHITE);
+    vga_goto(bx + 2, by + 8);
+    vga_puts("C: Clear grid", VGA_WHITE);
+    vga_goto(bx + 2, by + 9);
+    vga_puts("+/-: Adjust speed", VGA_WHITE);
+    vga_goto(bx + 2, by + 11);
+    vga_puts("F1:  Close help", VGA_GRAY);
+    vga_goto(bx + 2, by + 12);
+    vga_puts("F10: Quit to shell", VGA_GRAY);
+}
+
 static void input(char c) {
     if (!initialized) return;
+    uint8_t k = (uint8_t)c;
+
+    /* F1: toggle help */
+    if (k == PS2_VK_F1) {
+        help_open = !help_open;
+        if (help_open) draw_help();
+        else { draw_grid(); draw_hud(); }
+        return;
+    }
+    /* F10: close help or quit */
+    if (k == PS2_VK_F10) {
+        if (help_open) {
+            help_open = 0;
+            draw_grid(); draw_hud();
+            return;
+        }
+        initialized = 0;
+        return;
+    }
+
+    if (help_open) return;
 
     switch (c) {
         case '\r': case '\n':
@@ -227,6 +281,10 @@ static void input(char c) {
             draw_grid();
             break;
         case ' ':
+            if (edit_mode) {
+                hw_toggle_cell(cursor_y, cursor_x);
+                draw_grid();
+            }
             break;
         case 'r': case 'R':
             hw_randomize(0xDEAD);
@@ -261,7 +319,7 @@ static void input(char c) {
 
 static int finish(void) { return !initialized; }
 
-const program_t prog_conway_hw = {
-    "ConwayHW", "Hardware Conway — FPGA-accelerated 80x25 grid",
+const program_t prog_conway = {
+    "Conway", "Hardware Conway — FPGA-accelerated 80x25 grid",
     init, update, input, NULL, finish
 };

@@ -43,7 +43,6 @@ APP_SRC += $(DE2SHELL_DIR)/hello.c
 APP_SRC += $(DE2SHELL_DIR)/crypto.c
 APP_SRC += $(DE2SHELL_DIR)/ps2.c
 APP_SRC += $(DE2SHELL_DIR)/snake.c
-APP_SRC += $(DE2SHELL_DIR)/life.c
 APP_SRC += $(DE2SHELL_DIR)/info.c
 APP_SRC += $(DE2SHELL_DIR)/monitor.c
 APP_SRC += $(DE2SHELL_DIR)/selfcheck.c

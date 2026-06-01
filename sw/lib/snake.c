@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 #define GRID_W     78
-#define GRID_H     25
+#define GRID_H     26
 #define MAX_SNAKE  (GRID_W * GRID_H)
 
 typedef int16_t coord_t;
@@ -63,6 +63,7 @@ static int food_x, food_y;
 static int game_over, speed_ms, initialized, frame_count;
 static int choosing;   /* 1=mode select, 2=difficulty, 0=playing */
 static int winner;     /* 0=none, 1=P1, 2=P2, 3=draw */
+static int help_open;
 static unsigned rng = 0x12345678;
 
 /* ── RNG ─────────────────────────────────────────────────────── */
@@ -148,17 +149,17 @@ static void init_snake(snake_t *s, int sx, int sy, int dx) {
 }
 
 static void draw_border(void) {
-    vga_goto(0, 2);
+    vga_goto(0, 1);
     vga_putc(CH_TL, VGA_WHITE);
     for (int x = 0; x < GRID_W; x++) vga_putc(CH_HZ, VGA_WHITE);
     vga_putc(CH_TR, VGA_WHITE);
     for (int y = 0; y < GRID_H; y++) {
-        vga_goto(0, y + 3);
+        vga_goto(0, y + 2);
         vga_putc(CH_VT, VGA_WHITE);
-        vga_goto(GRID_W + 1, y + 3);
+        vga_goto(GRID_W + 1, y + 2);
         vga_putc(CH_VT, VGA_WHITE);
     }
-    vga_goto(0, GRID_H + 3);
+    vga_goto(0, GRID_H + 2);
     vga_putc(CH_BL, VGA_WHITE);
     for (int x = 0; x < GRID_W; x++) vga_putc(CH_HZ, VGA_WHITE);
     vga_putc(CH_BR, VGA_WHITE);
@@ -179,36 +180,38 @@ static void start_game(int diff) {
     place_food();
     vga_clear();
 
-    /* HUD: row 0 = title, row 1 = scores */
+    /* HUD row 0: title + scores */
     const char *labels[] = { "EASY", "NORM", "HARD" };
     vga_goto(1, 0);
     vga_puts(two_player ? "2P " : "SNAKE ", VGA_CYAN);
     vga_puts(labels[diff], VGA_CYAN);
-    vga_goto(1, 1);
+    vga_goto(13, 0);
     vga_puts("P1:", VGA_GREEN);
     print_int(0, VGA_YELLOW);
     if (two_player) {
-        vga_goto(20, 1);
+        vga_goto(22, 0);
         vga_puts("P2:", VGA_CYAN);
         print_int(0, VGA_YELLOW);
     }
+    vga_goto(70, 0);
+    vga_puts("F1=Help", VGA_GRAY);
 
     draw_border();
 
     /* Draw initial P1 */
     for (int i = 0; i < p1.len; i++) {
-        vga_goto(p1.x[i] + 1, p1.y[i] + 3);
+        vga_goto(p1.x[i] + 1, p1.y[i] + 2);
         vga_putc(i ? 'o' : 'O', i ? VGA_GREEN : VGA_YELLOW);
     }
     /* Draw initial P2 */
     if (two_player) {
         for (int i = 0; i < p2.len; i++) {
-            vga_goto(p2.x[i] + 1, p2.y[i] + 3);
+            vga_goto(p2.x[i] + 1, p2.y[i] + 2);
             vga_putc(i ? '=' : '#', i ? VGA_BLUE : VGA_CYAN);
         }
     }
     /* Draw food */
-    vga_goto(food_x + 1, food_y + 3);
+    vga_goto(food_x + 1, food_y + 2);
     vga_putc('@', VGA_RED);
 
     initialized = 1;
@@ -219,6 +222,7 @@ static void init(void) {
     initialized = 0;
     choosing = 1;
     two_player = 0;
+    help_open = 0;
     draw_mode_screen();
 }
 
@@ -245,7 +249,7 @@ static int hits_body(snake_t *s, int nx, int ny) {
 /* ── Update ──────────────────────────────────────────────────── */
 
 static void update(void) {
-    if (!initialized || game_over) return;
+    if (!initialized || game_over || help_open) return;
     if (++frame_count < speed_ms / 10) return;
     frame_count = 0;
 
@@ -270,7 +274,7 @@ static void update(void) {
 
     if (p1_dead || p2_dead) {
         game_over = 1;
-        vga_goto(GRID_W / 2 - 4, GRID_H / 2 + 3);
+        vga_goto(GRID_W / 2 - 4, GRID_H / 2 + 1);
         if (!two_player) {
             vga_puts("GAME OVER", VGA_RED);
         } else {
@@ -279,7 +283,7 @@ static void update(void) {
             else if (winner == 2) vga_puts("P2 WINS!", VGA_CYAN);
             else                  vga_puts("  DRAW!  ", VGA_YELLOW);
         }
-        vga_goto(GRID_W / 2 - 10, GRID_H / 2 + 5);
+        vga_goto(GRID_W / 2 - 10, GRID_H / 2 + 3);
         vga_puts("R/Space=retry  F10=quit", VGA_WHITE);
         return;
     }
@@ -315,34 +319,131 @@ static void update(void) {
     vga_wait_vblank();
 
     /* Clear old tails */
-    if (!ate1) { vga_goto(otx1 + 1, oty1 + 3); vga_putc(' ', VGA_BLACK); }
-    if (two_player && !ate2) { vga_goto(otx2 + 1, oty2 + 3); vga_putc(' ', VGA_BLACK); }
+    if (!ate1) { vga_goto(otx1 + 1, oty1 + 2); vga_putc(' ', VGA_BLACK); }
+    if (two_player && !ate2) { vga_goto(otx2 + 1, oty2 + 2); vga_putc(' ', VGA_BLACK); }
 
     /* P1 body + head */
-    if (p1.len > 1) { vga_goto(p1.x[1] + 1, p1.y[1] + 3); vga_putc('o', VGA_GREEN); }
-    vga_goto(p1.x[0] + 1, p1.y[0] + 3); vga_putc('O', VGA_YELLOW);
+    if (p1.len > 1) { vga_goto(p1.x[1] + 1, p1.y[1] + 2); vga_putc('o', VGA_GREEN); }
+    vga_goto(p1.x[0] + 1, p1.y[0] + 2); vga_putc('O', VGA_YELLOW);
 
     /* P2 body + head */
     if (two_player) {
-        if (p2.len > 1) { vga_goto(p2.x[1] + 1, p2.y[1] + 3); vga_putc('=', VGA_BLUE); }
-        vga_goto(p2.x[0] + 1, p2.y[0] + 3); vga_putc('#', VGA_CYAN);
+        if (p2.len > 1) { vga_goto(p2.x[1] + 1, p2.y[1] + 2); vga_putc('=', VGA_BLUE); }
+        vga_goto(p2.x[0] + 1, p2.y[0] + 2); vga_putc('#', VGA_CYAN);
     }
 
     /* New food if eaten */
     if (ate1 || ate2) {
         speed_ms = calc_speed();
         place_food();
-        vga_goto(food_x + 1, food_y + 3); vga_putc('@', VGA_RED);
+        vga_goto(food_x + 1, food_y + 2); vga_putc('@', VGA_RED);
     }
 
-    /* Update score HUD (row 1 only) */
-    vga_goto(4, 1);
+    /* Update score HUD */
+    vga_goto(16, 0);
     print_int(p1.score, VGA_YELLOW);
     if (two_player) {
-        vga_goto(23, 1);
+        vga_goto(25, 0);
         print_int(p2.score, VGA_YELLOW);
     }
-    vga_puts("  ", VGA_BLACK);
+}
+
+/* ── Help Overlay ────────────────────────────────────────────── */
+
+static void draw_help(void) {
+    int bx = 22, by = 6, bw = 36, bh = 16;
+
+    /* Clear box area */
+    for (int r = by; r < by + bh; r++) {
+        vga_goto(bx, r);
+        for (int c = 0; c < bw; c++) vga_putc(' ', VGA_BLACK);
+    }
+    /* Borders */
+    vga_goto(bx, by);
+    vga_putc('+', VGA_YELLOW);
+    for (int i = 0; i < bw - 2; i++) vga_putc('-', VGA_YELLOW);
+    vga_putc('+', VGA_YELLOW);
+    vga_goto(bx, by + bh - 1);
+    vga_putc('+', VGA_YELLOW);
+    for (int i = 0; i < bw - 2; i++) vga_putc('-', VGA_YELLOW);
+    vga_putc('+', VGA_YELLOW);
+    for (int r = by + 1; r < by + bh - 1; r++) {
+        vga_goto(bx, r); vga_putc('|', VGA_YELLOW);
+        vga_goto(bx + bw - 1, r); vga_putc('|', VGA_YELLOW);
+    }
+
+    /* Title */
+    vga_goto(bx + 10, by + 1);
+    vga_puts("SNAKE HELP", VGA_CYAN);
+
+    /* Content */
+    vga_goto(bx + 2, by + 3);
+    vga_puts("WASD: Move (P1)", VGA_WHITE);
+    vga_goto(bx + 2, by + 4);
+    vga_puts("Arrows: Move (1P/P2)", VGA_WHITE);
+    vga_goto(bx + 2, by + 6);
+    vga_puts("R / Space: Restart", VGA_WHITE);
+    vga_goto(bx + 2, by + 8);
+    vga_puts("F1:  Close help", VGA_GRAY);
+    vga_goto(bx + 2, by + 9);
+    vga_puts("F10: Quit to shell", VGA_GRAY);
+}
+
+static void redraw_all(void) {
+    /* HUD */
+    vga_clear_line(0, VGA_BLACK);
+    const char *labels[] = { "EASY", "NORM", "HARD" };
+    vga_goto(1, 0);
+    vga_puts(two_player ? "2P " : "SNAKE ", VGA_CYAN);
+    vga_puts(labels[difficulty], VGA_CYAN);
+    vga_goto(13, 0);
+    vga_puts("P1:", VGA_GREEN);
+    print_int(p1.score, VGA_YELLOW);
+    if (two_player) {
+        vga_goto(22, 0);
+        vga_puts("P2:", VGA_CYAN);
+        print_int(p2.score, VGA_YELLOW);
+    }
+    vga_goto(70, 0);
+    vga_puts("F1=Help", VGA_GRAY);
+
+    /* Border */
+    draw_border();
+
+    /* Clear game area */
+    for (int y = 0; y < GRID_H; y++) {
+        vga_goto(1, y + 2);
+        for (int x = 0; x < GRID_W; x++) vga_putc(' ', VGA_BLACK);
+    }
+
+    /* Snakes */
+    for (int i = 0; i < p1.len; i++) {
+        vga_goto(p1.x[i] + 1, p1.y[i] + 2);
+        vga_putc(i ? 'o' : 'O', i ? VGA_GREEN : VGA_YELLOW);
+    }
+    if (two_player) {
+        for (int i = 0; i < p2.len; i++) {
+            vga_goto(p2.x[i] + 1, p2.y[i] + 2);
+            vga_putc(i ? '=' : '#', i ? VGA_BLUE : VGA_CYAN);
+        }
+    }
+    /* Food */
+    vga_goto(food_x + 1, food_y + 2);
+    vga_putc('@', VGA_RED);
+
+    /* Game over */
+    if (game_over) {
+        vga_goto(GRID_W / 2 - 4, GRID_H / 2 + 1);
+        if (!two_player) {
+            vga_puts("GAME OVER", VGA_RED);
+        } else {
+            if (winner == 1)      vga_puts("P1 WINS!", VGA_GREEN);
+            else if (winner == 2) vga_puts("P2 WINS!", VGA_CYAN);
+            else                  vga_puts("  DRAW!  ", VGA_YELLOW);
+        }
+        vga_goto(GRID_W / 2 - 10, GRID_H / 2 + 3);
+        vga_puts("R/Space=retry  F10=quit", VGA_WHITE);
+    }
 }
 
 /* ── Input ───────────────────────────────────────────────────── */
@@ -350,8 +451,24 @@ static void update(void) {
 static void input(char c) {
     uint8_t k = (uint8_t)c;
 
-    /* F10 = quit */
-    if (k == PS2_VK_F10) { game_over = 1; initialized = 0; choosing = 0; return; }
+    /* F1: toggle help */
+    if (k == PS2_VK_F1) {
+        if (choosing || !initialized) return;
+        help_open = !help_open;
+        if (help_open) draw_help();
+        else redraw_all();
+        return;
+    }
+
+    /* F10: close help or quit */
+    if (k == PS2_VK_F10) {
+        if (help_open) { help_open = 0; redraw_all(); return; }
+        game_over = 1; initialized = 0; choosing = 0;
+        return;
+    }
+
+    /* Help open → ignore other keys */
+    if (help_open) return;
 
     /* Mode selection */
     if (choosing == 1) {

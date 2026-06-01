@@ -51,12 +51,11 @@ extern const program_t prog_hello;
 extern const program_t prog_crypto;
 extern const program_t prog_ps2;
 extern const program_t prog_snake;
-extern const program_t prog_life;
 extern const program_t prog_info;
 extern const program_t prog_monitor;
 extern const program_t prog_demo;
 extern const program_t prog_twm;
-extern const program_t prog_conway_hw;
+extern const program_t prog_conway;
 extern const program_t prog_ntt;
 extern const program_t prog_synth;
 
@@ -71,12 +70,11 @@ typedef enum {
     PROG_CRYPTO,
     PROG_PS2,
     PROG_SNAKE,
-    PROG_LIFE,
     PROG_INFO,
     PROG_MONITOR,
     PROG_DEMO,
     PROG_TWM,
-    PROG_CONWAY_HW,
+    PROG_CONWAY,
     PROG_NTT,
     PROG_SYNTH,
     PROG_COUNT
@@ -92,12 +90,11 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_CRYPTO]  = &prog_crypto,
     [PROG_PS2]     = &prog_ps2,
     [PROG_SNAKE]   = &prog_snake,
-    [PROG_LIFE]    = &prog_life,
     [PROG_INFO]    = &prog_info,
     [PROG_MONITOR] = &prog_monitor,
     [PROG_DEMO]    = &prog_demo,
     [PROG_TWM]     = &prog_twm,
-    [PROG_CONWAY_HW] = &prog_conway_hw,
+    [PROG_CONWAY]  = &prog_conway,
     [PROG_NTT]      = &prog_ntt,
     [PROG_SYNTH]    = &prog_synth
 };
@@ -395,11 +392,10 @@ PROG_CMD(hello,   PROG_HELLO)
 PROG_CMD(crypto,  PROG_CRYPTO)
 PROG_CMD(ps2,     PROG_PS2)
 PROG_CMD(snake,   PROG_SNAKE)
-PROG_CMD(life,    PROG_LIFE)
 PROG_CMD(info,    PROG_INFO)
 PROG_CMD(riscvasm, PROG_MONITOR)
 PROG_CMD(expdemo, PROG_DEMO)
-PROG_CMD(conwayhw, PROG_CONWAY_HW)
+PROG_CMD(conway,  PROG_CONWAY)
 PROG_CMD(ntt,     PROG_NTT)
 PROG_CMD(synth,   PROG_SYNTH)
 
@@ -509,22 +505,11 @@ static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
             if (*p == '\n' || *p == '\r') *p++ = '\0';
             if (nf < 4) continue;
 
-            /* Copy fields */
-            for (int i = 0; fields[0][i] && i < 15; i++)
-                tname[ntasks][i] = fields[0][i];
-            tname[ntasks][15] = '\0';
-
-            for (int i = 0; fields[1][i] && i < 7; i++)
-                tstate[ntasks][i] = fields[1][i];
-            tstate[ntasks][7] = '\0';
-
-            for (int i = 0; fields[2][i] && i < 7; i++)
-                tpri[ntasks][i] = fields[2][i];
-            tpri[ntasks][7] = '\0';
-
-            for (int i = 0; fields[3][i] && i < 7; i++)
-                tstack[ntasks][i] = fields[3][i];
-            tstack[ntasks][7] = '\0';
+            /* Copy fields (NUL-terminate immediately after content) */
+            { int j; for (j = 0; fields[0][j] && j < 15; j++) tname[ntasks][j] = fields[0][j]; tname[ntasks][j] = '\0'; }
+            { int j; for (j = 0; fields[1][j] && j < 7; j++) tstate[ntasks][j] = fields[1][j]; tstate[ntasks][j] = '\0'; }
+            { int j; for (j = 0; fields[2][j] && j < 7; j++) tpri[ntasks][j] = fields[2][j]; tpri[ntasks][j] = '\0'; }
+            { int j; for (j = 0; fields[3][j] && j < 7; j++) tstack[ntasks][j] = fields[3][j]; tstack[ntasks][j] = '\0'; }
 
             /* Default cpu% */
             tcpu[ntasks][0] = '-';
@@ -533,11 +518,11 @@ static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
             /* Find matching cpu% from previous parse */
             {
                 char *pc = cpu_buf;
-                int ci = 0;
                 while (*pc) {
                     char *cl = pc;
                     while (*pc && *pc != '\n' && *pc != '\r') pc++;
                     if (*pc) *pc++ = '\0';
+                    else if (*cl != '\0') pc++; /* skip NUL from first pass */
                     if (*cl == '\0') continue;
                     /* Extract name from cpu line */
                     char *lsp = NULL, *psp = NULL, *ss = cl;
@@ -623,10 +608,12 @@ static BaseType_t cli_ver(char *buf, size_t len, const char *cmd) {
     vga_puts("Firmware: de2shell_rtos\n", VGA_WHITE);
     vga_puts("SW Build: ", VGA_WHITE); vga_puts(SW_BUILD_TAG, VGA_YELLOW); vga_puts(" GMT+8\n", VGA_GRAY);
     vga_putc('\n', VGA_WHITE);
+    vga_puts("== CopyRight ==\n", VGA_GREEN);
     vga_puts("Author:   zhangzw0170\n", VGA_WHITE);
     vga_puts("Model:    GLM 5.1, Deepseek V4, GPT 5.4\n", VGA_WHITE);
     vga_puts("Harness:  Claude Code, Deepseek TUI, Codex\n", VGA_WHITE);
     vga_puts("Repo:     github.com/zhangzw0170/DE2Extra\n", VGA_CYAN);
+    vga_puts("License:  MIT\n", VGA_CYAN);
     /* UART output */
     neorv32_uart0_puts("== Hardware ==\n");
     neorv32_uart0_puts("Board:    DE2-115 (Cyclone IV E)\n");
@@ -640,10 +627,12 @@ static BaseType_t cli_ver(char *buf, size_t len, const char *cmd) {
     neorv32_uart0_puts("RTOS:     FreeRTOS " tskKERNEL_VERSION_NUMBER "\n");
     neorv32_uart0_puts("Firmware: de2shell_rtos\n");
     neorv32_uart0_puts("SW Build: " SW_BUILD_TAG " GMT+8\n");
-    neorv32_uart0_puts("\nAuthor:   zhangzw0170\n");
+    neorv32_uart0_puts("== CopyRight ==\n");
+    neorv32_uart0_puts("Author:   zhangzw0170\n");
     neorv32_uart0_puts("Model:    GLM 5.1, Deepseek V4, GPT 5.4\n");
     neorv32_uart0_puts("Harness:  Claude Code, Deepseek TUI, Codex\n");
     neorv32_uart0_puts("Repo:     github.com/zhangzw0170/DE2Extra\n");
+    neorv32_uart0_puts("License:  MIT\n");
     buf[0] = '\0';
     return pdFALSE;
 }
@@ -712,7 +701,7 @@ static const CLI_Command_Definition_t cmd_expdemo_def =
     {"expdemo", "expdemo:  HW course labs (13 exp)\r\n", cli_expdemo, 0};
 
 static const CLI_Command_Definition_t cmd_conway_def =
-    {"conway", "conway:   Conway Life (SW)\r\n", cli_life, 0};
+    {"conway", "conway:   Conway (HW accel)\r\n", cli_conway, 0};
 static const CLI_Command_Definition_t cmd_riscvasm_def =
     {"riscvasm", "riscvasm: RISC-V monitor/asm\r\n", cli_riscvasm, 0};
 PROG_CMD(twm,     PROG_TWM)
@@ -720,8 +709,6 @@ PROG_CMD(twm,     PROG_TWM)
 static const CLI_Command_Definition_t cmd_twm_def =
     {"twm", "twm:      Tiling window mgr\r\n", cli_twm, 0};
 
-static const CLI_Command_Definition_t cmd_conwayhw_def =
-    {"conwayhw", "conwayhw: Conway engine (HW)\r\n", cli_conwayhw, 0};
 static const CLI_Command_Definition_t cmd_ntt_def =
     {"ntt", "ntt:      NTT accelerator\r\n", cli_ntt, 0};
 static const CLI_Command_Definition_t cmd_synth_def =
@@ -951,7 +938,6 @@ static const CLI_Command_Definition_t cmd_vgamon_def =
 static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_clear_def);
     FreeRTOS_CLIRegisterCommand(&cmd_conway_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_conwayhw_def);
     FreeRTOS_CLIRegisterCommand(&cmd_crypto_def);
     FreeRTOS_CLIRegisterCommand(&cmd_expdemo_def);
     FreeRTOS_CLIRegisterCommand(&cmd_hello_def);

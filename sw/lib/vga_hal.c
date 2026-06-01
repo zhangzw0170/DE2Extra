@@ -78,8 +78,10 @@
 
   void vga_clear(void) {
       printf("\033[2J\033[H");
+      scroll_top = 0;
+      scroll_bottom = VGA_ROWS - 1;
       cur_col = 0;
-      cur_row = scroll_top;
+      cur_row = 0;
       clear_epoch++;
   }
 
@@ -209,8 +211,9 @@
 
   static void hw_cursor_sync(void) {
 #if VGA_MMIO_ENABLED
+      int disp_row = (cur_row > scroll_bottom) ? scroll_bottom : cur_row;
       vga_buf[VGA_CTRL_CURSOR_X / 4] = (uint32_t)cur_col;
-      vga_buf[VGA_CTRL_CURSOR_Y / 4] = (uint32_t)cur_row;
+      vga_buf[VGA_CTRL_CURSOR_Y / 4] = (uint32_t)disp_row;
 #endif
   }
 
@@ -348,8 +351,10 @@
 #if VGA_MMIO_ENABLED
       hw_fill_screen(VGA_BLACK);
 #endif
+      scroll_top = 0;
+      scroll_bottom = VGA_ROWS - 1;
       cur_col = 0;
-      cur_row = scroll_top;
+      cur_row = 0;
       clear_epoch++;
       hw_cursor_sync();
       if (serial_mirror_enabled != 0) {
