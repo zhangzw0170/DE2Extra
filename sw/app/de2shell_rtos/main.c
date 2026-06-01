@@ -1041,10 +1041,16 @@ static void t_shell(void *pv) {
             shell_line[shell_line_pos] = '\0';
             vga_putc('\n', VGA_WHITE);
 
-            if (shell_line_pos > 0) {
+            /* trim leading/trailing whitespace */
+            char *cmd_start = shell_line;
+            while (*cmd_start == ' ' || *cmd_start == '\t') cmd_start++;
+            char *cmd_end = shell_line + shell_line_pos - 1;
+            while (cmd_end >= cmd_start && (*cmd_end == ' ' || *cmd_end == '\t')) *cmd_end-- = '\0';
+
+            if (*cmd_start != '\0') {
                 BaseType_t more;
                 do {
-                    more = FreeRTOS_CLIProcessCommand(shell_line, cOutputBuffer, CLI_OUTPUT_BUF_SIZE);
+                    more = FreeRTOS_CLIProcessCommand(cmd_start, cOutputBuffer, CLI_OUTPUT_BUF_SIZE);
                     vga_puts(cOutputBuffer, VGA_WHITE);
                 } while (more != pdFALSE);
 
