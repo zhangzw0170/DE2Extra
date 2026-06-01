@@ -220,25 +220,6 @@ architecture rtl of de2os_top is
     signal buildinfo_wb_stb   : std_logic;
     signal buildinfo_wb_ack   : std_logic;
 
-    -- PONG engine Wishbone
-    signal pong_wb_adr   : std_logic_vector(4 downto 0);
-    signal pong_wb_dat_o : std_logic_vector(31 downto 0);
-    signal pong_wb_dat_i : std_logic_vector(31 downto 0);
-    signal pong_wb_we    : std_logic;
-    signal pong_wb_stb   : std_logic;
-    signal pong_wb_ack   : std_logic;
-
-    -- PONG VGA outputs
-    signal pong_vga_r       : std_logic_vector(7 downto 0);
-    signal pong_vga_g       : std_logic_vector(7 downto 0);
-    signal pong_vga_b       : std_logic_vector(7 downto 0);
-    signal pong_vga_hs      : std_logic;
-    signal pong_vga_vs      : std_logic;
-    signal pong_vga_blank   : std_logic;
-    signal pong_vga_sync    : std_logic;
-    signal pong_vga_clk     : std_logic;
-    signal pong_vga_en      : std_logic;
-
     -- Conway engine Wishbone
     signal conway_wb_adr   : std_logic_vector(4 downto 0);
     signal conway_wb_dat_o : std_logic_vector(31 downto 0);
@@ -500,30 +481,24 @@ begin
         s8_we_o  => expdemo_wb_we,
         s8_stb_o => expdemo_wb_stb,
         s8_ack_i => expdemo_wb_ack,
-        s9_adr_o => pong_wb_adr,
-        s9_dat_i => pong_wb_dat_i,
-        s9_dat_o => pong_wb_dat_o,
-        s9_we_o  => pong_wb_we,
-        s9_stb_o => pong_wb_stb,
-        s9_ack_i => pong_wb_ack,
-        s10_adr_o => conway_wb_adr,
-        s10_dat_i => conway_wb_dat_i,
-        s10_dat_o => conway_wb_dat_o,
-        s10_we_o  => conway_wb_we,
-        s10_stb_o => conway_wb_stb,
-        s10_ack_i => conway_wb_ack,
-        s11_adr_o => synth_wb_adr,
-        s11_dat_i => synth_wb_dat_i,
-        s11_dat_o => synth_wb_dat_o,
-        s11_we_o  => synth_wb_we,
-        s11_stb_o => synth_wb_stb,
-        s11_ack_i => synth_wb_ack,
-        s12_adr_o  => gpu_reg_adr,
-        s12_dat_i  => gpu_reg_dat_o,
-        s12_dat_o  => gpu_reg_dat_i,
-        s12_we_o   => gpu_reg_we,
-        s12_stb_o  => gpu_reg_stb,
-        s12_ack_i  => gpu_reg_ack
+        s9_adr_o => conway_wb_adr,
+        s9_dat_i => conway_wb_dat_i,
+        s9_dat_o => conway_wb_dat_o,
+        s9_we_o  => conway_wb_we,
+        s9_stb_o => conway_wb_stb,
+        s9_ack_i => conway_wb_ack,
+        s10_adr_o => synth_wb_adr,
+        s10_dat_i => synth_wb_dat_i,
+        s10_dat_o => synth_wb_dat_o,
+        s10_we_o  => synth_wb_we,
+        s10_stb_o => synth_wb_stb,
+        s10_ack_i => synth_wb_ack,
+        s11_adr_o  => gpu_reg_adr,
+        s11_dat_i  => gpu_reg_dat_o,
+        s11_dat_o  => gpu_reg_dat_i,
+        s11_we_o   => gpu_reg_we,
+        s11_stb_o  => gpu_reg_stb,
+        s11_ack_i  => gpu_reg_ack
     );
 
     -- ================================================================
@@ -619,29 +594,21 @@ begin
         vga_rd_done_i  => vga_sdram_rd_done
     );
 
-    VGA_R       <= pong_vga_r     when pong_vga_en = '1' else
-                   vga_pixel_r    when vga_pixel_mode = '1' else
+    VGA_R       <= vga_pixel_r    when vga_pixel_mode = '1' else
                    vga_r_int;
-    VGA_G       <= pong_vga_g     when pong_vga_en = '1' else
-                   vga_pixel_g    when vga_pixel_mode = '1' else
+    VGA_G       <= vga_pixel_g    when vga_pixel_mode = '1' else
                    vga_g_int;
-    VGA_B       <= pong_vga_b     when pong_vga_en = '1' else
-                   vga_pixel_b    when vga_pixel_mode = '1' else
+    VGA_B       <= vga_pixel_b    when vga_pixel_mode = '1' else
                    vga_b_int;
-    VGA_HS      <= pong_vga_hs    when pong_vga_en = '1' else
-                   vga_pixel_hs   when vga_pixel_mode = '1' else
+    VGA_HS      <= vga_pixel_hs   when vga_pixel_mode = '1' else
                    vga_hs_int;
-    VGA_VS      <= pong_vga_vs    when pong_vga_en = '1' else
-                   vga_pixel_vs   when vga_pixel_mode = '1' else
+    VGA_VS      <= vga_pixel_vs   when vga_pixel_mode = '1' else
                    vga_vs_int;
-    VGA_CLK     <= pong_vga_clk   when pong_vga_en = '1' else
-                   vga_pixel_clk  when vga_pixel_mode = '1' else
+    VGA_CLK     <= vga_pixel_clk  when vga_pixel_mode = '1' else
                    vga_clk_int;
-    VGA_SYNC_N  <= pong_vga_sync  when pong_vga_en = '1' else
-                   vga_pixel_sync when vga_pixel_mode = '1' else
+    VGA_SYNC_N  <= vga_pixel_sync when vga_pixel_mode = '1' else
                    vga_sync_int;
-    VGA_BLANK_N <= pong_vga_blank when pong_vga_en = '1' else
-                   vga_pixel_blank when vga_pixel_mode = '1' else
+    VGA_BLANK_N <= vga_pixel_blank when vga_pixel_mode = '1' else
                    vga_blank_int;
 
     -- ================================================================
@@ -823,28 +790,6 @@ begin
         av_write_n     => jtag_av_write_n,
         av_writedata   => jtag_av_writedata,
         av_waitrequest => jtag_av_waitreq
-    );
-
-    -- PONG engine (hardware-accelerated PONG with direct VGA output)
-    u_pong : entity work.pong_engine
-    port map (
-        clk_50m_i   => clk_50m,
-        rst_n_i     => rst_n,
-        wb_adr_i    => pong_wb_adr,
-        wb_dat_i    => pong_wb_dat_o,
-        wb_dat_o    => pong_wb_dat_i,
-        wb_we_i     => pong_wb_we,
-        wb_stb_i    => pong_wb_stb,
-        wb_ack_o    => pong_wb_ack,
-        vga_r_o     => pong_vga_r,
-        vga_g_o     => pong_vga_g,
-        vga_b_o     => pong_vga_b,
-        vga_hs_o    => pong_vga_hs,
-        vga_vs_o    => pong_vga_vs,
-        vga_blank_o => pong_vga_blank,
-        vga_sync_o  => pong_vga_sync,
-        vga_clk_o   => pong_vga_clk,
-        vga_en_o    => pong_vga_en
     );
 
     -- Conway's Game of Life engine (CPU reads grid via Wishbone)

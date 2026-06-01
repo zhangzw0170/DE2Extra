@@ -46,9 +46,9 @@ APP_SRC += $(DE2SHELL_DIR)/snake.c
 APP_SRC += $(DE2SHELL_DIR)/life.c
 APP_SRC += $(DE2SHELL_DIR)/info.c
 APP_SRC += $(DE2SHELL_DIR)/monitor.c
+APP_SRC += $(DE2SHELL_DIR)/selfcheck.c
 APP_SRC += $(DE2SHELL_DIR)/demo.c
 APP_SRC += $(DE2SHELL_DIR)/conway_hw.c
-APP_SRC += $(DE2SHELL_DIR)/pong_hw.c
 APP_SRC += $(DE2SHELL_DIR)/ntt.c
 APP_SRC += $(DE2SHELL_DIR)/synth.c
 

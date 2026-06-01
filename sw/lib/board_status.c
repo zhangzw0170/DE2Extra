@@ -78,9 +78,8 @@ static const char *program_title(uint8_t prog_id) {
         case 8u:  return "DE2Extra Demo";
         case 9u:  return "TWM WindowMgr";
         case 10u: return "Conway HW";
-        case 11u: return "PONG HW";
-        case 12u: return "NTT Accel";
-        case 13u: return "Synth Eng";
+        case 11u: return "NTT Accel";
+        case 12u: return "Synth Eng";
         default:  return "DE2Extra Shell";
     }
 }
@@ -97,9 +96,8 @@ static const char *program_abbr(uint8_t prog_id) {
         case 8u:  return "DEMO";
         case 9u:  return "TWM ";
         case 10u: return "CNWY";
-        case 11u: return "PONG";
-        case 12u: return "NTT ";
-        case 13u: return "SYNT";
+        case 11u: return "NTT ";
+        case 12u: return "SYNT";
         default:  return "SHEL";
     }
 }

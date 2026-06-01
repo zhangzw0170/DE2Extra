@@ -50,7 +50,7 @@ de2os_top.vhd (top entity, knows board pins)
 │       ├── DMEM         16KB
 │       ├── XBUS         Wishbone external bus master (timeout 2048 cycles), supports burst cti/tag signals
 │       └── Built-in     UART0 (115200), GPIO(32), TRNG, CLINT, OCD
-├── wb_intercon          1-master, 13-slave address decoder (combinational)
+├── wb_intercon          1-master, 12-slave address decoder (combinational)
 │   ├── s0: sdram_ctrl   0x01000000 (128MB, 100MHz state machine)
 │   ├── s1: vga_text_terminal  0xF0000000 (32KB, 80×30 text mode + pixel mode via SDRAM FB)
 │   ├── s2: ps2_controller    0xF0008000 (scancode + IRQ)
@@ -60,10 +60,9 @@ de2os_top.vhd (top entity, knows board pins)
 │   ├── s6: build_info_wb      0xF0009000 (build info ROM; timer address reused)
 │   ├── s7: (stub ack)        0xF000A000 (INTC address reserved, ack loopback)
 │   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 13 experiments)
-│   ├── s9: pong_engine      0xF0011000 (PONG engine + VGA output)
-│   ├── s10: conway_engine   0xF0012000 (Conway engine)
-│   ├── s11: synth_engine    0xF0013000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S)
-│   └── s12: gpu_2d          0xF0015000 (2D GPU: FILL rect via SDRAM burst-write)
+│   ├── s9: conway_engine   0xF0011000 (Conway engine)
+│   ├── s10: synth_engine    0xF0012000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S)
+│   └── s11: gpu_2d          0xF0015000 (2D GPU: FILL rect via SDRAM burst-write)
 │   Note: DDS (0xF000D000), SD card (0xF000E000), ChromaShader (0xF0014000) have
 │         address constants but no slave ports in wb_intercon. chroma.c excluded from build.
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
@@ -88,26 +87,25 @@ de2os_top.vhd (top entity, knows board pins)
 | 0xF000C000 | IR receiver | 4KB | 32-bit |
 | 0xF000F000 | NTT accelerator | 4KB | 32-bit |
 | 0xF0010000 | ExpDemo | 4KB | 32-bit |
-| 0xF0011000 | PONG engine | 4KB | 32-bit |
-| 0xF0012000 | Conway engine | 4KB | 32-bit |
-| 0xF0013000 | Audio synth | 4KB | 32-bit |
+| 0xF0011000 | Conway engine | 4KB | 32-bit |
+| 0xF0012000 | Audio synth | 4KB | 32-bit |
 | 0xF0015000 | GPU 2D accelerator | 4KB | 32-bit |
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
 
-Note: **GPU 2D** (`gpu_2d.vhd`, s12) RTL integrated, Quartus pass. C driver (`sw/lib/gpu.c`). FILL rect via SDRAM burst-write. Board verification pending.
+Note: **GPU 2D** (`gpu_2d.vhd`, s11) RTL integrated, Quartus pass. C driver (`sw/lib/gpu.c`). FILL rect via SDRAM burst-write. Board verification pending.
 
 Note: **NTT accelerator** (`ntt_sdf.vhd`, s4) RTL integrated, Quartus pass. C driver (`sw/lib/ntt.c`) dual-mode (LOCAL_BUILD SW / NEORV32 MMIO). Board verification pending.
 
-Note: **PONG engine** (`pong_engine.vhd`, s9) RTL integrated. C driver (`sw/lib/pong_hw.c`), `ponghw` command. Board verification pending.
-
-Note: **Conway engine** (`conway_engine.vhd`, s10) RTL integrated. C driver (`sw/lib/conway_hw.c`), `conwayhw` command. Board verification pending.
+Note: **Conway engine** (`conway_engine.vhd`, s9) RTL integrated. C driver (`sw/lib/conway_hw.c`), `conwayhw` command. Board verification pending.
 
 Note: **ExpDemo** (`expdemo_top.vhd`, s8) wraps 13 experiment adapters. Board verified.
 
-Note: **Audio synth** (`synth_engine.vhd`, s11) 3xOSC + DX7 FM operator → WM8731 via I2S. C driver (`sw/lib/synth.c`), `synth` command. Board verification pending.
+Note: **Audio synth** (`synth_engine.vhd`, s10) 3xOSC + DX7 FM operator → WM8731 via I2S. C driver (`sw/lib/synth.c`), `synth` command. Board verification pending.
 
-Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd` inside `vga_text_terminal`) reads SDRAM framebuffer, 640×480@60Hz RGB565. TWM (`twm` command) working on physical monitor (2026-06-01, minor flicker). Known issue: text mode has diagonal ghosting lines. 25MHz pixel clock from PLL c3 (not toggle flip-flop).
+Note: **ChromaShader** (`chroma_shader.vhd`) RTL + QuestaSim 10/10 pass. C driver exists but `chroma.c` excluded from build. Address 0xF0014000 defined but no WB slave port wired.
+
+Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd` inside `vga_text_terminal`) reads SDRAM framebuffer, 640×480@60Hz RGB565. TWM (`twm` command) working on physical monitor (2026-06-01). Known issues: text mode diagonal ghosting (PLL c3 fix insufficient), pixel mode display quality unclear. 25MHz pixel clock from PLL c3 (not toggle flip-flop).
 
 ### Software Structure
 
@@ -120,7 +118,7 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd` inside `vga_text_terminal`) reads
 
 **de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~151KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
 
-CLI commands (22 + help): hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear. Aliases: kbd→ps2, conwaylife→life, riscvasm→monitor.
+CLI commands (21 + help + builtins): hello, memtest, crypto, ps2, snake, life, info, expdemo (alias: demo), twm, conwayhw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear, monitor. Aliases: kbd→ps2, conwaylife→life, riscvasm→monitor. Note: `chroma` command registered in source but excluded from build.
 
 ### NEORV32 ISA Extensions
 
@@ -152,6 +150,22 @@ The upstream release includes these features that our wrapper/intercon have not 
 - **One clock domain per entity**; cross-domain via synchronizers
 - **Pin table is truth**: always verify against `DE2-115引脚表.xlsx` — wrong pins compile fine but malfunction
 
+### Shell Idle Board Display (GPIO → 7-SEG + LED)
+
+When `active_prog == PROG_SHELL`, `t_status` drives GPIO to show:
+
+| Display | Content | Encoding |
+|---------|---------|----------|
+| HEX5-HEX4 | Heap used % (0–99) | Decimal (BCD) |
+| HEX3-HEX0 | Uptime seconds | Hexadecimal |
+| LEDG7-0 | Heap used % | Hexadecimal (raw) |
+| LEDR15-0 | Uptime seconds | Hexadecimal (raw) |
+| HEX7-HEX6 | Blank (common-anode off) | Hardwired |
+| LCD line 1 | "DE2Extra Status" | Text |
+| LCD line 2 | "RAW " + GPIO hex | Text |
+
+When running a non-shell program, `board_status_set_program()` shows PROG_ID/state on HEX+LCD instead.
+
 ## Key Constraints
 
 - **IMEM**: 64KB via M9K block RAM (`neorv32_imem_rom.vhd`), initialized from MIF. The old VHDL constant array caused OOM — that file is the replacement.
@@ -174,4 +188,6 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 **V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-V3 progress: SDRAM execution ✅, FreeRTOS 4 tasks ✅, CLI 22 commands, VGA text 80×30 + pixel 640×480 RGB565 ✅, TWM pixel mode on monitor ✅, GPU 2D RTL ✅, Conway/PONG/NTT/Synth RTL ✅, 7h+ stability ✅. Latest firmware: ~151KB. ICACHE disabled.
+**Board verified**: SDRAM exec, FreeRTOS 4 tasks, UART shell, VGA text 80×30, CLI builtins (help/stats/heapstat/cpustat/clear), hello/info/life, TWM pixel mode (30s stable), ExpDemo 13 experiments.
+
+**Board pending**: crypto bench, conwayhw, ntt, synth, VGA text ghosting fix, pixel mode display quality.

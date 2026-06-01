@@ -1,6 +1,6 @@
 /* synth.h -- Audio synth driver for DE2-115 WM8731
  *
- * Register map at 0xF0013000 (Wishbone slave s11):
+ * Register map at 0xF0012000 (Wishbone slave s10):
  *   0x00 CTRL    [0]=mute, [2:1]=mode(00=3xOSC,01=DX7), [4:3]=volume
  *   0x01 STATUS  [0]=codec_ready (R)
  *   0x02 T1_NOTE full 32-bit tuning word (0=release)

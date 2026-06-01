@@ -57,7 +57,6 @@ extern const program_t prog_monitor;
 extern const program_t prog_demo;
 extern const program_t prog_twm;
 extern const program_t prog_conway_hw;
-extern const program_t prog_pong_hw;
 extern const program_t prog_ntt;
 extern const program_t prog_synth;
 
@@ -78,7 +77,6 @@ typedef enum {
     PROG_DEMO,
     PROG_TWM,
     PROG_CONWAY_HW,
-    PROG_PONG_HW,
     PROG_NTT,
     PROG_SYNTH,
     PROG_COUNT
@@ -100,7 +98,6 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_DEMO]    = &prog_demo,
     [PROG_TWM]     = &prog_twm,
     [PROG_CONWAY_HW] = &prog_conway_hw,
-    [PROG_PONG_HW]  = &prog_pong_hw,
     [PROG_NTT]      = &prog_ntt,
     [PROG_SYNTH]    = &prog_synth
 };
@@ -389,7 +386,6 @@ PROG_CMD(info,    PROG_INFO)
 PROG_CMD(monitor, PROG_MONITOR)
 PROG_CMD(expdemo, PROG_DEMO)
 PROG_CMD(conwayhw, PROG_CONWAY_HW)
-PROG_CMD(ponghw,  PROG_PONG_HW)
 PROG_CMD(ntt,     PROG_NTT)
 PROG_CMD(synth,   PROG_SYNTH)
 
@@ -508,12 +504,24 @@ static const CLI_Command_Definition_t cmd_twm_def =
 
 static const CLI_Command_Definition_t cmd_conwayhw_def =
     {"conwayhw", "conwayhw: Hardware Conway (FPGA)\r\n", cli_conwayhw, 0};
-static const CLI_Command_Definition_t cmd_ponghw_def =
-    {"ponghw", "ponghw:   Hardware PONG (FPGA)\r\n", cli_ponghw, 0};
 static const CLI_Command_Definition_t cmd_ntt_def =
     {"ntt", "ntt:      NTT accelerator CLI\r\n", cli_ntt, 0};
 static const CLI_Command_Definition_t cmd_synth_def =
     {"synth", "synth:    Audio synth (PS/2 piano)\r\n", cli_synth, 0};
+
+static BaseType_t cli_selfcheck(char *buf, size_t len, const char *cmd) {
+    (void)cmd;
+    (void)len;
+    extern uint32_t selfcheck_run(int skip_sdram, char *out_buf);
+    uint32_t m = selfcheck_run(1, buf);
+    if (m == 0 && buf[0] == '\0') {
+        strcpy_local(buf, "selfcheck: ALL PASS\r\n");
+    }
+    return pdFALSE;
+}
+
+static const CLI_Command_Definition_t cmd_selfcheck_def =
+    {"selfcheck", "selfcheck: Run hardware self-check\r\n", cli_selfcheck, 0};
 
 static const CLI_Command_Definition_t cmd_stats_def =
     {"stats", "stats:    Task list + stack HWM\r\n", cli_stats, 0};
@@ -735,9 +743,9 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_riscvasm_def);
     FreeRTOS_CLIRegisterCommand(&cmd_twm_def);
     FreeRTOS_CLIRegisterCommand(&cmd_conwayhw_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_ponghw_def);
     FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
     FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_selfcheck_def);
     FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_heapstat_def);
@@ -779,9 +787,7 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
 
 void vApplicationIdleHook(void) {
     g_idle_count++;
-    if ((g_idle_count & 0x3fffu) == 0u) {
-        gpio_write_out(g_dbg_code | ((g_idle_count >> 14) & 0x0fu));
-    }
+    /* Debug code on GPIO[31:28] — do not overwrite board_status data */
 }
 
 static void reset_display_mode(void) {
@@ -885,7 +891,7 @@ static void t_uart_input(void *pv) {
 
         {
             uint32_t budget = PS2_POLL_BUDGET;
-            if (active_prog != PROG_PS2 && active_prog != PROG_TWM && active_prog != PROG_PONG_HW && active_prog != PROG_SYNTH) {
+            if (active_prog != PROG_PS2 && active_prog != PROG_TWM && active_prog != PROG_SYNTH) {
                 while (((ps2[PS2_REG_STAT] & PS2_STAT_READY) != 0u) && (budget != 0u)) {
                     uint8_t raw = (uint8_t)ps2[PS2_REG_DATA];
                     budget--;
@@ -1106,7 +1112,18 @@ static void t_status(void *pv) {
         }
         xSemaphoreGive(xVgaMutex);
 
-        board_status_set_program((uint8_t)active_prog, BOARD_STATE_LIVE, 0u, 0u);
+        if (active_prog == PROG_SHELL) {
+            uint32_t up = board_status_uptime_seconds() & 0xFFFFu;
+            uint32_t hu = (uint32_t)((configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize())
+                                     * 100u / configTOTAL_HEAP_SIZE);
+            if (hu > 99u) hu = 99u;
+            /* heap used %: BCD for HEX5-HEX4 decimal display; LEDG shows raw hex */
+            uint32_t bcd_hu = (hu / 10u) * 16u + (hu % 10u);
+            /* uptime: hex on HEX3-HEX0 and LEDR15-R0 */
+            board_status_set_word(0x40000000u | (bcd_hu << 16) | up);
+        } else {
+            board_status_set_program((uint8_t)active_prog, BOARD_STATE_LIVE, 0u, 0u);
+        }
         vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
@@ -1118,6 +1135,13 @@ int main(void) {
     neorv32_uart0_setup(BAUD_RATE, 0);
     dbg_set(0xD010u, "BOOT: main()\n");
     neorv32_uart0_puts("\n=== de2shell_rtos: FreeRTOS on NEORV32 ===\n");
+
+    /* Self-check (before any RTOS init) */
+    extern uint32_t selfcheck_run(int skip_sdram, char *out_buf);
+    uint32_t sc_mask = selfcheck_run(0, NULL);
+    if (sc_mask != 0) {
+        neorv32_uart0_puts("WARNING: self-check failures detected, some peripherals may not work.\n");
+    }
     append_hw_build(cOutputBuffer);
     neorv32_uart0_puts(cOutputBuffer);
     append_sw_build(cOutputBuffer);

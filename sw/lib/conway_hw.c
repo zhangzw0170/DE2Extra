@@ -1,6 +1,6 @@
 /* conway_hw.c — Hardware-accelerated Conway's Game of Life
  *
- * Uses FPGA conway_engine at 0xF0012000 for grid computation.
+ * Uses FPGA conway_engine at 0xF0011000 for grid computation.
  * CPU reads grid rows via MMIO and writes to VGA text terminal.
  *
  * Registers:
@@ -14,7 +14,7 @@
 #include "vga_hal.h"
 #include <stdint.h>
 
-#define CONWAY_BASE  ((volatile uint32_t *)0xF0012000u)
+#define CONWAY_BASE  ((volatile uint32_t *)0xF0011000u)
 
 #define CONWAY_CMD      (*(CONWAY_BASE + 0))  /* W */
 #define CONWAY_CTRL     (*(CONWAY_BASE + 1))  /* W */

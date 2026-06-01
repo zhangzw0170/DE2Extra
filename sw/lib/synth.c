@@ -15,7 +15,7 @@
 #include "board_status.h"
 
 /* ── Hardware registers ──────────────────────────────────── */
-#define SYNTH_BASE  ((volatile uint32_t *)0xF0013000u)
+#define SYNTH_BASE  ((volatile uint32_t *)0xF0012000u)
 
 #define SYNTH_CTRL       (*(SYNTH_BASE + 0))
 #define SYNTH_STATUS     (*(SYNTH_BASE + 1))

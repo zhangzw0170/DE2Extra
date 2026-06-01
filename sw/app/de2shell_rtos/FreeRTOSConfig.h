@@ -21,7 +21,7 @@
 #define configUSE_PREEMPTION            1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_TICKLESS_IDLE         0
-#define configTICK_RATE_HZ              ( ( TickType_t ) 100 )
+#define configTICK_RATE_HZ              ( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES            5
 #define configMINIMAL_STACK_SIZE        ( ( uint16_t ) 256 )
 #define configTOTAL_HEAP_SIZE           ( ( size_t ) 65536 )

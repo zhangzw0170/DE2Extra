@@ -24,9 +24,8 @@ package de2extra_pkg is
     constant ADDR_SD_BASE      : std_logic_vector(31 downto 0) := x"F000E000"; -- 4KB
     constant ADDR_NTT_BASE     : std_logic_vector(31 downto 0) := x"F000F000"; -- 4KB
     constant ADDR_EXPDEMO_BASE : std_logic_vector(31 downto 0) := x"F0010000"; -- 4KB
-    constant ADDR_PONG_BASE    : std_logic_vector(31 downto 0) := x"F0011000"; -- 4KB
-    constant ADDR_CONWAY_BASE  : std_logic_vector(31 downto 0) := x"F0012000"; -- 4KB
-    constant ADDR_SYNTH_BASE   : std_logic_vector(31 downto 0) := x"F0013000"; -- 4KB
+    constant ADDR_CONWAY_BASE  : std_logic_vector(31 downto 0) := x"F0011000"; -- 4KB
+    constant ADDR_SYNTH_BASE   : std_logic_vector(31 downto 0) := x"F0012000"; -- 4KB
     constant ADDR_GPU_BASE     : std_logic_vector(31 downto 0) := x"F0015000"; -- 4KB
 
     -- ================================================================

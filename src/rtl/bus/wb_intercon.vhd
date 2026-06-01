@@ -1,9 +1,9 @@
 -- wb_intercon.vhd — Wishbone Single-Master Multi-Slave Interconnect
 -- 纯组合地址解码，新外设只需在 cs 选择中加一项
 library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use work.de2extra_pkg.all;
+	use ieee.std_logic_1164.all;
+	use ieee.numeric_std.all;
+	use work.de2extra_pkg.all;
 
 entity wb_intercon is
     port (
@@ -94,7 +94,7 @@ entity wb_intercon is
         s8_stb_o   : out std_logic;
         s8_ack_i   : in  std_logic;
 
-        -- Slave 9: PONG @ 0xF0011000
+        -- Slave 9: Conway @ 0xF0011000
         s9_adr_o   : out std_logic_vector(4 downto 0);
         s9_dat_i   : in  std_logic_vector(31 downto 0);
         s9_dat_o   : out std_logic_vector(31 downto 0);
@@ -102,7 +102,7 @@ entity wb_intercon is
         s9_stb_o   : out std_logic;
         s9_ack_i   : in  std_logic;
 
-        -- Slave 10: Conway @ 0xF0012000
+        -- Slave 10: Audio synth @ 0xF0012000
         s10_adr_o  : out std_logic_vector(4 downto 0);
         s10_dat_i  : in  std_logic_vector(31 downto 0);
         s10_dat_o  : out std_logic_vector(31 downto 0);
@@ -110,51 +110,41 @@ entity wb_intercon is
         s10_stb_o  : out std_logic;
         s10_ack_i  : in  std_logic;
 
-        -- Slave 11: Audio synth @ 0xF0013000
-        s11_adr_o  : out std_logic_vector(4 downto 0);
+        -- Slave 11: GPU 2D accelerator @ 0xF0015000
+        s11_adr_o  : out std_logic_vector(15 downto 0);
         s11_dat_i  : in  std_logic_vector(31 downto 0);
         s11_dat_o  : out std_logic_vector(31 downto 0);
         s11_we_o   : out std_logic;
         s11_stb_o  : out std_logic;
-        s11_ack_i  : in  std_logic;
-
-        -- Slave 12: GPU 2D accelerator @ 0xF0015000
-        s12_adr_o  : out std_logic_vector(15 downto 0);
-        s12_dat_i  : in  std_logic_vector(31 downto 0);
-        s12_dat_o  : out std_logic_vector(31 downto 0);
-        s12_we_o   : out std_logic;
-        s12_stb_o  : out std_logic;
-        s12_ack_i  : in  std_logic
+        s11_ack_i  : in  std_logic
     );
 end entity wb_intercon;
 
 architecture rtl of wb_intercon is
-    signal cs_sdram : std_logic;
-    signal cs_vga   : std_logic;
-    signal cs_ps2   : std_logic;
-    signal cs_ir    : std_logic;
-    signal cs_ntt   : std_logic;
-    signal cs_lcd   : std_logic;
-    signal cs_tmr   : std_logic;
-    signal cs_intc  : std_logic;
-    signal cs_expdemo: std_logic;
-    signal cs_pong    : std_logic;
-    signal cs_conway  : std_logic;
-    signal cs_synth   : std_logic;
-    signal cs_gpu     : std_logic;
-    constant SDRAM_END_C : unsigned(31 downto 0) := unsigned(ADDR_SDRAM_BASE) + to_unsigned(16#08000000#, 32);
-    constant VGA_END_C   : unsigned(31 downto 0) := unsigned(ADDR_VGA_BASE)   + to_unsigned(16#00008000#, 32);
-    constant PS2_END_C   : unsigned(31 downto 0) := unsigned(ADDR_PS2_BASE)   + to_unsigned(16#00001000#, 32);
-    constant IR_END_C    : unsigned(31 downto 0) := unsigned(ADDR_IR_BASE)    + to_unsigned(16#00001000#, 32);
-    constant LCD_END_C   : unsigned(31 downto 0) := unsigned(ADDR_LCD_BASE)   + to_unsigned(16#00001000#, 32);
-    constant NTT_END_C   : unsigned(31 downto 0) := unsigned(ADDR_NTT_BASE)   + to_unsigned(16#00001000#, 32);
-    constant TMR_END_C   : unsigned(31 downto 0) := unsigned(ADDR_TIMER_BASE) + to_unsigned(16#00001000#, 32);
-    constant INTC_END_C  : unsigned(31 downto 0) := unsigned(ADDR_INTC_BASE)  + to_unsigned(16#00001000#, 32);
-    constant EXPDEMO_END_C: unsigned(31 downto 0) := unsigned(ADDR_EXPDEMO_BASE) + to_unsigned(16#00001000#, 32);
-    constant PONG_END_C   : unsigned(31 downto 0) := unsigned(ADDR_PONG_BASE)   + to_unsigned(16#00001000#, 32);
+    signal cs_sdram  : std_logic;
+    signal cs_vga    : std_logic;
+    signal cs_ps2    : std_logic;
+    signal cs_ir     : std_logic;
+    signal cs_ntt    : std_logic;
+    signal cs_lcd    : std_logic;
+    signal cs_tmr    : std_logic;
+    signal cs_intc   : std_logic;
+    signal cs_expdemo : std_logic;
+    signal cs_conway : std_logic;
+    signal cs_synth  : std_logic;
+    signal cs_gpu    : std_logic;
+    constant SDRAM_END_C   : unsigned(31 downto 0) := unsigned(ADDR_SDRAM_BASE)   + to_unsigned(16#08000000#, 32);
+    constant VGA_END_C     : unsigned(31 downto 0) := unsigned(ADDR_VGA_BASE)     + to_unsigned(16#00008000#, 32);
+    constant PS2_END_C     : unsigned(31 downto 0) := unsigned(ADDR_PS2_BASE)     + to_unsigned(16#00001000#, 32);
+    constant IR_END_C      : unsigned(31 downto 0) := unsigned(ADDR_IR_BASE)      + to_unsigned(16#00001000#, 32);
+    constant LCD_END_C     : unsigned(31 downto 0) := unsigned(ADDR_LCD_BASE)     + to_unsigned(16#00001000#, 32);
+    constant NTT_END_C     : unsigned(31 downto 0) := unsigned(ADDR_NTT_BASE)     + to_unsigned(16#00001000#, 32);
+    constant TMR_END_C     : unsigned(31 downto 0) := unsigned(ADDR_TIMER_BASE)   + to_unsigned(16#00001000#, 32);
+    constant INTC_END_C    : unsigned(31 downto 0) := unsigned(ADDR_INTC_BASE)    + to_unsigned(16#00001000#, 32);
+    constant EXPDEMO_END_C : unsigned(31 downto 0) := unsigned(ADDR_EXPDEMO_BASE) + to_unsigned(16#00001000#, 32);
     constant CONWAY_END_C  : unsigned(31 downto 0) := unsigned(ADDR_CONWAY_BASE) + to_unsigned(16#00001000#, 32);
     constant SYNTH_END_C   : unsigned(31 downto 0) := unsigned(ADDR_SYNTH_BASE)  + to_unsigned(16#00001000#, 32);
-    constant GPU_END_C     : unsigned(31 downto 0) := unsigned(ADDR_GPU_BASE)    + to_unsigned(16#00001000#, 32);
+    constant GPU_END_C     : unsigned(31 downto 0) := unsigned(ADDR_GPU_BASE)     + to_unsigned(16#00001000#, 32);
 begin
 
     -- SDRAM byte address window: 0x01000000 - 0x08FFFFFF (128MB)
@@ -176,13 +166,11 @@ begin
                          (unsigned(m_adr_i) <  INTC_END_C) else '0';
     cs_expdemo <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_EXPDEMO_BASE)) and
                           (unsigned(m_adr_i) <  EXPDEMO_END_C) else '0';
-    cs_pong    <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_PONG_BASE)) and
-                         (unsigned(m_adr_i) <  PONG_END_C) else '0';
-    cs_conway  <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_CONWAY_BASE)) and
+    cs_conway <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_CONWAY_BASE)) and
                          (unsigned(m_adr_i) <  CONWAY_END_C) else '0';
-    cs_synth   <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_SYNTH_BASE)) and
+    cs_synth  <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_SYNTH_BASE)) and
                          (unsigned(m_adr_i) <  SYNTH_END_C) else '0';
-    cs_gpu     <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_GPU_BASE)) and
+    cs_gpu    <= '1' when (unsigned(m_adr_i) >= unsigned(ADDR_GPU_BASE)) and
                          (unsigned(m_adr_i) <  GPU_END_C) else '0';
 
     -- XBUS address is a full BYTE address. SDRAM controller expects a 25-bit
@@ -243,29 +231,23 @@ begin
     s8_we_o  <= m_we_i;
     s8_stb_o <= m_stb_i and m_cyc_i and cs_expdemo;
 
-    -- PONG: word-aligned register block
+    -- Conway: word-aligned register block
     s9_adr_o <= m_adr_i(6 downto 2);
     s9_dat_o <= m_dat_i;
     s9_we_o  <= m_we_i;
-    s9_stb_o <= m_stb_i and m_cyc_i and cs_pong;
+    s9_stb_o <= m_stb_i and m_cyc_i and cs_conway;
 
-    -- Conway: word-aligned register block
+    -- Audio synth: word-aligned register block
     s10_adr_o <= m_adr_i(6 downto 2);
     s10_dat_o <= m_dat_i;
     s10_we_o  <= m_we_i;
-    s10_stb_o <= m_stb_i and m_cyc_i and cs_conway;
-
-    -- Audio synth: word-aligned register block
-    s11_adr_o <= m_adr_i(6 downto 2);
-    s11_dat_o <= m_dat_i;
-    s11_we_o  <= m_we_i;
-    s11_stb_o <= m_stb_i and m_cyc_i and cs_synth;
+    s10_stb_o <= m_stb_i and m_cyc_i and cs_synth;
 
     -- GPU 2D accelerator: 16-bit address (register block)
-    s12_adr_o <= m_adr_i(15 downto 0);
-    s12_dat_o <= m_dat_i;
-    s12_we_o  <= m_we_i;
-    s12_stb_o <= m_stb_i and m_cyc_i and cs_gpu;
+    s11_adr_o <= m_adr_i(15 downto 0);
+    s11_dat_o <= m_dat_i;
+    s11_we_o  <= m_we_i;
+    s11_stb_o <= m_stb_i and m_cyc_i and cs_gpu;
 
     -- Response mux
     process(all)
@@ -300,21 +282,18 @@ begin
         elsif cs_expdemo = '1' then
             m_dat_o <= s8_dat_i;
             m_ack_o <= s8_ack_i;
-        elsif cs_pong = '1' then
+        elsif cs_conway = '1' then
             m_dat_o <= s9_dat_i;
             m_ack_o <= s9_ack_i;
-        elsif cs_conway = '1' then
+        elsif cs_synth = '1' then
             m_dat_o <= s10_dat_i;
             m_ack_o <= s10_ack_i;
-        elsif cs_synth = '1' then
+        elsif cs_gpu = '1' then
             m_dat_o <= s11_dat_i;
             m_ack_o <= s11_ack_i;
-        elsif cs_gpu = '1' then
-            m_dat_o <= s12_dat_i;
-            m_ack_o <= s12_ack_i;
         end if;
     end process;
 
-    m_err_o <= m_stb_i and m_cyc_i and not (cs_sdram or cs_vga or cs_ps2 or cs_ir or cs_ntt or cs_lcd or cs_tmr or cs_intc or cs_expdemo or cs_pong or cs_conway or cs_synth or cs_gpu);
+    m_err_o <= m_stb_i and m_cyc_i and not (cs_sdram or cs_vga or cs_ps2 or cs_ir or cs_ntt or cs_lcd or cs_tmr or cs_intc or cs_expdemo or cs_conway or cs_synth or cs_gpu);
 
 end architecture rtl;
