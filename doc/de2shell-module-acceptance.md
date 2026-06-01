@@ -443,7 +443,7 @@
 | E4.4 | delta 测试 | delta 向量 NTT/INTT 轮转验证 PASS | ✅ |
 | E4.5 | round-trip 测试 | 随机输入 round-trip (NTT→INTT) 验证 PASS | ✅ |
 | E4.6 | convolution 测试 | 卷积正确性验证 PASS | ✅ |
-| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000F000) 寄存器读写 | 🟡 ntt_sdf.vhd 已集成到 de2os_top (s4)，Quartus 通过，待上板验证 |
+| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000F000) 寄存器读写 | 🟡 ntt_sdf.vhd 已集成，`ntt` CLI 启动正常，但 `ntt_hw_exec()` busy-wait 卡住 (硬件可能未完成计算)，需调试 |
 | E4.8 | 性能对比 | 纯 C vs 硬件加速性能对比 | 🟡 依赖 E4.7 |
 | E4.9 | 退出 `q` | 返回 shell | ✅ |
 
@@ -571,9 +571,9 @@
 | G. 跨切面 | 7 | 7 | 0 | 0 | 0 |
 | H. 待验收 (串口) | 25 | 24 | 0 | 0 | 1 |
 | H. 待验收 (VGA) | 19 | 13 | 1 | 0 | 5 |
-| I. V3P6 PS/2 TUI + Snake 2P | 13 | 0 | 13 | 0 | 0 |
+| I. V3P6 PS/2 TUI + Snake 2P | 13 | 3 | 10 | 0 | 0 |
 | J. V3P3b Crypto Viz | 10 | 10 | 0 | 0 | 0 |
-| **合计** | **290** | **246** | **28** | **0** | **7** |
+| **合计** | **290** | **249** | **25** | **0** | **7** |
 
 **主要阻塞**:
 1. 🟡 V3P6 PS/2 TUI + Snake 2P (13 项) — 代码已实现，待上板验证
@@ -664,14 +664,14 @@
 | I.2 | PS/2 VK 方向键解码 | UP(0x75)→0x90, DOWN(0x72)→0x91, LEFT(0x6B)→0x92, RIGHT(0x74)→0x93 | 🟡 待上板 |
 | I.3 | 输入门控穿透 VK | `has_ascii=0, ascii≠0` 的虚拟键码可通过门控到达程序 | 🟡 待上板 |
 | I.4 | 全局 F1 帮助 | F1 在 `prog->input()` 之前拦截，输出 `[Help] progname: help` 到 UART | 🟡 待上板 |
-| I.5 | 全局 F10 退出 | F10 在 `prog->input()` 之后检查，程序可先做清理 | 🟡 待上板 |
-| I.6 | 全局 ESC 退出 | ESC 与 F10 同级退出当前程序 | 🟡 待上板 |
-| I.7 | Q 不再退出程序 | 所有 13 个程序 Q 键无退出效果 (twm 的 Q 是关闭窗口，非退出) | 🟡 待上板 |
-| I.8 | 直读 PS/2 程序 F10 | ps2/pong_hw/synth 在自己 PS/2 轮询中处理 F10 退出 | 🟡 待上板 |
-| I.9 | Snake 2P 模式选择 | 先选 1P/2P → 再选难度 (两页选择) | 🟡 待上板 |
-| I.10 | Snake 2P 独立控制 | P1: WASD (绿 o), P2: 方向键 (青 =)，1P 模式 WASD+方向键均可 | 🟡 待上板 |
-| I.11 | Snake 2P 碰撞检测 | 自撞/互撞/头碰头 (双死=平局) | 🟡 待上板 |
-| I.12 | Snake F10 退出 | F10 退出 snake (替代 Q) | 🟡 待上板 |
+| I.5 | 全局 F10 退出 | F10 在 `prog->input()` 之后检查，程序可先做清理 | 🟡 需 PS/2 键盘 |
+| I.6 | 全局 ESC 退出 | ESC 与 F10 同级退出当前程序 | ✅ UART 验证: hello/info/life 退出正常；memtest (V2程序) 不退出 |
+| I.7 | Q 不再退出程序 | 所有 13 个程序 Q 键无退出效果 (twm 的 Q 是关闭窗口，非退出) | ✅ UART 验证: hello/snake 不退出；crypto (FreeRTOS CLI) 独立处理 |
+| I.8 | 直读 PS/2 程序 F10 | ps2/pong_hw/synth 在自己 PS/2 轮询中处理 F10 退出 | 🟡 需 PS/2 键盘 |
+| I.9 | Snake 2P 模式选择 | 先选 1P/2P → 再选难度 (两页选择) | ✅ UART 验证: 1P/2P 菜单显示正常 |
+| I.10 | Snake 2P 独立控制 | P1: WASD (绿 o), P2: 方向键 (青 =)，1P 模式 WASD+方向键均可 | 🟡 需 PS/2 键盘 |
+| I.11 | Snake 2P 碰撞检测 | 自撞/互撞/头碰头 (双死=平局) | 🟡 需 PS/2 键盘 |
+| I.12 | Snake F10 退出 | F10 退出 snake (替代 Q) | 🟡 需 PS/2 键盘 |
 | I.13 | Chroma 方向键 + F10 | 方向键滚动地形，F10 退出并禁用 HW | 🟡 待上板 |
 
 ## J. V3P3b Crypto Visualization (crypto_viz.c/h)
@@ -694,4 +694,4 @@
 
 ---
 
-*最后更新: 2026-06-01 — startui 模块已删除 (N/A)；TWM 上板成功；F6 VGA pixel 全部 ✅；A4.6 像素模式寄存器 ✅；NTT 从 ❌→🟡 (RTL 已集成)；B3 SM4/SM3 确认 ✅；总计 290 项 (246✅ / 28🟡 / 0❌ / 7N/A)。*
+*最后更新: 2026-06-01 — startui 已删除 (N/A)；TWM 上板成功；F6 VGA pixel 全部 ✅；V3P6 UART 验证: I.6 ESC退出✅ I.7 Q不退出✅ I.9 Snake2P✅ (其余需PS/2键盘)；NTT HW busy-wait 卡住待调试；总计 290 项 (249✅ / 25🟡 / 0❌ / 7N/A)。*

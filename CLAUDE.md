@@ -12,37 +12,23 @@ NEORV32 (RISC-V) soft-core SoC on DE2-115 (Cyclone IV E EP4CE115F29C7), running 
 
 ## Build System
 
-### V3 deployment (Git Bash on Windows)
+Boot mode 0 only: IMEM holds ~2KB bootloader, firmware uploaded via UART to SDRAM at `0x01000000`.
+Software updates need no Quartus recompile. RTL changes require Quartus rebuild + flash.
 
-Two boot modes available for `de2os_top`:
+Detailed guide: `doc/编译烧录前必看.md`.
 
-**Boot mode 0** (default — recommended):
-IMEM holds only a ~2KB bootloader. After FPGA config, use the deploy script to
-cross-compile firmware in Docker, upload via UART, and execute from SDRAM at `0x01000000`.
-Software updates need NO Quartus recompile — just `app` or `upload`.
+### Software changes (C code)
 ```bash
-./run/deploy_de2shell_rtos.sh app      # compile + UART upload (~48s)
-./run/deploy_de2shell_rtos.sh upload   # upload existing bin only (fastest)
-./run/deploy_de2shell_rtos.sh fpga     # rebuild bootloader + Quartus + flash
-./run/deploy_de2shell_rtos.sh full     # full rebuild + flash + upload (~4min)
+# Compile (~25s)
+docker run --rm -v "E:/Main/JuniorII/NonExam/FPGA/DE2Extra:/work" de2extra-builder bash -c \
+  "cd /work && mkdir -p sw/app/de2shell_rtos/build && make -C sw/app/de2shell_rtos all image NEORV32_HOME=/work/neorv32"
+
+# Upload (~5s, board must be in bootloader state)
+python run/upload_de2os.py COM10 sw/app/de2shell_rtos/neorv32_raw_exe.bin
 ```
 
-**Boot mode 2** (IMEM direct — for bring-up only):
-Bakes the entire program into the bitstream. No UART upload needed at power-on,
-but every code change requires a full Quartus rebuild. Used by `deploy_de2shell_rtos_imem.sh`.
-```bash
-./run/deploy_deshell_rtos_imem.sh build   # compile + generate IMEM image
-./run/deployde2shell_rtos_imem.sh flash   # Quartus compile + JTAG flash
-```
-
-Only RTL/top/bootloader/address-map changes need `fpga` or `full`. See `doc/编译烧录前必看.md`
-for the full incremental deployment guide.
-
-### Manual build
-1. Firmware: `cd sw/app/<name> && make clean all image NEORV32_HOME=../../../neorv32`
-2. Copy: `cp neorv32/rtl/core/neorv32_imem_image.vhd src/rtl/`
-3. Quartus: open `par/de2os/de2os.qpf`, Ctrl+L
-4. Program: Quartus Programmer → `par/de2os/de2os.sof`
+### RTL changes (VHDL)
+Open `par/de2os/de2os.qpf` in Quartus GUI, Ctrl+L compile, Programmer flash `par/de2os/de2os.sof`, then upload firmware.
 
 ### Software local test (no FPGA needed)
 ```bash
@@ -132,7 +118,7 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd` inside `vga_text_terminal`) reads
 | `sw/app/crypto_cli/` | 加密库: AES/SHA/SM4 (RTOS makefile 直接编译) |
 | `sw/app/common/` | 公共头文件 |
 
-**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~146KB. See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~151KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
 
 CLI commands (22 + help): hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear. Aliases: kbd→ps2, conwaylife→life, riscvasm→monitor.
 
@@ -144,12 +130,9 @@ Enabled in `neorv32_wrapper.vhd`: `IMC`, `Zicsr`, `Zicntr`, `Zbkb`, `Zbkc`, `Zbk
 
 The upstream release includes these features that our wrapper/intercon have not yet connected:
 
-- **Cache burst transfers** (`CACHE_BURSTS_EN`): ICACHE/DCACHE refill uses Wishbone incrementing bursts (`cti=010`) instead of N consecutive locked single-reads. Enabled in both top entities (`ICACHE_BURSTS => true`) with async FIFO CDC path in `sdram_ctrl`. Note: `de2os_top` has `ICACHE_EN => false` currently (ICACHE disabled, but burst flag pre-set for when it is enabled).
-- **D-cache write-back** (`DCACHE_EN` + write-back policy): replaces write-through, reduces bus traffic. Not enabled.
-- **XBUS `cti`/`tag` signals**: routed through `neorv32_wrapper` → `wb_intercon` → `sdram_ctrl` in both top entities.
-- **Bootloader flexible base address**: v1.12.8+ reworked the executable header format. Our build flow uses `image_gen` which handles this.
-
-**ICACHE burst implementation**: `neorv32_wrapper` exposes `xbus_cti_o`/`xbus_tag_o`; `wb_intercon` passes `m_cti_i` → `s0_cti_o`; `sdram_ctrl` detects `cti=010` and uses a burst FSM with `async_fifo` (8-deep × 32-bit, Gray code CDC) for return data. Single-word path unchanged. See `doc/phases/de2os-debug.md` for root cause analysis.
+- **Cache burst transfers** (`CACHE_BURSTS_EN`): ICACHE/DCACHE refill uses Wishbone incrementing bursts (`cti=010`). Enabled in top entity (`ICACHE_BURSTS => true`) with async FIFO CDC path in `sdram_ctrl`. ICACHE itself disabled (`ICACHE_EN => false`).
+- **D-cache write-back** (`DCACHE_EN`): Not enabled.
+- **XBUS `cti`/`tag` signals**: routed through `neorv32_wrapper` → `wb_intercon` → `sdram_ctrl`.
 
 ## Adding a New Peripheral
 1. Write VHDL in `src/rtl/periph/` with generic register interface (`cs`, `wr_en`, `rd_en`, `addr`, `wr_data`, `rd_data`, `irq`)
@@ -174,9 +157,8 @@ The upstream release includes these features that our wrapper/intercon have not 
 - **IMEM**: 64KB via M9K block RAM (`neorv32_imem_rom.vhd`), initialized from MIF. The old VHDL constant array caused OOM — that file is the replacement.
 - **SDRAM phase shift**: DRAM_CLK requires `+1.56ns` phase shift for stable operation (empirically determined)
 - **XBUS timeout**: 2048 cycles (~41μs @50MHz)
-- **ICACHE disabled**: ICACHE_EN=false in de2os_top. The async FIFO CDC path for burst reads is pre-wired in sdram_ctrl but untested. See `doc/phases/de2os-debug.md` for root cause analysis.
-- **Boot mode 0**: bootloader from IMEM (~2KB), loads main app from UART into SDRAM at `0x01000000`. Used by `de2os_top` (V3 primary, **recommended**). Incremental deployment via `run/deploy_de2shell_rtos.sh`.
-- **Boot mode 2**: direct IMEM image execution (no bootloader, no UART upload needed). Entire program baked into bitstream. Used by `de2shell_rtos_imem_top` (V3 bring-up only) via `run/deploy_de2shell_rtos_imem.sh`. Every code change requires full Quartus rebuild.
+- **ICACHE disabled**: ICACHE_EN=false in de2os_top. Async FIFO CDC path for burst reads is pre-wired in sdram_ctrl but untested.
+- **Boot mode 0 only**: bootloader from IMEM (~2KB), loads main app from UART into SDRAM at `0x01000000`. Boot mode 2 (IMEM direct) is deprecated.
 - **Quartus parallelism**: `NUM_PARALLEL_PROCESSORS` is locked to `1` in QSF (was needed for OOM avoidance with old IMEM; may be safe to increase now)
 
 ## Toolchain
@@ -190,8 +172,6 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 ## Project Status
 
-**V2 deleted** — de2shell project and all V2 source files removed from repo. Acceptance archive: `doc/de2shell-module-acceptance.md`.
+**V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-**V3 is active** — de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/de2os-rtos-status.md` for detailed build status.
-
-V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 22 commands, VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode 640x480 RGB565 framebuffer in SDRAM. **GPU 2D accelerator integrated** (s12, FILL rect via SDRAM burst-write). **TWM pixel mode working on physical monitor** (2026-06-01, minor flicker). **Conway/PONG/NTT/Audio synth/GPU RTL all integrated** in de2os_top. ICACHE currently disabled. Latest Quartus build: 2026-06-01.
+V3 progress: SDRAM execution ✅, FreeRTOS 4 tasks ✅, CLI 22 commands, VGA text 80×30 + pixel 640×480 RGB565 ✅, TWM pixel mode on monitor ✅, GPU 2D RTL ✅, Conway/PONG/NTT/Synth RTL ✅, 7h+ stability ✅. Latest firmware: ~151KB. ICACHE disabled.
