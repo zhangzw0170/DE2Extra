@@ -97,7 +97,7 @@ Note: **GPU 2D** (`gpu_2d.vhd`, s11) RTL integrated, Quartus pass. C driver (`sw
 
 Note: **NTT accelerator** (`ntt_sdf.vhd`, s4) RTL integrated, Quartus pass. C driver (`sw/lib/ntt.c`) dual-mode (LOCAL_BUILD SW / NEORV32 MMIO). Board verification pending.
 
-Note: **Conway engine** (`conway_engine.vhd`, s9) RTL integrated. C driver (`sw/lib/conway_hw.c`), `conwayhw` command. Board verification pending.
+Note: **Conway engine** (`conway_engine.vhd`, s9) RTL integrated. C driver (`sw/lib/conway_hw.c`), `conway` command. 80×25 grid, dual-buffered BRAM, toggle cell, F1 help overlay. Grid read uses 3-word MMIO (lo/mid/hi for cols 0-31/32-63/64-79). VHDL fix pending Quartus rebuild.
 
 Note: **ExpDemo** (`expdemo_top.vhd`, s8) wraps 13 experiment adapters. Board verified.
 
@@ -112,13 +112,13 @@ Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd` inside `vga_text_terminal`) reads
 | Directory | Description |
 |-----------|-------------|
 | **`sw/app/de2shell_rtos/`** | **主固件**: FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI。4 任务 (uart_input/shell/active/status)，shell 从 PS/2 和 UART 双路接收输入。程序启动器 (PROG_TWM 等) |
-| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + GPU 驱动 (gpu) + 程序 (crypto, ps2, snake, life, ntt, synth, monitor 等) + TWM 窗口管理器 (twm, gfx)。RTOS makefile 直接编译 |
+| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + GPU 驱动 (gpu) + 程序 (crypto, ps2, snake, conway_hw, ntt, synth, monitor 等) + TWM 窗口管理器 (twm, gfx)。RTOS makefile 直接编译 |
 | `sw/app/crypto_cli/` | 加密库: AES/SHA/SM4 (RTOS makefile 直接编译) |
 | `sw/app/common/` | 公共头文件 |
 
-**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~151KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~156KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
 
-CLI commands (21 + help + builtins): hello, memtest, crypto, ps2, snake, life, info, expdemo (alias: demo), twm, conwayhw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear, monitor. Aliases: kbd→ps2, conwaylife→life, riscvasm→monitor. Note: `chroma` command registered in source but excluded from build.
+CLI commands (20 + help + builtins): hello, memtest, crypto, ps2, snake, conway, info, expdemo (alias: demo), twm, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear, monitor. Alias: kbd→ps2, riscvasm→monitor. All interactive programs: F1=help overlay (pauses game), F10=quit to shell. Note: `chroma` command registered in source but excluded from build.
 
 ### NEORV32 ISA Extensions
 
@@ -188,6 +188,6 @@ When running a non-shell program, `board_status_set_program()` shows PROG_ID/sta
 
 **V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-**Board verified**: SDRAM exec, FreeRTOS 4 tasks, UART shell, VGA text 80×30, CLI builtins (help/stats/heapstat/cpustat/clear), hello/info/life, TWM pixel mode (30s stable), ExpDemo 13 experiments.
+**Board verified**: SDRAM exec, FreeRTOS 4 tasks, UART shell, VGA text 80×30, CLI builtins (help/stats/heapstat/cpustat/clear), hello/info, TWM pixel mode (30s stable), ExpDemo 13 experiments.
 
-**Board pending**: crypto bench, conwayhw, ntt, synth, VGA text ghosting fix, pixel mode display quality.
+**Board pending**: crypto bench, conway (needs Quartus rebuild for grid read fix + toggle_cell), ntt, synth, VGA text ghosting fix, pixel mode display quality.
