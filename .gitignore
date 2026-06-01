@@ -80,3 +80,10 @@ snake_test_output.txt
 
 # Archived docs (untracked)
 doc/archive/
+
+# Root-level Quartus db (not under par/)
+db/
+
+# Simulation log files
+**/sim/*.txt
+transcript_*

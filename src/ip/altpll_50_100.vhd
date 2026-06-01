@@ -4,6 +4,7 @@
 --   c0: 50MHz   (CPU, 0° phase)
 --   c1: 100MHz  (SDRAM controller internal clock, 0° phase)
 --   c2: 100MHz  (DRAM_CLK output, phase shifted for board-level setup margin)
+--   c3: 25MHz   (VGA pixel clock, 0° phase)
 --
 -- 注意: 只改 c1 的相位没有意义，因为内部控制器和 DRAM_CLK 会一起平移。
 -- 必须拆成“内部 100MHz”和“输出到 SDRAM 芯片的 100MHz 相移版”两路时钟。
@@ -26,6 +27,7 @@ entity altpll_50_100 is
         clk_50m_o        : out std_logic;    -- 50MHz output (CPU)
         clk_100m_o       : out std_logic;    -- 100MHz internal output (SDRAM controller)
         clk_100m_shift_o : out std_logic;    -- 100MHz shifted output (DRAM clock pin)
+        clk_25m_o        : out std_logic;    -- 25MHz VGA pixel clock
         locked_o         : out std_logic     -- PLL locked
     );
 end entity altpll_50_100;
@@ -46,6 +48,10 @@ architecture rtl of altpll_50_100 is
         clk2_duty_cycle             : natural;
         clk2_multiply_by            : natural;
         clk2_phase_shift            : string;
+        clk3_divide_by              : natural;
+        clk3_duty_cycle             : natural;
+        clk3_multiply_by            : natural;
+        clk3_phase_shift            : string;
         compensate_clock            : string;
         inclk0_input_frequency      : natural;
         intended_device_family      : string;
@@ -114,6 +120,7 @@ begin
     clk_50m_o        <= clk_s(0);
     clk_100m_o       <= clk_s(1);
     clk_100m_shift_o <= clk_s(2);
+    clk_25m_o        <= clk_s(3);
 
     u_pll : altpll
     generic map (
@@ -130,6 +137,10 @@ begin
         clk2_duty_cycle           => 50,
         clk2_multiply_by          => 2,
         clk2_phase_shift          => SDRAM_CLK_SHIFT_PS,
+        clk3_divide_by            => 2,
+        clk3_duty_cycle           => 50,
+        clk3_multiply_by          => 1,
+        clk3_phase_shift          => "0",
         compensate_clock          => "CLK0",
         inclk0_input_frequency    => 20000,
         intended_device_family    => "Cyclone IV E",
@@ -165,7 +176,7 @@ begin
         port_clk0                 => "PORT_USED",
         port_clk1                 => "PORT_USED",
         port_clk2                 => "PORT_USED",
-        port_clk3                 => "PORT_UNUSED",
+        port_clk3                 => "PORT_USED",
         port_clk4                 => "PORT_UNUSED",
         port_clk5                 => "PORT_UNUSED",
         port_clkena0              => "PORT_UNUSED",

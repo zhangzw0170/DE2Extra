@@ -76,7 +76,7 @@ typedef enum {
     PROG_INFO,
     PROG_MONITOR,
     PROG_DEMO,
-    PROG_WIN30,
+    PROG_TWM,
     PROG_CONWAY_HW,
     PROG_PONG_HW,
     PROG_NTT,
@@ -98,7 +98,7 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_INFO]    = &prog_info,
     [PROG_MONITOR] = &prog_monitor,
     [PROG_DEMO]    = &prog_demo,
-    [PROG_WIN30]   = &prog_twm,
+    [PROG_TWM]     = &prog_twm,
     [PROG_CONWAY_HW] = &prog_conway_hw,
     [PROG_PONG_HW]  = &prog_pong_hw,
     [PROG_NTT]      = &prog_ntt,
@@ -312,8 +312,7 @@ static configSTACK_DEPTH_TYPE active_prog_stack_words(prog_id_t pid) {
             return 1024;
         case PROG_DEMO:
             return 896;
-        case PROG_WIN30:
-            return 1280;
+        case PROG_TWM:
         default:
             return 512;
     }
@@ -389,7 +388,6 @@ PROG_CMD(life,    PROG_LIFE)
 PROG_CMD(info,    PROG_INFO)
 PROG_CMD(monitor, PROG_MONITOR)
 PROG_CMD(expdemo, PROG_DEMO)
-PROG_CMD(win30,   PROG_WIN30)
 PROG_CMD(conwayhw, PROG_CONWAY_HW)
 PROG_CMD(ponghw,  PROG_PONG_HW)
 PROG_CMD(ntt,     PROG_NTT)
@@ -503,8 +501,11 @@ static const CLI_Command_Definition_t cmd_monitor_def =
     {"monitor", "monitor:  RISC-V monitor / asm\r\n", cli_monitor, 0};
 static const CLI_Command_Definition_t cmd_riscvasm_def =
     {"riscvasm", "riscvasm:  monitor alias\r\n", cli_monitor, 0};
+PROG_CMD(twm,     PROG_TWM)
+
 static const CLI_Command_Definition_t cmd_twm_def =
-    {"twm", "twm:      Tiling window manager\r\n", cli_win30, 0};
+    {"twm", "twm:      Tiling window manager\r\n", cli_twm, 0};
+
 static const CLI_Command_Definition_t cmd_conwayhw_def =
     {"conwayhw", "conwayhw: Hardware Conway (FPGA)\r\n", cli_conwayhw, 0};
 static const CLI_Command_Definition_t cmd_ponghw_def =
@@ -884,7 +885,7 @@ static void t_uart_input(void *pv) {
 
         {
             uint32_t budget = PS2_POLL_BUDGET;
-            if (active_prog != PROG_PS2 && active_prog != PROG_WIN30 && active_prog != PROG_PONG_HW && active_prog != PROG_SYNTH) {
+            if (active_prog != PROG_PS2 && active_prog != PROG_TWM && active_prog != PROG_PONG_HW && active_prog != PROG_SYNTH) {
                 while (((ps2[PS2_REG_STAT] & PS2_STAT_READY) != 0u) && (budget != 0u)) {
                     uint8_t raw = (uint8_t)ps2[PS2_REG_DATA];
                     budget--;

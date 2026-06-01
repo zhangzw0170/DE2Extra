@@ -1,6 +1,6 @@
 -- clk_rst_gen.vhd — 时钟和复位信号生成
 --
--- Phase 1: PLL 生成 50MHz (CPU) + 100MHz (SDRAM)
+-- Phase 1: PLL 生成 50MHz (CPU) + 100MHz (SDRAM) + 25MHz (VGA)
 -- Phase 2: 添加 74.25MHz VGA 时钟
 --
 -- 换板子: 只需改这个文件
@@ -14,6 +14,7 @@ entity clk_rst_gen is
         clk_50m_o    : out std_logic;   -- 50MHz CPU 时钟
         clk_sdram_o  : out std_logic;   -- 100MHz SDRAM 时钟
         clk_sdram_shift_o : out std_logic; -- 100MHz SDRAM 引脚时钟 (相移版)
+        clk_25m_o    : out std_logic;   -- 25MHz VGA pixel clock (PLL c3)
         clk_vga_o    : out std_logic;   -- 74.25MHz VGA 时钟 (Phase 2, 当前直通)
         rst_n_o      : out std_logic;   -- 同步复位输出 (active-low)
         pll_locked_o : out std_logic    -- PLL 锁定状态
@@ -29,7 +30,7 @@ architecture rtl of clk_rst_gen is
 begin
 
     -- ================================================================
-    -- PLL: 50MHz → 50MHz (CPU) + 100MHz internal + 100MHz shifted DRAM clock
+    -- PLL: 50MHz → 50MHz (CPU) + 100MHz internal + 100MHz shifted + 25MHz VGA
     -- ================================================================
     u_pll : entity work.altpll_50_100
     port map (
@@ -37,6 +38,7 @@ begin
         clk_50m_o        => clk_50m_o,
         clk_100m_o       => clk_sdram_o,
         clk_100m_shift_o => clk_sdram_shift_o,
+        clk_25m_o        => clk_25m_o,
         locked_o         => pll_locked
     );
 

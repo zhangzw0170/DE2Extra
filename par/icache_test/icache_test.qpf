@@ -1,0 +1,6 @@
+DATE = "10:34:31  MAY 31, 2026"
+QUARTUS_VERSION = "23.1std.0 SP0.02std Lite Edition"
+
+# Revisions
+
+PROJECT_REVISION = "icache_test"
