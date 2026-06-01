@@ -296,12 +296,16 @@ static void update(void) {
     }
 
     /* 4. Shift bodies */
-    for (int i = p1.len; i > 0; i--) {
-        p1.x[i] = p1.x[i - 1]; p1.y[i] = p1.y[i - 1];
+    {
+        int end = (p1.len >= MAX_SNAKE) ? p1.len - 1 : p1.len;
+        for (int i = end; i > 0; i--) {
+            p1.x[i] = p1.x[i - 1]; p1.y[i] = p1.y[i - 1];
+        }
     }
     p1.x[0] = nx1; p1.y[0] = ny1;
     if (two_player) {
-        for (int i = p2.len; i > 0; i--) {
+        int end = (p2.len >= MAX_SNAKE) ? p2.len - 1 : p2.len;
+        for (int i = end; i > 0; i--) {
             p2.x[i] = p2.x[i - 1]; p2.y[i] = p2.y[i - 1];
         }
         p2.x[0] = nx2; p2.y[0] = ny2;

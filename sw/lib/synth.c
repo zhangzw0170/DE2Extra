@@ -384,6 +384,7 @@ static void input(char c) {
         return;
     }
     if (k == 'q' || k == 'Q') {
+        if (help_open) { help_open = 0; redraw_synth(); return; }
         SYNTH_CTRL = 1;
         SYNTH_T1_NOTE = 0;
         SYNTH_T2_NOTE = 0;

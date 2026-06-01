@@ -305,7 +305,6 @@ static void input(char c) {
             if (speed_ms > 50) speed_ms -= 50;
             break;
         default: {
-            uint8_t k = (uint8_t)c;
             if (k == PS2_VK_UP)    { move_cursor(0, -1); }
             else if (k == PS2_VK_DOWN)  { move_cursor(0, 1); }
             else if (k == PS2_VK_LEFT)  { move_cursor(-1, 0); }
