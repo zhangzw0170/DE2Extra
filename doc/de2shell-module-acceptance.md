@@ -641,7 +641,7 @@
 | H2.6 | memtest VGA 输出 | 运行 `memtest` | VGA 显示测试进度和结果 | ✅ |
 | H2.7 | crypto VGA 输出 | 运行 `crypto` → `aes enc ...` | VGA 显示加解密结果 | ✅ |
 | H2.8 | snake VGA 渲染 | 运行 `snake` | VGA 显示 40×20 网格 + 蛇 + 食物 | ✅ |
-| H2.9 | snake Game Over | 撞墙/撞自身 | VGA 中央显示 "GAME OVER" | ☐ 撞自身卡住但未显示 GAME OVER，移至 V3 |
+| H2.9 | snake Game Over | 撞墙/撞自身 | VGA 中央显示 "GAME OVER" | ✅ |
 | H2.10 | life VGA 渲染 | 运行 `life` | VGA 显示 40×20 细胞网格 | ✅ |
 | H2.11 | ps2 VGA 事件日志 | 运行 `ps2` | VGA 显示每次按键的 scan code + 键名 | ✅ |
 | H2.12 | dashboard VGA 实时状态 | 运行 `dash` | VGA 显示 SW/KEY/IR/uptime 实时刷新 | ✅ |
