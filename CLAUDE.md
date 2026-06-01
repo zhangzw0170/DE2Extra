@@ -36,11 +36,7 @@ but every code change requires a full Quartus rebuild. Used by `deploy_de2shell_
 ```
 
 Only RTL/top/bootloader/address-map changes need `fpga` or `full`. See `doc/编译烧录前必看.md`
-for the full deployment guide.
-
-Normal SW changes (firmware only) need no Quartus compile -- just `app` or `upload`. Only RTL/top/bootloader/address-map changes need `fpga` or `full`. See `doc/编译烧录前必看.md` for the full incremental deployment guide.
-
-### V2 one-command build (deprecated — V2 project deleted)
+for the full incremental deployment guide.
 
 ### Manual build
 1. Firmware: `cd sw/app/<name> && make clean all image NEORV32_HOME=../../../neorv32`
@@ -68,7 +64,7 @@ de2os_top.vhd (top entity, knows board pins)
 │       ├── DMEM         16KB
 │       ├── XBUS         Wishbone external bus master (timeout 2048 cycles), supports burst cti/tag signals
 │       └── Built-in     UART0 (115200), GPIO(32), TRNG, CLINT, OCD
-├── wb_intercon          1-master, 14-slave address decoder (combinational)
+├── wb_intercon          1-master, 13-slave address decoder (combinational)
 │   ├── s0: sdram_ctrl   0x01000000 (128MB, 100MHz state machine)
 │   ├── s1: vga_text_terminal  0xF0000000 (32KB, 80×30 text mode + pixel mode via SDRAM FB)
 │   ├── s2: ps2_controller    0xF0008000 (scancode + IRQ)
@@ -77,14 +73,13 @@ de2os_top.vhd (top entity, knows board pins)
 │   ├── s5: lcd_wb            0xF000B000 (LCD Wishbone controller)
 │   ├── s6: build_info_wb      0xF0009000 (build info ROM; timer address reused)
 │   ├── s7: (stub ack)        0xF000A000 (INTC address reserved, ack loopback)
-│   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 11 experiments)
+│   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 13 experiments)
 │   ├── s9: pong_engine      0xF0011000 (PONG engine + VGA output)
 │   ├── s10: conway_engine   0xF0012000 (Conway engine)
 │   ├── s11: synth_engine    0xF0013000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S)
-│   ├── s12: gpu_2d          0xF0015000 (2D GPU: FILL rect via SDRAM burst-write)
-│   └── s13: chroma_shader   0xF0014000 (HW noise terrain + VGA terminal override — NOT YET WIRED)
-│   Note: DDS (0xF000D000) and SD card (0xF000E000) have address constants
-│         in de2extra_pkg.vhd but no slave ports in wb_intercon.
+│   └── s12: gpu_2d          0xF0015000 (2D GPU: FILL rect via SDRAM burst-write)
+│   Note: DDS (0xF000D000), SD card (0xF000E000), ChromaShader (0xF0014000) have
+│         address constants but no slave ports in wb_intercon. chroma.c excluded from build.
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
 ├── lcd_status / lcd_debug  HD44780 16×2 LCD (muxed by SW16)
 ├── uart_jtag_bridge     UART TX → JTAG UART IP (view output in Quartus System Console)
@@ -97,46 +92,49 @@ de2os_top.vhd (top entity, knows board pins)
 | 0x00000000 | IMEM | 64KB | 32-bit |
 | 0x80000000 | DMEM | 16KB | 32-bit |
 | 0x01000000 | SDRAM | 128MB | 32-bit |
+| 0x01800000 | Framebuffer (in SDRAM) | 600KB | 16-bit |
+| 0x01900000 | FreeRTOS heap (in SDRAM) | 16KB | 32-bit |
 | 0xF0000000 | VGA text terminal + pixel mode | 32KB | 16-bit |
-| 0xF0013000 | Audio synth (synth_engine) | 4KB | 32-bit |
-| 0xF0015000 | GPU 2D accelerator | 4KB | 32-bit |
 | 0xF0008000 | PS/2 keyboard | 4KB | 32-bit |
-| 0xF0009000 | Timer (reserved) | 4KB | 32-bit |
+| 0xF0009000 | Build info ROM | 4KB | 32-bit |
 | 0xF000A000 | INTC (reserved) | 4KB | 32-bit |
 | 0xF000B000 | LCD | 4KB | 32-bit |
 | 0xF000C000 | IR receiver | 4KB | 32-bit |
-| 0xF000D000 | DDS (reserved) | 4KB | 32-bit |
-| 0xF000E000 | SD card (reserved) | 4KB | 32-bit |
 | 0xF000F000 | NTT accelerator | 4KB | 32-bit |
 | 0xF0010000 | ExpDemo | 4KB | 32-bit |
 | 0xF0011000 | PONG engine | 4KB | 32-bit |
 | 0xF0012000 | Conway engine | 4KB | 32-bit |
-| 0xF0014000 | ChromaShader (HW terrain) | 4KB | 32-bit |
+| 0xF0013000 | Audio synth | 4KB | 32-bit |
+| 0xF0015000 | GPU 2D accelerator | 4KB | 32-bit |
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
 
-Note: **NTT accelerator** (`ntt_sdf.vhd`) is instantiated in `de2os_top.vhd` (RTL integrated, Quartus pass). The C driver (`sw/lib/ntt.c`) has dual-mode (LOCAL_BUILD SW reference / NEORV32 HW MMIO). NEORV32 path fixed: `cmd_ntt()` uses direct MMIO instead of software buffer. Board verification pending.
+Note: **GPU 2D** (`gpu_2d.vhd`, s12) RTL integrated, Quartus pass. C driver (`sw/lib/gpu.c`). FILL rect via SDRAM burst-write. Board verification pending.
 
-Note: **PONG engine** (`pong_engine.vhd`) is instantiated in `de2os_top.vhd` with full port map (Wishbone + VGA output). C driver (`pong_hw.c`) registered as `ponghw` CLI command. Board verification pending.
+Note: **NTT accelerator** (`ntt_sdf.vhd`, s4) RTL integrated, Quartus pass. C driver (`sw/lib/ntt.c`) dual-mode (LOCAL_BUILD SW / NEORV32 MMIO). Board verification pending.
 
-Note: **Conway engine** (`conway_engine.vhd`) is instantiated in `de2os_top.vhd`. C driver (`conway_hw.c`) registered as `conwayhw` CLI command. Board verification pending.
+Note: **PONG engine** (`pong_engine.vhd`, s9) RTL integrated. C driver (`sw/lib/pong_hw.c`), `ponghw` command. Board verification pending.
 
-Note: **ExpDemo** is instantiated in `de2os_top.vhd`. It wraps 11 experiment adapters with output/peripheral multiplexing. Board verified.
+Note: **Conway engine** (`conway_engine.vhd`, s10) RTL integrated. C driver (`sw/lib/conway_hw.c`), `conwayhw` command. Board verification pending.
 
-Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd`) is instantiated inside `vga_text_terminal`. It reads a framebuffer from SDRAM and displays 640×480@60Hz RGB565. Used by TWM (`twm` command) and screenshot tools. First displayed on physical monitor 2026-05-31 but unstable. VGA 25MHz clock changed from toggle flip-flop to PLL c3 output (2026-06-01) to fix UART TX noise coupling.
+Note: **ExpDemo** (`expdemo_top.vhd`, s8) wraps 13 experiment adapters. Board verified.
+
+Note: **Audio synth** (`synth_engine.vhd`, s11) 3xOSC + DX7 FM operator → WM8731 via I2S. C driver (`sw/lib/synth.c`), `synth` command. Board verification pending.
+
+Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd` inside `vga_text_terminal`) reads SDRAM framebuffer, 640×480@60Hz RGB565. TWM (`twm` command) working on physical monitor (2026-06-01, minor flicker). Known issue: text mode has diagonal ghosting lines. 25MHz pixel clock from PLL c3 (not toggle flip-flop).
 
 ### Software Structure
 
 | Directory | Description |
 |-----------|-------------|
-| **`sw/app/de2shell_rtos/`** | **主固件**: FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI。4 任务 (uart_input/shell/active/status)，shell 从 PS/2 和 UART 双路接收输入 |
-| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + 程序 (crypto, ps2, snake, life, ntt, synth 等) + GUI (gfx, gui, twm)。RTOS makefile 直接编译 |
+| **`sw/app/de2shell_rtos/`** | **主固件**: FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI。4 任务 (uart_input/shell/active/status)，shell 从 PS/2 和 UART 双路接收输入。程序启动器 (PROG_TWM 等) |
+| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + GPU 驱动 (gpu) + 程序 (crypto, ps2, snake, life, ntt, synth, monitor 等) + TWM 窗口管理器 (twm, gfx)。RTOS makefile 直接编译 |
 | `sw/app/crypto_cli/` | 加密库: AES/SHA/SM4 (RTOS makefile 直接编译) |
 | `sw/app/common/` | 公共头文件 |
 
-**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE + burst enabled via async FIFO CDC. PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: 146KB. See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~146KB. See `doc/phases/de2os-rtos-status.md` for build status and `doc/phases/de2os-debug.md` for ICACHE/SDRAM CDC analysis. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
 
-CLI commands (21 total + help): hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear. Aliases: kbd→ps2, conwaylife→life, riscvasm→monitor.
+CLI commands (22 + help): hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear. Aliases: kbd→ps2, conwaylife→life, riscvasm→monitor.
 
 ### NEORV32 ISA Extensions
 
@@ -155,10 +153,12 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 ## Adding a New Peripheral
 1. Write VHDL in `src/rtl/periph/` with generic register interface (`cs`, `wr_en`, `rd_en`, `addr`, `wr_data`, `rd_data`, `irq`)
-2. Add slave port + chip select in `wb_intercon.vhd`
-3. Instantiate in `de2_115_top.vhd`
-4. Add pin assignments in `par/de2os/de2os.qsf` — **always verify against `DE2-115引脚表.xlsx`**
-5. Software accesses via base address pointer
+2. Add address constant in `src/rtl/lib/de2extra_pkg.vhd`
+3. Add slave port + chip select in `wb_intercon.vhd`
+4. Instantiate in `de2os_top.vhd` (only entity that knows board pins)
+5. Add pin assignments in `par/de2os/de2os.qsf` — **always verify against `DE2-115引脚表.xlsx`**
+6. Add source file in `par/de2os/de2os.qsf`
+7. Software accesses via base address pointer
 
 ## Conventions
 
@@ -174,7 +174,7 @@ The upstream release includes these features that our wrapper/intercon have not 
 - **IMEM**: 64KB via M9K block RAM (`neorv32_imem_rom.vhd`), initialized from MIF. The old VHDL constant array caused OOM — that file is the replacement.
 - **SDRAM phase shift**: DRAM_CLK requires `+1.56ns` phase shift for stable operation (empirically determined)
 - **XBUS timeout**: 2048 cycles (~41μs @50MHz)
-- **ICACHE + SDRAM CDC**: `sdram_ctrl` uses toggle handshake across 50MHz↔100MHz domains. Single accesses are stable; consecutive locked reads (ICACHE miss refill) can cause `req_shadow` overwrite. Fix options: (a) async FIFO in sdram_ctrl, (b) enable cache bursts. See `doc/phases/de2os-debug.md`.
+- **ICACHE disabled**: ICACHE_EN=false in de2os_top. The async FIFO CDC path for burst reads is pre-wired in sdram_ctrl but untested. See `doc/phases/de2os-debug.md` for root cause analysis.
 - **Boot mode 0**: bootloader from IMEM (~2KB), loads main app from UART into SDRAM at `0x01000000`. Used by `de2os_top` (V3 primary, **recommended**). Incremental deployment via `run/deploy_de2shell_rtos.sh`.
 - **Boot mode 2**: direct IMEM image execution (no bootloader, no UART upload needed). Entire program baked into bitstream. Used by `de2shell_rtos_imem_top` (V3 bring-up only) via `run/deploy_de2shell_rtos_imem.sh`. Every code change requires full Quartus rebuild.
 - **Quartus parallelism**: `NUM_PARALLEL_PROCESSORS` is locked to `1` in QSF (was needed for OOM avoidance with old IMEM; may be safe to increase now)
@@ -190,8 +190,8 @@ The upstream release includes these features that our wrapper/intercon have not 
 
 ## Project Status
 
-**V2 (v0.1) is complete** — 192/213 acceptance items passed. de2shell is frozen. See `doc/de2shell-module-acceptance.md` for full results.
+**V2 deleted** — de2shell project and all V2 source files removed from repo. Acceptance archive: `doc/de2shell-module-acceptance.md`.
 
-**V3 is active** — all work on de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/phase5-sdram-gui.md` for plan. See `doc/phases/de2os-rtos-status.md` for detailed build status.
+**V3 is active** — de2os (SDRAM exec + FreeRTOS + PS/2 keyboard + VGA pixel GUI). See `doc/phases/de2os-rtos-status.md` for detailed build status.
 
-V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 22 commands (incl. chroma), VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode wired (640x480 RGB565 framebuffer in SDRAM). **GPU 2D accelerator integrated** (s12 @ 0xF0015000, FILL rect via SDRAM burst-write). **VGA PLL clock fix in progress**: toggle flip-flop → PLL c3 25MHz output to eliminate UART TX noise coupling. TWM pixel mode first displayed on physical monitor (2026-05-31) but unstable. Current blocker: VGA pixel mode display quality. **Conway/PONG/NTT/Audio synth/ChromaShader RTL all integrated** in de2os_top. Latest Quartus build: 2026-06-01 (compiling with PLL VGA clock fix).
+V3 progress: SDRAM execution done, FreeRTOS 4 tasks running (uart_input / shell / active / status), CLI 22 commands, VGA text terminal 80x30 (CP437 256 chars), VGA pixel mode 640x480 RGB565 framebuffer in SDRAM. **GPU 2D accelerator integrated** (s12, FILL rect via SDRAM burst-write). **TWM pixel mode working on physical monitor** (2026-06-01, minor flicker). **Conway/PONG/NTT/Audio synth/GPU RTL all integrated** in de2os_top. ICACHE currently disabled. Latest Quartus build: 2026-06-01.
