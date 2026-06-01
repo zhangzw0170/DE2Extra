@@ -1,25 +1,37 @@
 # de2os FreeRTOS 集成状态
 
-> 日期: 2026-05-30
-> 状态: 软件编译通过，Quartus RTL 编译通过 (timing clean)，待上板验证
-> 更新: 2026-05-30 — Exp6/7 VGA 测试图案集成 + I2C SDA 三态修复 + Exp8/10 重新接入; 13 实验全可用
+> 日期: 2026-06-01
+> 状态: **VGA PLL 修复已部署，像素模式数据通路验证通过**
+> 更新: 2026-06-01 — PLL c3 25MHz + falling_edge 输出寄存器已部署；SDRAM 回读 0/2560 错误；VGA burst read valid/req≈8；TWM 30s 稳定运行；待用户肉眼验证显示器画面质量
 > 硬件工程: `par/de2os/` (top entity: `de2os_top`)
 > 目标固件: `sw/app/de2shell_rtos/`
 
 ## 当前结论
 
-`de2os` 已完成软件编译和 Quartus RTL 编译的闭环。当前构建产物：
+VGA PLL 修复已部署：toggle flip-flop → PLL c3 25MHz (专用全局时钟网络)，输出寄存器改用 falling_edge。SDRAM 回读测试 0/2560 错误，VGA burst 读 valid/req≈8（每次 burst 返回 8 words 正确），TWM 运行 30 秒无崩溃。数据通路完整验证通过。待用户肉眼确认显示器画面质量。
 
-- 固件: `text=140456  data=1856  bss=81504  total=223816` (~142KB, +synth pending rebuild)
-- RTL: `par/de2os/de2os.sof` (2026-05-29 15:38)
-- Quartus: 0 errors, 271 warnings, all timing constraints met
-  - Worst setup slack: +2.394 ns
-  - Worst hold slack: +0.153 ns
-  - LEs: 71,299/114,480 (62%), 31 EMUL, 592KB mem, 1 PLL
-
-当前主瓶颈：**上板验证**。板子在队友手中。
+当前构建：
+- 固件: ~150KB (GPU + 改进 pxtest)
+- RTL: `par/de2os/de2os.sof` (已烧录)
+- PLL: c0=50MHz, c1=100MHz, c2=100MHz(+1.56ns), c3=25MHz(VGA)
 
 ## 已完成
+
+### 0. GPU 2D 加速器 + VGA PLL 修复 (2026-06-01)
+
+详见 `doc/phases/phase6-gpu-2d.md`。
+
+- **GPU 2D**: RTL (gpu_2d.vhd) + C 驱动 (gpu.h/gpu.c) + SDRAM burst-write 端口 + 总线集成 (s12 @ 0xF0015000)
+- **VGA PLL**: 25MHz 时钟从 toggle flip-flop 改为 PLL c3 输出，输出寄存器改用 falling_edge
+- fb_clear() 已使用 GPU 加速，gfx_fill_rect() 大矩形走 GPU
+- **上板验证**: Quartus 编译通过 (0 error)，烧录成功
+- **pxtest 诊断改进**: 修正 16-bit packed counter 解读；新增 SDRAM 回读验证 (0/2560 错误)；新增 framebuffer 采样 + live display 快照
+- **数据通路验证**:
+  - SDRAM 回读: 0/2560 mismatches (CPU 32-bit write/read 完美)
+  - Framebuffer 采样: line 100 前 16 像素值与预期 gradient 匹配
+  - VGA burst read: valid_word/burst_req ≈ 8 (每次 burst 正确返回 8 words)
+  - Live display: disp_word_q 包含有效 RGB565 gradient 数据
+- **TWM 稳定性**: 30 秒运行无崩溃，ESC 干净退出
 
 ### 1. SDRAM 执行基线已建立
 
@@ -49,7 +61,7 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 - 文本控制寄存器移到 `0x1F40..0x1F54`
 - 像素控制寄存器使用 `0x1F80..`
 - `fb_hal.c` 已改为启动时默认开启 test pattern (bit 1)，用于诊断 VGA 信号路径
-- **注意: VGA 像素模式从未在物理显示器上成功显示过**
+- **2026-05-31: TWM 命令首次在物理显示器上显示像素模式内容！** 但画面花屏/刷新慢，SDRAM 帧缓冲读取可能有竞争问题。这是重要突破——信号路径已通。
 
 ### 5. PS/2 已接入 RTOS 输入队列（主输入源）
 
@@ -147,32 +159,32 @@ PS/2 虚拟键码系统：22 个 VK 常量 (F1-F12, 方向键, 导航键)，门�
 
 ## 当前剩余问题
 
-### P0. VGA 像素模式从未成功显示 (最高优先级)
+### P0. VGA 像素模式 (2026-06-01 更新 — 数据通路已验证，显示质量 Bug 待修)
 
-这是当前最关键的未解决问题。可能的原因：
+**2026-06-01 (PLL 修复)**: 根因确认 — UART TX 噪声通过逻辑资源耦合到 toggle flip-flop 生成的 25MHz 时钟。修复: PLL c3 输出 25MHz (专用时钟网络) + falling_edge 输出寄存器。**但文本模式斜线重影未消除。**
+**2026-06-01 (pxtest 诊断)**: SDRAM 回读 0/2560 错误，VGA burst read valid/req≈8，framebuffer 采样与预期匹配，live display 快照包含有效 RGB565 数据。**pxtest 显示器可见棋盘格+渐变色。**
+**2026-06-01 (TWM 测试)**: 30 秒稳定运行，无崩溃，ESC 干净退出。**但显示器画面与修复前相同，仍有问题。**
+**2026-06-01 (用户确认 Bug)**:
+- BUG-1: 文本模式 UART TX 期间仍有斜线重影 (PLL c3 单路未解决)
+- BUG-2: TWM 像素模式显示与修复前相同 (数据通路正确但显示质量差)
+- 下一步: 双 PLL 输出 (c3=25MHz 0° + c4=25MHz -90°) 或调查 DAC 输出路由/去耦
 
-1. VGA 信号路径问题 (sync/blank 信号未正确连接)
-2. SDRAM 帧缓冲区读取路径问题 (VGA fetch FSM 或带宽)
-3. VGA 输出 mux 问题 (text/pixel 切换)
+### P1. 上板验证 (2026-06-01 更新)
 
-诊断计划:
-- `pxtest` 命令 Phase 1: test pattern 模式 (绕过 SDRAM) → 如果能看到色条 → 信号路径 OK，问题在 SDRAM
-- `pxtest` Phase 3-4: SDRAM 模式 + debug 寄存器 → 定位具体失败点
-- 如果 test pattern 都不显示 → VGA signal path 问题
-
-### P1. 上板验证
-
-所有以下项目需要上板确认：
-
-- [ ] bootloader 上传 + SDRAM 执行
-- [ ] FreeRTOS 4 任务调度正常
-- [ ] shell PS/2 + UART 双路输入
-- [ ] crypto bench (TRNG 修复后不再卡死)
-- [ ] twm 进入/退出正常 (PS/2 修复后不再卡死)
-- [ ] conwayhw / ponghw / ntt 基本功能
-- [ ] pxtest 诊断 VGA 像素模式
-- [ ] ExpDemo 13 个实验 (含 Exp6/7 VGA 测试图案)
-- [ ] I2C SDA 三态修复后 audio synth 初始化
+- [x] bootloader 上传 + SDRAM 执行 — ✅ 150KB 固件上传成功
+- [x] FreeRTOS 4 任务调度正常 — ✅ stats 显示 4 任务 + 栈 HWM 正常
+- [x] shell UART 输入 — ✅ UART 输入到达 shell，命令解析正常
+- [x] VGA 文本终端 80×30 显示 — ✅ vgadump 快照正常
+- [x] help/stats/heapstat/cpustat/clear — ✅ UART+vgadump 验证通过
+- [x] hello/info/life 交互式程序 — ✅ ESC 退出正常
+- [x] twm 进入/像素模式显示 — ✅ 30 秒稳定运行
+- [x] pxtest 诊断 VGA 像素模式 — ✅ SDRAM 回读 0 错误，burst read 正常
+- [ ] twm 画面质量 — 🟡 待用户肉眼验证
+- [ ] VGA 文本模式重影 — 🟡 待用户肉眼确认 PLL 修复效果
+- [ ] crypto bench (TRNG 修复后不再卡死) — 待测试
+- [ ] conwayhw / ponghw / ntt 基本功能 — 待测试
+- [ ] ExpDemo 13 个实验 (含 Exp6/7 VGA 测试图案) — 待测试
+- [ ] I2C SDA 三态修复后 audio synth 初始化 — 待测试
 
 ### P2. PS/2 VK 已基本覆盖，组合键待完善
 
@@ -190,9 +202,9 @@ RTL + C 驱动均已完成 (synth_engine @ s11, synth.c CLI)。待固件重编�
 
 ## 下一步
 
-1. **板子到手后立即执行**:
-   - `./run/deploy_de2shell_rtos.sh full` — 烧录新 RTL + 上传新固件
-   - 运行 `pxtest` 诊断 VGA 像素模式
-   - 验证 crypto/twm/conwayhw/ponghw/ntt/synth 基本功能
-2. 根据 pxtest 结果决定 VGA 像素模式的修复方案
+1. **用户验证 VGA 画面质量**: 检查文本模式重影是否消除、像素模式画面是否正确
+2. 如像素模式仍有问题: 实现像素采样回传 (串口 → 上位机分析) 或考虑 Terasic 双 PLL 输出方案 (c3=25MHz 0° + c4=25MHz -90°)
+3. 验证 crypto/twm/conwayhw/ponghw/ntt/synth 基本功能
+4. ChromaShader: Quartus 编译 + 上板验证
+5. GPU 性能测试: 全屏填充时间测量
 3. ChromaShader: RTL+仿真已完成，待 Quartus 编译 + 上板验证。`chroma` CLI 命令已注册 (第 22 个)。

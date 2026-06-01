@@ -55,7 +55,13 @@ entity sdram_ctrl is
         vga_rd_req_i  : in  std_logic;
         vga_rd_data_o : out std_logic_vector(31 downto 0);
         vga_rd_valid_o: out std_logic;
-        vga_rd_done_o : out std_logic
+        vga_rd_done_o : out std_logic;
+
+        -- GPU burst write port (100 MHz domain, direct)
+        gpu_wr_adr_i  : in  std_logic_vector(24 downto 0);
+        gpu_wr_dat_i  : in  std_logic_vector(31 downto 0);
+        gpu_wr_req_i  : in  std_logic;
+        gpu_wr_done_o : out std_logic
     );
 end entity sdram_ctrl;
 
@@ -88,7 +94,10 @@ architecture rtl of sdram_ctrl is
         S_BURST_CAPTURE, S_BURST_PRECHARGE, S_BURST_TRP_WAIT,
         -- VGA burst read states
         S_VGA_TRCD_WAIT, S_VGA_READ,
-        S_VGA_CAPTURE, S_VGA_PRECHARGE, S_VGA_TRP_WAIT
+        S_VGA_CAPTURE, S_VGA_PRECHARGE, S_VGA_TRP_WAIT,
+        -- GPU burst write states
+        S_GPU_TRCD_WAIT, S_GPU_WRITE,
+        S_GPU_PRECHARGE, S_GPU_TRP_WAIT
     );
 
     signal state       : state_t;
@@ -186,6 +195,12 @@ architecture rtl of sdram_ctrl is
     signal vga_fifo_rd_empty : std_logic;
     signal vga_fifo_pop_cnt  : unsigned(2 downto 0);
     signal vga_req_pending_cpu : std_logic;
+
+    -- GPU burst write port signals (100MHz, no CDC)
+    signal gpu_wr_valid     : std_logic;
+    signal gpu_adr_r        : std_logic_vector(24 downto 0);
+    signal gpu_col_cnt      : unsigned(2 downto 0);
+    signal gpu_done_r       : std_logic;
 
 begin
 
@@ -386,8 +401,10 @@ begin
     -- ================================================================
     burst_active <= burst_busy_cpu;
 
-    -- Burst pop: when burst active, stb asserted, FIFO not empty
-    fifo_rd_en <= '1' when burst_active = '1' and wb_stb_i = '1' and
+    -- Burst pop: autonomous — pop as soon as FIFO has data while burst active
+    -- (NEORV32 ICACHE fires 8 stb pulses then stops; FIFO fills asynchronously
+    --  from SDRAM.  Removing stb dependency prevents deadlock.)
+    fifo_rd_en <= '1' when burst_active = '1' and
                           wb_cyc_i = '1' and fifo_rd_empty = '0'
                   else '0';
 
@@ -514,6 +531,10 @@ begin
             vga_col_cnt  <= (others => '0');
             vga_fifo_wr_en <= '0';
             vga_fifo_wr_data <= (others => '0');
+            gpu_wr_valid <= '0';
+            gpu_adr_r    <= (others => '0');
+            gpu_col_cnt  <= (others => '0');
+            gpu_done_r   <= '0';
         elsif rising_edge(clk_sdram_i) then
             dram_cke <= '1';
             dq_oe    <= '0';
@@ -521,6 +542,7 @@ begin
             dram_dqm <= (others => '0');
             fifo_wr_en <= '0';
             vga_fifo_wr_en <= '0';
+            gpu_done_r <= '0';
 
             -- Latch the VGA request as soon as it crosses into the SDRAM
             -- domain. The main SDRAM FSM can then service it later from IDLE
@@ -528,6 +550,12 @@ begin
             if vga_fire_100m = '1' then
                 vga_valid <= '1';
                 vga_adr   <= vga_shadow_adr;
+            end if;
+
+            -- Latch GPU write request (100MHz domain, direct — no CDC needed)
+            if gpu_wr_req_i = '1' and gpu_wr_valid = '0' then
+                gpu_wr_valid <= '1';
+                gpu_adr_r    <= gpu_wr_adr_i;
             end if;
 
             case state is
@@ -591,7 +619,7 @@ begin
                     if ref_cnt = 0 then
                         state <= S_AUTO_REFRESH;
                     else
-                        -- Priority: burst > VGA > single-word
+                        -- Priority: burst > VGA > GPU > single-word
                         if burst_fire_100m = '1' then
                             burst_valid <= '1';
                             burst_adr   <= burst_req_shadow_adr;
@@ -611,6 +639,16 @@ begin
                             row_r   <= vga_adr(23 downto 11);
                             col_r   <= vga_adr(9 downto 0);
                             vga_col_cnt <= (others => '0');
+                            state   <= S_ACTIVATE;
+                        elsif gpu_wr_valid = '1' then
+                            addr_r  <= gpu_adr_r;
+                            we_r    <= '1';
+                            wr_data_r <= gpu_wr_dat_i;
+                            sel_r   <= (others => '0');
+                            ba_r    <= gpu_adr_r(24) & gpu_adr_r(10);
+                            row_r   <= gpu_adr_r(23 downto 11);
+                            col_r   <= gpu_adr_r(9 downto 0);
+                            gpu_col_cnt <= (others => '0');
                             state   <= S_ACTIVATE;
                         elsif req_valid = '1' then
                             addr_r    <= req_adr;
@@ -637,11 +675,13 @@ begin
                     dram_ba  <= ba_r;
                     dram_addr <= row_r;
                     trcd_cnt <= (others => '0');
-                    -- Route to burst, VGA, or single-word path after tRCD
+                    -- Route to burst, VGA, GPU, or single-word path after tRCD
                     if burst_valid = '1' then
                         state <= S_BURST_TRCD_WAIT;
                     elsif vga_valid = '1' then
                         state <= S_VGA_TRCD_WAIT;
+                    elsif gpu_wr_valid = '1' then
+                        state <= S_GPU_TRCD_WAIT;
                     else
                         state <= S_TRCD_WAIT;
                     end if;
@@ -802,6 +842,41 @@ begin
                         state <= S_IDLE;
                     end if;
 
+                -- ── GPU burst write path ──
+                when S_GPU_TRCD_WAIT =>
+                    trcd_cnt <= trcd_cnt + 1;
+                    if trcd_cnt = 1 then
+                        state <= S_GPU_WRITE;
+                    end if;
+
+                when S_GPU_WRITE =>
+                    wr_data_r <= gpu_wr_dat_i;
+                    dq_oe     <= '1';
+                    cmd_v     := CMD_WRITE;
+                    dram_addr <= "000" & std_logic_vector(unsigned(col_r) + resize(gpu_col_cnt, 10));
+                    dram_ba   <= ba_r;
+                    dram_dqm  <= (others => '0');
+                    if gpu_col_cnt = BURST_WORDS - 1 then
+                        state <= S_GPU_PRECHARGE;
+                    else
+                        gpu_col_cnt <= gpu_col_cnt + 1;
+                    end if;
+
+                when S_GPU_PRECHARGE =>
+                    cmd_v     := CMD_PRECHG;
+                    dram_ba   <= ba_r;
+                    dram_addr <= (others => '0');
+                    trcd_cnt  <= (others => '0');
+                    state     <= S_GPU_TRP_WAIT;
+
+                when S_GPU_TRP_WAIT =>
+                    trcd_cnt <= trcd_cnt + 1;
+                    if trcd_cnt = 1 then
+                        gpu_wr_valid <= '0';
+                        gpu_done_r   <= '1';
+                        state <= S_IDLE;
+                    end if;
+
                 when others => null;
 
             end case;
@@ -815,5 +890,8 @@ begin
     dram_cas_n <= cmd(1);
     dram_we_n  <= cmd(0);
     dram_dq    <= wr_data_r when dq_oe = '1' else (others => 'Z');
+
+    -- GPU done output (one-cycle pulse)
+    gpu_wr_done_o <= gpu_done_r;
 
 end architecture rtl;

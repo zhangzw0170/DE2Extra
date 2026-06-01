@@ -6,7 +6,7 @@ Usage:  python upload_de2os.py [COM_PORT] [BIN_FILE] [--wait]
   --wait : wait for KEY0 reset + bootloader banner (use when board already running)
   default: assume bootloader just started after JTAG config, upload immediately
 
-Defaults: COM10, ../sw/app/de2os/neorv32_exe.bin
+Defaults: COM10, ../sw/app/de2shell_rtos/neorv32_exe.bin
 Environment:
   NEORV32_BOOT_BAUD / DE2OS_BOOT_BAUD : override bootloader baud (default 115200)
   NEORV32_APP_BAUD  / DE2OS_APP_BAUD  : override app baud        (default 115200)
@@ -19,7 +19,7 @@ import serial
 
 PORT = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 'COM10'
 BINFILE = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith('-') else os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'sw', 'app', 'de2os', 'neorv32_exe.bin')
+    os.path.dirname(os.path.abspath(__file__)), '..', 'sw', 'app', 'de2shell_rtos', 'neorv32_exe.bin')
 WAIT = '--wait' in sys.argv
 
 BAUD_BOOT = int(os.getenv('DE2OS_BOOT_BAUD', os.getenv('NEORV32_BOOT_BAUD', '115200')))

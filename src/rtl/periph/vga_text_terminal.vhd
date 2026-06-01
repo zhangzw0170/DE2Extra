@@ -14,6 +14,7 @@ entity vga_text_terminal is
     port (
         clk_50m_i   : in  std_logic;
         rst_n_i     : in  std_logic;
+        clk_25m_i   : in  std_logic;
 
         -- VGA output (24-bit, 8-8-8 from RGB565 expansion)
         vga_r_o     : out std_logic_vector(7 downto 0);
@@ -31,17 +32,7 @@ entity vga_text_terminal is
         reg_dat_o   : out std_logic_vector(31 downto 0);
         reg_we_i    : in  std_logic;
         reg_stb_i   : in  std_logic;
-        reg_ack_o   : out std_logic;
-
-        -- ChromaShader override (25MHz domain, aligned with bram_q)
-        chroma_en_i    : in  std_logic := '0';
-        chroma_char_i  : in  std_logic_vector(7 downto 0) := x"20";
-        chroma_fg_i    : in  std_logic_vector(15 downto 0) := x"FFFF";
-        chroma_bg_i    : in  std_logic_vector(15 downto 0) := x"0000";
-
-        -- Exposed 25MHz clock and BRAM read address for ChromaShader
-        clk_25m_o      : out std_logic;
-        brm_rd_addr_o  : out integer range 0 to 2399
+        reg_ack_o   : out std_logic
     );
 end entity vga_text_terminal;
 
@@ -74,8 +65,14 @@ architecture rtl of vga_text_terminal is
 
     constant BLINK_MAX : integer := 25_000_000;  -- 0.5s @ 50MHz
 
-    -- 25MHz pixel clock (toggle on 50MHz)
-    signal clk_25m      : std_logic := '0';
+    -- Pre-registered VGA outputs (latched on falling edge of clk_25m per Terasic reference)
+    signal int_hs     : std_logic;
+    signal int_vs     : std_logic;
+    signal int_blank  : std_logic;
+    signal int_sync   : std_logic;
+    signal int_r      : std_logic_vector(7 downto 0);
+    signal int_g      : std_logic_vector(7 downto 0);
+    signal int_b      : std_logic_vector(7 downto 0);
 
     -- VGA timing counters
     signal h_count      : integer range 0 to H_TOTAL - 1 := 0;
@@ -122,23 +119,16 @@ architecture rtl of vga_text_terminal is
 begin
 
     ----------------------------------------------------------------
-    -- 25MHz pixel clock
+    -- VGA pixel clock from PLL (clean, noise-immune)
     ----------------------------------------------------------------
-    process(clk_50m_i)
-    begin
-        if rising_edge(clk_50m_i) then
-            clk_25m <= not clk_25m;
-        end if;
-    end process;
-    vga_clk_o <= clk_25m;
-    clk_25m_o <= clk_25m;
+    vga_clk_o <= clk_25m_i;
 
     ----------------------------------------------------------------
     -- VGA timing (25MHz)
     ----------------------------------------------------------------
-    process(clk_25m)
+    process(clk_25m_i)
     begin
-        if rising_edge(clk_25m) then
+        if rising_edge(clk_25m_i) then
             if h_count = H_TOTAL - 1 then
                 h_count <= 0;
                 if v_count = V_TOTAL - 1 then
@@ -160,19 +150,17 @@ begin
     pixel_x <= h_count - (H_SYNC + H_BP) when video_on = '1' else 0;
     pixel_y <= v_count - (V_SYNC + V_BP) when video_on = '1' else 0;
 
-    vga_hs_o   <= '1' when h_count >= H_SYNC else '0';
-    vga_vs_o   <= '1' when v_count >= V_SYNC else '0';
-    vga_blank_o <= video_on;
-    -- Match the known-good Exp6/Exp7 behaviour on DE2-115:
-    -- keep composite sync inactive during active video to avoid sync-on-green bias.
-    vga_sync_o <= '0' when (h_count >= H_SYNC and v_count >= V_SYNC) else '1';
+    int_hs   <= '1' when h_count >= H_SYNC else '0';
+    int_vs   <= '1' when v_count >= V_SYNC else '0';
+    int_blank <= video_on;
+    int_sync <= '0' when (h_count >= H_SYNC and v_count >= V_SYNC) else '1';
 
     ----------------------------------------------------------------
     -- Blink counter (25MHz)
     ----------------------------------------------------------------
-    process(clk_25m)
+    process(clk_25m_i)
     begin
-        if rising_edge(clk_25m) then
+        if rising_edge(clk_25m_i) then
             if blink_cnt = BLINK_MAX - 1 then
                 blink_cnt <= 0;
                 blink_vis <= not blink_vis;
@@ -197,7 +185,6 @@ begin
         end if;
         bram_rd_addr <= char_row * COLS + char_col;
         sub_row     <= pixel_y mod CHAR_H;
-        brm_rd_addr_o <= char_row * COLS + char_col;
     end process;
 
     ----------------------------------------------------------------
@@ -205,9 +192,9 @@ begin
     -- Registers bram_q, px_d, py_d, sub_row_d all on the same edge
     -- so they are aligned for the rendering stage.
     ----------------------------------------------------------------
-    process(clk_25m)
+    process(clk_25m_i)
     begin
-        if rising_edge(clk_25m) then
+        if rising_edge(clk_25m_i) then
             bram_q    <= char_ram(bram_rd_addr);
             px_d      <= pixel_x;
             py_d      <= pixel_y;
@@ -219,7 +206,7 @@ begin
     -- Font ROM lookup + pixel rendering (25MHz, registered output)
     -- All inputs (bram_q, px_d, py_d, sub_row_d) are aligned.
     ----------------------------------------------------------------
-    process(clk_25m)
+    process(clk_25m_i)
         variable ascii_char : integer range 0 to 255;
         variable font_byte  : std_logic_vector(7 downto 0);
         variable pixel_bit  : std_logic;
@@ -228,34 +215,27 @@ begin
         variable color_rgb  : std_logic_vector(15 downto 0);
         variable cursor_at  : std_logic;
     begin
-        if rising_edge(clk_25m) then
-            -- ChromaShader override: replace char/fg/bg when active
-            if chroma_en_i = '1' then
-                ascii_char := to_integer(unsigned(chroma_char_i));
-                fg_rgb := chroma_fg_i;
-                bg_rgb := chroma_bg_i;
-            else
-                ascii_char := to_integer(unsigned(bram_q(31 downto 24)));
-                fg_rgb := bram_q(15 downto 0);
-                bg_rgb := bg_color;
-            end if;
-
+        if rising_edge(clk_25m_i) then
             -- Font ROM: use variable for immediate use in this process
+            ascii_char := to_integer(unsigned(bram_q(31 downto 24)));
             font_byte := font_rom_data(ascii_char * 16 + sub_row_d);
 
             -- Pixel on: select bit from font data (MSB = leftmost pixel)
             pixel_bit := font_byte(7 - (px_d mod CHAR_W));
 
             -- Cursor detection (full character cell)
-            -- Suppress cursor in chroma region
             cursor_at := '0';
-            if ctrl_enable = '1' and chroma_en_i = '0' then
+            if ctrl_enable = '1' then
                 if py_d >= (cursor_y * CHAR_H) and py_d < ((cursor_y + 1) * CHAR_H) then
                     if px_d >= (cursor_x * CHAR_W) and px_d < ((cursor_x + 1) * CHAR_W) then
                         cursor_at := '1';
                     end if;
                 end if;
             end if;
+
+            -- fg from per-cell, bg from global register
+            fg_rgb := bram_q(15 downto 0);
+            bg_rgb := bg_color;
 
             if pixel_bit = '1' then
                 color_rgb := fg_rgb;
@@ -268,16 +248,41 @@ begin
                 color_rgb := not color_rgb;
             end if;
 
-            -- RGB565 to 8-bit expansion
+            -- RGB565 to 8-bit expansion (internal, output register delays to pins)
             if video_on = '0' then
-                vga_r_o <= x"00";
-                vga_g_o <= x"00";
-                vga_b_o <= x"00";
+                int_r <= x"00";
+                int_g <= x"00";
+                int_b <= x"00";
             else
-                vga_r_o <= color_rgb(15 downto 11) & "000";
-                vga_g_o <= color_rgb(10 downto 5)  & "00";
-                vga_b_o <= color_rgb(4 downto 0)   & "000";
+                int_r <= color_rgb(15 downto 11) & "000";
+                int_g <= color_rgb(10 downto 5)  & "00";
+                int_b <= color_rgb(4 downto 0)   & "000";
             end if;
+        end if;
+    end process;
+
+    ----------------------------------------------------------------
+    -- Output registers: latch ALL VGA signals on falling edge of PLL 25MHz.
+    -- Data stable for 20ns before DAC samples on next rising edge.
+    ----------------------------------------------------------------
+    process(clk_25m_i, rst_n_i)
+    begin
+        if rst_n_i = '0' then
+            vga_r_o     <= (others => '0');
+            vga_g_o     <= (others => '0');
+            vga_b_o     <= (others => '0');
+            vga_hs_o    <= '1';
+            vga_vs_o    <= '1';
+            vga_blank_o <= '0';
+            vga_sync_o  <= '1';
+        elsif falling_edge(clk_25m_i) then
+            vga_r_o     <= int_r;
+            vga_g_o     <= int_g;
+            vga_b_o     <= int_b;
+            vga_hs_o    <= int_hs;
+            vga_vs_o    <= int_vs;
+            vga_blank_o <= int_blank;
+            vga_sync_o  <= int_sync;
         end if;
     end process;
 

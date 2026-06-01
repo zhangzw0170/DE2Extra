@@ -21,7 +21,6 @@
 #include "gpio_hal.h"
 #include "board_status.h"
 #include "ps2_decoder.h"
-#include "crypto_viz.h"
 
 #define BAUD_RATE 115200
 #define APP_BOOT_ADDR 0x01000000u
@@ -61,7 +60,6 @@ extern const program_t prog_conway_hw;
 extern const program_t prog_pong_hw;
 extern const program_t prog_ntt;
 extern const program_t prog_synth;
-extern const program_t prog_chroma;
 
 uint8_t last_ir_cmd = 0;
 
@@ -83,8 +81,6 @@ typedef enum {
     PROG_PONG_HW,
     PROG_NTT,
     PROG_SYNTH,
-    PROG_CRYPTOVIZ,
-    PROG_CHROMA,
     PROG_COUNT
 } prog_id_t;
 
@@ -106,9 +102,7 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_CONWAY_HW] = &prog_conway_hw,
     [PROG_PONG_HW]  = &prog_pong_hw,
     [PROG_NTT]      = &prog_ntt,
-    [PROG_SYNTH]    = &prog_synth,
-    [PROG_CRYPTOVIZ] = &prog_cryptoviz,
-    [PROG_CHROMA]    = &prog_chroma
+    [PROG_SYNTH]    = &prog_synth
 };
 
 static volatile prog_id_t active_prog = PROG_SHELL;
@@ -265,9 +259,7 @@ static uint8_t ps2_lock_mask(void) {
 static void dbg_set(uint32_t code, const char *msg) {
     g_dbg_code = code & 0xfffffff0u;
     gpio_write_out(g_dbg_code);
-    if (msg != NULL) {
-        neorv32_uart0_puts(msg);
-    }
+    (void)msg;
 }
 
 static void write_resume_marker(void) {
@@ -317,15 +309,11 @@ static configSTACK_DEPTH_TYPE active_prog_stack_words(prog_id_t pid) {
         case PROG_INFO:
         case PROG_MONITOR:
         case PROG_NTT:
-            return 640;
+            return 1024;
         case PROG_DEMO:
             return 896;
         case PROG_WIN30:
             return 1280;
-        case PROG_CRYPTOVIZ:
-            return 896;
-        case PROG_CHROMA:
-            return 640;
         default:
             return 512;
     }
@@ -380,7 +368,6 @@ static int ps2_sync_leds(volatile uint32_t *ps2) {
         }
     }
 
-    neorv32_uart0_puts("WARN: ps2 led sync failed\n");
     return -1;
 }
 
@@ -495,35 +482,6 @@ static BaseType_t cli_vgamon(char *buf, size_t len, const char *cmd) {
     return pdFALSE;
 }
 
-static BaseType_t cli_cryptoviz(char *buf, size_t len, const char *cmd) {
-    const char *p = cmd;
-    char *p_out = buf;
-    (void)len;
-
-    /* skip "cryptoviz" */
-    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
-    while ((*p == ' ') || (*p == '\t')) p++;
-    const char *algo = p;
-    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
-    char algo_buf[16];
-    { int i = 0; const char *s = algo; while (s < p && i < 15) algo_buf[i++] = *s++; algo_buf[i] = '\0'; }
-    while ((*p == ' ') || (*p == '\t')) p++;
-    const char *a1 = p;
-    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
-    char a1_buf[128];
-    { int i = 0; const char *s = a1; while (s < p && i < 127) a1_buf[i++] = *s++; a1_buf[i] = '\0'; }
-    while ((*p == ' ') || (*p == '\t')) p++;
-    const char *a2 = p;
-    while ((*p != '\0') && (*p != ' ') && (*p != '\t')) p++;
-    char a2_buf[128];
-    { int i = 0; const char *s = a2; while (s < p && i < 127) a2_buf[i++] = *s++; a2_buf[i] = '\0'; }
-
-    crypto_viz_set_args(algo_buf, a1_buf, a2_buf);
-    p_out += strcpy_local(p_out, "Starting cryptoviz...\r\n");
-    cli_launch_req = PROG_CRYPTOVIZ;
-    return pdFALSE;
-}
-
 static const CLI_Command_Definition_t cmd_hello_def =
     {"hello", "hello:    LED chaser\r\n", cli_hello, 0};
 static const CLI_Command_Definition_t cmd_crypto_def =
@@ -535,7 +493,7 @@ static const CLI_Command_Definition_t cmd_snake_def =
 static const CLI_Command_Definition_t cmd_info_def =
     {"info", "info:     System dashboard\r\n", cli_info, 0};
 static const CLI_Command_Definition_t cmd_expdemo_def =
-    {"expdemo", "expdemo:  13 course labs\r\n", cli_expdemo, 0};
+    {"expdemo", "expdemo:  11 course labs\r\n", cli_expdemo, 0};
 
 static const CLI_Command_Definition_t cmd_life_def =
     {"life", "life:     Conway's Game of Life\r\n", cli_life, 0};
@@ -555,17 +513,6 @@ static const CLI_Command_Definition_t cmd_ntt_def =
     {"ntt", "ntt:      NTT accelerator CLI\r\n", cli_ntt, 0};
 static const CLI_Command_Definition_t cmd_synth_def =
     {"synth", "synth:    Audio synth (PS/2 piano)\r\n", cli_synth, 0};
-static const CLI_Command_Definition_t cmd_cryptoviz_def =
-    {"cryptoviz", "cryptoviz: AES/SHA step-through viz\r\n", cli_cryptoviz, 0};
-
-/* ── chroma (HW terrain) ──────────────────────────────────────────── */
-static BaseType_t cli_chroma(char *buf, size_t len, const char *cmd) {
-    (void)buf; (void)len; (void)cmd;
-    cli_launch_req = PROG_CHROMA;
-    return pdFALSE;
-}
-static const CLI_Command_Definition_t cmd_chroma_def =
-    {"chroma", "chroma:   HW terrain sandbox\r\n", cli_chroma, 0};
 
 static const CLI_Command_Definition_t cmd_stats_def =
     {"stats", "stats:    Task list + stack HWM\r\n", cli_stats, 0};
@@ -586,7 +533,7 @@ static const CLI_Command_Definition_t cmd_cpustat_def =
 #define PX_REG_SAMP1  (0x7020u / 4u)
 #define PX_REG_SAMP2  (0x7024u / 4u)
 #define PX_REG_SAMP3  (0x7028u / 4u)
-#define PX_FB         ((volatile uint8_t *)0x01800000u)
+#define PX_FB         ((volatile uint16_t *)0x01800000u)
 #define PX_FB_W       640
 #define PX_FB_H       480
 
@@ -612,6 +559,21 @@ static void px_dump(const char *label) {
     neorv32_uart0_putc('\n');
 }
 
+static void px_uart_hex16(uint16_t v) {
+    static const char hex[] = "0123456789ABCDEF";
+    for (int s = 12; s >= 0; s -= 4)
+        neorv32_uart0_putc(hex[(v >> s) & 0xf]);
+}
+
+static void px_fsm_name(uint32_t d0) {
+    uint32_t fsm = d0 & 0x7;
+    neorv32_uart0_puts(fsm == 0 ? "IDLE" :
+                       fsm == 1 ? "REQ" :
+                       fsm == 2 ? "POP" :
+                       fsm == 3 ? "NEXT_BURST" :
+                       fsm == 4 ? "LINE_DONE" : "?");
+}
+
 static BaseType_t cli_pxtest(char *buf, size_t len, const char *cmd) {
     (void)cmd; (void)len;
     char *p = buf;
@@ -627,62 +589,119 @@ static BaseType_t cli_pxtest(char *buf, size_t len, const char *cmd) {
     neorv32_uart0_puts("  => Waiting 3 s...\n");
     vTaskDelay(pdMS_TO_TICKS(3000));
 
-    /* Phase 2: Read debug registers after 3s of test pattern */
+    /* Phase 2: Debug regs after test pattern — properly extract 16-bit counters */
     neorv32_uart0_puts("\n-- Phase 2: debug regs after test pattern --\n");
     px_dump("  ");
     {
         uint32_t d0 = PX_BASE[PX_REG_DBG0];
-        uint32_t fsm = d0 & 0x7;
-        uint32_t line_evt = d0 >> 16;
-        neorv32_uart0_puts("  FSM=");
-        neorv32_uart0_putc('0' + (char)fsm);
-        neorv32_uart0_puts(" line_events=");
-        px_uart_hex(line_evt);
-        neorv32_uart0_puts(fsm == 0 ? " (IDLE)" :
-                           fsm == 1 ? " (REQ)" :
-                           fsm == 2 ? " (POP)" :
-                           fsm == 3 ? " (NEXT_BURST)" :
-                           fsm == 4 ? " (LINE_DONE)" : " (?)");
+        neorv32_uart0_puts("  FSM="); px_fsm_name(d0);
+        neorv32_uart0_puts(" line_evt="); px_uart_hex16((uint16_t)(d0 >> 16));
+        neorv32_uart0_putc('\n');
+        uint32_t d2 = PX_BASE[PX_REG_DBG2];
+        uint32_t d3 = PX_BASE[PX_REG_DBG3];
+        neorv32_uart0_puts("  burst_req=");  px_uart_hex16((uint16_t)d2);
+        neorv32_uart0_puts(" valid_word=");  px_uart_hex16((uint16_t)(d2 >> 16));
+        neorv32_uart0_puts(" line_evt2=");   px_uart_hex16((uint16_t)d3);
+        neorv32_uart0_puts(" burst_done=");  px_uart_hex16((uint16_t)(d3 >> 16));
         neorv32_uart0_putc('\n');
     }
 
-    /* Phase 3: Switch to SDRAM mode, write gradient */
-    neorv32_uart0_puts("\n-- Phase 3: SDRAM framebuffer with gradient --\n");
-    PX_BASE[PX_REG_MODE] = 0x00000001u;  /* mode_en=1, testpat=0 */
-    for (int y = 0; y < PX_FB_H; y++) {
-        for (int x = 0; x < PX_FB_W; x++) {
-            uint8_t r = (uint8_t)(x * 7u / PX_FB_W);
-            uint8_t g = (uint8_t)(y * 7u / PX_FB_H);
-            uint8_t b = (uint8_t)((x + y) & 0x3);
-            PX_FB[y * PX_FB_W + x] = (uint8_t)((r << 5) | (g << 2) | b);
+    /* Phase 3: Write known pattern for readback test */
+    neorv32_uart0_puts("\n-- Phase 3: SDRAM write + readback test --\n");
+    PX_BASE[PX_REG_MODE] = 0x00000000u;  /* disable pixel mode during write */
+    /* Write a simple checkerboard to first 8 lines */
+    volatile uint32_t *fb32 = (volatile uint32_t *)0x01800000u;
+    for (int i = 0; i < 8 * 320; i++) {
+        fb32[i] = 0xF80007E0u;  /* pixel0=red, pixel1=green per word */
+    }
+    /* Read back and verify */
+    int mismatches = 0;
+    for (int i = 0; i < 8 * 320; i++) {
+        if (fb32[i] != 0xF80007E0u) {
+            if (mismatches < 8) {
+                neorv32_uart0_puts("  MISMATCH [");
+                px_uart_hex((uint32_t)i);
+                neorv32_uart0_puts("] got ");
+                px_uart_hex(fb32[i]);
+                neorv32_uart0_puts(" exp F80007E0\n");
+            }
+            mismatches++;
         }
     }
+    neorv32_uart0_puts("  readback: ");
+    px_uart_hex((uint32_t)mismatches);
+    neorv32_uart0_puts(" / 2560 mismatches\n");
+
+    /* Phase 4: SDRAM gradient write + display */
+    neorv32_uart0_puts("\n-- Phase 4: SDRAM gradient + display --\n");
+    for (int y = 0; y < PX_FB_H; y++) {
+        for (int x = 0; x < PX_FB_W; x++) {
+            uint16_t r5 = (uint16_t)(x * 31u / (PX_FB_W - 1));
+            uint16_t g6 = (uint16_t)(y * 63u / (PX_FB_H - 1));
+            uint16_t b5 = (uint16_t)(((x + y) * 31u) / (PX_FB_W + PX_FB_H - 2));
+            PX_FB[y * PX_FB_W + x] = (uint16_t)((r5 << 11) | (g6 << 5) | b5);
+        }
+    }
+    PX_BASE[PX_REG_MODE] = 0x00000001u;  /* mode_en=1, testpat=0 */
     px_dump("  after gradient write");
     neorv32_uart0_puts("  => Check monitor: should see color gradient.\n");
     neorv32_uart0_puts("  => Waiting 3 s...\n");
     vTaskDelay(pdMS_TO_TICKS(3000));
 
-    /* Phase 4: Debug regs after SDRAM mode */
-    neorv32_uart0_puts("\n-- Phase 4: debug regs after SDRAM mode --\n");
+    /* Phase 5: Debug regs during active SDRAM display */
+    neorv32_uart0_puts("\n-- Phase 5: debug regs during SDRAM display --\n");
     px_dump("  ");
     {
+        uint32_t d0 = PX_BASE[PX_REG_DBG0];
+        neorv32_uart0_puts("  FSM="); px_fsm_name(d0);
+        neorv32_uart0_puts(" line_evt="); px_uart_hex16((uint16_t)(d0 >> 16));
         uint32_t d2 = PX_BASE[PX_REG_DBG2];
         uint32_t d3 = PX_BASE[PX_REG_DBG3];
-        neorv32_uart0_puts("  req_count=");   px_uart_hex(d2);
-        neorv32_uart0_puts(" valid_count=");  px_uart_hex(d3);
-        if (d2 == 0) {
-            neorv32_uart0_puts(" *** NO SDRAM REQUESTS — fetch FSM never triggered!\n");
-        } else if (d3 == 0) {
-            neorv32_uart0_puts(" *** NO VALID DATA — SDRAM not returning data!\n");
-        } else if (d3 < d2) {
-            neorv32_uart0_puts(" *** DROPPED REQUESTS — SDRAM bandwidth issue?\n");
-        } else {
-            neorv32_uart0_puts(" (SDRAM reads active)\n");
-        }
+        neorv32_uart0_puts(" burst_req=");  px_uart_hex16((uint16_t)d2);
+        neorv32_uart0_puts(" valid_word="); px_uart_hex16((uint16_t)(d2 >> 16));
+        neorv32_uart0_puts(" burst_done="); px_uart_hex16((uint16_t)(d3 >> 16));
+        neorv32_uart0_putc('\n');
     }
 
-    /* Phase 5: Restore text mode */
-    neorv32_uart0_puts("\n-- Phase 5: restore text mode --\n");
+    /* Phase 6: Sample framebuffer contents during active display */
+    neorv32_uart0_puts("\n-- Phase 6: framebuffer sample (first 16 pixels of line 100) --\n");
+    {
+        volatile uint16_t *line100 = &PX_FB[100 * PX_FB_W];
+        for (int i = 0; i < 16; i++) {
+            if (i % 8 == 0) neorv32_uart0_puts("  ");
+            px_uart_hex16(line100[i]);
+            neorv32_uart0_putc(' ');
+            if (i % 8 == 7) neorv32_uart0_putc('\n');
+        }
+        /* Expected: r5 gradient for x=0..15 */
+        neorv32_uart0_puts("  expected first 4: ");
+        for (int x = 0; x < 4; x++) {
+            uint16_t r5 = (uint16_t)(x * 31u / 639);
+            uint16_t g6 = (uint16_t)(100 * 63u / 479);
+            uint16_t b5 = (uint16_t)(((x + 100) * 31u) / 1118);
+            px_uart_hex16((uint16_t)((r5 << 11) | (g6 << 5) | b5));
+            neorv32_uart0_putc(' ');
+        }
+        neorv32_uart0_putc('\n');
+    }
+
+    /* Phase 7: Sample live VGA display registers (multiple snapshots) */
+    neorv32_uart0_puts("\n-- Phase 7: live display snapshots --\n");
+    for (int snap = 0; snap < 4; snap++) {
+        uint32_t s0 = PX_BASE[PX_REG_SAMP0];  /* disp_word_q */
+        uint32_t s3 = PX_BASE[PX_REG_SAMP3];  /* rd/wr addr */
+        neorv32_uart0_puts("  snap");
+        neorv32_uart0_putc('0' + (char)snap);
+        neorv32_uart0_puts(": disp=");
+        px_uart_hex(s0);
+        neorv32_uart0_puts(" addr_en=");
+        px_uart_hex(s3);
+        neorv32_uart0_putc('\n');
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    /* Phase 8: Restore text mode */
+    neorv32_uart0_puts("\n-- Phase 8: restore text mode --\n");
     PX_BASE[PX_REG_MODE] = 0x00000000u;
     vga_cursor_show(1);
     neorv32_uart0_puts("  pixel mode disabled.\n");
@@ -718,8 +737,6 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_ponghw_def);
     FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
     FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_cryptoviz_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_chroma_def);
     FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_heapstat_def);
@@ -734,8 +751,10 @@ void freertos_risc_v_application_interrupt_handler(void) {
 }
 
 void freertos_risc_v_application_exception_handler(void) {
-    dbg_set(0xDEE0u, "DBG: exception\n");
-    neorv32_uart0_puts("!!! FreeRTOS exception !!!\n");
+    uint32_t cause = neorv32_cpu_csr_read(CSR_MCAUSE);
+    uint32_t epc   = neorv32_cpu_csr_read(CSR_MEPC);
+    uint32_t mtval = neorv32_cpu_csr_read(CSR_MTVAL);
+    neorv32_uart0_printf("!!! FreeRTOS exception !!! mcause=0x%x mepc=0x%x mtval=0x%x\n", cause, epc, mtval);
     for (;;) {
     }
 }
@@ -856,7 +875,11 @@ static void t_uart_input(void *pv) {
                 bootloader_restart();
             }
             c = (char)raw_uart;
-            (void)xQueueSend(xInputQueue, &c, 0);
+            if ((uint8_t)c == 0x14u) { /* Ctrl+T: trigger vgadump from any context */
+                g_vga_dump_req = 1u;
+            } else {
+                (void)xQueueSend(xInputQueue, &c, 0);
+            }
         }
 
         {
@@ -871,7 +894,7 @@ static void t_uart_input(void *pv) {
                             (void)ps2_sync_leds(ps2);
                             last_lock_mask = ps2_lock_mask();
                         }
-                        if (key.is_press && (key.has_ascii || key.ascii != 0)) {
+                        if (key.is_press && key.has_ascii) {
                             c = (char)key.ascii;
                             (void)xQueueSend(xInputQueue, &c, 0);
                         }
@@ -899,21 +922,13 @@ static void t_active_prog(void *pv) {
         }
 
         if (xQueueReceive(xInputQueue, &c, 0) == pdTRUE) {
-            /* F1 = show help (intercepted before program) */
-            if ((uint8_t)c == PS2_VK_F1) {
-                if ((prog != NULL) && (prog->help != NULL)) {
-                    neorv32_uart0_printf("[Help] %s: %s\r\n", prog->name, prog->help);
-                }
+            if (c == 27) {
+                exit_active_program();
             }
-            /* Deliver to program first (allows cleanup on F10/ESC) */
             if ((prog != NULL) && (prog->input != NULL)) {
                 xSemaphoreTake(xVgaMutex, portMAX_DELAY);
                 prog->input(c);
                 xSemaphoreGive(xVgaMutex);
-            }
-            /* F10 or ESC = quit (after program had chance to clean up) */
-            if (c == 27 || (uint8_t)c == PS2_VK_F10) {
-                exit_active_program();
             }
         }
 
@@ -1104,7 +1119,7 @@ int main(void) {
 
     gpio_write_out(0u);
     board_status_init();
-    vga_set_serial_mirror(0);
+    vga_set_serial_mirror(1);
     vga_init();
     reset_display_mode();
     write_resume_marker();
@@ -1136,7 +1151,7 @@ int main(void) {
         for (;;) {
         }
     }
-    if (xTaskCreate(t_status, "status", 256, NULL, 1, NULL) != pdPASS) {
+    if (xTaskCreate(t_status, "status", 256, NULL, 4, NULL) != pdPASS) {
         dbg_set(0xD070u, "FATAL: status task create failed\n");
         for (;;) {
         }

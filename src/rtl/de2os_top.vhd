@@ -86,7 +86,7 @@ entity de2os_top is
         AUD_DACLRCK : in  std_logic;
         AUD_DACDAT  : out std_logic;
         I2C_SCLK    : out std_logic;
-        I2C_SDAT    : inout std_logic
+        I2C_SDAT    : out std_logic
     );
 end entity de2os_top;
 
@@ -96,6 +96,7 @@ architecture rtl of de2os_top is
     signal clk_50m     : std_logic;
     signal clk_sdram   : std_logic;
     signal clk_sdram_shift : std_logic;
+    signal clk_25m     : std_logic;
     signal rst_n       : std_logic;
     signal rst_sdram_n : std_logic;
     signal rst_sdram_sync : std_logic_vector(1 downto 0);
@@ -238,17 +239,6 @@ architecture rtl of de2os_top is
     signal pong_vga_clk     : std_logic;
     signal pong_vga_en      : std_logic;
 
-    -- ExpDemo VGA outputs
-    signal exp_vga_r       : std_logic_vector(7 downto 0);
-    signal exp_vga_g       : std_logic_vector(7 downto 0);
-    signal exp_vga_b       : std_logic_vector(7 downto 0);
-    signal exp_vga_hs      : std_logic;
-    signal exp_vga_vs      : std_logic;
-    signal exp_vga_blank   : std_logic;
-    signal exp_vga_sync    : std_logic;
-    signal exp_vga_clk     : std_logic;
-    signal exp_vga_en      : std_logic;
-
     -- Conway engine Wishbone
     signal conway_wb_adr   : std_logic_vector(4 downto 0);
     signal conway_wb_dat_o : std_logic_vector(31 downto 0);
@@ -265,19 +255,17 @@ architecture rtl of de2os_top is
     signal synth_wb_stb   : std_logic;
     signal synth_wb_ack   : std_logic;
 
-    -- ChromaShader
-    signal chroma_wb_adr    : std_logic_vector(4 downto 0);
-    signal chroma_wb_dat_o  : std_logic_vector(31 downto 0);
-    signal chroma_wb_dat_i  : std_logic_vector(31 downto 0);
-    signal chroma_wb_we     : std_logic;
-    signal chroma_wb_stb    : std_logic;
-    signal chroma_wb_ack    : std_logic;
-    signal chroma_en        : std_logic;
-    signal chroma_char      : std_logic_vector(7 downto 0);
-    signal chroma_fg        : std_logic_vector(15 downto 0);
-    signal chroma_bg        : std_logic_vector(15 downto 0);
-    signal chroma_clk_25m   : std_logic;
-    signal chroma_rd_addr   : integer range 0 to 2399;
+    -- GPU 2D accelerator signals
+    signal gpu_reg_adr    : std_logic_vector(15 downto 0);
+    signal gpu_reg_dat_i  : std_logic_vector(31 downto 0);
+    signal gpu_reg_dat_o  : std_logic_vector(31 downto 0);
+    signal gpu_reg_we     : std_logic;
+    signal gpu_reg_stb    : std_logic;
+    signal gpu_reg_ack    : std_logic;
+    signal gpu_wr_adr     : std_logic_vector(24 downto 0);
+    signal gpu_wr_dat     : std_logic_vector(31 downto 0);
+    signal gpu_wr_req     : std_logic;
+    signal gpu_wr_done    : std_logic;
 
     -- INTC slave 7 stub: tie ack to stb to prevent bus hang
     signal intc_stub_stb : std_logic;
@@ -374,6 +362,7 @@ begin
         clk_50m_o   => clk_50m,
         clk_sdram_o => clk_sdram,
         clk_sdram_shift_o => clk_sdram_shift,
+        clk_25m_o   => clk_25m,
         clk_vga_o   => open,
         rst_n_o     => rst_n,
         pll_locked_o => open
@@ -408,10 +397,10 @@ begin
         IMEM_SIZE       => CPU_IMEM_SIZE_G,
         DMEM_SIZE       => 16*1024,
         BOOT_MODE       => CPU_BOOT_MODE_G,
-        ICACHE_EN       => false,
+        ICACHE_EN       => false, -- disabled: mcause=1 at mepc=0x55025FFE (instr access fault)
         ICACHE_BLOCKS   => 64,
         ICACHE_BLOCK_SZ => 32,
-        ICACHE_BURSTS   => true,
+        ICACHE_BURSTS   => false,
         TRNG_EN         => true
     )
     port map (
@@ -529,14 +518,12 @@ begin
         s11_we_o  => synth_wb_we,
         s11_stb_o => synth_wb_stb,
         s11_ack_i => synth_wb_ack,
-
-        -- s12: ChromaShader
-        s12_adr_o => chroma_wb_adr,
-        s12_dat_i => chroma_wb_dat_i,
-        s12_dat_o => chroma_wb_dat_o,
-        s12_we_o  => chroma_wb_we,
-        s12_stb_o => chroma_wb_stb,
-        s12_ack_i => chroma_wb_ack
+        s12_adr_o  => gpu_reg_adr,
+        s12_dat_i  => gpu_reg_dat_o,
+        s12_dat_o  => gpu_reg_dat_i,
+        s12_we_o   => gpu_reg_we,
+        s12_stb_o  => gpu_reg_stb,
+        s12_ack_i  => gpu_reg_ack
     );
 
     -- ================================================================
@@ -571,7 +558,11 @@ begin
         vga_rd_req_i  => vga_sdram_rd_req,
         vga_rd_data_o => vga_sdram_rd_data,
         vga_rd_valid_o=> vga_sdram_rd_valid,
-        vga_rd_done_o => vga_sdram_rd_done
+        vga_rd_done_o => vga_sdram_rd_done,
+        gpu_wr_adr_i  => gpu_wr_adr,
+        gpu_wr_dat_i  => gpu_wr_dat,
+        gpu_wr_req_i  => gpu_wr_req,
+        gpu_wr_done_o => gpu_wr_done
     );
 
     -- DRAM 时钟使用相移版 PLL 输出，给板级地址/命令/写数据留 setup 裕量
@@ -584,6 +575,7 @@ begin
     port map (
         clk_50m_i   => clk_50m,
         rst_n_i     => rst_n,
+        clk_25m_i   => clk_25m,
         vga_r_o     => vga_r_int,
         vga_g_o     => vga_g_int,
         vga_b_o     => vga_b_int,
@@ -597,21 +589,14 @@ begin
         reg_dat_o   => vga_txt_reg_dat_i,
         reg_we_i    => vga_reg_we,
         reg_stb_i   => vga_txt_reg_stb,
-        reg_ack_o   => vga_txt_reg_ack,
-
-        -- ChromaShader override
-        chroma_en_i    => chroma_en,
-        chroma_char_i  => chroma_char,
-        chroma_fg_i    => chroma_fg,
-        chroma_bg_i    => chroma_bg,
-        clk_25m_o      => chroma_clk_25m,
-        brm_rd_addr_o  => chroma_rd_addr
+        reg_ack_o   => vga_txt_reg_ack
     );
 
     u_vga_px : entity work.vga_pixel_ctrl
     port map (
         clk_50m_i    => clk_50m,
         rst_n_i      => rst_n,
+        clk_25m_i    => clk_25m,
         vga_r_o      => vga_pixel_r,
         vga_g_o      => vga_pixel_g,
         vga_b_o      => vga_pixel_b,
@@ -634,36 +619,28 @@ begin
         vga_rd_done_i  => vga_sdram_rd_done
     );
 
-    VGA_R       <= exp_vga_r      when exp_vga_en = '1' else
-                   pong_vga_r     when pong_vga_en = '1' else
+    VGA_R       <= pong_vga_r     when pong_vga_en = '1' else
                    vga_pixel_r    when vga_pixel_mode = '1' else
                    vga_r_int;
-    VGA_G       <= exp_vga_g      when exp_vga_en = '1' else
-                   pong_vga_g     when pong_vga_en = '1' else
+    VGA_G       <= pong_vga_g     when pong_vga_en = '1' else
                    vga_pixel_g    when vga_pixel_mode = '1' else
                    vga_g_int;
-    VGA_B       <= exp_vga_b      when exp_vga_en = '1' else
-                   pong_vga_b     when pong_vga_en = '1' else
+    VGA_B       <= pong_vga_b     when pong_vga_en = '1' else
                    vga_pixel_b    when vga_pixel_mode = '1' else
                    vga_b_int;
-    VGA_HS      <= exp_vga_hs     when exp_vga_en = '1' else
-                   pong_vga_hs    when pong_vga_en = '1' else
+    VGA_HS      <= pong_vga_hs    when pong_vga_en = '1' else
                    vga_pixel_hs   when vga_pixel_mode = '1' else
                    vga_hs_int;
-    VGA_VS      <= exp_vga_vs     when exp_vga_en = '1' else
-                   pong_vga_vs    when pong_vga_en = '1' else
+    VGA_VS      <= pong_vga_vs    when pong_vga_en = '1' else
                    vga_pixel_vs   when vga_pixel_mode = '1' else
                    vga_vs_int;
-    VGA_CLK     <= exp_vga_clk    when exp_vga_en = '1' else
-                   pong_vga_clk   when pong_vga_en = '1' else
+    VGA_CLK     <= pong_vga_clk   when pong_vga_en = '1' else
                    vga_pixel_clk  when vga_pixel_mode = '1' else
                    vga_clk_int;
-    VGA_SYNC_N  <= exp_vga_sync   when exp_vga_en = '1' else
-                   pong_vga_sync  when pong_vga_en = '1' else
+    VGA_SYNC_N  <= pong_vga_sync  when pong_vga_en = '1' else
                    vga_pixel_sync when vga_pixel_mode = '1' else
                    vga_sync_int;
-    VGA_BLANK_N <= exp_vga_blank  when exp_vga_en = '1' else
-                   pong_vga_blank when pong_vga_en = '1' else
+    VGA_BLANK_N <= pong_vga_blank when pong_vga_en = '1' else
                    vga_pixel_blank when vga_pixel_mode = '1' else
                    vga_blank_int;
 
@@ -739,15 +716,6 @@ begin
         lcd_en_o    => exp_lcd_en,
         active_o    => expdemo_active,
         channel_o   => expdemo_channel,
-        vga_r_o     => exp_vga_r,
-        vga_g_o     => exp_vga_g,
-        vga_b_o     => exp_vga_b,
-        vga_hs_o    => exp_vga_hs,
-        vga_vs_o    => exp_vga_vs,
-        vga_clk_o   => exp_vga_clk,
-        vga_blank_o => exp_vga_blank,
-        vga_sync_o  => exp_vga_sync,
-        vga_en_o    => exp_vga_en,
         wb_adr_i    => expdemo_wb_adr,
         wb_dat_i    => expdemo_wb_dat_o,
         wb_dat_o    => expdemo_wb_dat_i,
@@ -911,24 +879,23 @@ begin
         i2c_sdat_o    => I2C_SDAT
     );
 
-    -- ChromaShader (hardware terrain generator)
-    u_chroma : entity work.chroma_shader
-    port map (
-        clk_i       => clk_50m,
-        rst_n_i     => rst_n,
-        wb_adr_i    => chroma_wb_adr,
-        wb_dat_i    => chroma_wb_dat_o,
-        wb_dat_o    => chroma_wb_dat_i,
-        wb_we_i     => chroma_wb_we,
-        wb_stb_i    => chroma_wb_stb,
-        wb_ack_o    => chroma_wb_ack,
-        clk_25m_i   => chroma_clk_25m,
-        rd_addr_i   => chroma_rd_addr,
-        rd_char_o   => chroma_char,
-        rd_fg_o     => chroma_fg,
-        rd_bg_o     => chroma_bg,
-        chroma_en_o => chroma_en
-    );
+    -- GPU 2D accelerator
+    u_gpu_2d : entity work.gpu_2d
+        port map (
+            clk_50m_i    => clk_50m,
+            clk_100m_i   => clk_sdram,
+            rst_n_i      => rst_n,
+            reg_adr_i    => gpu_reg_adr,
+            reg_dat_i    => gpu_reg_dat_i,
+            reg_dat_o    => gpu_reg_dat_o,
+            reg_we_i     => gpu_reg_we,
+            reg_stb_i    => gpu_reg_stb,
+            reg_ack_o    => gpu_reg_ack,
+            gpu_wr_adr_o => gpu_wr_adr,
+            gpu_wr_dat_o => gpu_wr_dat,
+            gpu_wr_req_o => gpu_wr_req,
+            gpu_wr_done_i=> gpu_wr_done
+        );
 
     -- ================================================================
     -- LCD -- SW16=0 保持 Phase 1/2a 状态显示; SW16=1 切到 2b 调试显示

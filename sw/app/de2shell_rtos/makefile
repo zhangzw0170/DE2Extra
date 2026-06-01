@@ -23,10 +23,10 @@ CHIP_EXT_DIR  = $(PORT_DIR)/chip_specific_extensions/RISCV_MTIME_CLINT_no_extens
 MEMMANG_DIR   = $(FREERTOS_DIR)/portable/MemMang
 
 # de2shell source directory
-DE2SHELL_DIR = ../de2shell
+DE2SHELL_DIR = ../../lib
 
 # This app's own sources
-APP_SRC  = $(wildcard ./*.c) $(wildcard ./*.S)
+APP_SRC  = $(filter-out ./chroma.c,$(wildcard ./*.c)) $(wildcard ./*.S)
 
 # FreeRTOS kernel
 APP_SRC += $(FREERTOS_DIR)/tasks.c
@@ -51,11 +51,11 @@ APP_SRC += $(DE2SHELL_DIR)/conway_hw.c
 APP_SRC += $(DE2SHELL_DIR)/pong_hw.c
 APP_SRC += $(DE2SHELL_DIR)/ntt.c
 APP_SRC += $(DE2SHELL_DIR)/synth.c
-APP_SRC += $(DE2SHELL_DIR)/crypto_viz.c
 
 # GUI + pixel mode (for Win 3.0 desktop)
 APP_SRC += $(DE2SHELL_DIR)/fb_hal.c
 APP_SRC += $(DE2SHELL_DIR)/gfx.c
+APP_SRC += $(DE2SHELL_DIR)/gpu.c
 APP_SRC += $(DE2SHELL_DIR)/gui.c
 APP_SRC += $(DE2SHELL_DIR)/gui_widgets.c
 APP_SRC += $(DE2SHELL_DIR)/twm.c
@@ -71,16 +71,16 @@ APP_SRC += $(DE2SHELL_DIR)/lcd_hal.c
 APP_SRC += ./FreeRTOS_CLI.c
 
 # Crypto CLI sources (linked into de2shell)
-APP_SRC += ../crypto_cli/crypto_aes.c
-APP_SRC += ../crypto_cli/crypto_sha.c
-APP_SRC += ../crypto_cli/crypto_sm.c
+APP_SRC += ../../app/crypto_cli/crypto_aes.c
+APP_SRC += ../../app/crypto_cli/crypto_sha.c
+APP_SRC += ../../app/crypto_cli/crypto_sm.c
 
 # Include paths
 APP_INC  = -I . -I $(DE2SHELL_DIR)
 APP_INC += -I $(FREERTOS_DIR)/include -I $(PORT_DIR) -I $(CHIP_EXT_DIR)
-APP_INC += -I ../crypto_cli
+APP_INC += -I ../../app/crypto_cli
 ASM_INC  = -I . -I $(CHIP_EXT_DIR)
 
-NEORV32_HOME ?= ../../neorv32
+NEORV32_HOME ?= ../../../neorv32
 
 include $(NEORV32_HOME)/sw/common/common.mk

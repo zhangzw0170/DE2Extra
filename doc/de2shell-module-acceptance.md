@@ -1,6 +1,6 @@
-# de2shell 模块验收表
+# de2shell 模块验收表 (V2 — 已冻结)
 
-> 整理时间: 2026-05-25 (v2)
+> **此文件为 V2 验收记录，V2 工程已删除。V3 验收表分散在各阶段文档中 (doc/phases/v3p*.md)。**
 > 适用范围: `sw/app/de2shell/` 全线 C 软件 + 依赖的 VHDL 硬件外设
 > 配套文档: `implementation_plan.md`, `phases/phase1-bus-sdram.md`, `phases/phase2a-crypto-cli.md`, `phases/phase2b-vga-terminal.md`, `phases/phase3-integration.md`
 > 注意: `de2os` (FreeRTOS + SDRAM 执行) 的验收表另建，不在此文件范围内
@@ -9,7 +9,24 @@
 
 ## 最新上板结果
 
-- 构建/烧录: Docker 手动构建 + Quartus 手动编译 → JTAG 烧录
+### V3 (de2os / FreeRTOS / SDRAM exec)
+
+- 构建/烧录: `deploy_de2shell_rtos.sh full` 一条龙
+- 实测板卡: `EP4CE115F29C7`
+- 串口: `COM10`, `115200 8N1`
+- FreeRTOS 4 任务: uart_input / shell / active / status
+- CLI 命令: 22+ (hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear, chroma)
+- **长期稳定性: 已连续运行 27490+ 秒 (~7h38m) 无崩溃**
+- PS/2 键盘主输入 + UART 辅助输入
+- VGA 文本终端 80×30 (CP437 256 字符)
+- VGA 像素模式: RGB332 → **RGB565 升级完成** (GPU 2D 加速器集成)
+- GPU 2D 硬件加速器 (`gpu_2d.vhd`) — RTL + 软件驱动就绪，Quartus 编译通过，上板待验证性能
+- **VGA PLL 修复**: toggle flip-flop → PLL c3 25MHz (专用全局时钟网络) + falling_edge 输出寄存器
+- **pxtest 数据通路验证**: SDRAM 回读 0/2560 错误，VGA burst read valid/req≈8，framebuffer 采样正确
+- **TWM 像素模式**: 30 秒稳定运行，无崩溃，ESC 干净退出
+- **pxtest 显示器验证**: 棋盘格+渐变色可见，画面质量待用户确认
+
+### V2 (de2shell — 已冻结)
 - 实测板卡: `EP4CE115F29C7`
 - 串口: `COM10`, `115200 8N1`
 - shell 首页: `DE2Extra Shell v0.2`
@@ -501,11 +518,11 @@
 
 | # | 验收项 | 通过条件 | 状态 |
 |---|---|---|---|
-| F6.1 | VGA 时序 | 640×480@60Hz，与文本终端共用 25MHz 时钟 | ✅ 仿真通过 |
-| F6.2 | SDRAM 读取 | 通过 ping-pong 行缓冲从 SDRAM 读取 RGB332 像素数据 | 🟡 待 VGA 显示器验证 |
-| F6.3 | 模式切换 | 写 0x1F80 寄存器切换 text/pixel 模式 | 🟡 待 VGA 显示器验证 |
-| F6.4 | 基址寄存器 | 写 0x1F84 设置 framebuffer 基址 | 🟡 待 VGA 显示器验证 |
-| F6.5 | RGB332→RGB888 扩展 | 每像素 1 字节正确扩展到 VGA DAC 输出 | 🟡 待 VGA 显示器验证 |
+| F6.1 | VGA 时序 | 640×480@60Hz，PLL c3 25MHz 专用时钟网络 | ✅ PLL 编译通过，timing met |
+| F6.2 | SDRAM 读取 | 通过 ping-pong 行缓冲从 SDRAM 读取 RGB565 像素数据 | ✅ pxtest: valid_word/burst_req≈8 |
+| F6.3 | 模式切换 | 写 0x1F80 寄存器切换 text/pixel 模式 | ✅ pxtest 进出像素模式正常 |
+| F6.4 | 基址寄存器 | 写 0x1F84 设置 framebuffer 基址 | ✅ gradient 数据与预期匹配 |
+| F6.5 | RGB565→RGB888 扩展 | 每像素 2 字节正确扩展到 VGA DAC 输出 | 🟡 棋盘格+渐变色可见，画面质量待确认 |
 | F6.6 | Quartus 综合 | vga_pixel_ctrl.vhd 加入 de2extra.qsf，综合无错误 | ✅ 编译通过 |
 | F6.7 | 地址解码 | de2_115_top.vhd 中 text 寄存器 (0x1F40..) 与 pixel 寄存器 (0x1F80+) 正确分流 | ✅ 编译通过 |
 | F6.8 | 资源开销 | ~4,500 额外 LEs + 行缓冲 M9K | ✅ 27,508 LEs total (24%) |
@@ -557,12 +574,12 @@
 | D. 实验模块 (expdemo) | 33 | 21 | 12 | 0 | 0 |
 | E. 系统工具 | 25 | 22 | 0 | 3 | 0 |
 | F. 硬件外设 (F1-F5) | 22 | 22 | 0 | 0 | 0 |
-| F. 硬件外设 (F6 VGA pixel) | 8 | 3 | 5 | 0 | 0 |
+| F. 硬件外设 (F6 VGA pixel) | 8 | 7 | 1 | 0 | 0 |
 | F. 硬件外设 (F7 LCD WB) | 3 | 3 | 0 | 0 | 0 |
 | G. 跨切面 | 7 | 7 | 0 | 0 | 0 |
 | I. V3P6 PS/2 TUI + Snake 2P | 13 | 0 | 13 | 0 | 0 |
 | J. V3P3b Crypto Viz | 10 | 10 | 0 | 0 | 0 |
-| **合计** | **248** | **212** | **36** | **7** | **1** |
+| **合计** | **248** | **216** | **32** | **7** | **1** |
 
 **主要阻塞**:
 1. ❌ NTT 硬件加速器 — C 驱动就绪，真实 NTT 盒子未并回 bitstream
@@ -687,4 +704,4 @@ R10 重开：6/7 通道已从保留改为 VGA 实验输出，需重新验证 mux
 
 ---
 
-*最后更新: 2026-05-30 — 新增 I. V3P6 PS/2 TUI + Snake 2P (13 项 🟡)；J. V3P3b Crypto Visualization (10 项 ✅)；总计 248 项 (212✅ 36🟡 7❌ 1N/A)。*
+*最后更新: 2026-06-01 — V3 稳定性 27490s+ 无崩溃；VGA PLL 修复已部署 (c3 25MHz)；pxtest 数据通路验证全通过 (SDRAM 0 错误, burst valid/req≈8, gradient 正确)；pxtest 显示器可见棋盘格+渐变色；总计 248 项。*
