@@ -558,6 +558,9 @@ static int cmd_bench(void) {
     uint32_t trng_ones = 0;
     int i;
 
+    /* Release board status claim so t_status can update uptime during bench */
+    board_status_release();
+
 #ifdef LOCAL_BUILD
     enum { bench_iters = 1000 };
     bench_reset();
@@ -737,6 +740,8 @@ static int cmd_bench(void) {
         vga_puts("TRNG: not available, skipped\n", VGA_RED);
     }
 
+    /* Reclaim board status */
+    board_status_set_program(2u, BOARD_STATE_RUN, 0u, 0u);
     return 0;
 }
 

@@ -94,9 +94,12 @@ void ntt_bit_reverse(uint16_t *a) {
 #ifndef LOCAL_BUILD
 void ntt_hw_exec(uint16_t *a, int inverse) {
     int i;
+    uint32_t st;
     for (i = 0; i < NTT_N; i++) ntt_hw_write(i, a[i]);
     ntt_hw_start(inverse);
-    while (!(ntt_hw_status() & 0x2)) ;
+    i = 2000000;
+    do { st = ntt_hw_status(); } while (!(st & 2) && --i > 0);
+    if (i == 0) return;
     for (i = 0; i < NTT_N; i++) a[i] = ntt_hw_read(i);
 }
 #endif
@@ -116,7 +119,7 @@ static uint16_t ntt_b[NTT_N];
 #endif
 
 static void ntt_prompt(void) {
-    vga_puts("ntt  > ", VGA_GREEN);
+    vga_puts("ntt > ", VGA_GREEN);
 }
 
 static void ntt_put_hex(uint16_t v) {
@@ -166,8 +169,17 @@ static void cmd_ntt(int inverse) {
     ntt_dump(ntt_a, 32);
     vga_puts("...\n", VGA_WHITE);
 #else
+    int timeout;
+    uint32_t st;
     ntt_hw_start(inverse);
-    while (!(ntt_hw_status() & 0x2)) ;
+    timeout = 2000000;
+    do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
+    if (timeout == 0) {
+        vga_puts("HW NTT TIMEOUT (status=", VGA_RED);
+        ntt_put_hex((uint16_t)st);
+        vga_puts(")\n", VGA_RED);
+        return;
+    }
     vga_puts(inverse ? "HW INTT done\n" : "HW NTT done\n", VGA_CYAN);
 #endif
 }
@@ -189,11 +201,27 @@ static void cmd_roundtrip(void) {
              ok ? VGA_GREEN : VGA_RED);
 #else
     int i, ok = 1;
+    uint32_t st;
+    int timeout;
     for (i = 0; i < NTT_N; i++) ntt_hw_write(i, ntt_hw_read(i));
     ntt_hw_start(0);
-    while (!(ntt_hw_status() & 0x2)) ;
+    timeout = 2000000;
+    do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
+    if (timeout == 0) {
+        vga_puts("HW NTT timeout in roundtrip (status=", VGA_RED);
+        ntt_put_hex((uint16_t)st);
+        vga_puts(")\n", VGA_RED);
+        return;
+    }
     ntt_hw_start(1);
-    while (!(ntt_hw_status() & 0x2)) ;
+    timeout = 2000000;
+    do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
+    if (timeout == 0) {
+        vga_puts("HW INTT timeout in roundtrip (status=", VGA_RED);
+        ntt_put_hex((uint16_t)st);
+        vga_puts(")\n", VGA_RED);
+        return;
+    }
     for (i = 0; i < NTT_N; i++) {
         uint16_t v = ntt_hw_read(i);
         /* INTT output is bit-reversed; just check non-zero for now */
@@ -205,16 +233,17 @@ static void cmd_roundtrip(void) {
 }
 
 static void cmd_show_help(void) {
-    vga_puts("NTT accelerator CLI (N=256, q=3329, g=17)\n", VGA_CYAN);
-    vga_puts("  load delta    Load [1,0,...,0]\n", VGA_WHITE);
-    vga_puts("  load random   Load random values\n", VGA_WHITE);
+    vga_puts("NTT: Number Theoretic Transform\n", VGA_CYAN);
+    vga_puts("  N=256  q=3329  generator=17\n", VGA_GRAY);
+    vga_puts("Commands:\n", VGA_WHITE);
+    vga_puts("  load delta    Delta input [1,0,...,0]\n", VGA_WHITE);
+    vga_puts("  load random   Random coefficients\n", VGA_WHITE);
     vga_puts("  ntt           Forward NTT\n", VGA_WHITE);
     vga_puts("  intt          Inverse NTT\n", VGA_WHITE);
-    vga_puts("  roundtrip     NTT then INTT, check identity\n", VGA_WHITE);
+    vga_puts("  roundtrip     NTT+INTT, verify identity\n", VGA_WHITE);
     vga_puts("  dump          Show first 32 values\n", VGA_WHITE);
-    vga_puts("  help          Show this help\n", VGA_WHITE);
-    vga_puts("  clear         Clear screen\n", VGA_WHITE);
-    vga_puts("  quit          Return to shell\n", VGA_WHITE);
+    vga_puts("  clear (cls)   Clear screen\n", VGA_GRAY);
+    vga_puts("  quit (q)      Return to shell\n", VGA_GRAY);
 }
 
 static void cmd_dump(void) {

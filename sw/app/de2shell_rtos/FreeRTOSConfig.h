@@ -63,8 +63,18 @@
 #define configGENERATE_RUN_TIME_STATS           1
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_STATS_FORMATTING_FUNCTIONS    1
+#define configRUN_TIME_COUNTER_TYPE             uint64_t
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() /* mcycle always runs */
-#define portGET_RUN_TIME_COUNTER_VALUE()         neorv32_cpu_csr_read(CSR_MCYCLE)
+static inline uint64_t mcycle_read64(void) {
+    uint32_t lo, hi, hi2;
+    do {
+        hi  = neorv32_cpu_csr_read(CSR_MCYCLEH);
+        lo  = neorv32_cpu_csr_read(CSR_MCYCLE);
+        hi2 = neorv32_cpu_csr_read(CSR_MCYCLEH);
+    } while (hi != hi2);
+    return ((uint64_t)hi << 32) | (uint64_t)lo;
+}
+#define portGET_RUN_TIME_COUNTER_VALUE()         mcycle_read64()
 
 /* ── Software timers ───────────────────────────────────────────── */
 

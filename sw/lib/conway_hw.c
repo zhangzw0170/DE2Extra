@@ -12,6 +12,7 @@
  */
 #include "board_status.h"
 #include "vga_hal.h"
+#include "ps2_decoder.h"
 #include <stdint.h>
 
 #define CONWAY_BASE  ((volatile uint32_t *)0xF0011000u)
@@ -86,6 +87,22 @@ static void hw_auto_toggle(void) {
 
 /* ── Display ──────────────────────────────────────────────────────── */
 
+static void draw_cell(int x, int y, uint32_t lo, uint32_t hi) {
+    int bit;
+    if (x < 32) bit = (lo >> x) & 1;
+    else if (x < 64) bit = (lo >> x) & 1;
+    else bit = (hi >> (x - 64)) & 1;
+
+    char ch = bit ? '#' : '.';
+    uint16_t color = bit ? VGA_WHITE : VGA_DKGRAY;
+    if (edit_mode && x == cursor_x && y == cursor_y) {
+        ch = bit ? 'O' : '+';
+        color = VGA_YELLOW;
+    }
+    vga_goto(x + 1, y + 3);
+    vga_putc(ch, color);
+}
+
 #define CONWAY_DISP_COLS 78  /* 80 hardware cols - 2 for border */
 
 static void draw_grid(void) {
@@ -148,8 +165,15 @@ static void draw_hud(void) {
 }
 
 static void move_cursor(int dx, int dy) {
+    int old_x = cursor_x, old_y = cursor_y;
     cursor_x = (cursor_x + dx + 80) % 80;
     cursor_y = (cursor_y + dy + 25) % 25;
+    /* Redraw only old and new cell */
+    uint32_t lo, hi;
+    hw_read_row(old_y, &lo, &hi);
+    draw_cell(old_x, old_y, lo, hi);
+    hw_read_row(cursor_y, &lo, &hi);
+    draw_cell(cursor_x, cursor_y, lo, hi);
 }
 
 /* ── Callbacks ───────────────────────────────────────────────────── */
@@ -200,15 +224,17 @@ static void input(char c) {
     switch (c) {
         case '\r': case '\n':
             edit_mode = !edit_mode;
+            draw_grid();
             break;
         case ' ':
-            /* HW engine is read-only: cell toggle not supported */
             break;
         case 'r': case 'R':
             hw_randomize(0xDEAD);
+            draw_grid();
             break;
         case 'c': case 'C':
             hw_clear();
+            draw_grid();
             break;
         case 'w': case 'W': move_cursor(0, -1); break;
         case 's': case 'S': move_cursor(0, 1); break;
@@ -220,9 +246,16 @@ static void input(char c) {
         case '-': case '[':
             if (speed_ms > 50) speed_ms -= 50;
             break;
-        default: return;
+        default: {
+            uint8_t k = (uint8_t)c;
+            if (k == PS2_VK_UP)    { move_cursor(0, -1); }
+            else if (k == PS2_VK_DOWN)  { move_cursor(0, 1); }
+            else if (k == PS2_VK_LEFT)  { move_cursor(-1, 0); }
+            else if (k == PS2_VK_RIGHT) { move_cursor(1, 0); }
+            else return;
+            break;
+        }
     }
-    draw_grid();
     draw_hud();
 }
 

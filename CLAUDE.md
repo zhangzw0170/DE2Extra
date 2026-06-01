@@ -23,8 +23,8 @@ Detailed guide: `doc/编译烧录前必看.md`.
 docker run --rm -v "E:/Main/JuniorII/NonExam/FPGA/DE2Extra:/work" de2extra-builder bash -c \
   "cd /work && mkdir -p sw/app/de2shell_rtos/build && make -C sw/app/de2shell_rtos all image NEORV32_HOME=/work/neorv32"
 
-# Upload (~5s, board must be in bootloader state)
-python run/upload_de2os.py COM10 sw/app/de2shell_rtos/neorv32_raw_exe.bin
+# Upload (~5s, use --wait if board is running firmware; omit if bootloader is waiting)
+python run/upload_de2os.py --wait
 ```
 
 ### RTL changes (VHDL)

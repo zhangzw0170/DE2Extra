@@ -145,10 +145,10 @@ upload_uart() {
     if [ "$UPLOAD_MODE" = "uart" ]; then
         if [ "$wait_bootloader" = "wait" ]; then
             echo "  Press KEY0 to reset, then upload starts..."
-            python "$UPLOAD_COM" "$COMPORT" "$BIN" --wait
+            python "$UPLOAD_COM" --wait
         else
             echo "  Bootloader should be ready after JTAG config..."
-            python "$UPLOAD_COM" "$COMPORT" "$BIN"
+            python "$UPLOAD_COM"
         fi
     else
         local win_script="$(cygpath -w "$UPLOAD_JTAG")"

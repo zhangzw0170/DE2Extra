@@ -3,6 +3,7 @@
  */
 #include "board_status.h"
 #include "vga_hal.h"
+#include "ps2_decoder.h"
 #include <stdint.h>
 
 #define GRID_W 40
@@ -26,7 +27,6 @@ static int speed_ms = 150;
 static int edit_mode;
 static int cursor_x;
 static int cursor_y;
-static int esc_state;
 
 /* ── RNG ──────────────────────────────────────────────────────── */
 static unsigned rng = 0x12345678;
@@ -103,9 +103,23 @@ static void step(void) {
     gen++;
 }
 
+static void draw_cell(int x, int y) {
+    char ch = cur[y][x] ? '#' : '.';
+    uint16_t color = cur[y][x] ? VGA_WHITE : VGA_DKGRAY;
+    if (edit_mode && x == cursor_x && y == cursor_y) {
+        ch = cur[y][x] ? 'O' : '+';
+        color = VGA_YELLOW;
+    }
+    vga_goto(x + 1, y + 3);
+    vga_putc(ch, color);
+}
+
 static void move_cursor(int dx, int dy) {
+    int old_x = cursor_x, old_y = cursor_y;
     cursor_x = (cursor_x + dx + GRID_W) % GRID_W;
     cursor_y = (cursor_y + dy + GRID_H) % GRID_H;
+    draw_cell(old_x, old_y);
+    draw_cell(cursor_x, cursor_y);
 }
 
 static void draw_grid(void) {
@@ -173,7 +187,6 @@ static void init(void) {
     edit_mode = 1;
     cursor_x = GRID_W / 2;
     cursor_y = GRID_H / 2;
-    esc_state = 0;
 
     /* Draw border once */
     vga_clear();
@@ -208,49 +221,36 @@ static void update(void) {
 }
 
 static void input(char c) {
-    if (esc_state == 1) {
-        esc_state = (c == '[') ? 2 : 0;
-        return;
-    }
-    if (esc_state == 2) {
-        if (c == 'A') move_cursor(0, -1);
-        else if (c == 'B') move_cursor(0, 1);
-        else if (c == 'C') move_cursor(1, 0);
-        else if (c == 'D') move_cursor(-1, 0);
-        esc_state = 0;
-        draw_grid();
-        draw_hud();
-        return;
-    }
-    if (c == 27) {
-        esc_state = 1;
-        return;
-    }
-
     switch (c) {
         case '\r': case '\n':
             edit_mode = !edit_mode;
+            draw_grid();
             break;
         case ' ':
             if (edit_mode) {
                 cur[cursor_y][cursor_x] = (cell_t)!cur[cursor_y][cursor_x];
+                draw_cell(cursor_x, cursor_y);
             }
             break;
         case 'g': case 'G':
             grid_glider();
             edit_mode = 1;
+            draw_grid();
             break;
         case 'n': case 'N':
             grid_gun();
             edit_mode = 1;
+            draw_grid();
             break;
         case 'r': case 'R':
             grid_random();
             edit_mode = 1;
+            draw_grid();
             break;
         case 'c': case 'C':
             grid_clear();
             edit_mode = 1;
+            draw_grid();
             break;
         case 'w': case 'W': move_cursor(0, -1); break;
         case 's': case 'S': move_cursor(0, 1); break;
@@ -262,9 +262,16 @@ static void input(char c) {
         case '-': case '_': case '[': case ',':
             if (speed_ms > 20) speed_ms -= 10;
             break;
-        default: return;
+        default: {
+            uint8_t k = (uint8_t)c;
+            if (k == PS2_VK_UP)       { move_cursor(0, -1); }
+            else if (k == PS2_VK_DOWN)  { move_cursor(0, 1); }
+            else if (k == PS2_VK_LEFT)  { move_cursor(-1, 0); }
+            else if (k == PS2_VK_RIGHT) { move_cursor(1, 0); }
+            else return;
+            break;
+        }
     }
-    draw_grid();
     draw_hud();
 }
 

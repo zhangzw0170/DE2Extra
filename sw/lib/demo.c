@@ -629,6 +629,13 @@ static void draw_menu_page(void) {
         vga_puts("\n", VGA_BLACK);
     }
     vga_puts("\nAll 13 experiments available (1-5, 6-7 VGA, 8-13).\n", VGA_GREEN);
+
+    /* Position cursor after "Selected: " for visual feedback */
+    {
+        int val = (typed_value >= 0) ? typed_value : selected_channel;
+        int ndigits = (val >= 10) ? 2 : 1;
+        vga_goto(10 + ndigits, 8);
+    }
 }
 
 static void draw_exp12_page(const exp_entry_t *entry, const expdemo_monitor_t *mon) {

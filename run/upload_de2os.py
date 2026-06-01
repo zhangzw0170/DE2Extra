@@ -72,7 +72,8 @@ def read_until(ser, patterns, timeout, echo=True):
 
 
 def open_serial(port, baud):
-    return serial.Serial(port, baud, timeout=0.05, write_timeout=2)
+    return serial.Serial(port, baud, timeout=0.5, write_timeout=2,
+                         dsrdtr=False, rtscts=False)
 
 
 def wait_for_prompt(ser, initial_timeout, prompt_timeout):

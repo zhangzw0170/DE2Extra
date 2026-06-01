@@ -217,9 +217,10 @@ static void init(void) {
 
     vga_clear();
     vga_puts("=== Audio Synth ===\n", VGA_CYAN);
-    vga_puts("T1(L): A-; piano  Tab/Caps octave\n", VGA_WHITE);
-    vga_puts("T2(R): Numpad     NumLock octave\n", VGA_WHITE);
-    vga_puts("M=mode  Q=quit\n", VGA_YELLOW);
+    vga_puts("Mode: 3xOSC / DX7 FM (M toggle)\n", VGA_WHITE);
+    vga_puts("T1: A-; piano  Tab/Caps octave\n", VGA_WHITE);
+    vga_puts("T2: Numpad     NumLock octave\n", VGA_WHITE);
+    vga_puts("Q/F10=quit\n", VGA_YELLOW);
 }
 
 static void update(void) {

@@ -186,7 +186,7 @@ static int shell_esc_state = 0;
 #define IR_BTN_MUTE    0x0Cu
 
 static void shell_prompt(void) {
-    vga_puts("0000  > ", VGA_GREEN);
+    vga_puts("0000 > ", VGA_GREEN);
 }
 
 static void shell_redraw_line(int old_len) {

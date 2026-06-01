@@ -276,7 +276,7 @@ static void draw_header(void) {
 }
 
 static void prompt(void) {
-    vga_puts("riscvasm  > ", VGA_GREEN);
+    vga_puts("riscvasm > ", VGA_GREEN);
 }
 
 static void ensure_output_room(void) {

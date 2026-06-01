@@ -17,7 +17,7 @@ static int done;
 static void init(void) {
     vga_clear();
     vga_goto(0, 0);
-    vga_puts("DE2Extra — NEORV32 RISC-V alive!\n", VGA_CYAN);
+    vga_puts("DE2Extra -- NEORV32 RISC-V alive!\n", VGA_CYAN);
     vga_puts("================================\n", VGA_WHITE);
     vga_puts("CPU:    RV32IMC + Zk*\n", VGA_GREEN);
     vga_puts("Board:  DE2-115 (Cyclone IV E)\n", VGA_GREEN);
@@ -81,7 +81,7 @@ static void update(void) {
 }
 
 static void input(char c) {
-    (void)c;
+    if (c == 'q' || c == 'Q') done = 1;
 }
 
 static int finish(void) { return done; }

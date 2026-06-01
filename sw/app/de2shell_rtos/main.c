@@ -109,6 +109,18 @@ static volatile uint32_t g_idle_count = 0u;
 static volatile uint8_t g_vga_dump_req = 0u;
 static volatile TickType_t g_vga_dump_period_ticks = 0;
 static volatile TickType_t g_vga_dump_next_tick = 0;
+static volatile uint8_t g_status_suspend = 0u;  /* set during selfcheck to avoid VGA escape noise on UART */
+
+/* CSI escape filter: decode terminal CSI sequences from UART RX */
+static int uart_csi_filter_state;
+static int uart_esc_wait;
+static int uart_csi_param;
+#define UART_CSI_NONE    0
+#define UART_CSI_ESC      1
+#define UART_CSI_BRACKET 2
+#define UART_CSI_SS3      3
+#define ESC_WAIT_TICKS   6
+
 
 static QueueHandle_t xInputQueue;
 static QueueHandle_t xProgCmdQueue;
@@ -178,6 +190,7 @@ static int append_hw_build(char *buf) {
     char *p = buf;
     p += strcpy_local(p, "Hardware build: ");
     p += strcpy_local(p, HW_BUILD_TAG);
+    p += strcpy_local(p, " GMT+8");
     *p++ = '\n';
     *p = '\0';
     return (int)(p - buf);
@@ -187,6 +200,7 @@ static int append_sw_build(char *buf) {
     char *p = buf;
     p += strcpy_local(p, "Software build: ");
     p += strcpy_local(p, SW_BUILD_TAG);
+    p += strcpy_local(p, " GMT+8");
     *p++ = '\n';
     *p = '\0';
     return (int)(p - buf);
@@ -383,37 +397,202 @@ PROG_CMD(ps2,     PROG_PS2)
 PROG_CMD(snake,   PROG_SNAKE)
 PROG_CMD(life,    PROG_LIFE)
 PROG_CMD(info,    PROG_INFO)
-PROG_CMD(monitor, PROG_MONITOR)
+PROG_CMD(riscvasm, PROG_MONITOR)
 PROG_CMD(expdemo, PROG_DEMO)
 PROG_CMD(conwayhw, PROG_CONWAY_HW)
 PROG_CMD(ntt,     PROG_NTT)
 PROG_CMD(synth,   PROG_SYNTH)
 
+static void buf_replace_tabs(char *buf) {
+    char out[512];
+    int oi = 0;
+    int col = 0;
+    for (int i = 0; buf[i] && oi < 510; i++) {
+        if (buf[i] == '\t') {
+            int n = 8 - (col % 8);
+            for (int j = 0; j < n && oi < 510; j++) { out[oi++] = ' '; col++; }
+        } else {
+            out[oi++] = buf[i];
+            if (buf[i] == '\n') col = 0; else col++;
+        }
+    }
+    out[oi] = '\0';
+    /* copy back */
+    for (int i = 0; i <= oi; i++) buf[i] = out[i];
+}
+
+/* Helper: pad string to n chars */
+static void pad_str(char *dst, const char *src, int width) {
+    int i = 0;
+    while (src[i] && i < width) { dst[i] = src[i]; i++; }
+    while (i < width) dst[i++] = ' ';
+    dst[i] = '\0';
+}
+
 static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
+    char task_buf[300];
+    char cpu_buf[300];
+    char num[16];
     (void)cmd;
-    (void)len;
-    vTaskList(buf);
-    return pdFALSE;
-}
 
-static BaseType_t cli_heapstat(char *buf, size_t len, const char *cmd) {
-    char *p = buf;
-    (void)cmd;
-    (void)len;
-    p += strcpy_local(p, "Heap free: ");
-    p += utoa_local(p, xPortGetFreeHeapSize());
-    p += strcpy_local(p, " / ");
-    p += utoa_local(p, configTOTAL_HEAP_SIZE);
-    p += strcpy_local(p, " bytes\r\nMin free: ");
-    p += utoa_local(p, xPortGetMinimumEverFreeHeapSize());
-    p += strcpy_local(p, " bytes\r\n");
-    return pdFALSE;
-}
+    vTaskList(task_buf);
+    buf_replace_tabs(task_buf);
+    vTaskGetRunTimeStats(cpu_buf);
+    buf_replace_tabs(cpu_buf);
 
-static BaseType_t cli_cpustat(char *buf, size_t len, const char *cmd) {
-    (void)cmd;
-    (void)len;
-    vTaskGetRunTimeStats(buf);
+    /* Parse task list into arrays */
+    #define MAX_TASKS 8
+    char tname[MAX_TASKS][16];
+    char tstate[MAX_TASKS][8];
+    char tpri[MAX_TASKS][8];
+    char tstack[MAX_TASKS][8];
+    char tcpu[MAX_TASKS][8];
+    int ntasks = 0;
+
+    /* Parse cpu stats: name -> cpu% */
+    {
+        char *p = cpu_buf;
+        while (*p && ntasks < MAX_TASKS) {
+            char *line_start = p;
+            while (*p && *p != '\n' && *p != '\r') p++;
+            if (*p) *p++ = '\0';
+            if (*line_start == '\0') continue;
+
+            /* Find last field (cpu%) and second-to-last field */
+            char *last_sp = NULL, *prev_sp = NULL, *s = line_start;
+            while (*s) {
+                if (*s == ' ' && *(s+1) != ' ' && *(s+1) != '\0') {
+                    prev_sp = last_sp;
+                    last_sp = s;
+                }
+                s++;
+            }
+            if (!last_sp) continue;
+
+            /* Extract name (up to prev_sp or end) */
+            int name_end = prev_sp ? (int)(prev_sp - line_start) : (int)(last_sp - line_start);
+            if (name_end >= 15) name_end = 15;
+            for (int i = 0; i < name_end; i++) tcpu[ntasks][i] = line_start[i];
+            tcpu[ntasks][name_end] = '\0';
+
+            /* Shift cpu% to match name position */
+            for (int i = ntasks - 1; i >= 0; i--) {
+                if (strcmp_local(tcpu[i], tcpu[ntasks]) == 0) {
+                    /* Found matching name, copy cpu% value */
+                    const char *pct = last_sp + 1;
+                    int j = 0;
+                    while (*pct && j < 7) tcpu[i][j++] = *pct++;
+                    tcpu[i][j] = '\0';
+                    break;
+                }
+            }
+            ntasks++;
+        }
+    }
+
+    /* Parse task list and merge with cpu% */
+    ntasks = 0;
+    {
+        char *p = task_buf;
+        while (*p && ntasks < MAX_TASKS) {
+            char *line_start = p;
+            /* Find fields separated by multi-space */
+            char *fields[8];
+            int nf = 0;
+            while (*p && *p != '\n' && *p != '\r') {
+                while (*p == ' ') p++;
+                if (!*p || *p == '\n' || *p == '\r') break;
+                fields[nf++] = p;
+                while (*p && *p != ' ' && *p != '\n' && *p != '\r') p++;
+                if (*p && *p != '\n' && *p != '\r') *p++ = '\0';
+            }
+            if (*p == '\n' || *p == '\r') *p++ = '\0';
+            if (nf < 4) continue;
+
+            /* Copy fields */
+            for (int i = 0; fields[0][i] && i < 15; i++)
+                tname[ntasks][i] = fields[0][i];
+            tname[ntasks][15] = '\0';
+
+            for (int i = 0; fields[1][i] && i < 7; i++)
+                tstate[ntasks][i] = fields[1][i];
+            tstate[ntasks][7] = '\0';
+
+            for (int i = 0; fields[2][i] && i < 7; i++)
+                tpri[ntasks][i] = fields[2][i];
+            tpri[ntasks][7] = '\0';
+
+            for (int i = 0; fields[3][i] && i < 7; i++)
+                tstack[ntasks][i] = fields[3][i];
+            tstack[ntasks][7] = '\0';
+
+            /* Default cpu% */
+            tcpu[ntasks][0] = '-';
+            tcpu[ntasks][1] = '\0';
+
+            /* Find matching cpu% from previous parse */
+            {
+                char *pc = cpu_buf;
+                int ci = 0;
+                while (*pc) {
+                    char *cl = pc;
+                    while (*pc && *pc != '\n' && *pc != '\r') pc++;
+                    if (*pc) *pc++ = '\0';
+                    if (*cl == '\0') continue;
+                    /* Extract name from cpu line */
+                    char *lsp = NULL, *psp = NULL, *ss = cl;
+                    while (*ss) {
+                        if (*ss == ' ' && *(ss+1) != ' ' && *(ss+1) != '\0') {
+                            psp = lsp; lsp = ss;
+                        }
+                        ss++;
+                    }
+                    if (lsp) {
+                        int ne = psp ? (int)(psp - cl) : (int)(lsp - cl);
+                        if (ne >= 15) ne = 15;
+                        char cname[16];
+                        for (int i = 0; i < ne; i++) cname[i] = cl[i];
+                        cname[ne] = '\0';
+                        if (strcmp_local(cname, tname[ntasks]) == 0) {
+                            const char *pv = lsp + 1;
+                            int j = 0;
+                            while (*pv && j < 7) tcpu[ntasks][j++] = *pv++;
+                            tcpu[ntasks][j] = '\0';
+                            break;
+                        }
+                    }
+                }
+            }
+            ntasks++;
+        }
+    }
+
+    /* Render table */
+    vga_puts("Task       State Pri Stack  CPU%\n", VGA_CYAN);
+    for (int i = 0; i < ntasks; i++) {
+        char tmp[16];
+        pad_str(tmp, tname[i], 10); vga_puts(tmp, VGA_WHITE); vga_putc(' ', VGA_WHITE);
+        pad_str(tmp, tstate[i], 5); vga_puts(tmp, VGA_WHITE); vga_putc(' ', VGA_WHITE);
+        pad_str(tmp, tpri[i], 3);   vga_puts(tmp, VGA_WHITE); vga_putc(' ', VGA_WHITE);
+        pad_str(tmp, tstack[i], 5);  vga_puts(tmp, VGA_WHITE); vga_puts("  ", VGA_WHITE);
+        vga_puts(tcpu[i], VGA_YELLOW);
+        vga_putc('\n', VGA_WHITE);
+    }
+
+    /* Heap summary */
+    vga_putc('\n', VGA_WHITE);
+    vga_puts("Heap: ", VGA_CYAN);
+    utoa_local(num, xPortGetFreeHeapSize());
+    vga_puts(num, VGA_YELLOW);
+    vga_puts("/", VGA_WHITE);
+    utoa_local(num, configTOTAL_HEAP_SIZE);
+    vga_puts(num, VGA_YELLOW);
+    vga_puts(" free  min:", VGA_WHITE);
+    utoa_local(num, xPortGetMinimumEverFreeHeapSize());
+    vga_puts(num, VGA_YELLOW);
+    vga_putc('\n', VGA_WHITE);
+
+    buf[0] = '\0';
     return pdFALSE;
 }
 
@@ -422,6 +601,49 @@ static BaseType_t cli_clear(char *buf, size_t len, const char *cmd) {
     (void)len;
     vga_clear();
     vga_goto(0, 0);
+    buf[0] = '\0';
+    return pdFALSE;
+}
+
+static BaseType_t cli_ver(char *buf, size_t len, const char *cmd) {
+    (void)cmd;
+    (void)len;
+    /* VGA output with colored section headers */
+    vga_puts("== Hardware ==\n", VGA_GREEN);
+    vga_puts("Board:    DE2-115 (Cyclone IV E)\n", VGA_WHITE);
+    vga_puts("FPGA:     EP4CE115F29C7\n", VGA_WHITE);
+    vga_puts("CPU:      NEORV32 RV32IMC v1.13.1 @50MHz\n", VGA_WHITE);
+    vga_puts("GPU:      2D FILL (custom RTL)\n", VGA_WHITE);
+    vga_puts("SDRAM:    128MB @100MHz\n", VGA_WHITE);
+    vga_puts("VGA:      640x480@60Hz 80x30 text\n", VGA_WHITE);
+    vga_puts("HW Build: ", VGA_WHITE); vga_puts(HW_BUILD_TAG, VGA_YELLOW); vga_puts(" GMT+8\n", VGA_GRAY);
+    vga_putc('\n', VGA_WHITE);
+    vga_puts("== Software ==\n", VGA_GREEN);
+    vga_puts("RTOS:     FreeRTOS ", VGA_WHITE); vga_puts(tskKERNEL_VERSION_NUMBER "\n", VGA_YELLOW);
+    vga_puts("Firmware: de2shell_rtos\n", VGA_WHITE);
+    vga_puts("SW Build: ", VGA_WHITE); vga_puts(SW_BUILD_TAG, VGA_YELLOW); vga_puts(" GMT+8\n", VGA_GRAY);
+    vga_putc('\n', VGA_WHITE);
+    vga_puts("Author:   zhangzw0170\n", VGA_WHITE);
+    vga_puts("Model:    GLM 5.1, Deepseek V4, GPT 5.4\n", VGA_WHITE);
+    vga_puts("Harness:  Claude Code, Deepseek TUI, Codex\n", VGA_WHITE);
+    vga_puts("Repo:     github.com/zhangzw0170/DE2Extra\n", VGA_CYAN);
+    /* UART output */
+    neorv32_uart0_puts("== Hardware ==\n");
+    neorv32_uart0_puts("Board:    DE2-115 (Cyclone IV E)\n");
+    neorv32_uart0_puts("FPGA:     EP4CE115F29C7\n");
+    neorv32_uart0_puts("CPU:      NEORV32 RV32IMC v1.13.1 @50MHz\n");
+    neorv32_uart0_puts("GPU:      2D FILL (custom RTL)\n");
+    neorv32_uart0_puts("SDRAM:    128MB @100MHz\n");
+    neorv32_uart0_puts("VGA:      640x480@60Hz 80x30 text\n");
+    neorv32_uart0_puts("HW Build: " HW_BUILD_TAG " GMT+8\n");
+    neorv32_uart0_puts("\n== Software ==\n");
+    neorv32_uart0_puts("RTOS:     FreeRTOS " tskKERNEL_VERSION_NUMBER "\n");
+    neorv32_uart0_puts("Firmware: de2shell_rtos\n");
+    neorv32_uart0_puts("SW Build: " SW_BUILD_TAG " GMT+8\n");
+    neorv32_uart0_puts("\nAuthor:   zhangzw0170\n");
+    neorv32_uart0_puts("Model:    GLM 5.1, Deepseek V4, GPT 5.4\n");
+    neorv32_uart0_puts("Harness:  Claude Code, Deepseek TUI, Codex\n");
+    neorv32_uart0_puts("Repo:     github.com/zhangzw0170/DE2Extra\n");
     buf[0] = '\0';
     return pdFALSE;
 }
@@ -477,43 +699,41 @@ static BaseType_t cli_vgamon(char *buf, size_t len, const char *cmd) {
 }
 
 static const CLI_Command_Definition_t cmd_hello_def =
-    {"hello", "hello:    LED chaser\r\n", cli_hello, 0};
+    {"hello", "hello:    LED chaser + counter\r\n", cli_hello, 0};
 static const CLI_Command_Definition_t cmd_crypto_def =
-    {"crypto", "crypto:   AES/SHA/SM4 CLI\r\n", cli_crypto, 0};
-static const CLI_Command_Definition_t cmd_ps2_def =
-    {"ps2", "ps2:      PS/2 keyboard test\r\n", cli_ps2, 0};
+    {"crypto", "crypto:   AES/SHA/SM4 bench\r\n", cli_crypto, 0};
+static const CLI_Command_Definition_t cmd_kbd_def =
+    {"kbd", "kbd:      PS/2 keyboard test\r\n", cli_ps2, 0};
 static const CLI_Command_Definition_t cmd_snake_def =
-    {"snake", "snake:    Snake game\r\n", cli_snake, 0};
+    {"snake", "snake:    Snake (1P/2P)\r\n", cli_snake, 0};
 static const CLI_Command_Definition_t cmd_info_def =
     {"info", "info:     System dashboard\r\n", cli_info, 0};
 static const CLI_Command_Definition_t cmd_expdemo_def =
-    {"expdemo", "expdemo:  11 course labs\r\n", cli_expdemo, 0};
+    {"expdemo", "expdemo:  HW course labs (13 exp)\r\n", cli_expdemo, 0};
 
-static const CLI_Command_Definition_t cmd_life_def =
-    {"life", "life:     Conway's Game of Life\r\n", cli_life, 0};
 static const CLI_Command_Definition_t cmd_conway_def =
-    {"conwaylife", "conwaylife: Conway's Game of Life (alias)\r\n", cli_life, 0};
-static const CLI_Command_Definition_t cmd_monitor_def =
-    {"monitor", "monitor:  RISC-V monitor / asm\r\n", cli_monitor, 0};
+    {"conway", "conway:   Conway Life (SW)\r\n", cli_life, 0};
 static const CLI_Command_Definition_t cmd_riscvasm_def =
-    {"riscvasm", "riscvasm:  monitor alias\r\n", cli_monitor, 0};
+    {"riscvasm", "riscvasm: RISC-V monitor/asm\r\n", cli_riscvasm, 0};
 PROG_CMD(twm,     PROG_TWM)
 
 static const CLI_Command_Definition_t cmd_twm_def =
-    {"twm", "twm:      Tiling window manager\r\n", cli_twm, 0};
+    {"twm", "twm:      Tiling window mgr\r\n", cli_twm, 0};
 
 static const CLI_Command_Definition_t cmd_conwayhw_def =
-    {"conwayhw", "conwayhw: Hardware Conway (FPGA)\r\n", cli_conwayhw, 0};
+    {"conwayhw", "conwayhw: Conway engine (HW)\r\n", cli_conwayhw, 0};
 static const CLI_Command_Definition_t cmd_ntt_def =
-    {"ntt", "ntt:      NTT accelerator CLI\r\n", cli_ntt, 0};
+    {"ntt", "ntt:      NTT accelerator\r\n", cli_ntt, 0};
 static const CLI_Command_Definition_t cmd_synth_def =
-    {"synth", "synth:    Audio synth (PS/2 piano)\r\n", cli_synth, 0};
+    {"synth", "synth:    Audio synth\r\n", cli_synth, 0};
 
 static BaseType_t cli_selfcheck(char *buf, size_t len, const char *cmd) {
     (void)cmd;
     (void)len;
     extern uint32_t selfcheck_run(int skip_sdram, char *out_buf);
+    g_status_suspend = 1u;
     uint32_t m = selfcheck_run(1, buf);
+    g_status_suspend = 0u;
     if (m == 0 && buf[0] == '\0') {
         strcpy_local(buf, "selfcheck: ALL PASS\r\n");
     }
@@ -521,14 +741,10 @@ static BaseType_t cli_selfcheck(char *buf, size_t len, const char *cmd) {
 }
 
 static const CLI_Command_Definition_t cmd_selfcheck_def =
-    {"selfcheck", "selfcheck: Run hardware self-check\r\n", cli_selfcheck, 0};
+    {"selfcheck", "selfcheck:Board self-test\r\n", cli_selfcheck, 0};
 
 static const CLI_Command_Definition_t cmd_stats_def =
-    {"stats", "stats:    Task list + stack HWM\r\n", cli_stats, 0};
-static const CLI_Command_Definition_t cmd_heapstat_def =
-    {"heapstat", "heapstat: Heap usage\r\n", cli_heapstat, 0};
-static const CLI_Command_Definition_t cmd_cpustat_def =
-    {"cpustat", "cpustat:  CPU usage per task\r\n", cli_cpustat, 0};
+    {"stats", "stats:    Tasks + CPU + heap\r\n", cli_stats, 0};
 /* ── Pixel mode diagnostic (pxtest) ─────────────────────────────── */
 #define PX_BASE       ((volatile uint32_t *)0xF0000000u)
 #define PX_REG_MODE   (0x7000u / 4u)
@@ -721,36 +937,35 @@ static BaseType_t cli_pxtest(char *buf, size_t len, const char *cmd) {
 }
 
 static const CLI_Command_Definition_t cmd_pxtest_def =
-    {"pxtest", "pxtest:   VGA pixel mode diagnostic\r\n", cli_pxtest, 0};
+    {"pxtest", "pxtest:   VGA pixel diag\r\n", cli_pxtest, 0};
 
 static const CLI_Command_Definition_t cmd_clear_def =
-    {"clear", "clear:    Clear VGA screen\r\n", cli_clear, 0};
+    {"clear", "clear:    Clear screen\r\n", cli_clear, 0};
+static const CLI_Command_Definition_t cmd_ver_def =
+    {"ver", "ver:      Version info\r\n", cli_ver, 0};
 static const CLI_Command_Definition_t cmd_vgadump_def =
-    {"vgadump", "vgadump:  dump current VGA text screen to UART\r\n", cli_vgadump, 0};
+    {"vgadump", "vgadump:  Dump VGA to UART\r\n", cli_vgadump, 0};
 static const CLI_Command_Definition_t cmd_vgamon_def =
-    {"vgamon", "vgamon:   periodic VGA dump to UART (default 2s)\r\n", cli_vgamon, -1};
+    {"vgamon", "vgamon:   Periodic VGA dump\r\n", cli_vgamon, -1};
 
 static void register_cli_commands(void) {
-    FreeRTOS_CLIRegisterCommand(&cmd_hello_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_crypto_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_ps2_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_snake_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_info_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_expdemo_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_life_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_conway_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_monitor_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_riscvasm_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_twm_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_conwayhw_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_selfcheck_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_heapstat_def);
-    FreeRTOS_CLIRegisterCommand(&cmd_cpustat_def);
     FreeRTOS_CLIRegisterCommand(&cmd_clear_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_conway_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_conwayhw_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_crypto_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_expdemo_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_hello_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_info_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_kbd_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_ntt_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_pxtest_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_riscvasm_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_selfcheck_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_snake_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_twm_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_ver_def);
     FreeRTOS_CLIRegisterCommand(&cmd_vgadump_def);
     FreeRTOS_CLIRegisterCommand(&cmd_vgamon_def);
 }
@@ -856,6 +1071,10 @@ static void render_status_bar(void) {
 }
 
 static void exit_active_program(void) {
+    /* Reset expdemo hardware mux back to GPIO mode */
+    volatile uint32_t *expdemo_ch = (volatile uint32_t *)0xF0010000u;
+    *expdemo_ch = 0;
+    board_status_release();
     reset_display_mode();
     active_prog = PROG_SHELL;
     xActiveTask = NULL;
@@ -876,10 +1095,90 @@ static void t_uart_input(void *pv) {
     (void)ps2_sync_leds(ps2);
 
     for (;;) {
+        /* ESC timeout: if no byte follows ESC within N ticks, treat as standalone ESC */
+        if (uart_csi_filter_state == UART_CSI_ESC && uart_esc_wait > 0) {
+            uart_esc_wait--;
+            if (uart_esc_wait == 0) {
+                uart_csi_filter_state = UART_CSI_NONE;
+                c = (char)0x1bu;
+                (void)xQueueSend(xInputQueue, &c, 0);
+            }
+        }
+
         if (neorv32_uart0_char_received()) {
             uint8_t raw_uart = (uint8_t)neorv32_uart0_getc();
             if (soft_boot_seq_feed(raw_uart, &soft_boot_state) != 0) {
                 bootloader_restart();
+            }
+            /* Decode CSI escape sequences (F-keys, arrows, ESC from terminal) */
+            if (raw_uart == 0x1bu) {
+                uart_csi_filter_state = UART_CSI_ESC;
+                uart_esc_wait = ESC_WAIT_TICKS;
+                uart_csi_param = 0;
+                continue;
+            }
+            if (uart_csi_filter_state == UART_CSI_ESC) {
+                uart_esc_wait = 0; /* cancel timeout — follow-up byte arrived */
+                if (raw_uart == '[') {
+                    uart_csi_filter_state = UART_CSI_BRACKET;
+                } else if (raw_uart == 'O') {
+                    uart_csi_filter_state = UART_CSI_SS3;
+                } else {
+                    uart_csi_filter_state = UART_CSI_NONE;
+                }
+                continue;
+            }
+            if (uart_csi_filter_state == UART_CSI_BRACKET) {
+                /* Buffer digit params, dispatch on final byte */
+                if (raw_uart >= '0' && raw_uart <= '9') {
+                    uart_csi_param = uart_csi_param * 10 + (raw_uart - '0');
+                    continue;
+                }
+                if (raw_uart >= 0x40u && raw_uart <= 0x7eu) {
+                    c = 0;
+                    switch (raw_uart) {
+                        case 'A': c = (char)PS2_VK_UP;    break;
+                        case 'B': c = (char)PS2_VK_DOWN;  break;
+                        case 'C': c = (char)PS2_VK_RIGHT; break;
+                        case 'D': c = (char)PS2_VK_LEFT;  break;
+                        case 'H': c = (char)PS2_VK_HOME;  break;
+                        case 'F': c = (char)PS2_VK_END;   break;
+                        case '~':
+                            /* CSI param F-keys: 1~..5~ = F1-F5, 17~..21~ = F6-F10, 23~..24~ = F11-F12 */
+                            {
+                                int pn;
+                                if (uart_csi_param >= 1 && uart_csi_param <= 5) pn = uart_csi_param;
+                                else if (uart_csi_param >= 17 && uart_csi_param <= 21) pn = uart_csi_param - 11;
+                                else if (uart_csi_param == 23 || uart_csi_param == 24) pn = uart_csi_param - 12;
+                                else pn = 0;
+                                if (pn >= 1 && pn <= 12) {
+                                    c = (char)(PS2_VK_F1 + pn - 1);
+                                }
+                            }
+                            break;
+                        default: break;
+                    }
+                    uart_csi_filter_state = UART_CSI_NONE;
+                    if (c != 0) { (void)xQueueSend(xInputQueue, &c, 0); }
+                    continue;
+                }
+                /* unexpected byte in CSI */
+                uart_csi_filter_state = UART_CSI_NONE;
+                continue;
+            }
+            /* CSI SS3 sequences: ESC O P/Q/R/S for F1-F4 */
+            if (uart_csi_filter_state == UART_CSI_SS3) {
+                c = 0;
+                switch (raw_uart) {
+                    case 'P': c = (char)PS2_VK_F1; break;
+                    case 'Q': c = (char)PS2_VK_F2; break;
+                    case 'R': c = (char)PS2_VK_F3; break;
+                    case 'S': c = (char)PS2_VK_F4; break;
+                    default: break;
+                }
+                uart_csi_filter_state = UART_CSI_NONE;
+                if (c != 0) { (void)xQueueSend(xInputQueue, &c, 0); }
+                continue;
             }
             c = (char)raw_uart;
             if ((uint8_t)c == 0x14u) { /* Ctrl+T: trigger vgadump from any context */
@@ -901,7 +1200,7 @@ static void t_uart_input(void *pv) {
                             (void)ps2_sync_leds(ps2);
                             last_lock_mask = ps2_lock_mask();
                         }
-                        if (key.is_press && key.has_ascii) {
+                        if (key.is_press && key.ascii != 0) {
                             c = (char)key.ascii;
                             (void)xQueueSend(xInputQueue, &c, 0);
                         }
@@ -929,7 +1228,7 @@ static void t_active_prog(void *pv) {
         }
 
         if (xQueueReceive(xInputQueue, &c, 0) == pdTRUE) {
-            if (c == 27) {
+            if (c == 27 || c == (char)PS2_VK_F10) {
                 exit_active_program();
             }
             if ((prog != NULL) && (prog->input != NULL)) {
@@ -978,10 +1277,15 @@ static void stop_active_program(void) {
         xActiveTask = NULL;
     }
 
+    /* Reset expdemo hardware mux back to GPIO mode */
+    {
+        volatile uint32_t *expdemo_ch = (volatile uint32_t *)0xF0010000u;
+        *expdemo_ch = 0;
+    }
+    board_status_release();
     reset_display_mode();
     active_prog = PROG_SHELL;
 }
-
 static void launch_program(prog_id_t pid) {
     char dummy;
     const program_t *prog;
@@ -1097,6 +1401,20 @@ static void t_status(void *pv) {
         TickType_t now = xTaskGetTickCount();
         int do_vga_dump = 0;
 
+        /* GPIO/board_status update — no VGA mutex needed */
+        {
+            uint32_t up = board_status_uptime_seconds() & 0xFFFFu;
+            if (active_prog == PROG_SHELL) {
+                uint32_t hu = (uint32_t)((configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize())
+                                         * 100u / configTOTAL_HEAP_SIZE);
+                if (hu > 99u) hu = 99u;
+                uint32_t bcd_hu = (hu / 10u) * 16u + (hu % 10u);
+                board_status_set_word(0x40000000u | (bcd_hu << 16) | up);
+            } else {
+                board_status_apply_fallback((uint8_t)active_prog, BOARD_STATE_RUN);
+            }
+        }
+
         if (g_vga_dump_req != 0u) {
             g_vga_dump_req = 0u;
             do_vga_dump = 1;
@@ -1106,24 +1424,14 @@ static void t_status(void *pv) {
         }
 
         xSemaphoreTake(xVgaMutex, portMAX_DELAY);
-        render_status_bar();
+        if (g_status_suspend == 0u) {
+            render_status_bar();
+        }
         if (do_vga_dump != 0) {
             vga_dump_snapshot_locked();
         }
         xSemaphoreGive(xVgaMutex);
 
-        if (active_prog == PROG_SHELL) {
-            uint32_t up = board_status_uptime_seconds() & 0xFFFFu;
-            uint32_t hu = (uint32_t)((configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize())
-                                     * 100u / configTOTAL_HEAP_SIZE);
-            if (hu > 99u) hu = 99u;
-            /* heap used %: BCD for HEX5-HEX4 decimal display; LEDG shows raw hex */
-            uint32_t bcd_hu = (hu / 10u) * 16u + (hu % 10u);
-            /* uptime: hex on HEX3-HEX0 and LEDR15-R0 */
-            board_status_set_word(0x40000000u | (bcd_hu << 16) | up);
-        } else {
-            board_status_set_program((uint8_t)active_prog, BOARD_STATE_LIVE, 0u, 0u);
-        }
         vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
