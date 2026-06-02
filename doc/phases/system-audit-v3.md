@@ -133,27 +133,58 @@ Crypto bench 运行 1000 次 × 5 算法 × 2 变体 = 10000 次加密操作，�
 - [x] Forth 错误码不友好 — 常见 ThrowCode 改为可读文本
 - [x] Synth Q 键未文档化 — help overlay 添加 "F10 / Q: Quit"
 - [x] Crypto parse_u32_dec 溢出 — 添加 n>99999 guard
+- [x] UART 串口角色 — 默认关闭 VGA mirror，shell 双路输出，CLI 程序纯文本 UART，Ctrl+C 强制退出
 
 ## 验收表 (Release v1.0)
 
-| 模块 | 功能 | 代码 | 上板 | 备注 |
-|------|------|------|------|------|
-| SDRAM 启动 | Bootloader → 0x01000000 | ✅ | ✅ | 200KB 固件稳定加载 |
-| FreeRTOS 4 任务 | shell/uart_input/active/status | ✅ | ✅ | 调度正常 |
-| UART shell | 18 命令 + 帮助 | ✅ | ✅ | 双路输入 (UART+PS/2) |
-| VGA 文本 80×30 | 字符终端 + R29 状态栏 | ✅ | ✅ | 有斜线重影 (PLL)，功能正常 |
-| PS/2 键盘 | 轮询式主输入 | ✅ | ✅ | F1/F10 统一 |
-| Snake | 1P/2P, F1帮助, F10退出 | ✅ | ✅ | |
-| ExpDemo | 13 个实验 | ✅ | ✅ | |
-| pForth | 完整 Forth REPL | ✅ | ✅ | F10退出, 帮助保留会话 |
-| Conway (HW) | 64×25 硬件加速 | ✅ | ⏳周四 | VHDL 地址已修，待复测 |
-| NTT (HW) | 256-point NTT 加速 | ✅ | ⏳周四 | VHDL 地址已修，待复测 |
-| Crypto | AES/SHA/SM4/SM3/bench | ✅ | ⏳周四 | F1/F10 已加，bench 加警告 |
-| Synth | 3xOSC + DX7 FM | ✅ | ⏳周四 | 待音频输出验证 |
-| TWM 像素模式 | 30s 稳定运行 | ✅ | ✅ | |
-| VGA 像素画质 | 640×480 RGB565 | ✅ | ⏳周四 | 数据通路正确 |
-| LCD/7-SEG 状态 | Heap%/Uptime | ✅ | ✅ | |
-| GPU 2D | FILL rect SDRAM burst | ✅ | ⏳ | RTL 集成，待验证 |
-| ChromaShader | 色彩着色器 | ✅ | — | RTL 验证通过，C 驱动未集成 |
+| 模块 | 功能 | 代码 | UART 验证 | VGA 验证 | 备注 |
+|------|------|------|-----------|----------|------|
+| SDRAM 启动 | Bootloader → 0x01000000 | ✅ | ✅ | — | 200KB 固件稳定加载 |
+| FreeRTOS 4 任务 | shell/uart_input/active/status | ✅ | ✅ | — | 调度正常，stats 可读 |
+| UART shell | 18 命令 + 帮助 + Ctrl+C | ✅ | ✅ | — | 干净纯文本，无 ANSI 噪音 |
+| VGA 文本 80×30 | 字符终端 + R29 状态栏 | ✅ | — | ✅ | 有斜线重影 (PLL)，功能正常 |
+| PS/2 键盘 | 轮询式主输入 | ✅ | — | ✅ | F1/F10/Ctrl+C 统一 |
+| Snake | 1P/2P, F1帮助, F10退出 | ✅ | ✅ (启动/退出) | ✅ | |
+| ExpDemo | 13 个实验 | ✅ | ✅ (启动) | ✅ | |
+| pForth | 完整 Forth REPL | ✅ | ✅ (启动) | ✅ | F10退出, 帮助保留会话, CLI UART |
+| Conway (HW) | 64×25 硬件加速 | ✅ | ⏳ | ⏳ | VHDL 地址已修，需 Quartus 重建 |
+| NTT (HW) | 256-point NTT 加速 | ✅ | ⏳ | ⏳ | UART 测试: HW TIMEOUT (status=0000)，需 Quartus 重建 |
+| Crypto | AES/SHA/SM4/SM3/bench | ✅ | ✅ (启动/help) | ⏳ | CLI UART 输出正常，bench 待 VGA 验证 |
+| Synth | 3xOSC + DX7 FM | ✅ | ⏳ | ⏳ | 待音频输出验证 |
+| Hello | LED chaser | ✅ | ✅ | ✅ | CLI UART 输出正常 |
+| Info | System dashboard | ✅ | ⏳ | ✅ | CLI 标记，待 UART 测试 |
+| Monitor | RISC-V 监控器 | ✅ | ⏳ | — | CLI 标记，待 UART 测试 |
+| TWM 像素模式 | 30s 稳定运行 | ✅ | — | ✅ | |
+| VGA 像素画质 | 640×480 RGB565 | ✅ | — | ⏳ | 数据通路正确 |
+| LCD/7-SEG 状态 | Heap%/Uptime | ✅ | — | ✅ | |
+| GPU 2D | FILL rect SDRAM burst | ✅ | — | ⏳ | RTL 集成，待验证 |
+| ChromaShader | 色彩着色器 | ✅ | — | — | RTL 验证通过，C 驱动未集成 |
+| UART 调试通道 | shell 双路 + CLI 纯文本 + vgadump | ✅ | ✅ | — | 无 VGA mirror 噪音 |
+| vgadump/vgamon | VGA 帧捕获到 UART | ✅ | ✅ | — | 按需捕获，独立于 mirror |
 
-**⏳周四** = 周四接 VGA 显示器 + PS/2 键盘时验证
+### UART 验证详情 (2026-06-02 17:50)
+
+通过 COM10 串口逐项测试：
+
+| 测试项 | 结果 | 说明 |
+|--------|------|------|
+| shell prompt + 命令回显 | PASS | 干净纯文本，无 ANSI 转义码 |
+| help 命令 | PASS | 18 个命令完整列出 |
+| stats 命令 | PASS | 任务表 + CPU% 可读 |
+| ver 命令 | PASS | 硬件/软件信息完整 |
+| hello 启动 + Ctrl+C 退出 | PASS | CLI UART 输出正常，Ctrl+C 即时退出 |
+| crypto 启动 + help | PASS | 内部 CLI 输出到 UART |
+| ntt 启动 + load delta | PASS | 内部 CLI 输出到 UART |
+| ntt HW NTT | TIMEOUT | status=0000，需 Quartus 重建 |
+| Ctrl+C 强制退出 | PASS | 从任何 CLI 程序即时返回 shell |
+| F10 退出 (0x8E) | PASS | shell 层拦截，不传给程序 |
+| 状态栏 UART 隔离 | PASS | 无 "DE2Extra RTOS | Crypto | up Xs" 噪音 |
+| 程序生命周期消息 | PASS | ">> X started" / ">> returned to shell" |
+
+### Quartus 重建后待验证
+
+- [ ] NTT HW roundtrip（VHDL 地址解码已修）
+- [ ] Conway toggle_cell + grid 渲染（VHDL 地址解码已修）
+- [ ] Synth 音频输出（I2C+I2S 通路）
+- [ ] VGA 像素模式画质（DAC/PLL）
+- [ ] Crypto bench 完整运行（含 AES 加密结果验证）
