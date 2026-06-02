@@ -1,83 +1,23 @@
-# de2shell 模块验收表 (V2 — 已冻结)
+# DE2Extra 模块验收表
 
-> **此文件为 V2 验收记录，V2 工程已删除。V3 验收表分散在各阶段文档中 (doc/phases/v3p*.md)。**
-> 适用范围: `sw/app/de2shell/` 全线 C 软件 + 依赖的 VHDL 硬件外设
-> 配套文档: `implementation_plan.md`, `phases/phase1-bus-sdram.md`, `phases/phase2a-crypto-cli.md`, `phases/phase2b-vga-terminal.md`, `phases/phase3-integration.md`
-> 注意: `de2os` (FreeRTOS + SDRAM 执行) 的验收表另建，不在此文件范围内
+> 适用范围: `sw/app/de2shell_rtos/` FreeRTOS 固件 + VHDL 硬件外设
+> 硬件工程: `par/de2os/` (top entity: `de2os_top`)
+> 构建/烧录: `deploy_de2shell_rtos.sh full` 一条龙
+> 实测板卡: `EP4CE115F29C7`, 串口 `COM10 115200 8N1`
 
 ---
 
-## 最新上板结果
+## 最新上板结果 (2026-06-02)
 
-### V3 (de2os / FreeRTOS / SDRAM exec)
-
-- 构建/烧录: `deploy_de2shell_rtos.sh full` 一条龙
-- 实测板卡: `EP4CE115F29C7`
-- 串口: `COM10`, `115200 8N1`
 - FreeRTOS 4 任务: uart_input / shell / active / status
 - CLI 命令: 18 (hello, crypto, ps2, snake, conway, info, riscvasm, expdemo, twm, ntt, synth + clear, selfcheck, stats, ver, pxtest, vgadump, vgamon)
 - **长期稳定性: 已连续运行 27490+ 秒 (~7h38m) 无崩溃**
 - PS/2 键盘主输入 + UART 辅助输入
-- VGA 文本终端 80×30 (CP437 256 字符)
-- VGA 像素模式: RGB332 → **RGB565 升级完成** (GPU 2D 加速器集成)
-- GPU 2D 硬件加速器 (`gpu_2d.vhd`) — RTL + 软件驱动就绪，Quartus 编译通过，上板待验证性能
-- **VGA PLL 修复**: toggle flip-flop → PLL c3 25MHz (专用全局时钟网络) + falling_edge 输出寄存器
-- **TWM 像素模式**: 上板成功运行，ESC 干净退出 (2026-06-01，轻微闪烁)
-- **pxtest 显示器验证**: 棋盘格+渐变色可见 (2026-06-01)
-- **startui (Win 3.0 GUI) 已删除** — 代码和 CLI 命令均已移除
+- VGA 文本终端 80×30 (CP437 256 字符) + 像素模式 RGB565
+- GPU 2D 硬件加速器 (`gpu_2d.vhd`) — RTL 就绪
+- **TWM 像素模式**: 上板成功运行 (2026-06-01)
 
-### V2 (de2shell — 已冻结)
-- 实测板卡: `EP4CE115F29C7`
-- 串口: `COM10`, `115200 8N1`
-- shell 首页: `DE2Extra Shell v0.2`
-- LCD 修复: busy-polling → 固定延时 (2ms/cmd, 1ms/char)，待目视确认
-- HEX/状态字: shell 空闲时可见心跳翻转，证明主循环仍在推进
-- IMEM: 62,872 bytes / 65,536 bytes (95.9%, 剩余 2,664 bytes)
-- Quartus: 27,508 LEs (24%), 9,239 registers, 937K memory bits, 编译耗时 25m57s
-
-本轮新增模块/改动：
-
-- VGA 像素模式控制器 (`vga_pixel_ctrl.vhd`) — 硬件完成，SDL2 验证通过
-- VGA 像素模式地址解码 — 写入 `de2os_top.vhd` (0x1F80+ offset)
-- ~~Win 3.0 GUI (`startui` 命令)~~ — 已删除，由 TWM 替代
-- LCD HAL 修复 — 固定延时替代 busy-polling，解决只显示 "LDL" 问题
-- 绘图库 (`gfx.c/h`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
-- GUI 控件库 (`gui.c/h`, `gui_widgets.c`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
-- PS/2 解码器提取 (`ps2_decoder.c/h`) — 可复用模块
-- 帧缓冲 HAL (`fb_hal.c`) — 仅 LOCAL_BUILD，NEORV32 固件未编译
-
-本轮新增模块/改动 (2026-05-30)：
-
-- Exp6 VGA 静态测试图案 (`adapt_exp6.vhd` + `vga_test_pattern.vhd`) — RTL 完成，待 Quartus 编译 + 上板
-- Exp7 VGA 动画测试图案 (`adapt_exp7.vhd`) — RTL 完成，待 Quartus 编译 + 上板
-- Exp6/7 expdemo 集成 — `expdemo_top.vhd` 输出 mux + VGA mux，`de2os_top.vhd` VGA 输出优先级 mux
-- Exp6/7 C 驱动 — `demo.c` 添加 Exp 6/7 条目 + draw_exp6/7_page 函数
-- I2C SDA 三态修复 — `wm8731_ctrl.vhd`/`synth_engine.vhd`/`de2os_top.vhd`/`de2os_imem_top.vhd` I2C_SDAT 从 `out` 改为 `inout`
-- Exp8/10 expdemo 重新接入 — RTL 适配器已有，C 驱动从"重定向到 shell 命令"改为直接实验入口
-
-已通过串口 smoke test 的模块：
-
-| 模块 | 进入 | 退出 | 备注 |
-|---|---|---|---|
-| `help` | ✅ | N/A | 列出全部命令 (9 个用户程序) |
-| `lcdmon` | ✅ | N/A | 输出软件侧 LCD 16x2 阴影缓冲 |
-| `info` | ✅ | ✅ | `q` 返回 `0000>` |
-| `hello` | ✅ | ✅ | `q` 返回 `0000>` |
-| `dash` | ✅ | ✅ | 串口验收通过 |
-| `monitor` | ✅ | ✅ | `q` 返回 `0000>` |
-| `crypto` | ✅ | ✅ | `q<CR>` 返回 `0000>` |
-| `ps2` | ✅ | ✅ | 串口可见键盘事件与 LED sync 日志 |
-| `snake` | ✅ | ✅ | `q` 返回 `0000>` |
-| `life` | — | — | 已删除，功能由硬件 `conway` 接管 |
-| `memtest` | ✅ | ✅ | 五项 SDRAM 测试实板 `ALL PASS` |
-| `expdemo` | ✅ | ✅ | 菜单进入/浏览/退出通过 |
-| `startui` | 🟡 | 🟡 | SDL2 验证通过；NEORV32 实板需 VGA 显示器 |
-
-本次 bitstream (builds/de2shell_lcd_vgapx/)：
-
-- IMEM 95.9% (62,872 bytes)，接近上限
-- Quartus 路由拥塞 (92% at X58_Y37~X68_Y48)，高努力重试后通过
-- NTT 硬件仍为占位响应，`0xF000C000` 不代表 NTT 已恢复
+**已知 Bug**: BuildInfo fault / NTT TIMEOUT / Conway 花屏 / Snake 边框 / Synth 无声。详见 `doc/phases/de2os-rtos-status.md`。
 
 ---
 
@@ -275,14 +215,6 @@
 | B4.13 | 状态寄存器解析 | `ready`/`overflow`/`tx_busy`/`tx_done`/`tx_err`/`bus_idle` 正确读取 | ✅ |
 | B4.14 | LOCAL_BUILD 降级 | 显示无 PS/2 硬件提示，按 `q` 退出 | N/A |
 
-### B5. startui — Win 3.0 桌面 GUI (已删除)
-
-> **此模块已从代码库中删除。** startui/win30/gui 相关代码和 CLI 命令均已移除。功能由 TWM (`twm` 命令) 替代。
-
-| # | 验收项 | 状态 |
-|---|---|---|
-| B5.1-B5.11 | 全部 11 项 | N/A 模块已删除 |
-
 ---
 
 ## C. 游戏
@@ -309,25 +241,21 @@
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| C2.1 | 默认图案 | 启动时随机填充网格 (LFSR seed=0xA59B)，进入编辑模式 | ⬜ 待 Quartus 重编译 |
-| C2.2 | B3/S23 规则 | 邻居=3 出生，邻居=2/3 存活，其余死亡 (硬件 RTL) | ⬜ |
-| C2.3 | 边界回绕 | 环面拓扑 (硬件取模) | ⬜ |
-| C2.4 | 迭代推进 | 运行模式下按 speed_ms 间隔推进一代 | ⬜ |
-| C2.5 | 运行/暂停 | Enter 切换运行/编辑，HUD 右上角显示 RUN/STOP | ⬜ |
-| C2.6 | 细胞切换 | 编辑态按空格翻转当前光标位置细胞 (硬件 toggle_cell) | ⬜ |
-| C2.7 | 随机填充 `R` | 按 R 随机初始化网格 (seed=0xDEAD) | ⬜ |
-| C2.8 | 清空 `C` | 按 C 清空所有细胞，重置代数为 0 | ⬜ |
-| C2.9 | 速度调节 `+`/`-` | `+` 加速 (speed_ms-50)，`-` 减速 (speed_ms+50)，HUD 显示 GPS (代/秒) | ⬜ |
-| C2.10 | 编辑模式默认进入 | 启动后进入 STOP，光标位于网格中心 (32,12) | ⬜ |
-| C2.11 | 光标移动 | 方向键 / WASD 移动光标，支持边界回绕 | ⬜ |
-| C2.12 | VGA 布局 | 内容 C2-C65 R2-R26 (64×25)，边框 C1/C66 R1/R27，HUD R0 | ⬜ |
-| C2.13 | HUD 显示 | 左: Gen/Pop/GPS 右: RUN/STOP + F1=Help | ⬜ |
-| C2.14 | F1 帮助 | 显示 B3/S23 规则 + 操作说明，暂停游戏 | ⬜ |
-| C2.15 | F10 退出 | 帮助打开时关闭帮助，帮助关闭时退出到 shell | ⬜ |
-
-### C3. `life` / `conway_ed` 旧实现
-
-`life.c` 和 `conway_ed.c` 已删除。功能由硬件版 `conway_hw.c` 接管。
+| C2.1 | 默认图案 | 启动时随机填充网格 (LFSR seed=0xA59B)，进入编辑模式 | ✅ 上板通过 |
+| C2.2 | B3/S23 规则 | 邻居=3 出生，邻居=2/3 存活，其余死亡 (硬件 RTL) | ✅ |
+| C2.3 | 边界回绕 | 环面拓扑 (硬件取模) | ✅ |
+| C2.4 | 迭代推进 | 运行模式下按 speed_ms 间隔推进一代 | ✅ **但有花屏闪烁 bug** |
+| C2.5 | 运行/暂停 | Enter 切换运行/编辑，HUD 右上角显示 RUN/STOP | ✅ |
+| C2.6 | 细胞切换 | 编辑态按空格翻转当前光标位置细胞 (硬件 toggle_cell) | ✅ **但切换时花屏** |
+| C2.7 | 随机填充 `R` | 按 R 随机初始化网格 (seed=0xDEAD) | ✅ **seed 固定非真随机** |
+| C2.8 | 清空 `C` | 按 C 清空所有细胞，重置代数为 0 | ✅ |
+| C2.9 | 速度调节 `+`/`-` | `+` 加速 (speed_ms-50)，`-` 减速 (speed_ms+50)，HUD 显示 GPS (代/秒) | ✅ |
+| C2.10 | 编辑模式默认进入 | 启动后进入 STOP，光标位于网格中心 (32,12) | ✅ |
+| C2.11 | 光标移动 | 方向键 / WASD 移动光标，支持边界回绕 | ✅ |
+| C2.12 | VGA 布局 | 内容 C2-C65 R2-R26 (64×25)，边框 C1/C66 R1/R27，HUD R0 | ✅ |
+| C2.13 | HUD 显示 | 左: Gen/Pop/GPS 右: RUN/STOP + F1=Help | ✅ |
+| C2.14 | F1 帮助 | 显示 B3/S23 规则 + 操作说明，暂停游戏 | ✅ **bx 建议左移 3 格** |
+| C2.15 | F10 退出 | 帮助打开时关闭帮助，帮助关闭时退出到 shell | ✅ |
 
 ---
 
@@ -443,7 +371,7 @@
 | E4.4 | delta 测试 | delta 向量 NTT/INTT 轮转验证 PASS | ✅ |
 | E4.5 | round-trip 测试 | 随机输入 round-trip (NTT→INTT) 验证 PASS | ✅ |
 | E4.6 | convolution 测试 | 卷积正确性验证 PASS | ✅ |
-| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000F000) 寄存器读写 | 🟡 ntt_sdf.vhd 已集成，`ntt` CLI 启动正常，但 `ntt_hw_exec()` busy-wait 卡住 (硬件可能未完成计算)，需调试 |
+| E4.7 | NEORV32 实板 MMIO | 硬件 NTT (0xF000F000) 寄存器读写 | ⚠️ `ntt` CLI 进入正常，但 `ntt`/`roundtrip` 均报 HW TIMEOUT status=0000 (引擎从未启动)，地址链验证正确，待调试 |
 | E4.8 | 性能对比 | 纯 C vs 硬件加速性能对比 | 🟡 依赖 E4.7 |
 | E4.9 | 退出 `q` | 返回 shell | ✅ |
 
@@ -573,23 +501,9 @@
 | H. 待验收 (VGA) | 19 | 13 | 1 | 0 | 5 |
 | I. V3P6 PS/2 TUI + Snake 2P | 13 | 3 | 10 | 0 | 0 |
 | J. V3P3b Crypto Viz | 10 | 10 | 0 | 0 | 0 |
-| **合计** | **290** | **249** | **25** | **0** | **7** |
+| **合计** | **290** | **262** | **13** | **1** | **7** |
 
-**主要阻塞**:
-1. 🟡 V3P6 PS/2 TUI + Snake 2P (13 项) — 代码已实现，待上板验证
-2. 🟡 Exp6/7 VGA 测试图案 (12 项) — RTL + C 驱动完成，需上板验证
-3. 🟡 NTT/E4 硬件验证 (2 项) — ntt_sdf.vhd 已集成，待上板
-4. 🟡 H2.13 Exp6/7 VGA 入口 + H2.9 snake Game Over — 待上板验证
-
-## V2 剩余项
-
-**V2 验收完成。** 以下项状态：
-
-- **snake Game Over 显示** (H2.9) — 撞自身卡住但未显示 GAME OVER 文字，待 V3 验证
-- ~~**startui** (B5, H2.15-19)~~ — **已删除**，由 TWM 替代
-- **NTT 硬件** (E4.7, E4.8) — ntt_sdf.vhd 已集成到 de2os_top，待上板验证
-- **Exp6/7 画廊** (H2.13) — RTL+C 驱动完成 (vga_test_pattern + adapt_exp6/7)，待上板验证
-- ~~**VGA 像素模式实板** (F6.2-6.5)~~ — **已完成**，TWM 上板运行成功 (2026-06-01)
+**主要阻塞**: 详见 `doc/phases/de2os-rtos-status.md` 已知 Bug 列表。
 
 ---
 
@@ -641,8 +555,8 @@
 | H2.6 | memtest VGA 输出 | 运行 `memtest` | VGA 显示测试进度和结果 | ✅ |
 | H2.7 | crypto VGA 输出 | 运行 `crypto` → `aes enc ...` | VGA 显示加解密结果 | ✅ |
 | H2.8 | snake VGA 渲染 | 运行 `snake` | VGA 显示 40×20 网格 + 蛇 + 食物 | ✅ |
-| H2.9 | snake Game Over | 撞墙/撞自身 | VGA 中央显示 "GAME OVER" | ✅ |
-| H2.10 | conway VGA 渲染 | 运行 `conway` | VGA 显示 64×25 硬件加速网格 | ⬜ 待 Quartus 重编译 |
+| H2.9 | snake Game Over | 撞墙/撞自身 | VGA 中央显示 "GAME OVER" | ✅ **但边框覆盖 HUD 模式文字** |
+| H2.10 | conway VGA 渲染 | 运行 `conway` | VGA 显示 64×25 硬件加速网格 | ✅ **但迭代时空格切换时花屏闪烁** |
 | H2.11 | ps2 VGA 事件日志 | 运行 `ps2` | VGA 显示每次按键的 scan code + 键名 | ✅ |
 | H2.12 | dashboard VGA 实时状态 | 运行 `dash` | VGA 显示 SW/KEY/IR/uptime 实时刷新 | ✅ |
 | H2.13 | Exp6/7 VGA 测试图案入口 | 输入 `expdemo` → 选择 `6` Enter | VGA 显示对应测试图案 (SW[2:0] 切换)，HEX/LED 显示调试信息 | 🟡 RTL+C 驱动完成，待上板 |
@@ -694,4 +608,4 @@
 
 ---
 
-*最后更新: 2026-06-01 — startui 已删除 (N/A)；TWM 上板成功；F6 VGA pixel 全部 ✅；V3P6 UART 验证: I.6 ESC退出✅ I.7 Q不退出✅ I.9 Snake2P✅ (其余需PS/2键盘)；NTT HW busy-wait 卡住待调试；总计 290 项 (249✅ / 25🟡 / 0❌ / 7N/A)。*
+*最后更新: 2026-06-02 — 总计 ~290 项 (252✅ / 15🟡 / 1❌ / 7N/A)。已知 Bug 详见 `doc/phases/de2os-rtos-status.md`。*
