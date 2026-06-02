@@ -84,6 +84,7 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 | monitor (riscvasm) | prog_monitor | Memory/register monitor |
 | expdemo (demo) | prog_demo | 13 course labs (Exp1-13 全可用) |
 | twm | prog_twm | Tiling window manager (像素模式 GUI) |
+| pforth | prog_forth | pForth 解释器 (完整 Forth 语言, 运行时 system.fth 解释) |
 | ntt | prog_ntt | NTT 加速器 CLI |
 | synth | prog_synth | Audio synth (PS/2 钢琴键盘, F1帮助, F10退出) |
 | pxtest | — | VGA 像素模式诊断 (5-phase) |
@@ -184,6 +185,7 @@ PS/2 虚拟键码系统：22 个 VK 常量 (F1-F12, 方向键, 导航键)，门�
 - [x] pxtest 诊断 VGA 像素模式 — ✅ SDRAM 回读 0 错误，burst read 正常
 - [x] snake 游戏 — ✅ 验收通过 (F1帮助, 双人模式, 缓冲区修复)
 - [x] ExpDemo 13 个实验 — ✅ 全可用
+- [x] pForth 解释器 — ✅ 完整 Forth (算术/比较/逻辑/栈/DO LOOP/IF ELSE/VARIABLE/CONSTANT/CREATE/MEMORY/EMIT/TYPE/." / WORDS/F1帮助/F10退出), 运行时 system.fth 解释 (pfBuildDictionary + ffInterpret 逐行), Jupyter 风格提示符 (OK >/ERR >)
 - [ ] conway 硬件 Conway — Quartus 重编译中 (64×25, ramstyle="logic", toggle_cell, F1含B3/S23规则, GPS调速)
 - [ ] synth 音频合成 — 待上板验证 (I2C+I2S)
 - [ ] crypto bench — 待测试

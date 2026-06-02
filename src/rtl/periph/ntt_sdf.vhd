@@ -139,13 +139,14 @@ begin
                 reg_start <= '0';
 
                 -- Wishbone control/data writes (blocked while engine is busy)
+                -- wb_adr_i is word-aligned from intercon: m_adr_i(13:2)
                 if wb_stb_i = '1' and wb_we_i = '1' and status_busy = '0' then
-                    if unsigned(wb_adr_i) = x"400" then
+                    if unsigned(wb_adr_i) = x"100" then
                         ctrl_dir <= wb_dat_i(1);
                         reg_start <= wb_dat_i(0);
                         if wb_dat_i(0) = '1' then status_done <= '0'; end if;
-                    elsif unsigned(wb_adr_i(11 downto 10)) = 0 then
-                        widx := unsigned(wb_adr_i(9 downto 2));
+                    elsif unsigned(wb_adr_i(11 downto 8)) = 0 then
+                        widx := unsigned(wb_adr_i(7 downto 0));
                         if widx < 256 then
                             buf(to_integer(widx)) <= unsigned(wb_dat_i(11 downto 0));
                         end if;
@@ -258,13 +259,13 @@ begin
     begin
         wb_dat_o <= (others => '0');
         if wb_stb_i = '1' and wb_we_i = '0' then
-            if unsigned(wb_adr_i) = x"404" then
+            if unsigned(wb_adr_i) = x"101" then
                 wb_dat_o(0) <= status_busy;
                 wb_dat_o(1) <= status_done;
-            elsif unsigned(wb_adr_i) = x"408" then
+            elsif unsigned(wb_adr_i) = x"102" then
                 wb_dat_o <= std_logic_vector(cycle_cnt);
-            elsif unsigned(wb_adr_i(11 downto 10)) = 0 then
-                ridx := unsigned(wb_adr_i(9 downto 2));
+            elsif unsigned(wb_adr_i(11 downto 8)) = 0 then
+                ridx := unsigned(wb_adr_i(7 downto 0));
                 if ridx < 256 then
                     wb_dat_o(11 downto 0) <= std_logic_vector(buf(to_integer(ridx)));
                 end if;

@@ -22,7 +22,7 @@ entity conway_engine is
         rst_n_i     : in  std_logic;
 
         -- Wishbone slave (CPU registers)
-        wb_adr_i    : in  std_logic_vector(4 downto 0);  -- word address [4:2]
+        wb_adr_i    : in  std_logic_vector(4 downto 0);  -- word address from intercon
         wb_dat_i    : in  std_logic_vector(31 downto 0);
         wb_dat_o    : out std_logic_vector(31 downto 0);
         wb_we_i     : in  std_logic;
@@ -124,7 +124,7 @@ begin
                 -- Wishbone slave handling (process every clock stb is asserted)
                 if wb_stb_i = '1' then
                     wb_ack_o <= '1';
-                    addr := to_integer(unsigned(wb_adr_i(4 downto 2)));
+                    addr := to_integer(unsigned(wb_adr_i(2 downto 0)));
 
                     if wb_we_i = '1' then
                         case addr is

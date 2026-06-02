@@ -30,8 +30,8 @@ static inline uint16_t barrett(uint32_t x) {
     return (uint16_t)r;
 }
 
-/* ── Twiddle table: TW[k] = 17^k mod 3329, k=0..127 ────────────── */
-
+/* ── Twiddle table + Software NTT (LOCAL_BUILD only) ─────────── */
+#ifdef LOCAL_BUILD
 static const uint16_t TW[128] = {
        1,   17,  289, 1584,  296, 1703, 2319, 2804, 1062, 1409,  650, 1063,
     1426,  939, 2647, 1722, 2642, 1637, 1197,  375, 3046, 1847, 1438, 1143,
@@ -48,7 +48,6 @@ static const uint16_t TW[128] = {
 
 /* ── Software NTT (matches VHDL engine exactly) ─────────────────── */
 
-#ifdef LOCAL_BUILD
 void ntt_sw(uint16_t *a, int inverse) {
     int s, b;
     for (s = 7; s >= 0; s--) {
@@ -130,6 +129,7 @@ static void ntt_put_hex(uint16_t v) {
     vga_putc(hex[(v >>  0) & 0xf], VGA_YELLOW);
 }
 
+#ifdef LOCAL_BUILD
 static void ntt_dump(const uint16_t *a, int n) {
     for (int i = 0; i < n; i++) {
         if (i && (i % 16 == 0)) vga_putc('\n', VGA_WHITE);
@@ -137,6 +137,7 @@ static void ntt_dump(const uint16_t *a, int n) {
     }
     vga_putc('\n', VGA_WHITE);
 }
+#endif
 
 /* ── Interactive commands ────────────────────────────────────────── */
 
@@ -171,6 +172,7 @@ static void cmd_ntt(int inverse) {
 #else
     int timeout;
     uint32_t st;
+    vga_puts("HW NTT running...\n", VGA_YELLOW);
     ntt_hw_start(inverse);
     timeout = 2000000;
     do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
@@ -203,6 +205,7 @@ static void cmd_roundtrip(void) {
     int i, ok = 1;
     uint32_t st;
     int timeout;
+    vga_puts("HW roundtrip running...\n", VGA_YELLOW);
     for (i = 0; i < NTT_N; i++) ntt_hw_write(i, ntt_hw_read(i));
     ntt_hw_start(0);
     timeout = 2000000;

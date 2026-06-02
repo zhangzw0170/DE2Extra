@@ -58,6 +58,7 @@ extern const program_t prog_twm;
 extern const program_t prog_conway;
 extern const program_t prog_ntt;
 extern const program_t prog_synth;
+extern const program_t prog_forth;
 
 uint8_t last_ir_cmd = 0;
 
@@ -77,6 +78,7 @@ typedef enum {
     PROG_CONWAY,
     PROG_NTT,
     PROG_SYNTH,
+    PROG_FORTH,
     PROG_COUNT
 } prog_id_t;
 
@@ -96,7 +98,8 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_TWM]     = &prog_twm,
     [PROG_CONWAY]  = &prog_conway,
     [PROG_NTT]      = &prog_ntt,
-    [PROG_SYNTH]    = &prog_synth
+    [PROG_SYNTH]    = &prog_synth,
+    [PROG_FORTH]    = &prog_forth
 };
 
 static volatile prog_id_t active_prog = PROG_SHELL;
@@ -317,6 +320,7 @@ static configSTACK_DEPTH_TYPE active_prog_stack_words(prog_id_t pid) {
         case PROG_INFO:
         case PROG_MONITOR:
         case PROG_NTT:
+        case PROG_FORTH:
             return 1024;
         case PROG_DEMO:
             return 896;
@@ -398,6 +402,7 @@ PROG_CMD(expdemo, PROG_DEMO)
 PROG_CMD(conway,  PROG_CONWAY)
 PROG_CMD(ntt,     PROG_NTT)
 PROG_CMD(synth,   PROG_SYNTH)
+PROG_CMD(pforth,   PROG_FORTH)
 
 static void buf_replace_tabs(char *buf) {
     char out[512];
@@ -491,7 +496,6 @@ static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
     {
         char *p = task_buf;
         while (*p && ntasks < MAX_TASKS) {
-            char *line_start = p;
             /* Find fields separated by multi-space */
             char *fields[8];
             int nf = 0;
@@ -713,6 +717,8 @@ static const CLI_Command_Definition_t cmd_ntt_def =
     {"ntt", "ntt:      NTT accelerator\r\n", cli_ntt, 0};
 static const CLI_Command_Definition_t cmd_synth_def =
     {"synth", "synth:    Audio synth\r\n", cli_synth, 0};
+static const CLI_Command_Definition_t cmd_pforth_def =
+    {"pforth", "pforth:   pForth interpreter\r\n", cli_pforth, 0};
 
 static BaseType_t cli_selfcheck(char *buf, size_t len, const char *cmd) {
     (void)cmd;
@@ -950,6 +956,7 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_snake_def);
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_pforth_def);
     FreeRTOS_CLIRegisterCommand(&cmd_twm_def);
     FreeRTOS_CLIRegisterCommand(&cmd_ver_def);
     FreeRTOS_CLIRegisterCommand(&cmd_vgadump_def);
@@ -1017,7 +1024,7 @@ static void shell_init_screen(void) {
 
     reset_display_mode();
     xSemaphoreTake(xVgaMutex, portMAX_DELAY);
-    vga_set_scroll_region(0, VGA_ROWS - 2);
+    vga_set_scroll_region(0, VGA_ROWS - 2); /* redundant: default already VGA_ROWS-2, kept for clarity */
     vga_clear();
     vga_goto(0, 0);
     vga_puts("DE2Extra Shell (FreeRTOS)\n", VGA_CYAN);
@@ -1025,7 +1032,7 @@ static void shell_init_screen(void) {
     append_sw_build(sw_line);
     vga_puts(hw_line, VGA_YELLOW);
     vga_puts(sw_line, VGA_YELLOW);
-    vga_puts("Type 'help' for commands\n", VGA_GRAY);
+    vga_puts("Type 'help' for commands. F10/ESC exits any program.\n", VGA_GRAY);
     shell_reset_line();
     shell_prompt();
     xSemaphoreGive(xVgaMutex);

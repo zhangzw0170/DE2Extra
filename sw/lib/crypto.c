@@ -1,6 +1,7 @@
 #include "vga_hal.h"
 #include "crypto.h"
 #include "board_status.h"
+#include "ps2_decoder.h"
 
 #include <stdint.h>
 
@@ -561,6 +562,8 @@ static int cmd_bench(void) {
     /* Release board status claim so t_status can update uptime during bench */
     board_status_release();
 
+    vga_puts("Running benchmark (system may appear unresponsive)...\n", VGA_YELLOW);
+
 #ifdef LOCAL_BUILD
     enum { bench_iters = 1000 };
     bench_reset();
@@ -821,6 +824,20 @@ static void input(char c) {
     int printed_prompt = 0;
 
     if (done) {
+        return;
+    }
+
+    if ((uint8_t)c == PS2_VK_F10) {
+        done = 1;
+        return;
+    }
+    if ((uint8_t)c == PS2_VK_F1) {
+        vga_clear();
+        vga_goto(0, 0);
+        vga_puts("DE2Extra Crypto CLI\n", VGA_CYAN);
+        vga_puts("Type 'help' for commands.\n", VGA_GRAY);
+        vga_puts("F10=quit  F1=this help\n\n", VGA_GRAY);
+        prompt();
         return;
     }
 

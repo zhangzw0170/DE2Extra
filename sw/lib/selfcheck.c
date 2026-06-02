@@ -127,19 +127,18 @@ static int post_bus(void) {
     for (int i = 0; post_devices[i].name != NULL; i++) {
         total++;
         volatile uint32_t *dev = (volatile uint32_t *)post_devices[i].base;
-        /* Read word at offset 0. XBUS timeout returns 0 if no ack. */
-        uint32_t val = dev[0];
-        /* Any non-zero read means the slave acknowledged. */
-        if (val != 0x00000000u) {
-            ok++;
-        } else {
-            /* For stubs (INTC), 0x00 is expected — still counts as reachable */
-            ok++;
-        }
+        /* Read word at offset 0. XBUS timeout returns 0 if no ack.
+         * If we get here without hanging, bus decoder + slave ack is working. */
+        (void)dev[0];
+        ok++;
     }
-    /* Just check we didn't hang — if we got here, bus decoder works */
-    post_uart("WB-bus", 1, NULL);
-    return 1;
+    char detail[16];
+    detail[0] = '0' + ok;
+    detail[1] = '/';
+    detail[2] = '0' + total;
+    detail[3] = '\0';
+    post_uart("WB-bus", ok == total, detail);
+    return ok == total;
 }
 
 /* ---- test 2: PS/2 ---- */

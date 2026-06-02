@@ -10,6 +10,9 @@ EFFORT = -Os
 # RTOS build flag (moves large static pools to SDRAM)
 USER_FLAGS += -DDE2SHELL_RTOS
 
+# pForth configuration — init-mode dictionary build (C primitives only)
+USER_FLAGS += -DPF_NO_FILEIO -DPF_NO_MALLOC -DPF_NO_CLIB
+
 # SDRAM execution — code at 0x01000000, data stays in DMEM
 USER_FLAGS += -Wl,--defsym,__neorv32_rom_base=0x01000000
 USER_FLAGS += -Wl,--defsym,__neorv32_rom_size=128M
@@ -50,6 +53,22 @@ APP_SRC += $(DE2SHELL_DIR)/demo.c
 APP_SRC += $(DE2SHELL_DIR)/conway_hw.c
 APP_SRC += $(DE2SHELL_DIR)/ntt.c
 APP_SRC += $(DE2SHELL_DIR)/synth.c
+APP_SRC += $(DE2SHELL_DIR)/forth.c
+
+# pForth interpreter (csrc/ files)
+PFORTH_DIR = $(DE2SHELL_DIR)/pforth
+APP_SRC += $(PFORTH_DIR)/pf_io_de2.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_cglue.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_clib.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_core.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_inner.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_io.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_mem.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_save.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_text.c
+APP_SRC += $(PFORTH_DIR)/csrc/pf_words.c
+APP_SRC += $(PFORTH_DIR)/csrc/pfcompil.c
+APP_SRC += $(PFORTH_DIR)/csrc/pfcustom.c
 
 # GUI + pixel mode (for Win 3.0 desktop)
 APP_SRC += $(DE2SHELL_DIR)/fb_hal.c
@@ -78,6 +97,7 @@ APP_SRC += ../../app/crypto_cli/crypto_sm.c
 APP_INC  = -I . -I $(DE2SHELL_DIR)
 APP_INC += -I $(FREERTOS_DIR)/include -I $(PORT_DIR) -I $(CHIP_EXT_DIR)
 APP_INC += -I ../../app/crypto_cli
+APP_INC += -I $(PFORTH_DIR) -I $(PFORTH_DIR)/csrc
 ASM_INC  = -I . -I $(CHIP_EXT_DIR)
 
 NEORV32_HOME ?= ../../../neorv32

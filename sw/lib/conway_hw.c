@@ -93,6 +93,14 @@ static void hw_toggle_cell(int row, int col) {
 
 /* ── Display ──────────────────────────────────────────────────────── */
 
+static void put_dec(uint32_t v, uint16_t color) {
+    char buf[10];
+    int pos = 0;
+    if (v == 0) { vga_putc('0', color); return; }
+    while (v > 0) { buf[pos++] = '0' + (v % 10); v /= 10; }
+    for (int i = pos - 1; i >= 0; i--) vga_putc(buf[i], color);
+}
+
 static int cell_bit(int x, uint32_t lo, uint32_t mid) {
     if (x < 32) return (int)((lo >> x) & 1u);
     return (int)((mid >> (x - 32)) & 1u);
@@ -141,11 +149,11 @@ static void draw_hud(void) {
     /* left: Gen / Pop / GPS */
     vga_goto(0, 0);
     vga_puts("Gen:", VGA_CYAN);
-    vga_puthex32(gen);
+    put_dec(gen, VGA_CYAN);
     vga_puts(" Pop:", VGA_WHITE);
-    vga_puthex32(pop);
+    put_dec(pop, VGA_WHITE);
     vga_puts(" GPS:", VGA_WHITE);
-    vga_puthex32((uint32_t)gps);
+    put_dec((uint32_t)gps, VGA_WHITE);
 
     /* right: RUN/STOP + F1 */
     vga_goto(60, 0);

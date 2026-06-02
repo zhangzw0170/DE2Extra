@@ -15,7 +15,7 @@
   static int cur_row = 0;
   static uint32_t clear_epoch = 0;
   static int scroll_top = 0;
-  static int scroll_bottom = VGA_ROWS - 1;
+  static int scroll_bottom = VGA_ROWS - 2; /* R29 reserved for status bar */
 
   static void scroll_if_needed(void) {
       if (cur_row > scroll_bottom) {
@@ -37,7 +37,7 @@
       cur_col = 0;
       cur_row = 0;
       scroll_top = 0;
-      scroll_bottom = VGA_ROWS - 1;
+      scroll_bottom = VGA_ROWS - 2;
   }
 
   void vga_putc(char c, uint16_t color) {
@@ -79,7 +79,7 @@
   void vga_clear(void) {
       printf("\033[2J\033[H");
       scroll_top = 0;
-      scroll_bottom = VGA_ROWS - 1;
+      scroll_bottom = VGA_ROWS - 2;
       cur_col = 0;
       cur_row = 0;
       clear_epoch++;
@@ -124,7 +124,7 @@
   }
 
   void vga_reset_scroll_region(void) {
-      vga_set_scroll_region(0, VGA_ROWS - 1);
+      vga_set_scroll_region(0, VGA_ROWS - 2);
   }
 
   void vga_wait_vblank(void) {
@@ -170,7 +170,7 @@
   static int cur_row = 0;
   static uint32_t clear_epoch = 0;
   static int scroll_top = 0;
-  static int scroll_bottom = VGA_ROWS - 1;
+  static int scroll_bottom = VGA_ROWS - 2; /* R29 reserved for status bar */
   static int serial_mirror_enabled = 1;
 
   static void hw_write_cell(int col, int row, char c, uint16_t color);
@@ -287,7 +287,7 @@
       cur_col = 0;
       cur_row = 0;
       scroll_top = 0;
-      scroll_bottom = VGA_ROWS - 1;
+      scroll_bottom = VGA_ROWS - 2; /* R29 reserved for status bar */
       hw_cursor_sync();
       if (serial_mirror_enabled != 0) {
           neorv32_uart0_puts("\033[2J\033[H\033[?25h");
@@ -352,7 +352,7 @@
       hw_fill_screen(VGA_BLACK);
 #endif
       scroll_top = 0;
-      scroll_bottom = VGA_ROWS - 1;
+      scroll_bottom = VGA_ROWS - 2; /* R29 reserved for status bar */
       cur_col = 0;
       cur_row = 0;
       clear_epoch++;
@@ -422,7 +422,7 @@
   }
 
   void vga_reset_scroll_region(void) {
-      vga_set_scroll_region(0, VGA_ROWS - 1);
+      vga_set_scroll_region(0, VGA_ROWS - 2);
   }
 
   void vga_wait_vblank(void) {
