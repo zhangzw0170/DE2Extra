@@ -38,7 +38,7 @@ static void post_uart(const char *tag, int pass, const char *detail) {
         neorv32_uart0_puts(": ");
         neorv32_uart0_puts(detail);
     }
-    neorv32_uart0_putc('\n');
+    neorv32_uart0_puts("\r\n");
     /* Also write to buf if available (for VGA/CLI output) */
     if (sc_buf) {
         /* Manually format into buffer - simple append */
@@ -235,12 +235,12 @@ uint32_t selfcheck_run(int skip_sdram, char *out_buf) {
     sc_buf = out_buf;
     if (out_buf) out_buf[0] = '\0';
 
-    neorv32_uart0_puts("\n=== selfcheck ===\n");
+    neorv32_uart0_puts("\r\n=== selfcheck ===\r\n");
 
     if (skip_sdram) {
-        neorv32_uart0_puts("  [SKIP] SDRAM (bootloader tested)\n");
-        neorv32_uart0_puts("  [SKIP] FB (skipped with SDRAM)\n");
-        neorv32_uart0_puts("  [SKIP] BuildInfo (requires direct access)\n");
+        neorv32_uart0_puts("  [SKIP] SDRAM (bootloader tested)\r\n");
+        neorv32_uart0_puts("  [SKIP] FB (skipped with SDRAM)\r\n");
+        neorv32_uart0_puts("  [SKIP] BuildInfo (requires direct access)\r\n");
         passed += 3;
     } else {
         if (post_sdram())      { passed++; } else { mask |= POST_SDRAM; }
@@ -251,7 +251,7 @@ uint32_t selfcheck_run(int skip_sdram, char *out_buf) {
     if (post_ps2())        { passed++; } else { mask |= POST_PS2; }
     if (post_trng())       { passed++; } else { mask |= POST_TRNG; }
 
-    neorv32_uart0_puts("\n");
+    neorv32_uart0_puts("\r\n");
     if (passed == total) {
         neorv32_uart0_puts("selfcheck: ALL PASS (");
     } else {
@@ -271,6 +271,7 @@ uint32_t selfcheck_run(int skip_sdram, char *out_buf) {
         if (mask & POST_FRAMEBUFFER) { neorv32_uart0_puts(" FB"); }
     }
     neorv32_uart0_putc('\n');
+    neorv32_uart0_putc('\r');
 
     sc_buf = NULL;
     return mask;

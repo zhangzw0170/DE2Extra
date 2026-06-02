@@ -88,5 +88,5 @@ static int finish(void) { return done; }
 
 const program_t prog_hello = {
     "Hello", "Phase 0 LED chasing demo",
-    init, update, input, NULL, finish, PROG_FLAG_CLI
+    init, update, input, NULL, finish, 0
 };
