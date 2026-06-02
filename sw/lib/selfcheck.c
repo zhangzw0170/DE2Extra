@@ -158,6 +158,18 @@ static int post_ps2(void) {
 
 /* ---- test 3: TRNG ---- */
 
+static int post_trng_read32(uint32_t *out, int timeout) {
+    uint32_t val = 0;
+    for (int i = 0; i < 4; i++) {
+        while (!neorv32_trng_data_avail() && --timeout > 0)
+            ;
+        if (timeout == 0) return 0;
+        val = (val << 8) | neorv32_trng_data_get();
+    }
+    *out = val;
+    return 1;
+}
+
 static int post_trng(void) {
     if (!neorv32_trng_available()) {
         post_uart("TRNG", 0, "not available");
@@ -165,25 +177,16 @@ static int post_trng(void) {
     }
     neorv32_trng_enable();
     neorv32_trng_fifo_clear();
-    /* Wait for at least 2 samples */
-    int timeout = 100000;
-    while (neorv32_trng_get_fifo_depth() < 2 && --timeout > 0) ;
-    if (timeout == 0) {
+
+    uint32_t r1, r2;
+    if (!post_trng_read32(&r1, 200000)) {
         post_uart("TRNG", 0, "no data");
         return 0;
     }
-    uint32_t r1 = (uint32_t)neorv32_trng_data_get() << 24;
-    r1 |= (uint32_t)neorv32_trng_data_get() << 16;
-    r1 |= (uint32_t)neorv32_trng_data_get() << 8;
-    r1 |= (uint32_t)neorv32_trng_data_get();
-    /* Re-check after reading */
-    neorv32_trng_fifo_clear();
-    timeout = 100000;
-    while (neorv32_trng_get_fifo_depth() < 4 && --timeout > 0) ;
-    uint32_t r2 = (uint32_t)neorv32_trng_data_get() << 24;
-    r2 |= (uint32_t)neorv32_trng_data_get() << 16;
-    r2 |= (uint32_t)neorv32_trng_data_get() << 8;
-    r2 |= (uint32_t)neorv32_trng_data_get();
+    if (!post_trng_read32(&r2, 200000)) {
+        post_uart("TRNG", 0, "no data (2nd)");
+        return 0;
+    }
     if (r1 == r2) {
         post_uart("TRNG", 0, "no entropy");
         return 0;

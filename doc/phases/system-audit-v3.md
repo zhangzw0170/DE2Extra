@@ -119,7 +119,7 @@ Crypto bench 运行 1000 次 × 5 算法 × 2 变体 = 10000 次加密操作，�
 ## 待修问题清单
 
 - [ ] VGA 文本模式斜线重影
-- [ ] TRNG 自检 FAILED (已知问题)
+- [x] TRNG 自检 FAILED — 软件测试 bug: `neorv32_trng_get_fifo_depth()` 返回 FIFO 容量 (始终=4)，非当前条目数，导致 wait 循环从不等待，从空 FIFO 读取全零
 - [x] Conway toggle_cell — VHDL 地址解码修复 (wb_adr_i(4:2) → (2:0))
 - [x] NTT 加速器不响应 — VHDL 地址解码修复 (x"400"→x"100", wb_adr_i(9:2)→(7:0))
 - [x] Crypto bench "卡死" — 非 bug，纯 CPU 密集计算，已加黄色警告
