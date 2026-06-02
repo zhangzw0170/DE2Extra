@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DE2Extra 系统架构图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+  .container { width: 1200px; margin: 0 auto; padding: 40px 20px; }
+  h1 { text-align: center; color: #e0e0e0; font-size: 28px; font-weight: 600; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 30px; }
+
+  /* Layer labels */
+  .layer { position: relative; border-radius: 12px; padding: 20px; margin-bottom: 12px; }
+  .layer-label {
+    position: absolute; left: -2px; top: 50%; transform: translateY(-50%) rotate(-90deg);
+    font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* Software layer */
+  .sw-layer { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 1px solid #2a2a4a; }
+  .sw-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .sw-row:last-child { margin-bottom: 0; }
+  .cmd-chip {
+    background: #0f3460; border: 1px solid #1a5276; border-radius: 6px;
+    padding: 5px 12px; color: #a8d8ea; font-size: 12px; font-family: 'Consolas', monospace;
+    white-space: nowrap;
+  }
+  .cmd-chip.highlight { background: #1b4332; border-color: #2d6a4f; color: #95d5b2; }
+
+  /* CPU layer */
+  .cpu-layer { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border: 1px solid #3a3a3a; }
+  .bus-diagram { display: flex; flex-direction: column; gap: 14px; }
+  .cpu-row { display: flex; align-items: center; gap: 12px; justify-content: center; }
+  .cpu-block {
+    background: linear-gradient(135deg, #e94560, #c23152);
+    border-radius: 10px; padding: 14px 24px; color: white; text-align: center;
+    min-width: 180px;
+  }
+  .cpu-block .name { font-size: 16px; font-weight: 700; }
+  .cpu-block .detail { font-size: 10px; opacity: 0.8; margin-top: 3px; }
+
+  /* Wishbone bus bar */
+  .wb-bus {
+    background: linear-gradient(90deg, #f39c12, #e67e22, #f39c12);
+    border-radius: 8px; padding: 10px 20px; text-align: center; position: relative;
+  }
+  .wb-bus .bus-label { font-size: 13px; font-weight: 700; color: #1a1a1a; letter-spacing: 2px; }
+  .wb-bus .bus-detail { font-size: 10px; color: #2c2c2c; margin-top: 2px; }
+  .bus-connector {
+    width: 2px; height: 14px; background: #f39c12; margin: 0 auto;
+  }
+
+  /* Peripheral grid */
+  .periph-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 4px; }
+  .periph-block {
+    border-radius: 8px; padding: 10px 6px; text-align: center;
+    border: 1px solid; position: relative;
+  }
+  .periph-block .pname { font-size: 11px; font-weight: 600; }
+  .periph-block .paddr { font-size: 9px; font-family: 'Consolas', monospace; opacity: 0.7; margin-top: 2px; }
+  .periph-block .pdesc { font-size: 9px; opacity: 0.6; margin-top: 1px; }
+
+  /* Peripheral colors by category */
+  .p-memory { background: #1b2838; border-color: #2a475e; color: #66c0f4; }
+  .p-display { background: #2d1b38; border-color: #4a2d5e; color: #c866f4; }
+  .p-input { background: #1b3828; border-color: #2d5e3e; color: #66f4a0; }
+  .p-accel { background: #38291b; border-color: #5e4a2d; color: #f4c866; }
+  .p-sys { background: #381b1b; border-color: #5e2d2d; color: #f46666; }
+  .p-audio { background: #1b2e38; border-color: #2d5a6e; color: #66e0f4; }
+
+  /* Legend */
+  .legend { display: flex; gap: 16px; justify-content: center; margin-top: 8px; white-space: nowrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #aaa; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
+  .legend-dot.ld-memory { background: #66c0f4; border-color: #2a475e; }
+  .legend-dot.ld-display { background: #c866f4; border-color: #4a2d5e; }
+  .legend-dot.ld-input { background: #66f4a0; border-color: #2d5e3e; }
+  .legend-dot.ld-accel { background: #f4c866; border-color: #5e4a2d; }
+  .legend-dot.ld-sys { background: #f46666; border-color: #5e2d2d; }
+  .legend-dot.ld-audio { background: #66e0f4; border-color: #2d5a6e; }
+
+  /* Board I/O layer */
+  .io-layer { background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 100%); border: 1px solid #2a3a4a; }
+  .io-grid { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .io-block {
+    background: #162030; border: 1px solid #2a3a50; border-radius: 8px;
+    padding: 10px 16px; text-align: center; min-width: 120px;
+  }
+  .io-block .io-icon { font-size: 22px; margin-bottom: 4px; }
+  .io-block .io-name { font-size: 11px; color: #a8d8ea; font-weight: 600; }
+  .io-block .io-detail { font-size: 9px; color: #6a8da8; margin-top: 2px; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex; gap: 24px; justify-content: center; margin-top: 20px; padding: 12px;
+    background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);
+  }
+  .stat { text-align: center; }
+  .stat .val { font-size: 24px; font-weight: 700; color: #f39c12; }
+  .stat .lbl { font-size: 10px; color: #888; margin-top: 2px; }
+
+  /* Connector arrows between layers */
+  .layer-connector { text-align: center; height: 20px; position: relative; }
+  .layer-connector::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 2px; background: rgba(243,156,18,0.4);
+  }
+  .layer-connector::after {
+    content: ''; position: absolute; left: 50%; bottom: 0;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-top: 6px solid rgba(243,156,18,0.6);
+  }
+
+  /* Arrows from bus to peripherals */
+  .bus-to-periph { display: flex; justify-content: center; gap: 0; }
+  .bus-line {
+    width: 2px; height: 10px; background: rgba(243,156,18,0.3); margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>DE2Extra — RISC-V 全外设终端系统</h1>
+  <p class="subtitle">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) | 12 Wishbone slaves | FreeRTOS 4 tasks | 18 CLI commands</p>
+
+  <!-- ============ SOFTWARE LAYER ============ -->
+  <div class="layer sw-layer">
+    <div style="text-align:center;margin-bottom:10px;">
+      <span style="background:#0f3460;padding:3px 12px;border-radius:4px;color:#a8d8ea;font-size:12px;font-weight:600;">
+        软件层 — FreeRTOS V11.3 + SDRAM 执行
+      </span>
+    </div>
+    <div class="sw-row">
+      <span class="cmd-chip highlight">hello</span>
+      <span class="cmd-chip">crypto</span>
+      <span class="cmd-chip">ps2</span>
+      <span class="cmd-chip">snake</span>
+      <span class="cmd-chip">conway</span>
+      <span class="cmd-chip">info</span>
+      <span class="cmd-chip">riscvasm</span>
+      <span class="cmd-chip">expdemo</span>
+      <span class="cmd-chip">twm</span>
+      <span class="cmd-chip">ntt</span>
+      <span class="cmd-chip">synth</span>
+      <span class="cmd-chip highlight">forth</span>
+    </div>
+    <div class="sw-row">
+      <span class="cmd-chip">selfcheck</span>
+      <span class="cmd-chip">stats</span>
+      <span class="cmd-chip">ver</span>
+      <span class="cmd-chip">clear</span>
+      <span class="cmd-chip">pxtest</span>
+      <span class="cmd-chip">vgadump</span>
+      <span class="cmd-chip">vgamon</span>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <span style="color:#666;font-size:10px;">4 FreeRTOS 任务: t_uart_input / t_shell / t_active / t_status &nbsp;|&nbsp; F1=帮助 F10=退出</span>
+    </div>
+  </div>
+
+  <div class="layer-connector"></div>
+
+  <!-- ============ CPU + BUS LAYER ============ -->
+  <div class="layer cpu-layer">
+    <div class="bus-diagram">
+      <!-- CPU -->
+      <div class="cpu-row">
+        <div class="cpu-block">
+          <div class="name">NEORV32 RISC-V</div>
+          <div class="detail">RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx + Zknd/Zkne/Zknh</div>
+          <div class="detail">50MHz | IMEM 64KB | DMEM 16KB | UART 115200 | GPIO 32-bit | TRNG</div>
+        </div>
+      </div>
+
+      <!-- XBUS -->
+      <div style="text-align:center;">
+        <div style="display:inline-block;background:#444;border-radius:4px;padding:3px 14px;">
+          <span style="color:#f39c12;font-size:10px;font-family:Consolas,monospace;">XBUS Master &nbsp;|&nbsp; timeout 2048 cycles &nbsp;|&nbsp; burst cti/tag</span>
+        </div>
+      </div>
+
+      <!-- Wishbone Bus -->
+      <div class="wb-bus">
+        <div class="bus-label">WISHBONE BUS &mdash; 1 主 / 12 从</div>
+        <div class="bus-detail">32-bit 数据 &nbsp;|&nbsp; 组合地址解码 &nbsp;|&nbsp; wb_intercon.vhd</div>
+      </div>
+
+      <!-- Peripherals -->
+      <div class="periph-grid">
+        <div class="periph-block p-memory">
+          <div class="pname">SDRAM</div>
+          <div class="paddr">0x01000000</div>
+          <div class="pdesc">128MB | burst | async FIFO</div>
+        </div>
+        <div class="periph-block p-display">
+          <div class="pname">VGA 终端</div>
+          <div class="paddr">0xF0000000</div>
+          <div class="pdesc">80×30 文本 + 像素 RGB565</div>
+        </div>
+        <div class="periph-block p-input">
+          <div class="pname">PS/2 键盘</div>
+          <div class="paddr">0xF0008000</div>
+          <div class="pdesc">scancode + IRQ</div>
+        </div>
+        <div class="periph-block p-sys">
+          <div class="pname">BuildInfo</div>
+          <div class="paddr">0xF0009000</div>
+          <div class="pdesc">HW/SW 版本 ROM</div>
+        </div>
+        <div class="periph-block p-sys">
+          <div class="pname">INTC</div>
+          <div class="paddr">0xF000A000</div>
+          <div class="pdesc">中断控制器 (reserved)</div>
+        </div>
+        <div class="periph-block p-display">
+          <div class="pname">LCD</div>
+          <div class="paddr">0xF000B000</div>
+          <div class="pdesc">HD44780 16×2</div>
+        </div>
+        <div class="periph-block p-input">
+          <div class="pname">IR 红外</div>
+          <div class="paddr">0xF000C000</div>
+          <div class="pdesc">NEC 解码</div>
+        </div>
+        <div class="periph-block p-accel">
+          <div class="pname">NTT 加速器</div>
+          <div class="paddr">0xF000F000</div>
+          <div class="pdesc">ML-KEM-512 | q=3329</div>
+        </div>
+        <div class="periph-block p-accel">
+          <div class="pname">ExpDemo</div>
+          <div class="paddr">0xF0010000</div>
+          <div class="pdesc">13 个实验多路复用</div>
+        </div>
+        <div class="periph-block p-accel">
+          <div class="pname">Conway 引擎</div>
+          <div class="paddr">0xF0011000</div>
+          <div class="pdesc">64×25 | LE 寄存器</div>
+        </div>
+        <div class="periph-block p-audio">
+          <div class="pname">Synth 音频</div>
+          <div class="paddr">0xF0012000</div>
+          <div class="pdesc">3xOSC + DX7 FM | WM8731</div>
+        </div>
+        <div class="periph-block p-accel">
+          <div class="pname">GPU 2D</div>
+          <div class="paddr">0xF0015000</div>
+          <div class="pdesc">FILL rect | burst 写</div>
+        </div>
+      </div>
+      <!-- Legend -->
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot ld-memory"></span>存储</span>
+        <span class="legend-item"><span class="legend-dot ld-display"></span>显示</span>
+        <span class="legend-item"><span class="legend-dot ld-input"></span>输入</span>
+        <span class="legend-item"><span class="legend-dot ld-accel"></span>加速器</span>
+        <span class="legend-item"><span class="legend-dot ld-sys"></span>系统</span>
+        <span class="legend-item"><span class="legend-dot ld-audio"></span>音频</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer-connector"></div>
+
+  <!-- ============ BOARD I/O LAYER ============ -->
+  <div class="layer io-layer">
+    <div style="text-align:center;margin-bottom:10px;">
+      <span style="background:#162030;padding:3px 12px;border-radius:4px;color:#a8d8ea;font-size:12px;font-weight:600;">
+        DE2-115 板级 I/O &mdash; Cyclone IV E (EP4CE115F29C7, 114K LEs)
+      </span>
+    </div>
+    <div class="io-grid">
+      <div class="io-block">
+        <div class="io-icon">🖥️</div>
+        <div class="io-name">VGA 显示器</div>
+        <div class="io-detail">640×480@60Hz<br>RGB565 像素 + 文本</div>
+      </div>
+      <div class="io-block">
+        <div class="io-icon">⌨️</div>
+        <div class="io-name">PS/2 键盘</div>
+        <div class="io-detail">主输入源<br>Scancode Set 2</div>
+      </div>
+      <div class="io-block">
+        <div class="io-icon">🔊</div>
+        <div class="io-name">WM8731 音频</div>
+        <div class="io-detail">I2S 24-bit DAC<br>I2C 配置</div>
+      </div>
+      <div class="io-block">
+        <div class="io-icon">🔢</div>
+        <div class="io-name">7-SEG ×8</div>
+        <div class="io-detail">HEX0–HEX7<br>Heap% / Uptime</div>
+      </div>
+      <div class="io-block">
+        <div class="io-icon">💡</div>
+        <div class="io-name">LED ×24</div>
+        <div class="io-detail">LEDR 16 + LEDG 8<br>程序状态指示</div>
+      </div>
+      <div class="io-block">
+        <div class="io-icon">📟</div>
+        <div class="io-name">LCD 16×2</div>
+        <div class="io-detail">HD44780<br>DE2Extra Status</div>
+      </div>
+      <div class="io-block">
+        <div class="io-icon">📡</div>
+        <div class="io-name">IR 红外</div>
+        <div class="io-detail">NEC 协议<br>遥控器输入</div>
+      </div>
+      <div class="io-block">
+        <div class="io-icon">🔌</div>
+        <div class="io-name">UART 串口</div>
+        <div class="io-detail">COM10 115200<br>调试 + 上传</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATS BAR ============ -->
+  <div class="stats-bar">
+    <div class="stat"><div class="val">12</div><div class="lbl">Wishbone 外设</div></div>
+    <div class="stat"><div class="val">18</div><div class="lbl">CLI 命令</div></div>
+    <div class="stat"><div class="val">128</div><div class="lbl">Git 提交</div></div>
+    <div class="stat"><div class="val">12</div><div class="lbl">开发天数</div></div>
+    <div class="stat"><div class="val">7h+</div><div class="lbl">长稳无崩溃</div></div>
+    <div class="stat"><div class="val">~24%</div><div class="lbl">FPGA 资源</div></div>
+  </div>
+
+  <div style="text-align:center;margin-top:20px;color:#555;font-size:11px;">
+    Boot mode 0: 2KB bootloader (IMEM) → UART upload → SDRAM exec (0x01000000) | FreeRTOS heap @ 0x01900000 | Framebuffer @ 0x01800000
+  </div>
+</div>
+</body>
+</html>
