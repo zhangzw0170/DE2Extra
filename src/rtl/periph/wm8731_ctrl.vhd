@@ -22,15 +22,16 @@ architecture rtl of wm8731_ctrl is
     constant CLK_DIV : integer := 1250; -- half SCL period (~25 us)
 
     type reg_t is array(0 to 9) of std_logic_vector(15 downto 0);
+    -- Bits [15:9] = register address, bits [8:0] = data
     constant CFG : reg_t := (
-        x"001A", x"001A",  -- 0,1: Line In -6dB
-        x"007B", x"007B",  -- 2,3: Headphone 0dB
-        x"0010",            -- 4:  DAC on, bypass off, HPOUT on
-        x"0006",            -- 5: 16-bit I2S
-        x"0000",            -- 6: all power on
-        x"0001",            -- 7: I2S 16-bit slave
-        x"0006",            -- 8: 48kHz USB mode (PLL accepts 12.5 MHz MCLK)
-        x"0000"             -- 9: DAC soft-mute OFF
+        x"001A", x"021A",  -- Reg 0,1:   Line In -6dB
+        x"047B", x"067B",  -- Reg 2,3:   Headphone 0dB
+        x"0812",            -- Reg 4:     DAC selected, mic muted
+        x"0A06",            -- Reg 5:     DAC unmuted, deemphasis 48kHz
+        x"0C00",            -- Reg 6:     All power on
+        x"0E12",            -- Reg 7:     I2S 16-bit, WM8731 MASTER
+        x"1000",            -- Reg 8:     Normal mode, MCLK/256
+        x"1201"             -- Reg 9:     ACTIVE
     );
 
     type state_t is (S_IDLE, S_START, S_BIT_LOW, S_BIT_HIGH, S_STOP1, S_STOP2);
@@ -109,16 +110,17 @@ begin
                                 shift   <= CFG(reg_idx)(15 downto 8);
                                 bit_idx <= 8;
                                 phase   <= 1;
+                                state   <= S_BIT_LOW;
                             elsif phase = 1 then
                                 shift   <= CFG(reg_idx)(7 downto 0);
                                 bit_idx <= 8;
                                 phase   <= 2;
+                                state   <= S_BIT_LOW;
                             elsif phase = 2 then
                                 reg_idx <= reg_idx + 1;
                                 sda_r   <= '0';
                                 state   <= S_STOP1;
                             end if;
-                            state <= S_BIT_LOW;
                         else
                             bit_idx <= bit_idx - 1;
                             state   <= S_BIT_LOW;

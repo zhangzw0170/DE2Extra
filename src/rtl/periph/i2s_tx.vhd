@@ -1,6 +1,6 @@
--- i2s_tx.vhd -- I2S transmitter for WM8731 (slave mode)
+-- i2s_tx.vhd -- I2S transmitter for WM8731 (master mode)
 --
--- WM8731 generates BCLK and LRCK in slave mode.
+-- WM8731 generates BCLK and LRCK in master mode.
 -- FPGA provides MCLK and serial DAC data.
 -- Data changes on BCLK falling edge (I2S standard).
 -- Double-buffered: samples captured on LRCK edge, output next frame.
@@ -61,6 +61,8 @@ begin
                 -- Falling LRCK = right channel
                 is_left  <= '0';
                 lrck_edge <= '1';
+            else
+                lrck_edge <= '0';
             end if;
         end if;
     end process;
