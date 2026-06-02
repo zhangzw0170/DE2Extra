@@ -60,7 +60,7 @@ V3 推进了 VGA 像素模式（6 月 1 日）。之前 VGA 只用于 80×30 文
 
 1. **F1/F10 统一帮助系统**：每个交互式程序都有相同的 F1 帮助叠加层和 F10 退出逻辑，用户不需要记住每个程序的不同操作方式
 2. **删除冗余**：软件 Conway (life.c) 和硬件 Conway 并存没有意义，删掉软件版只保留硬件加速版
-3. **Bug 修复**：snake 缓冲区溢出、synth F1 无反应、Conway 网格只读 32/80 列、VGA 光标和状态栏冲突
+3. **Bug 修复**：snake 缓冲区溢出、synth F1 无反应、Conway 网格 80→64 列缩减 (M9K→LE ramstyle)、VGA 光标和状态栏冲突
 
 这些打磨没有增加任何功能，但把"能用"变成了"好用"。
 
@@ -89,7 +89,7 @@ Day 7-8 (05-29/30) NTT/PONG/Conway RTL 集成，Audio synth，ChromaShader
 Day 9 (05-30)  Snake 2P，PS/2 TUI 虚拟键码
 Day 10 (06-01) GPU 2D，VGA PLL 修复，TWM 像素模式上板
 Day 11 (06-01) 文档清理，v0.2 发布
-Day 12 (06-02) 程序打磨：F1/F10 统一帮助系统，life.c 删除→conway 硬件接管，Conway VHDL 网格读取修复+toggle_cell，snake 缓冲区溢出修复，synth F1 修复，R29 光标冲突修复
+Day 12 (06-02) 程序打磨：F1/F10 统一帮助系统，life.c 删除→conway 硬件接管，Conway VHDL 80→64 列+ramstyle="logic"+toggle_cell，snake 缓冲区溢出修复，synth F1 修复，R29 光标冲突修复
 ```
 
 12 天，110+ 次提交。从零到一个有 12 个 Wishbone 外设、20 条 CLI 命令、FreeRTOS 多任务、VGA 像素 GUI 的完整系统。

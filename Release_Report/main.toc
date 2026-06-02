@@ -1,0 +1,11 @@
+\contentsline {section}{\numberline {1}模板说明}{1}{section.1}%
+\contentsline {section}{\numberline {2}一些插入功能}{1}{section.2}%
+\contentsline {subsection}{\numberline {2.1}插入公式}{1}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}插入图片}{1}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}插入文本框}{2}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}插入表格}{2}{subsection.2.4}%
+\contentsline {section}{\numberline {3}定理环境}{2}{section.3}%
+\contentsline {subsection}{\numberline {3.1}插入参考文献}{3}{subsection.3.1}%
+\contentsline {section}{\numberline {4}写在最后}{3}{section.4}%
+\contentsline {subsection}{\numberline {4.1}致谢}{3}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}发布地址}{3}{subsection.4.2}%

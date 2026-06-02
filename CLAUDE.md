@@ -101,7 +101,7 @@ Note: **GPU 2D** (`gpu_2d.vhd`, s11) RTL integrated, Quartus pass. C driver (`sw
 
 Note: **NTT accelerator** (`ntt_sdf.vhd`, s4) RTL integrated, Quartus pass. C driver (`sw/lib/ntt.c`) dual-mode (LOCAL_BUILD SW / NEORV32 MMIO). Board verification pending.
 
-Note: **Conway engine** (`conway_engine.vhd`, s9) RTL integrated, Quartus pass. C driver (`sw/lib/conway_hw.c`), `conway` command. 80×25 grid, dual-buffered BRAM, toggle cell, F1 help overlay. Grid read uses 3-word MMIO (lo/mid/hi for cols 0-31/32-63/64-79). Board verification pending.
+Note: **Conway engine** (`conway_engine.vhd`, s9) RTL integrated, Quartus pass. C driver (`sw/lib/conway_hw.c`), `conway` command. 64×25 grid, dual-buffered LE registers (`ramstyle="logic"`), toggle cell, F1 help overlay (含 B3/S23 规则). Grid read uses 2-word MMIO (lo/mid for cols 0-31/32-63). Board verification pending.
 
 Note: **ExpDemo** (`expdemo_top.vhd`, s8) wraps 13 experiment adapters. Board verified.
 

@@ -1,16 +1,16 @@
 -- conway_engine.vhd — Conway's Game of Life hardware engine
 --
--- 80x25 grid, B3/S23 rules, toroidal wrap, dual-buffered BRAM.
+-- 64x25 grid, B3/S23 rules, toroidal wrap, dual-buffered LE registers.
 -- Wishbone slave for CPU control.
 -- Hardware computes next generation; CPU reads grid for VGA display.
 --
 -- Slave registers (word-aligned, 4-byte stride):
 --   0x00 [W] cmd: bit0=clear, bit1=randomize, bit2=step, bit3=auto_run, bit4=toggle_cell
---   0x04 [W] control/data: bits[15:8]=row_index, bits[6:0]=col_index (for toggle)
+--   0x04 [W] control/data: bits[12:8]=row_index, bits[6:0]=col_index (for toggle)
 --   0x08 [R] status: bit0=busy, bit1=auto_run, bits[17:2]=generation[15:0]
 --   0x0C [R] population count [15:0]
---   0x10 [R] grid_row: returns 80-bit row data (read row_index set by last write to 0x04)
---              bits[79:0] = column alive/dead (1=alive), left-to-right
+--   0x10 [R] grid_row lo:  cols 0-31 (bits[31:0])
+--   0x14 [R] grid_row mid: cols 32-63 (bits[31:0])
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -33,17 +33,17 @@ end entity conway_engine;
 
 architecture rtl of conway_engine is
 
-    constant COLS      : integer := 80;
+    constant COLS      : integer := 64;
     constant ROWS      : integer := 25;
-    constant GRID_SIZE : integer := COLS * ROWS;  -- 2000
+    constant GRID_SIZE : integer := COLS * ROWS;  -- 1600
 
     -- Grid: 1 bit per cell, dual buffer
     type grid_t is array(0 to GRID_SIZE - 1) of std_logic;
     signal grid_a : grid_t := (others => '0');
     signal grid_b : grid_t := (others => '0');
     attribute ramstyle : string;
-    attribute ramstyle of grid_a : signal is "M9K, no_rw_check";
-    attribute ramstyle of grid_b : signal is "M9K, no_rw_check";
+    attribute ramstyle of grid_a : signal is "logic";
+    attribute ramstyle of grid_b : signal is "logic";
 
     -- Active buffer: '0' = A, '1' = B (flips after each generation)
     signal buf_sel    : std_logic := '0';
@@ -178,18 +178,6 @@ begin
                                 rd_idx := row_idx * COLS + 32;
                                 row_data := (others => '0');
                                 for c in 0 to 31 loop
-                                    if buf_sel = '0' then
-                                        row_data(c) := grid_a(rd_idx);
-                                    else
-                                        row_data(c) := grid_b(rd_idx);
-                                    end if;
-                                    rd_idx := rd_idx + 1;
-                                end loop;
-                                wb_dat_o <= row_data;
-                            when 6 =>  -- grid_row hi: cols 64-79
-                                rd_idx := row_idx * COLS + 64;
-                                row_data := (others => '0');
-                                for c in 0 to 15 loop
                                     if buf_sel = '0' then
                                         row_data(c) := grid_a(rd_idx);
                                     else

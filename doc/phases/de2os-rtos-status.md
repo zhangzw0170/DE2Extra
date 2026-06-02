@@ -79,7 +79,7 @@ FreeRTOS 内核通过 NEORV32 上游集成的 RISC-V port 提供（`neorv32/sw/e
 | crypto | prog_crypto | AES/SHA/SM4 CLI + bench |
 | ps2 (kbd) | prog_ps2 | PS/2 keyboard test |
 | snake | prog_snake | Snake game (1P/2P, WASD+箭头, F1帮助, F10退出) |
-| conway | prog_conway | Conway 硬件引擎 (80×25, F1帮助, 空格切换, F10退出) |
+| conway | prog_conway | Conway 硬件引擎 (64×25, F1帮助含规则, 空格切换, F10退出, +/-调速) |
 | info | prog_info | System dashboard |
 | monitor (riscvasm) | prog_monitor | Memory/register monitor |
 | expdemo (demo) | prog_demo | 13 course labs (Exp1-13 全可用) |
@@ -124,17 +124,19 @@ Audio synth C 驱动 (`sw/lib/synth.c`): 88 音符 tuning table, PS/2 双轨钢�
 **各游戏帮助内容**:
 
 - **Snake**: 方向键/WASD移动, 空格/R重开, F1帮助, F10退出
-- **Conway**: 方向键/WASD移动光标, 空格切换细胞, Enter运行/暂停, R随机, C清除, +/-调速, F1帮助, F10退出
+- **Conway**: 方向键/WASD移动光标, 空格切换细胞, Enter运行/暂停, R随机, C清除, +/-调速(每秒代数), F1帮助(含B3/S23规则), F10退出
 - **Synth**: Z-M音符, Tab/CapsLock八度, M切换3xOSC/DX7, F1帮助, F10/Q退出
 
 **技术实现**: 每个程序维护 `help_open` 标志 + `draw_help()` 叠加层 + `redraw()` 全量重绘。`update()` 在 help_open 时跳过。
 
 ### 10. Conway 硬件加速 (2026-06-02)
 
-- **VHDL 修复**: 网格读取从 32 列扩展到 80 列 (addr 4/5/6 → lo/mid/hi)
+- **VHDL 修复**: 网格从 80×25 缩减为 64×25 (2-word row read, ramstyle="logic")
 - **VHDL 新增**: toggle_cell 命令 (cmd bit4, control bits[6:0]=col_idx)
-- **C 驱动重写**: 3-word hw_read_row(), cell_bit() 辅助函数, 帮助叠加层
+- **C 驱动重写**: 2-word hw_read_row(), cell_bit() 辅助函数, F1 帮助叠加层 (含 B3/S23 规则)
 - **命令重命名**: `conwayhw` → `conway`
+- **显示布局**: 内容 C2–C65, R2–R26; 边框 C1/C66, R1/R27; HUD R0 左侧, RUN/STOP 右上角
+- **调速**: +/- 调整每秒代数 (speed_ms)
 - **待 Quartus 重编译** (VHDL 更改需要)
 
 ### 11. Bug 修复 (2026-06-02)
@@ -182,7 +184,7 @@ PS/2 虚拟键码系统：22 个 VK 常量 (F1-F12, 方向键, 导航键)，门�
 - [x] pxtest 诊断 VGA 像素模式 — ✅ SDRAM 回读 0 错误，burst read 正常
 - [x] snake 游戏 — ✅ 验收通过 (F1帮助, 双人模式, 缓冲区修复)
 - [x] ExpDemo 13 个实验 — ✅ 全可用
-- [ ] conway 硬件 Conway — 待 Quartus 重编译 (网格读取修复 + toggle_cell)
+- [ ] conway 硬件 Conway — Quartus 重编译中 (64×25, ramstyle="logic", toggle_cell, F1含B3/S23规则, GPS调速)
 - [ ] synth 音频合成 — 待上板验证 (I2C+I2S)
 - [ ] crypto bench — 待测试
 - [ ] ntt 加速器 — 待测试
@@ -191,13 +193,14 @@ PS/2 虚拟键码系统：22 个 VK 常量 (F1-F12, 方向键, 导航键)，门�
 
 ### P2. Quartus 重编译 (conway VHDL)
 
-conway_engine.vhd 两项更改需要 Quartus 重编译：
-1. 网格读取修复: addr 5/6 寄存器 (cols 32-79)
-2. toggle_cell 命令: cmd bit4, control bits[6:0]=col_idx
+conway_engine.vhd 更改需要 Quartus 重编译：
+1. 网格缩减 80→64 列, ramstyle="logic" (LE 寄存器替代 M9K)
+2. 移除 addr 6 (cols 64-79) 读寄存器
+3. toggle_cell 命令: cmd bit4, control bits[6:0]=col_idx
 
 ## 下一步
 
-1. **Quartus 重编译**: conway VHDL 修改 → 烧录 → 验证 conway 空格切换 + 80列显示
+1. **Quartus 重编译**: conway VHDL 修改 → 烧录 → 验证 conway 空格切换 + 64列显示 + 随机填充
 2. **验证 synth/ntt/crypto 基本功能**
 3. **VGA 显示质量**: 文本模式重影 + 像素模式画面
 4. **V3 最终文档**: 撰写项目总结文档

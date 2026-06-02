@@ -15,7 +15,7 @@
 - 实测板卡: `EP4CE115F29C7`
 - 串口: `COM10`, `115200 8N1`
 - FreeRTOS 4 任务: uart_input / shell / active / status
-- CLI 命令: 22 (hello, memtest, crypto, ps2, snake, life, info, expdemo, twm, conwayhw, ponghw, ntt, synth, pxtest, vgadump, vgam, stats, heapstat, cpustat, clear)
+- CLI 命令: 18 (hello, crypto, ps2, snake, conway, info, riscvasm, expdemo, twm, ntt, synth + clear, selfcheck, stats, ver, pxtest, vgadump, vgamon)
 - **长期稳定性: 已连续运行 27490+ 秒 (~7h38m) 无崩溃**
 - PS/2 键盘主输入 + UART 辅助输入
 - VGA 文本终端 80×30 (CP437 256 字符)
@@ -68,7 +68,7 @@
 | `crypto` | ✅ | ✅ | `q<CR>` 返回 `0000>` |
 | `ps2` | ✅ | ✅ | 串口可见键盘事件与 LED sync 日志 |
 | `snake` | ✅ | ✅ | `q` 返回 `0000>` |
-| `life` | ✅ | ✅ | `q` 返回 `0000>` |
+| `life` | — | — | 已删除，功能由硬件 `conway` 接管 |
 | `memtest` | ✅ | ✅ | 五项 SDRAM 测试实板 `ALL PASS` |
 | `expdemo` | ✅ | ✅ | 菜单进入/浏览/退出通过 |
 | `startui` | 🟡 | 🟡 | SDL2 验证通过；NEORV32 实板需 VGA 显示器 |
@@ -109,7 +109,7 @@
 | A1.9 | `quit`/`exit` 命令 | 从子程序返回 shell 主界面 | ✅ |
 | A1.10 | 状态栏常驻 | 第 25 行 (row 24) 显示当前频道名，右侧显示 uptime (按分钟刷新) | ✅ 串口实测可见 `Up HH:MM` 递增 |
 | A1.11 | 程序注册表完整性 | 9 个用户程序 + shell 的 `prog_id_t` 全部注册到 `programs[]` 数组 | ✅ |
-| A1.12 | IR 遥控切频 | 遥控器按内部频道号映射：`1-9` 对应 hello/memtest/crypto/ps2/snake/life/dash/info/monitor，`A` 进入 expdemo；`0/RETURN` 返回 shell；`CH+/CH-` 顺序切换 | ✅ |
+| A1.12 | IR 遥控切频 | 遥控器按内部频道号映射 (V2 功能，V3 中 IR 未做主输入) | ✅ (V2) |
 | A1.13 | IR 指令透传 | 子程序的 `ir_input` 回调优先级高于全局 IR 映射 | ✅ 已由 dashboard `ir_input` 吞掉全局切频验证 |
 | A1.14 | Docker 交叉编译 | 手动 Docker 构建链可稳定生成 `de2shell` IMEM 镜像；当前 `Executable (VHD)` 为 `62872 bytes` (95.9%)，适配 64KB IMEM | ✅ |
 | A1.15 | LOCAL_BUILD 编译 | `make local` (host gcc) 编译通过 | ✅ |
@@ -302,32 +302,32 @@
 | C1.9 | Game Over 显示 | 网格中央显示 "GAME OVER" | ✅ 上板通过 |
 | C1.10 | 退出 `q` | 返回 shell | ✅ |
 
-### C2. life — 康威生命游戏 (life.c)
+### C2. conway — 硬件康威生命游戏 (conway_hw.c + conway_engine.vhd)
+
+> 软件版 `life.c` 已删除，硬件版接管。64×25 网格由 FPGA RTL 计算，CPU 读取 grid 行数据写入 VGA。
+> ramstyle="logic" (LE 寄存器，非 M9K)，2-word MMIO 行读取 (lo/mid)。
 
 | # | 验收项 | 预期行为 | 状态 |
 |---|---|---|---|
-| C2.1 | 默认图案 | 启动时加载滑翔机 (glider) 图案 | ✅ |
-| C2.2 | B3/S23 规则 | 邻居=3 出生，邻居=2/3 存活，其余死亡 | ✅ |
-| C2.3 | 边界回绕 | 环面拓扑 (x/y 坐标取模) | ✅ |
-| C2.4 | 迭代推进 | 非暂停时每 speed_ms/10 帧推进一代 | ✅ |
-| C2.5 | 暂停/继续 `p` | 按 `p` 切换暂停状态，HUD 显示 PAUSED/RUN | ✅ |
-| C2.6 | 单步 `SPACE` | 暂停时按空格推进一代 | ✅ |
-| C2.7 | 图案切换 `g` | 按 `g` 加载滑翔机，重置代数为 0 | ✅ |
-| C2.8 | 图案切换 `n` | 按 `n` 加载高斯帕滑翔机枪 (Gosper glider gun)，重置代数为 0 | ✅ |
-| C2.9 | 图案切换 `r` | 按 `r` 随机初始化网格 | ✅ |
-| C2.10 | 清空 `c` | 按 `c` 清空所有细胞，重置代数为 0 | ✅ |
-| C2.11 | 速度调节 `+`/`-` | `+`/`=` 加速 (speed_ms-10, 下限 20)，`-`/`_` 减速 (上限 500) | ✅ |
-| C2.12 | 编辑模式默认进入 | 启动后进入 `EDIT`，光标位于网格中心 | ✅ |
-| C2.13 | 光标移动 | 方向键 / WASD 都能移动光标，支持边界回绕 | ✅ |
-| C2.14 | 细胞切换 | 编辑态按空格翻转当前光标位置细胞 | ✅ |
-| C2.15 | 运行 / 返回编辑 | `Enter` 进入运行，`E` 返回编辑 | ✅ |
-| C2.16 | HUD 坐标与状态 | HUD 显示 `RUN/EDIT/HOLD` 以及 `X/Y` 坐标 | ✅ |
-| C2.17 | VGA 渲染 | 40×20 网格 + 边框 + HUD (代数+状态+按键提示) | ✅ 上板通过 |
-| C2.18 | 退出 `q` | 返回 shell | ✅ |
+| C2.1 | 默认图案 | 启动时随机填充网格 (LFSR seed=0xA59B)，进入编辑模式 | ⬜ 待 Quartus 重编译 |
+| C2.2 | B3/S23 规则 | 邻居=3 出生，邻居=2/3 存活，其余死亡 (硬件 RTL) | ⬜ |
+| C2.3 | 边界回绕 | 环面拓扑 (硬件取模) | ⬜ |
+| C2.4 | 迭代推进 | 运行模式下按 speed_ms 间隔推进一代 | ⬜ |
+| C2.5 | 运行/暂停 | Enter 切换运行/编辑，HUD 右上角显示 RUN/STOP | ⬜ |
+| C2.6 | 细胞切换 | 编辑态按空格翻转当前光标位置细胞 (硬件 toggle_cell) | ⬜ |
+| C2.7 | 随机填充 `R` | 按 R 随机初始化网格 (seed=0xDEAD) | ⬜ |
+| C2.8 | 清空 `C` | 按 C 清空所有细胞，重置代数为 0 | ⬜ |
+| C2.9 | 速度调节 `+`/`-` | `+` 加速 (speed_ms-50)，`-` 减速 (speed_ms+50)，HUD 显示 GPS (代/秒) | ⬜ |
+| C2.10 | 编辑模式默认进入 | 启动后进入 STOP，光标位于网格中心 (32,12) | ⬜ |
+| C2.11 | 光标移动 | 方向键 / WASD 移动光标，支持边界回绕 | ⬜ |
+| C2.12 | VGA 布局 | 内容 C2-C65 R2-R26 (64×25)，边框 C1/C66 R1/R27，HUD R0 | ⬜ |
+| C2.13 | HUD 显示 | 左: Gen/Pop/GPS 右: RUN/STOP + F1=Help | ⬜ |
+| C2.14 | F1 帮助 | 显示 B3/S23 规则 + 操作说明，暂停游戏 | ⬜ |
+| C2.15 | F10 退出 | 帮助打开时关闭帮助，帮助关闭时退出到 shell | ⬜ |
 
-### C3. `conway_ed` 旧实现
+### C3. `life` / `conway_ed` 旧实现
 
-`conway_ed.c` 已退出当前 `de2shell` 正式路径。编辑功能已并入 `life.c`，后续验收只看 `life`，不再把 `conway_ed` 作为并行实现维护。
+`life.c` 和 `conway_ed.c` 已删除。功能由硬件版 `conway_hw.c` 接管。
 
 ---
 
@@ -636,13 +636,13 @@
 | H2.1 | VGA 时序 + 画面 | 上电接显示器 | 稳定 640×480@60Hz，无花屏 | ✅ |
 | H2.2 | shell 首页 VGA 显示 | 上电进入 shell | VGA 显示启动画面 + 提示符，与串口一致 | ✅ |
 | H2.3 | 状态栏常驻 | 观察 VGA 最后一行 | `DE2Extra | Ch:X progname Up HH:MM` | ✅ |
-| H2.4 | 页面切换无花屏 | 进入 help/memtest/crypto/life/dash | 切换时 VGA 正常刷新，不残留前页内容 | ✅ |
+| H2.4 | 页面切换无花屏 | 进入 help/crypto/conway/dash | 切换时 VGA 正常刷新，不残留前页内容 | ✅ |
 | H2.5 | vga_clear / 光标 / 换行 / 退格 | 在 shell 中输入文字并退格 | VGA 行为与串口镜像一致 | ✅ |
 | H2.6 | memtest VGA 输出 | 运行 `memtest` | VGA 显示测试进度和结果 | ✅ |
 | H2.7 | crypto VGA 输出 | 运行 `crypto` → `aes enc ...` | VGA 显示加解密结果 | ✅ |
 | H2.8 | snake VGA 渲染 | 运行 `snake` | VGA 显示 40×20 网格 + 蛇 + 食物 | ✅ |
 | H2.9 | snake Game Over | 撞墙/撞自身 | VGA 中央显示 "GAME OVER" | ✅ |
-| H2.10 | life VGA 渲染 | 运行 `life` | VGA 显示 40×20 细胞网格 | ✅ |
+| H2.10 | conway VGA 渲染 | 运行 `conway` | VGA 显示 64×25 硬件加速网格 | ⬜ 待 Quartus 重编译 |
 | H2.11 | ps2 VGA 事件日志 | 运行 `ps2` | VGA 显示每次按键的 scan code + 键名 | ✅ |
 | H2.12 | dashboard VGA 实时状态 | 运行 `dash` | VGA 显示 SW/KEY/IR/uptime 实时刷新 | ✅ |
 | H2.13 | Exp6/7 VGA 测试图案入口 | 输入 `expdemo` → 选择 `6` Enter | VGA 显示对应测试图案 (SW[2:0] 切换)，HEX/LED 显示调试信息 | 🟡 RTL+C 驱动完成，待上板 |
@@ -665,7 +665,7 @@
 | I.3 | 输入门控穿透 VK | `has_ascii=0, ascii≠0` 的虚拟键码可通过门控到达程序 | 🟡 待上板 |
 | I.4 | 全局 F1 帮助 | F1 在 `prog->input()` 之前拦截，输出 `[Help] progname: help` 到 UART | 🟡 待上板 |
 | I.5 | 全局 F10 退出 | F10 在 `prog->input()` 之后检查，程序可先做清理 | 🟡 需 PS/2 键盘 |
-| I.6 | 全局 ESC 退出 | ESC 与 F10 同级退出当前程序 | ✅ UART 验证: hello/info/life 退出正常；memtest (V2程序) 不退出 |
+| I.6 | 全局 ESC/F10 退出 | F10 退出当前程序 (snake 仅 game over 后) | ✅ UART 验证: hello/info 退出正常 |
 | I.7 | Q 不再退出程序 | 所有 13 个程序 Q 键无退出效果 (twm 的 Q 是关闭窗口，非退出) | ✅ UART 验证: hello/snake 不退出；crypto (FreeRTOS CLI) 独立处理 |
 | I.8 | 直读 PS/2 程序 F10 | ps2/pong_hw/synth 在自己 PS/2 轮询中处理 F10 退出 | 🟡 需 PS/2 键盘 |
 | I.9 | Snake 2P 模式选择 | 先选 1P/2P → 再选难度 (两页选择) | ✅ UART 验证: 1P/2P 菜单显示正常 |
