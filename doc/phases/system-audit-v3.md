@@ -129,6 +129,10 @@ Crypto bench 运行 1000 次 × 5 算法 × 2 变体 = 10000 次加密操作，�
 - [x] Conway HUD hex — 改为 decimal 显示
 - [x] Shell 欢迎界面 — 添加 "F10/ESC exits any program" 提示
 - [x] NTT HW 操作无反馈 — 添加 "running..." 黄色提示
+- [x] Crypto bench 无进度指示 — 每个 algorithm 后输出 progress dot
+- [x] Forth 错误码不友好 — 常见 ThrowCode 改为可读文本
+- [x] Synth Q 键未文档化 — help overlay 添加 "F10 / Q: Quit"
+- [x] Crypto parse_u32_dec 溢出 — 添加 n>99999 guard
 
 ## 验收表 (Release v1.0)
 
