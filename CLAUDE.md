@@ -97,19 +97,7 @@ de2os_top.vhd (top entity, knows board pins)
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
 
-Note: **GPU 2D** (`gpu_2d.vhd`, s11) RTL integrated, Quartus pass. C driver (`sw/lib/gpu.c`). FILL rect via SDRAM burst-write. Board verification pending.
-
-Note: **NTT accelerator** (`ntt_sdf.vhd`, s4) RTL integrated, Quartus pass. C driver (`sw/lib/ntt.c`) dual-mode (LOCAL_BUILD SW / NEORV32 MMIO). Board verification pending.
-
-Note: **Conway engine** (`conway_engine.vhd`, s9) RTL integrated, Quartus pass. C driver (`sw/lib/conway_hw.c`), `conway` command. 64×25 grid, dual-buffered LE registers (`ramstyle="logic"`), toggle cell, F1 help overlay (含 B3/S23 规则). Grid read uses 2-word MMIO (lo/mid for cols 0-31/32-63). Board verification pending.
-
-Note: **ExpDemo** (`expdemo_top.vhd`, s8) wraps 13 experiment adapters. Board verified.
-
-Note: **Audio synth** (`synth_engine.vhd`, s10) 3xOSC + DX7 FM operator → WM8731 via I2S. C driver (`sw/lib/synth.c`), `synth` command. Board verification pending.
-
-Note: **ChromaShader** (`chroma_shader.vhd`) RTL + QuestaSim 10/10 pass. C driver exists but `chroma.c` excluded from build. Address 0xF0014000 defined but no WB slave port wired.
-
-Note: **VGA pixel mode** (`vga_pixel_ctrl.vhd` inside `vga_text_terminal`) reads SDRAM framebuffer, 640×480@60Hz RGB565. TWM (`twm` command) working on physical monitor (2026-06-01). Known issues: text mode diagonal ghosting (PLL c3 fix insufficient), pixel mode display quality unclear. 25MHz pixel clock from PLL c3 (not toggle flip-flop).
+Per-peripheral board status and known issues: `doc/phases/de2os-rtos-status.md`.
 
 ### Software Structure
 
@@ -216,8 +204,4 @@ When running a non-shell program, `board_status_set_program()` shows PROG_ID/sta
 
 ## Project Status
 
-**V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). See `doc/phases/de2os-rtos-status.md` for detailed build status.
-
-**Board verified**: SDRAM exec, FreeRTOS 4 tasks, UART shell, VGA text 80×30, CLI builtins (help/stats/clear), hello/info, snake (1P/2P, F1 help), TWM pixel mode (30s stable), ExpDemo 13 experiments.
-
-**Board pending**: crypto bench, conway (Quartus rebuilt, needs board test), ntt, synth, VGA text ghosting fix, pixel mode display quality.
+**V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). Board verified 2026-06-02, 5 known bugs. Details: `doc/phases/de2os-rtos-status.md`.

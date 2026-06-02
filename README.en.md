@@ -70,6 +70,8 @@ DE2Extra/
 
 Detailed guide: [`doc/编译烧录前必看.md`](doc/编译烧录前必看.md)
 
+> **Bash environment**: All `bash` / `sh` scripts must run in **Git Bash** — not WSL's `bash.exe`, PowerShell, or CMD. Replace `bash` in the commands below with the absolute path to your local Git Bash, e.g. `E:/Software/Scoop/apps/git/current/bin/bash.exe`.
+
 **Software changes (C code)**:
 ```bash
 # Compile (~25s)

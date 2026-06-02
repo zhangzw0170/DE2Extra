@@ -70,6 +70,8 @@ DE2Extra/
 
 详细指南: [`doc/编译烧录前必看.md`](doc/编译烧录前必看.md)
 
+> **Bash 环境**: 所有 `bash` / `sh` 脚本必须在 **Git Bash** 中运行（非 WSL 的 `bash.exe`、PowerShell 或 CMD）。请将下方命令中的 `bash` 替换为你本机 Git Bash 的绝对路径，例如 `E:/Software/Scoop/apps/git/current/bin/bash.exe`。
+
 **改了软件（C 代码）**:
 ```bash
 # 编译 (~25s)
