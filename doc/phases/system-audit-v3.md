@@ -122,8 +122,34 @@ Crypto bench 运行 1000 次 × 5 算法 × 2 变体 = 10000 次加密操作，�
 - [ ] TRNG 自检 FAILED (已知问题)
 - [x] Conway toggle_cell — VHDL 地址解码修复 (wb_adr_i(4:2) → (2:0))
 - [x] NTT 加速器不响应 — VHDL 地址解码修复 (x"400"→x"100", wb_adr_i(9:2)→(7:0))
-- [x] Crypto bench "卡死" — 非 bug，纯 CPU 密集计算，bench 最终会完成
-- [ ] Synth 上板验证 (音频输出)
-- [ ] Conway 上板复测 (地址修复后)
-- [ ] NTT 上板复测 (地址修复后)
-- [ ] VGA 像素模式画质确认
+- [x] Crypto bench "卡死" — 非 bug，纯 CPU 密集计算，已加黄色警告
+- [x] R29 scroll region — vga_clear() 重置 scroll_bottom，已改为 VGA_ROWS-2
+- [x] Crypto 无 F1/F10 — 已添加 F1 简要帮助 + F10 退出
+- [x] Forth 无 F10 — 已添加 F10 退出，帮助不再销毁会话
+- [x] Conway HUD hex — 改为 decimal 显示
+- [x] Shell 欢迎界面 — 添加 "F10/ESC exits any program" 提示
+- [x] NTT HW 操作无反馈 — 添加 "running..." 黄色提示
+
+## 验收表 (Release v1.0)
+
+| 模块 | 功能 | 代码 | 上板 | 备注 |
+|------|------|------|------|------|
+| SDRAM 启动 | Bootloader → 0x01000000 | ✅ | ✅ | 200KB 固件稳定加载 |
+| FreeRTOS 4 任务 | shell/uart_input/active/status | ✅ | ✅ | 调度正常 |
+| UART shell | 18 命令 + 帮助 | ✅ | ✅ | 双路输入 (UART+PS/2) |
+| VGA 文本 80×30 | 字符终端 + R29 状态栏 | ✅ | ✅ | 有斜线重影 (PLL)，功能正常 |
+| PS/2 键盘 | 轮询式主输入 | ✅ | ✅ | F1/F10 统一 |
+| Snake | 1P/2P, F1帮助, F10退出 | ✅ | ✅ | |
+| ExpDemo | 13 个实验 | ✅ | ✅ | |
+| pForth | 完整 Forth REPL | ✅ | ✅ | F10退出, 帮助保留会话 |
+| Conway (HW) | 64×25 硬件加速 | ✅ | ⏳周四 | VHDL 地址已修，待复测 |
+| NTT (HW) | 256-point NTT 加速 | ✅ | ⏳周四 | VHDL 地址已修，待复测 |
+| Crypto | AES/SHA/SM4/SM3/bench | ✅ | ⏳周四 | F1/F10 已加，bench 加警告 |
+| Synth | 3xOSC + DX7 FM | ✅ | ⏳周四 | 待音频输出验证 |
+| TWM 像素模式 | 30s 稳定运行 | ✅ | ✅ | |
+| VGA 像素画质 | 640×480 RGB565 | ✅ | ⏳周四 | 数据通路正确 |
+| LCD/7-SEG 状态 | Heap%/Uptime | ✅ | ✅ | |
+| GPU 2D | FILL rect SDRAM burst | ✅ | ⏳ | RTL 集成，待验证 |
+| ChromaShader | 色彩着色器 | ✅ | — | RTL 验证通过，C 驱动未集成 |
+
+**⏳周四** = 周四接 VGA 显示器 + PS/2 键盘时验证

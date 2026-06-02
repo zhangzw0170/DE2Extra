@@ -156,6 +156,7 @@ static int parse_u32_dec(const char *s) {
         if ((*s < '0') || (*s > '9')) {
             return -1;
         }
+        if (n > 99999) return -1; /* overflow guard */
         n = (n * 10) + (*s - '0');
         s++;
     }
@@ -591,6 +592,7 @@ static int cmd_bench(void) {
     t_aes = bench_cycles_now();
     bench_reset_now();
 #endif
+    vga_putc('.', VGA_GRAY);
 
     for (i = 0; i < bench_iters; i++) {
         sha256_hash(msg, 64u, digest);
@@ -602,6 +604,7 @@ static int cmd_bench(void) {
     t_sha256 = bench_cycles_now();
     bench_reset_now();
 #endif
+    vga_putc('.', VGA_GRAY);
 
     for (i = 0; i < bench_iters; i++) {
         sha512_hash(msg, 64u, digest);
@@ -613,6 +616,7 @@ static int cmd_bench(void) {
     t_sha512 = bench_cycles_now();
     bench_reset_now();
 #endif
+    vga_putc('.', VGA_GRAY);
 
     sm4_key_schedule(key, rk_sm4);
     for (i = 0; i < bench_iters; i++) {
@@ -625,6 +629,7 @@ static int cmd_bench(void) {
     t_sm4 = bench_cycles_now();
     bench_reset_now();
 #endif
+    vga_putc('.', VGA_GRAY);
 
     for (i = 0; i < bench_iters; i++) {
         sm3_hash(msg, 64u, digest);
@@ -634,6 +639,7 @@ static int cmd_bench(void) {
 #else
     t_sm3 = bench_cycles_now();
 #endif
+    vga_putc('.', VGA_GRAY);
 
     ensure_lines_available(17);
     vga_puts("Software benchmark\n", VGA_CYAN);
@@ -679,18 +685,21 @@ static int cmd_bench(void) {
             aes128_enc_block_zkn(pt, rk_zkn, ct);
         }
         t_zkn_aes = bench_cycles_now();
+        vga_putc('.', VGA_GRAY);
 
         bench_reset_now();
         for (i = 0; i < bench_iters; i++) {
             sha256_hash_zkn(msg, 64u, digest);
         }
         t_zkn_sha256 = bench_cycles_now();
+        vga_putc('.', VGA_GRAY);
 
         bench_reset_now();
         for (i = 0; i < bench_iters; i++) {
             sha512_hash_zkn(msg, 64u, digest);
         }
         t_zkn_sha512 = bench_cycles_now();
+        vga_putc('.', VGA_GRAY);
 
         bench_reset_now();
         sm4_key_schedule_zks(key, rk_zks);
@@ -698,12 +707,14 @@ static int cmd_bench(void) {
             sm4_encrypt_zks(pt, rk_zks, ct);
         }
         t_zks_sm4 = bench_cycles_now();
+        vga_putc('.', VGA_GRAY);
 
         bench_reset_now();
         for (i = 0; i < bench_iters; i++) {
             sm3_hash_zks(msg, 64u, digest);
         }
         t_zks_sm3 = bench_cycles_now();
+        vga_putc('.', VGA_GRAY);
 
         vga_puts("Zk* acceleration\n", VGA_CYAN);
         vga_puts("Label          SW        Zk*       Speedup\n", VGA_WHITE);

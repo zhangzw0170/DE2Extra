@@ -147,17 +147,27 @@ static void execute_line(void)
         vga_puts("OK ", VGA_GREEN);
     } else {
         vga_puts("ERR ", VGA_RED);
-        char buf[16];
-        int neg = 0;
-        int val = (int)err;
-        if (val < 0) { neg = 1; val = -val; }
-        int pos = 0;
-        if (val == 0) { buf[pos++] = '0'; }
-        else {
-            while (val > 0) { buf[pos++] = '0' + (val % 10); val /= 10; }
+        switch ((int)err) {
+            case -3:  vga_puts("stack overflow", VGA_RED); break;
+            case -4:  vga_puts("stack underflow", VGA_RED); break;
+            case -13: vga_puts("undefined word", VGA_RED); break;
+            case -14: vga_puts("executing", VGA_RED); break;
+            case -22: vga_puts("control mismatch", VGA_RED); break;
+            default:
+            {
+                char buf[16];
+                int neg = 0;
+                int val = (int)err;
+                if (val < 0) { neg = 1; val = -val; }
+                int pos = 0;
+                if (val == 0) { buf[pos++] = '0'; }
+                else {
+                    while (val > 0) { buf[pos++] = '0' + (val % 10); val /= 10; }
+                }
+                if (neg) buf[pos++] = '-';
+                for (int i = pos - 1; i >= 0; i--) vga_putc(buf[i], VGA_RED);
+            }
         }
-        if (neg) buf[pos++] = '-';
-        for (int i = pos - 1; i >= 0; i--) vga_putc(buf[i], VGA_RED);
         vga_putc(' ', VGA_WHITE);
     }
 

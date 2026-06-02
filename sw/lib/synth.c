@@ -251,7 +251,7 @@ static void draw_help(void) {
     vga_goto(bx + 2, by + 12);
     vga_puts("F1:  Close help", VGA_GRAY);
     vga_goto(bx + 2, by + 13);
-    vga_puts("F10: Quit to shell", VGA_GRAY);
+    vga_puts("F10 / Q: Quit to shell", VGA_GRAY);
 }
 
 static void init(void) {
