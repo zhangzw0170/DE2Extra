@@ -1086,6 +1086,7 @@ static void exit_active_program(void) {
     volatile uint32_t *expdemo_ch = (volatile uint32_t *)0xF0010000u;
     *expdemo_ch = 0;
     vga_set_uart_text(0);
+    vga_cursor_show(0);
     neorv32_uart0_puts(">> returned to shell\r\n");
     board_status_release();
     reset_display_mode();
