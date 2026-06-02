@@ -521,5 +521,5 @@ static int finish(void) { return !active; }
 
 const program_t prog_monitor = {
     "RiscvAsm", "RISC-V monitor — regs/dump/peek/poke/aes/sha/sm4",
-    init, update, input, NULL, finish
+    init, update, input, NULL, finish, PROG_FLAG_CLI
 };

@@ -348,5 +348,6 @@ const program_t prog_ntt = {
     ntt_update,
     ntt_input,
     NULL,
-    ntt_finish
+    ntt_finish,
+    PROG_FLAG_CLI
 };

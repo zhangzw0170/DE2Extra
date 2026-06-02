@@ -79,7 +79,14 @@ void vga_wait_vblank(void);
 /* Print 32-bit hex value */
 void vga_puthex32(uint32_t val);
 
+/* Enable/disable plain-text UART mirror for CLI programs.
+ * When enabled, vga_putc sends printable text to UART but NOT
+ * ANSI cursor positioning. */
+void vga_set_uart_text(int enabled);
+
 /* ── Program Interface (shared with shell) ─────────────────────── */
+
+#define PROG_FLAG_CLI  1u  /* text program: mirror output to UART */
 
 typedef struct {
     const char *name;
@@ -89,6 +96,7 @@ typedef struct {
     void (*input)(char c);
     void (*ir_input)(uint8_t cmd);
     int  (*finish)(void);
+    unsigned flags;
 } program_t;
 
 #endif /* VGA_HAL_H */

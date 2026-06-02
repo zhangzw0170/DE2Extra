@@ -322,5 +322,5 @@ static int finish(void)
 
 const program_t prog_forth = {
     "pForth", "pForth interpreter (stack-based Forth language)",
-    init, update, input, NULL, finish
+    init, update, input, NULL, finish, PROG_FLAG_CLI
 };

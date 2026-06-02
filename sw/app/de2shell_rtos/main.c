@@ -558,6 +558,7 @@ static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
 
     /* Render table */
     vga_puts("Task       State Pri Stack  CPU%\n", VGA_CYAN);
+    neorv32_uart0_puts("Task       State Pri Stack  CPU%\r\n");
     for (int i = 0; i < ntasks; i++) {
         char tmp[16];
         pad_str(tmp, tname[i], 10); vga_puts(tmp, VGA_WHITE); vga_putc(' ', VGA_WHITE);
@@ -566,6 +567,17 @@ static BaseType_t cli_stats(char *buf, size_t len, const char *cmd) {
         pad_str(tmp, tstack[i], 5);  vga_puts(tmp, VGA_WHITE); vga_puts("  ", VGA_WHITE);
         vga_puts(tcpu[i], VGA_YELLOW);
         vga_putc('\n', VGA_WHITE);
+        /* UART mirror for stats table */
+        neorv32_uart0_puts(tname[i]);
+        neorv32_uart0_putc('\t');
+        neorv32_uart0_puts(tstate[i]);
+        neorv32_uart0_putc('\t');
+        neorv32_uart0_puts(tpri[i]);
+        neorv32_uart0_putc('\t');
+        neorv32_uart0_puts(tstack[i]);
+        neorv32_uart0_puts("  ");
+        neorv32_uart0_puts(tcpu[i]);
+        neorv32_uart0_puts("\r\n");
     }
 
     /* Heap summary */
@@ -1006,6 +1018,7 @@ static void reset_display_mode(void) {
 
 static void shell_prompt(void) {
     vga_puts("RTOS > ", VGA_GREEN);
+    neorv32_uart0_puts("RTOS > ");
 }
 
 #define SHELL_LINE_SIZE 80
@@ -1044,6 +1057,7 @@ static void render_status_bar(void) {
     const char *prog_name = "Shell";
     int saved_col = vga_col();
     int saved_row = vga_row();
+    vga_set_uart_text(0); /* suppress status bar from UART */
 
     if ((active_prog > PROG_SHELL) && (active_prog < PROG_COUNT) && (programs[active_prog] != NULL)) {
         prog_name = programs[active_prog]->name;
@@ -1061,12 +1075,18 @@ static void render_status_bar(void) {
     vga_puts(up_buf, VGA_WHITE);
     vga_puts("s", VGA_GRAY);
     vga_goto(saved_col, saved_row);
+    vga_set_uart_text(
+        (active_prog > PROG_SHELL) && (active_prog < PROG_COUNT) &&
+        (programs[active_prog] != NULL) && (programs[active_prog]->flags & PROG_FLAG_CLI)
+    );
 }
 
 static void exit_active_program(void) {
     /* Reset expdemo hardware mux back to GPIO mode */
     volatile uint32_t *expdemo_ch = (volatile uint32_t *)0xF0010000u;
     *expdemo_ch = 0;
+    vga_set_uart_text(0);
+    neorv32_uart0_puts(">> returned to shell\r\n");
     board_status_release();
     reset_display_mode();
     active_prog = PROG_SHELL;
@@ -1221,8 +1241,9 @@ static void t_active_prog(void *pv) {
         }
 
         if (xQueueReceive(xInputQueue, &c, 0) == pdTRUE) {
-            if (c == 27 || c == (char)PS2_VK_F10) {
+            if (c == 27 || c == (char)PS2_VK_F10 || c == 0x03) {
                 exit_active_program();
+                continue;
             }
             if ((prog != NULL) && (prog->input != NULL)) {
                 xSemaphoreTake(xVgaMutex, portMAX_DELAY);
@@ -1298,6 +1319,8 @@ static void launch_program(prog_id_t pid) {
 
     active_prog = pid;
 
+    vga_set_uart_text((prog->flags & PROG_FLAG_CLI) != 0 ? 1 : 0);
+
     while (xQueueReceive(xInputQueue, &dummy, 0) == pdTRUE) {
     }
 
@@ -1306,6 +1329,10 @@ static void launch_program(prog_id_t pid) {
         prog->init();
     }
     xSemaphoreGive(xVgaMutex);
+
+    neorv32_uart0_puts(">> ");
+    neorv32_uart0_puts(prog->name);
+    neorv32_uart0_puts(" started (F10/Ctrl+C to exit)\r\n");
 
     if (xTaskCreate(t_active_prog, "prog", active_prog_stack_words(pid), NULL, 2, &xActiveTask) != pdPASS) {
         active_prog = PROG_SHELL;
@@ -1341,9 +1368,20 @@ static void t_shell(void *pv) {
 
         xSemaphoreTake(xVgaMutex, portMAX_DELAY);
 
+        if (c == 0x03) {
+            shell_line[0] = '\0';
+            shell_line_pos = 0;
+            vga_puts("^C\n", VGA_YELLOW);
+            neorv32_uart0_puts("^C\r\n");
+            shell_prompt();
+            xSemaphoreGive(xVgaMutex);
+            continue;
+        }
+
         if ((c == '\r') || (c == '\n')) {
             shell_line[shell_line_pos] = '\0';
             vga_putc('\n', VGA_WHITE);
+            neorv32_uart0_puts("\r\n");
 
             /* trim leading/trailing whitespace */
             char *cmd_start = shell_line;
@@ -1356,6 +1394,7 @@ static void t_shell(void *pv) {
                 do {
                     more = FreeRTOS_CLIProcessCommand(cmd_start, cOutputBuffer, CLI_OUTPUT_BUF_SIZE);
                     vga_puts(cOutputBuffer, VGA_WHITE);
+                    neorv32_uart0_puts(cOutputBuffer);
                 } while (more != pdFALSE);
 
                 if (cli_launch_req != PROG_SHELL) {
@@ -1375,11 +1414,13 @@ static void t_shell(void *pv) {
                 shell_line_pos--;
                 shell_line[shell_line_pos] = '\0';
                 vga_putc('\b', VGA_WHITE);
+                neorv32_uart0_puts("\b \b");
             }
         } else if ((c >= ' ') && (c < 0x7fu) && (shell_line_pos < (SHELL_LINE_SIZE - 1))) {
             shell_line[shell_line_pos++] = c;
             shell_line[shell_line_pos] = '\0';
             vga_putc(c, VGA_WHITE);
+            neorv32_uart0_putc(c);
         }
 
         xSemaphoreGive(xVgaMutex);
@@ -1447,11 +1488,10 @@ int main(void) {
     neorv32_uart0_puts(cOutputBuffer);
     append_sw_build(cOutputBuffer);
     neorv32_uart0_puts(cOutputBuffer);
-    neorv32_uart0_puts("UART debug mode: VGA mirroring disabled; use vgadump/vgamon for screen capture.\n");
+    neorv32_uart0_puts("UART debug mode: shell echo enabled; use vgadump/vgamon for screen capture.\n");
 
     gpio_write_out(0u);
     board_status_init();
-    vga_set_serial_mirror(1);
     vga_init();
     reset_display_mode();
     write_resume_marker();

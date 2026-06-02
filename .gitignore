@@ -78,8 +78,8 @@ DE2-115_v.3.0.6_SystemCD/
 .vscode/
 snake_test_output.txt
 
-# Archived docs (untracked)
-doc/archive/
+# Archived docs
+doc/archive/stale-docs/
 
 # Root-level Quartus db (not under par/)
 db/

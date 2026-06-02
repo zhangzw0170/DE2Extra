@@ -171,7 +171,8 @@
   static uint32_t clear_epoch = 0;
   static int scroll_top = 0;
   static int scroll_bottom = VGA_ROWS - 2; /* R29 reserved for status bar */
-  static int serial_mirror_enabled = 1;
+  static int serial_mirror_enabled = 0;
+  static int uart_text_enabled = 0;
 
   static void hw_write_cell(int col, int row, char c, uint16_t color);
 
@@ -298,6 +299,8 @@
       if (c == '\n') {
           if (serial_mirror_enabled != 0) {
               neorv32_uart0_puts("\r\n");
+          } else if (uart_text_enabled != 0) {
+              neorv32_uart0_puts("\r\n");
           }
           cur_col = 0;
           cur_row++;
@@ -309,7 +312,11 @@
           return;
       }
       if (c == '\r') {
-          serial_putc('\r');
+          if (serial_mirror_enabled == 0 && uart_text_enabled != 0) {
+              neorv32_uart0_putc('\r');
+          } else {
+              serial_putc('\r');
+          }
           cur_col = 0;
           hw_cursor_sync();
           return;
@@ -320,6 +327,8 @@
               hw_write_cell(cur_col, cur_row, ' ', VGA_BLACK);
               if (serial_mirror_enabled != 0) {
                   neorv32_uart0_puts("\b \b");
+              } else if (uart_text_enabled != 0) {
+                  neorv32_uart0_puts("\b \b");
               }
               hw_cursor_sync();
           }
@@ -327,7 +336,11 @@
       }
 
       hw_write_cell(cur_col, cur_row, c, color);
-      serial_putc(c);
+      if (serial_mirror_enabled != 0) {
+          serial_putc(c);
+      } else if (uart_text_enabled != 0) {
+          neorv32_uart0_putc(c);
+      }
       advance_cursor();
       hw_cursor_sync();
   }
@@ -406,6 +419,10 @@
 
   void vga_set_serial_mirror(int enabled) {
       serial_mirror_enabled = (enabled != 0);
+  }
+
+  void vga_set_uart_text(int enabled) {
+      uart_text_enabled = (enabled != 0);
   }
 
   void vga_set_scroll_region(int top, int bottom) {

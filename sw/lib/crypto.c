@@ -920,5 +920,6 @@ const program_t prog_crypto = {
     update,
     input,
     NULL,
-    finish
+    finish,
+    PROG_FLAG_CLI
 };

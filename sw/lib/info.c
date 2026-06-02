@@ -235,5 +235,5 @@ static int finish(void) { return done; }
 
 const program_t prog_info = {
     "Info", "System info + live SW/KEY/IR monitor",
-    init, update, input, ir_input, finish
+    init, update, input, ir_input, finish, PROG_FLAG_CLI
 };
