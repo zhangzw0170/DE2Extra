@@ -362,6 +362,58 @@ static void update(void) {
     }
 }
 
+/* Map ASCII piano key to semitone offset (same layout as PS/2 track 1) */
+static int ascii_to_semi(char c) {
+    switch (c) {
+        /* White keys */
+        case 'a': case 'A': return 0;  /* C   */
+        case 's': case 'S': return 2;  /* D   */
+        case 'd': case 'D': return 4;  /* E   */
+        case 'f': case 'F': return 5;  /* F   */
+        case 'g': case 'G': return 7;  /* G   */
+        case 'h': case 'H': return 9;  /* A   */
+        case 'j': case 'J': return 11; /* B   */
+        case 'k': case 'K': return 12; /* C+1 */
+        case 'l': case 'L': return 14; /* D+1 */
+        case ';':           return 16; /* E+1 */
+        /* Black keys */
+        case 'w': case 'W': return 1;  /* C#  */
+        case 'e': case 'E': return 3;  /* D#  */
+        case 'r': case 'R': return 6;  /* F#  */
+        case 't': case 'T': return 8;  /* G#  */
+        case 'y': case 'Y': return 10; /* A#  */
+        case 'i': case 'I': return 13; /* C#+1 */
+        case 'o': case 'O': return 15; /* D#+1 */
+        default: return -1;
+    }
+}
+
+static const char *note_name(int midi) {
+    static const char *names[] = {
+        "C","C#","D","D#","E","F","F#","G","G#","A","A#","B"
+    };
+    static char buf[5];
+    int oct = midi / 12 - 1;
+    int n = midi % 12;
+    /* Simple int-to-string */
+    buf[0] = names[n][0];
+    if (names[n][1] == '#') { buf[1] = '#'; buf[2] = '0' + (oct % 10); buf[3] = '\0'; }
+    else { buf[1] = '0' + (oct % 10); buf[2] = '\0'; }
+    return buf;
+}
+
+static void show_note(int midi) {
+    vga_goto(10, 0);
+    vga_puts("  Note: ", VGA_YELLOW);
+    vga_puts(note_name(midi), VGA_CYAN);
+    vga_puts("   ", VGA_GRAY);
+}
+
+static void show_note_off(void) {
+    vga_goto(10, 0);
+    vga_puts("            ", VGA_GRAY);
+}
+
 static void input(char c) {
     uint8_t k = (uint8_t)c;
 
@@ -389,12 +441,58 @@ static void input(char c) {
         SYNTH_T1_NOTE = 0;
         SYNTH_T2_NOTE = 0;
         initialized = 0;
+        return;
+    }
+    if (help_open) return;
+
+    /* Mode toggle */
+    if (c == 'm' || c == 'M') {
+        mode = 1 - mode;
+        SYNTH_CTRL = (SYNTH_CTRL & ~0x06u) | ((uint32_t)mode << 1);
+        if (mode == 0) preset_3xosc();
+        else           preset_dx7();
+        redraw_synth();
+        return;
+    }
+
+    /* Octave shift via UART */
+    if (c == 'z' || c == 'Z') {
+        t1_base = (t1_base > 36) ? t1_base - 12 : t1_base;
+        return;
+    }
+    if (c == 'x' || c == 'X') {
+        t1_base = (t1_base < 96) ? t1_base + 12 : t1_base;
+        return;
+    }
+
+    /* Piano keys via UART (note on) */
+    if (c == ' ' || c == '\b' || c == 0x7f) {
+        /* Release note */
+        if (t1_held >= 0) {
+            note_off(1);
+            show_note_off();
+            t1_held = -1;
+        }
+        return;
+    }
+
+    {
+        int semi = ascii_to_semi(c);
+        if (semi >= 0) {
+            /* Release previous note */
+            if (t1_held >= 0) note_off(1);
+            t1_held = semi;
+            int midi = t1_base + semi;
+            note_on(1, midi);
+            show_note(midi);
+            return;
+        }
     }
 }
 
 static int finish(void) { return !initialized; }
 
 const program_t prog_synth = {
-    "Synth", "Audio synth — PS/2 piano (M=mode, Tab/Caps octave, Q quit)",
+    "Synth", "Audio synth — piano (A-; keys, Z/X octave, M mode, Q quit)",
     init, update, input, NULL, finish
 };

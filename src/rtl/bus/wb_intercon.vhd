@@ -201,8 +201,8 @@ begin
     s3_we_o  <= m_we_i;
     s3_stb_o <= m_stb_i and m_cyc_i and cs_ir;
 
-    -- NTT accelerator is a 32-bit register block with 12-bit address.
-    s4_adr_o <= m_adr_i(13 downto 2);
+    -- NTT accelerator: 10-bit word offset within 4KB space, zero-extended to 12.
+    s4_adr_o <= "00" & m_adr_i(11 downto 2);
     s4_dat_o <= m_dat_i;
     s4_we_o  <= m_we_i;
     s4_stb_o <= m_stb_i and m_cyc_i and cs_ntt;

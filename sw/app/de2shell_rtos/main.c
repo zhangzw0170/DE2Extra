@@ -1319,6 +1319,10 @@ static void launch_program(prog_id_t pid) {
 
     active_prog = pid;
 
+    neorv32_uart0_puts(">> ");
+    neorv32_uart0_puts(prog->name);
+    neorv32_uart0_puts(" started (F10/Ctrl+C to exit)\r\n");
+
     vga_set_uart_text((prog->flags & PROG_FLAG_CLI) != 0 ? 1 : 0);
 
     while (xQueueReceive(xInputQueue, &dummy, 0) == pdTRUE) {
@@ -1329,10 +1333,6 @@ static void launch_program(prog_id_t pid) {
         prog->init();
     }
     xSemaphoreGive(xVgaMutex);
-
-    neorv32_uart0_puts(">> ");
-    neorv32_uart0_puts(prog->name);
-    neorv32_uart0_puts(" started (F10/Ctrl+C to exit)\r\n");
 
     if (xTaskCreate(t_active_prog, "prog", active_prog_stack_words(pid), NULL, 2, &xActiveTask) != pdPASS) {
         active_prog = PROG_SHELL;

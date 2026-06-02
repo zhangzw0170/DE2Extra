@@ -316,8 +316,7 @@ static void ntt_init(void) {
     vga_puts("Mode: HW @ 0xF000F000\n", VGA_GRAY);
 #endif
     vga_putc('\n', VGA_WHITE);
-    cmd_show_help();
-    vga_putc('\n', VGA_WHITE);
+    vga_puts("Type 'help' for commands\n", VGA_GRAY);
     ntt_prompt();
 }
 

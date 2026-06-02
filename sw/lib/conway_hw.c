@@ -42,6 +42,11 @@ static int cursor_x, cursor_y;
 static int frame_count;
 static int speed_ms = 200;  /* ms per generation step */
 
+/* Shadow buffer for partial refresh */
+static uint32_t prev_lo[25], prev_mid[25];
+static uint16_t prev_gen, prev_pop;
+static int prev_edit;
+
 /* ── Hardware helpers ────────────────────────────────────────────── */
 
 static void hw_set_row(int row) {
@@ -134,6 +139,26 @@ static void draw_grid(void) {
             }
             vga_putc(ch, color);
         }
+        prev_lo[y] = lo;
+        prev_mid[y] = mid;
+    }
+}
+
+/* Partial refresh: only redraw rows that changed */
+static void draw_grid_partial(void) {
+    for (int y = 0; y < 25; y++) {
+        uint32_t lo, mid;
+        hw_read_row(y, &lo, &mid);
+        if (lo == prev_lo[y] && mid == prev_mid[y]) continue;
+        vga_goto(2, y + 2);
+        for (int x = 0; x < 64; x++) {
+            int bit = cell_bit(x, lo, mid);
+            char ch = bit ? '#' : '.';
+            uint16_t color = bit ? VGA_WHITE : VGA_DKGRAY;
+            vga_putc(ch, color);
+        }
+        prev_lo[y] = lo;
+        prev_mid[y] = mid;
     }
 }
 
@@ -146,20 +171,25 @@ static void draw_hud(void) {
     board_status_set_program(10u, state, 0u,
                              (uint16_t)(((cursor_y & 0xffu) << 8) | (cursor_x & 0xffu)));
 
-    /* left: Gen / Pop / GPS */
-    vga_goto(0, 0);
-    vga_puts("Gen:", VGA_CYAN);
-    put_dec(gen, VGA_CYAN);
-    vga_puts(" Pop:", VGA_WHITE);
-    put_dec(pop, VGA_WHITE);
-    vga_puts(" GPS:", VGA_WHITE);
-    put_dec((uint32_t)gps, VGA_WHITE);
+    /* Only redraw HUD if values changed */
+    if (gen != prev_gen || pop != prev_pop || edit_mode != prev_edit) {
+        vga_goto(0, 0);
+        vga_puts("Gen:", VGA_CYAN);
+        put_dec(gen, VGA_CYAN);
+        vga_puts(" Pop:", VGA_WHITE);
+        put_dec(pop, VGA_WHITE);
+        vga_puts(" GPS:", VGA_WHITE);
+        put_dec((uint32_t)gps, VGA_WHITE);
 
-    /* right: RUN/STOP + F1 */
-    vga_goto(60, 0);
-    vga_puts(edit_mode ? " STOP " : " RUN  ", VGA_YELLOW);
-    vga_goto(66, 0);
-    vga_puts("F1=Help", VGA_GRAY);
+        vga_goto(60, 0);
+        vga_puts(edit_mode ? " STOP " : " RUN  ", VGA_YELLOW);
+        vga_goto(66, 0);
+        vga_puts("F1=Help", VGA_GRAY);
+
+        prev_gen = gen;
+        prev_pop = pop;
+        prev_edit = edit_mode;
+    }
 }
 
 static void draw_border(void) {
@@ -195,12 +225,15 @@ static void move_cursor(int dx, int dy) {
 
 static void init(void) {
     hw_clear();
-    hw_randomize(0xA59B);
     edit_mode = 1;
     cursor_x = 32;
     cursor_y = 12;
     frame_count = 0;
     speed_ms = 200;
+
+    /* Clear shadow buffer to force first full draw */
+    for (int i = 0; i < 25; i++) { prev_lo[i] = 0xFFFFFFFFu; prev_mid[i] = 0xFFFFFFFFu; }
+    prev_gen = 0xFFFFu; prev_pop = 0xFFFFu; prev_edit = -1;
 
     vga_clear();
     draw_border();
@@ -217,7 +250,7 @@ static void update(void) {
 
     if (!edit_mode) {
         hw_step();
-        draw_grid();
+        draw_grid_partial();
         draw_hud();
     }
 }
