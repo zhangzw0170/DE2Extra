@@ -134,6 +134,9 @@ Crypto bench 运行 1000 次 × 5 算法 × 2 变体 = 10000 次加密操作，�
 - [x] Synth Q 键未文档化 — help overlay 添加 "F10 / Q: Quit"
 - [x] Crypto parse_u32_dec 溢出 — 添加 n>99999 guard
 - [x] UART 串口角色 — 默认关闭 VGA mirror，shell 双路输出，CLI 程序纯文本 UART，Ctrl+C 强制退出
+- [x] Synth WM8731 I2C — CFG 寄存器地址全 0 (写入目标错误)，ACTIVE 寄存器未设置，master 模式未启用
+- [x] Synth I2C STOP — 无条件 state 赋值覆盖 STOP 条件
+- [x] Synth I2S lrck_edge — 缺少 else 清零，脉冲永久为高
 
 ## 验收表 (Release v1.0)
 
@@ -150,7 +153,7 @@ Crypto bench 运行 1000 次 × 5 算法 × 2 变体 = 10000 次加密操作，�
 | Conway (HW) | 64×25 硬件加速 | ✅ | ⏳ | ⏳ | VHDL 地址已修，需 Quartus 重建 |
 | NTT (HW) | 256-point NTT 加速 | ✅ | ⏳ | ⏳ | UART 测试: HW TIMEOUT (status=0000)，需 Quartus 重建 |
 | Crypto | AES/SHA/SM4/SM3/bench | ✅ | ✅ (启动/help) | ⏳ | CLI UART 输出正常，bench 待 VGA 验证 |
-| Synth | 3xOSC + DX7 FM | ✅ | ⏳ | ⏳ | 待音频输出验证 |
+| Synth | 3xOSC + DX7 FM | ✅ | ⏳ | ⏳ | I2C/I2S VHDL 已修 (5 bugs)，需 Quartus 重建 |
 | Hello | LED chaser | ✅ | ✅ | ✅ | CLI UART 输出正常 |
 | Info | System dashboard | ✅ | ⏳ | ✅ | CLI 标记，待 UART 测试 |
 | Monitor | RISC-V 监控器 | ✅ | ⏳ | — | CLI 标记，待 UART 测试 |
