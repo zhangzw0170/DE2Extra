@@ -147,6 +147,6 @@
 ## 待办 (按优先级)
 
 1. **Synth 物理验收**: BUG-5a (背景音) / BUG-5b (释放不停止) / BUG-5c (音量键) — SW 已部署，RTL auto-mute 待编译
-2. **TWM 上板验证**: 渐变背景 + 调试 dump 移除 — 固件已编译，待上传
-3. **NTT HW TIMEOUT**: BUG-3 根因排查，与 synth RTL auto-mute 一起编译
-4. **Snake 边框**: BUG-4 调整 HUD/边框坐标
+2. **NTT HW TIMEOUT**: BUG-3 根因排查，与 synth RTL auto-mute 一起编译
+3. **Snake 边框**: BUG-4 调整 HUD/边框坐标
+4. **V3P8 TWM 刷新优化**: 见 `doc/phases/v3p8-twm-perf.md`，P0 起步 (GPU 路由所有矩形填充)
