@@ -347,8 +347,30 @@ static void render_tile(tile_t *t) {
     }
 }
 
+static void twm_draw_bg(void) {
+    int n = 64;
+    int sw = FB_W / n;
+    for (int i = 0; i < n; i++) {
+        int hue = i * 6 / n;
+        int f = (i * 6 * 255 / n) % 256;
+        uint8_t r, g, b;
+        switch (hue) {
+            case 0: r = 255; g = (uint8_t)f;     b = 0;   break;
+            case 1: r = (uint8_t)(255-f); g = 255; b = 0;   break;
+            case 2: r = 0;   g = 255; b = (uint8_t)f;     break;
+            case 3: r = 0;   g = (uint8_t)(255-f); b = 255; break;
+            case 4: r = (uint8_t)f;     g = 0;   b = 255; break;
+            default: r = 255; g = 0;   b = (uint8_t)(255-f); break;
+        }
+        r = (uint8_t)(r * 2 / 5);
+        g = (uint8_t)(g * 2 / 5);
+        b = (uint8_t)(b * 2 / 5);
+        gfx_fill_rect(i * sw, 0, sw, FB_H, fb_rgb565(r, g, b));
+    }
+}
+
 void tile_render_all(void) {
-    gfx_fill_rect(0, 0, FB_W, FB_H, FB_BLACK);
+    twm_draw_bg();
 
     if (zoomed && zoom_tile) {
         render_tile(zoom_tile);
