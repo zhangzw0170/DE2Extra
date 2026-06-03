@@ -113,10 +113,8 @@ static const post_dev_t post_devices[] = {
     { "PS/2",   0xF0008000u },
     { "LCD",     0xF000B000u },
     { "IR",      0xF000C000u },
-    { "NTT",     0xF000F000u },
     { "ExpDemo",  0xF0010000u },
     { "Conway",  0xF0011000u },
-    { "Synth",   0xF0012000u },
     { "GPU",     0xF0015000u },
     { NULL, 0 }
 };

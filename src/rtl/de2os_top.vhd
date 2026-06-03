@@ -333,6 +333,8 @@ begin
     --     wb_stb_i  => ntt_wb_stb,
     --     wb_ack_o  => ntt_wb_ack
     -- );
+    ntt_wb_ack  <= '1';  -- stub ack: NTT HW removed
+    ntt_wb_dat_i <= (others => '0');
 
     -- ================================================================
     -- Clock and Reset Generation
@@ -829,6 +831,8 @@ begin
     --     i2c_sclk_o    => I2C_SCLK,
     --     i2c_sdat_io   => I2C_SDAT
     -- );
+    synth_wb_ack  <= '1';  -- stub ack: Synth HW removed
+    synth_wb_dat_i <= (others => '0');
 
     -- GPU 2D accelerator
     u_gpu_2d : entity work.gpu_2d
