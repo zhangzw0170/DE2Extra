@@ -101,7 +101,7 @@ architecture rtl of ntt_sdf is
         variable r       : unsigned(23 downto 0);
     begin
         prod_mu := prod * BARRETT_C;               -- 24 × 13 = 37 bits
-        q_est   := prod_mu(35 downto 23);           -- >> 23, 13-bit
+        q_est   := prod_mu(36 downto 24);           -- >> 24, 13-bit
         q_prod  := q_est * resize(MODULUS_C, 12);   -- 13 × 12 = 25 bits
         r := prod - q_prod(23 downto 0);
         if r >= resize(MODULUS_C, 24) then

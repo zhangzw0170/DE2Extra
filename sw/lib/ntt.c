@@ -21,6 +21,8 @@
   }
 #endif
 
+static void ntt_put_hex(uint16_t v);
+
 /* ── Barrett reduction (matches VHDL: constant=5039) ────────────── */
 
 static inline uint16_t barrett(uint32_t x) {
@@ -29,6 +31,9 @@ static inline uint16_t barrett(uint32_t x) {
     if (r >= 3329u) r -= 3329u;
     return (uint16_t)r;
 }
+
+static void ntt_sw(uint16_t *a, int inverse);
+static void ntt_bit_reverse(uint16_t *a);
 
 /* ── Twiddle table + Software NTT (LOCAL_BUILD only) ─────────── */
 #ifdef LOCAL_BUILD
@@ -85,6 +90,125 @@ void ntt_bit_reverse(uint16_t *a) {
         for (int b = 0; b < 8; b++) { j = (j << 1) | (tmp & 1); tmp >>= 1; }
         if (j > i) { uint16_t t = a[i]; a[i] = a[j]; a[j] = t; }
     }
+}
+#endif
+
+/* ── Twiddle table (shared by HW build for bfly) ─────────── */
+#ifndef LOCAL_BUILD
+static const uint16_t TW[128] = {
+       1,   17,  289, 1584,  296, 1703, 2319, 2804, 1062, 1409,  650, 1063,
+    1426,  939, 2647, 1722, 2642, 1637, 1197,  375, 3046, 1847, 1438, 1143,
+    2786,  756, 2865, 2099, 2393,  733, 2474, 2110, 2580,  583, 3253, 2037,
+    1339, 2789, 807,  403,  193, 3281, 2513, 2773,  535, 2437, 1481, 1874,
+    1897, 2288, 2277, 2090, 2240, 1461, 1534, 2775,  569, 3015, 1320, 2466,
+    1974,  268, 1227, 885, 1729, 2761,  331, 2298, 2447, 1651, 1435, 1092,
+    1919, 2662, 1977,  319, 2094, 2308, 2617, 1212,  630,  723, 2304, 2549,
+      56,  952, 2868, 2150, 3260, 2156,   33,  561, 2879, 2337, 3110, 2935,
+    3289, 2649, 1756, 3220, 1476, 1789,  452, 1026,  797,  233,  632,  757,
+    2882, 2388,  648, 1029,  848, 1100, 2055, 1645, 1333, 2687, 2402, 886,
+    1746, 3050, 1915, 2594,  821,  641,  910, 2154
+};
+
+static void cmd_bfly(void) {
+    /* Exact VHDL butterfly simulation with bit-level address/twiddle ops */
+    static uint16_t sbuf[256];
+    uint16_t av, bv, sm, df, tw_val;
+    uint32_t prod;
+    int s, elem, half, grp, idx, top, bot, tw_idx;
+
+    /* Load delta */
+    for (int i = 0; i < 256; i++) sbuf[i] = 0;
+    sbuf[0] = 1;
+
+    vga_puts("bfly sim (delta input):\n", VGA_CYAN);
+
+    for (s = 7; s >= 0; s--) {
+        half = 1 << s;
+        for (elem = 0; elem < 128; elem++) {
+            /* VHDL grp/idx extraction (bit slicing, matches ntt_sdf.vhd) */
+            switch (s) {
+            case 0: idx = 0;             grp = elem; break;
+            case 1: idx = elem & 1;         grp = elem >> 1; break;
+            case 2: idx = elem & 3;         grp = elem >> 2; break;
+            case 3: idx = elem & 7;         grp = elem >> 3; break;
+            case 4: idx = elem & 0xF;        grp = elem >> 4; break;
+            case 5: idx = elem & 0x1F;       grp = elem >> 5; break;
+            case 6: idx = elem & 0x3F;       grp = elem >> 6; break;
+            case 7: idx = elem;             grp = 0;       break;
+            }
+            top = grp * half * 2 + idx;
+            bot = top + half;
+
+            /* VHDL twiddle index (bit shifting, matches ntt_sdf.vhd) */
+            switch (s) {
+            case 0: tw_idx = 0;                                          break;
+            case 1: tw_idx = (idx & 1) << 6;                           break;
+            case 2: tw_idx = (idx & 3) << 5;                           break;
+            case 3: tw_idx = (idx & 7) << 4;                           break;
+            case 4: tw_idx = (idx & 0xF) << 3;                           break;
+            case 5: tw_idx = (idx & 0x1F) << 2;                           break;
+            case 6: tw_idx = (idx & 0x3F) << 1;                           break;
+            case 7: tw_idx = idx;                                     break;
+            }
+
+            tw_val = TW[tw_idx];
+
+            av = sbuf[top]; bv = sbuf[bot];
+            sm = av + bv;
+            if (sm >= 3329) sm -= 3329;
+            df = av + 3329 - bv;
+            if (df >= 3329) df -= 3329;
+
+            prod = (uint32_t)df * tw_val;
+            sbuf[top] = sm;
+            sbuf[bot] = barrett(prod);
+        }
+
+        /* Print first 8 values after each stage */
+        vga_puts("  s=", VGA_GRAY);
+        ntt_put_hex((uint16_t)s);
+        vga_puts(": ", VGA_GRAY);
+        for (int i = 0; i < 8; i++) {
+            ntt_put_hex(sbuf[i]);
+            vga_putc(' ', VGA_WHITE);
+        }
+        vga_putc('\n', VGA_WHITE);
+    }
+
+    /* Check if all 1s */
+    int ok = 1;
+    for (int i = 0; i < 256; i++) if (sbuf[i] != 1) { ok = 0; break; }
+    vga_puts(ok ? "  Result: ALL-1s PASS\n" : "  Result: NOT all-1s\n",
+             ok ? VGA_GREEN : VGA_RED);
+
+    /* Also compare with standard SW NTT */
+    static uint16_t ref[256];
+    for (int i = 0; i < 256; i++) ref[i] = 0;
+    ref[0] = 1;
+    for (s = 7; s >= 0; s--) {
+        half = 1 << s;
+        for (elem = 0; elem < 128; elem++) {
+            int sw_grp = elem / half;
+            int sw_idx = elem % half;
+            int sw_top = sw_grp * 2 * half + sw_idx;
+            int sw_bot = sw_top + half;
+            int sw_tw = sw_idx * (128 / half);
+            av = ref[sw_top]; bv = ref[sw_bot];
+            sm = av + bv; if (sm >= 3329) sm -= 3329;
+            df = av + 3329 - bv; if (df >= 3329) df -= 3329;
+            ref[sw_top] = sm;
+            ref[sw_bot] = barrett((uint32_t)df * TW[sw_tw]);
+        }
+    }
+    int ref_ok = 1;
+    for (int i = 0; i < 256; i++) if (ref[i] != 1) { ref_ok = 0; break; }
+    vga_puts(ref_ok ? "  SW ref:  ALL-1s PASS\n" : "  SW ref:  NOT all-1s\n",
+             ref_ok ? VGA_GREEN : VGA_RED);
+
+    int match = 1;
+    for (int i = 0; i < 256; i++) if (sbuf[i] != ref[i]) { match = 0; break; }
+    vga_puts(match ? "  bfly-sim vs SW: MATCH\n" : "  bfly-sim vs SW: MISMATCH\n",
+             match ? VGA_GREEN : VGA_RED);
 }
 #endif
 
@@ -315,7 +439,9 @@ static void cmd_show_help(void) {
     vga_puts("  ntt           Forward NTT\n", VGA_WHITE);
     vga_puts("  intt          Inverse NTT\n", VGA_WHITE);
     vga_puts("  roundtrip     NTT+INTT, verify identity\n", VGA_WHITE);
+    vga_puts("  bfly          VHDL butterfly sim (debug)\n", VGA_YELLOW);
     vga_puts("  dump          Show first 32 values\n", VGA_WHITE);
+    vga_puts("  verify        HW vs SW delta comparison (256 elems)\n", VGA_YELLOW);
     vga_puts("  clear (cls)   Clear screen\n", VGA_GRAY);
     vga_puts("  quit (q)      Return to shell\n", VGA_GRAY);
 }
@@ -330,6 +456,70 @@ static void cmd_dump(void) {
         ntt_put_hex(ntt_hw_read(i)); vga_putc(' ', VGA_WHITE);
     }
     vga_putc('\n', VGA_WHITE);
+#endif
+}
+
+/* ── Verify: HW NTT(delta) should produce all-1s (256-element check) ── */
+static void cmd_verify(void) {
+#ifdef LOCAL_BUILD
+    vga_puts("verify: HW only\n", VGA_YELLOW);
+#else
+    uint32_t st;
+    int timeout, i, mismatches = 0, first_bad = -1;
+
+    /* Load delta to HW */
+    for (i = 0; i < 256; i++) ntt_hw_write(i, 0);
+    ntt_hw_write(0, 1);
+
+    /* Run HW NTT */
+    ntt_hw_start(0);
+    timeout = 2000000;
+    do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
+    if (timeout == 0) {
+        vga_puts("HW NTT timeout!\n", VGA_RED); return;
+    }
+
+    /* NTT([1,0,...,0]) = all-1s in bit-reversed order = still all-1s */
+    for (i = 0; i < 256; i++) {
+        if (ntt_hw_read(i) != 1) {
+            if (mismatches == 0) first_bad = i;
+            mismatches++;
+        }
+    }
+
+    if (mismatches == 0) {
+        vga_puts("VERIFY PASS: all 256 elements = 1\n", VGA_GREEN);
+    } else {
+        vga_puts("VERIFY FAIL: ", VGA_RED);
+        char buf[12]; int d = 0;
+        int m = mismatches;
+        if (m == 0) buf[d++] = '0';
+        else { char tmp[12]; int t = 0;
+            while (m > 0) { tmp[t++] = '0' + m % 10; m /= 10; }
+            while (t > 0) buf[d++] = tmp[--t]; }
+        buf[d] = 0;
+        vga_puts(buf, VGA_RED);
+        vga_puts("/256 != 1\n", VGA_RED);
+        if (first_bad >= 0) {
+            vga_puts("  first bad [", VGA_YELLOW);
+            d = 0; m = first_bad;
+            if (m == 0) buf[d++] = '0';
+            else { char tmp[12]; int t = 0;
+                while (m > 0) { tmp[t++] = '0' + m % 10; m /= 10; }
+                while (t > 0) buf[d++] = tmp[--t]; }
+            buf[d] = 0;
+            vga_puts(buf, VGA_YELLOW);
+            vga_puts("]=", VGA_YELLOW);
+            ntt_put_hex(ntt_hw_read(first_bad));
+            vga_putc('\n', VGA_YELLOW);
+        }
+        /* Show first 32 elements */
+        vga_puts("  HW out: ", VGA_GRAY);
+        for (i = 0; i < 32; i++) {
+            ntt_put_hex(ntt_hw_read(i)); vga_putc(' ', VGA_WHITE);
+        }
+        vga_putc('\n', VGA_WHITE);
+    }
 #endif
 }
 
@@ -368,9 +558,11 @@ static void ntt_dispatch(void) {
     }
     else if (strcmp(args[0], "ntt") == 0)    cmd_ntt(0);
     else if (strcmp(args[0], "intt") == 0)   cmd_ntt(1);
+    else if (strcmp(args[0], "bfly") == 0)    cmd_bfly();
     else if (strcmp(args[0], "roundtrip") == 0 || strcmp(args[0], "test") == 0)
                                              cmd_roundtrip();
     else if (strcmp(args[0], "dump") == 0)   cmd_dump();
+    else if (strcmp(args[0], "verify") == 0) cmd_verify();
     else if (strcmp(args[0], "clear") == 0 || strcmp(args[0], "cls") == 0) {
         vga_clear(); ntt_prompt();
     }
