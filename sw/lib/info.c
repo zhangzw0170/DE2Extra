@@ -132,7 +132,7 @@ static void update(void) {
     ir_status = IR_DBG->status;
 #endif
 
-    board_status_set_program(6u, BOARD_STATE_LIVE, key_bits,
+    board_status_set_program(5u, BOARD_STATE_LIVE, key_bits,
                              (uint16_t)((last_ir_cmd << 8) | key_bits));
 
     /* Draw header once on first frame */

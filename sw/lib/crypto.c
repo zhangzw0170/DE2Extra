@@ -581,9 +581,14 @@ static int cmd_bench(void) {
         msg[i] = (uint8_t)i;
     }
 
+    board_status_set_program(2u, BOARD_STATE_BUSY, 0u, 0u);   /* AES 0% */
     aes128_key_expand(key, rk_aes);
     for (i = 0; i < bench_iters; i++) {
         aes128_enc_block(pt, rk_aes, ct);
+        if ((i & 0x7Fu) == 0) {
+            board_status_set_program(2u, BOARD_STATE_BUSY, 0u,
+                (uint16_t)((unsigned)i * 100u / bench_iters));
+        }
     }
 #ifdef LOCAL_BUILD
     t_aes = bench_cycles();
@@ -594,8 +599,13 @@ static int cmd_bench(void) {
 #endif
     vga_putc('.', VGA_GRAY);
 
+    board_status_set_program(2u, BOARD_STATE_BUSY, 1u, 20u);   /* SHA 20% */
     for (i = 0; i < bench_iters; i++) {
         sha256_hash(msg, 64u, digest);
+        if ((i & 0x7Fu) == 0) {
+            board_status_set_program(2u, BOARD_STATE_BUSY, 1u,
+                (uint16_t)(20u + (unsigned)i * 20u / bench_iters));
+        }
     }
 #ifdef LOCAL_BUILD
     t_sha256 = bench_cycles();
@@ -606,8 +616,13 @@ static int cmd_bench(void) {
 #endif
     vga_putc('.', VGA_GRAY);
 
+    board_status_set_program(2u, BOARD_STATE_BUSY, 2u, 40u);   /* SHA512 40% */
     for (i = 0; i < bench_iters; i++) {
         sha512_hash(msg, 64u, digest);
+        if ((i & 0x7Fu) == 0) {
+            board_status_set_program(2u, BOARD_STATE_BUSY, 2u,
+                (uint16_t)(40u + (unsigned)i * 15u / bench_iters));
+        }
     }
 #ifdef LOCAL_BUILD
     t_sha512 = bench_cycles();
@@ -618,9 +633,14 @@ static int cmd_bench(void) {
 #endif
     vga_putc('.', VGA_GRAY);
 
+    board_status_set_program(2u, BOARD_STATE_BUSY, 3u, 55u);   /* SM4 55% */
     sm4_key_schedule(key, rk_sm4);
     for (i = 0; i < bench_iters; i++) {
         sm4_encrypt(pt, rk_sm4, ct);
+        if ((i & 0x7Fu) == 0) {
+            board_status_set_program(2u, BOARD_STATE_BUSY, 3u,
+                (uint16_t)(55u + (unsigned)i * 20u / bench_iters));
+        }
     }
 #ifdef LOCAL_BUILD
     t_sm4 = bench_cycles();
@@ -631,8 +651,13 @@ static int cmd_bench(void) {
 #endif
     vga_putc('.', VGA_GRAY);
 
+    board_status_set_program(2u, BOARD_STATE_BUSY, 3u, 75u);   /* SM3 75% */
     for (i = 0; i < bench_iters; i++) {
         sm3_hash(msg, 64u, digest);
+        if ((i & 0x7Fu) == 0) {
+            board_status_set_program(2u, BOARD_STATE_BUSY, 3u,
+                (uint16_t)(75u + (unsigned)i * 25u / bench_iters));
+        }
     }
 #ifdef LOCAL_BUILD
     t_sm3 = bench_cycles();

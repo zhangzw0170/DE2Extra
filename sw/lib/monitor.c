@@ -374,7 +374,7 @@ static void history_next(void) {
 }
 
 static void init(void) {
-    board_status_set_program(7u, BOARD_STATE_RUN, 0u, 0u);
+    board_status_set_program(6u, BOARD_STATE_RUN, 0u, 0u);
     draw_header();
     prompt();
     active = 1;

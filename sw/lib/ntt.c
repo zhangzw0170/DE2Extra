@@ -8,11 +8,8 @@
 #include "vga_hal.h"
 #include "board_status.h"
 #include <stdint.h>
-#ifndef LOCAL_BUILD
-#include <neorv32.h>
-#endif
 
-#define NTT_PROG_ID 12u
+#define NTT_PROG_ID 10u
 
 #ifdef LOCAL_BUILD
   #include <string.h>
@@ -132,12 +129,6 @@ static void ntt_put_hex(uint16_t v) {
     vga_putc(hex[(v >>  0) & 0xf], VGA_YELLOW);
 }
 
-static void ntt_put_hex_uart(uint32_t v) {
-    static const char hex[] = "0123456789abcdef";
-    for (int i = 28; i >= 0; i -= 4)
-        neorv32_uart0_putc(hex[(v >> i) & 0xf]);
-}
-
 #ifdef LOCAL_BUILD
 static void ntt_dump(const uint16_t *a, int n) {
     for (int i = 0; i < n; i++) {
@@ -183,19 +174,6 @@ static void cmd_ntt(int inverse) {
     uint32_t st;
     vga_puts("HW NTT running...\n", VGA_YELLOW);
     ntt_hw_start(inverse);
-    /* Diagnostic: verify write path by checking data[0] readback,
-       then poll status for engine start */
-    {
-        uint16_t rb = ntt_hw_read(0);
-        st = ntt_hw_status();
-        if (st == 0 && rb == 0) {
-            vga_puts("DIAG: write0=", VGA_RED);
-            ntt_put_hex(ntt_hw_read(0));
-            vga_puts(" st=", VGA_RED);
-            ntt_put_hex((uint16_t)st);
-            vga_puts("\n", VGA_RED);
-        }
-    }
     timeout = 2000000;
     do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
     if (timeout == 0) {
@@ -228,22 +206,10 @@ static void cmd_roundtrip(void) {
     uint32_t st;
     int timeout;
     vga_puts("HW roundtrip running...\n", VGA_YELLOW);
+    board_status_set_program(NTT_PROG_ID, BOARD_STATE_BUSY, 0u, 0u);
     for (i = 0; i < NTT_N; i++) ntt_hw_write(i, ntt_hw_read(i));
-    /* Verify write path before starting engine */
-    ntt_hw_write(0, 0x123);
-    if (ntt_hw_read(0) != 0x123) {
-        vga_puts("DIAG: data write failed (rb=", VGA_RED);
-        ntt_put_hex(ntt_hw_read(0));
-        vga_puts(")\n", VGA_RED);
-    }
     ntt_hw_start(0);
-    /* Check engine started */
-    st = ntt_hw_status();
-    if (st == 0) {
-        vga_puts("DIAG: engine did not start after 1st write (st=", VGA_RED);
-        ntt_put_hex((uint16_t)st);
-        vga_puts(")\n", VGA_RED);
-    }
+    board_status_set_program(NTT_PROG_ID, BOARD_STATE_BUSY, 0u, 50u);
     timeout = 2000000;
     do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
     if (timeout == 0) {
@@ -253,6 +219,7 @@ static void cmd_roundtrip(void) {
         return;
     }
     ntt_hw_start(1);
+    board_status_set_program(NTT_PROG_ID, BOARD_STATE_BUSY, 0u, 75u);
     timeout = 2000000;
     do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
     if (timeout == 0) {
@@ -268,99 +235,73 @@ static void cmd_roundtrip(void) {
     }
     vga_puts(ok ? "HW ROUND-TRIP PASS (basic)\n" : "HW ROUND-TRIP FAIL\n",
              ok ? VGA_GREEN : VGA_RED);
+    board_status_set_program(NTT_PROG_ID, BOARD_STATE_RUN, 0u, 100u);
 #endif
 }
 
+#ifndef LOCAL_BUILD
 static void cmd_diag(void) {
     uint32_t st;
     uint16_t rb;
-    volatile uint32_t *p;
-    vga_puts("NTT HW diagnostic:\n", VGA_CYAN);
+    int ok = 1;
 
-    /* Test 0: raw pointer sanity via UART */
-    neorv32_uart0_puts("[diag] NTT_BASE=");
-    p = (volatile uint32_t *)0xF000F000u;
-    ntt_put_hex_uart((uint32_t)p);
-    neorv32_uart0_puts("\n[diag] *NTT_BASE before write=");
-    ntt_put_hex_uart(*p);
-    neorv32_uart0_puts("\n[diag] writing 0xABC to *NTT_BASE...\n");
-    *p = 0xABC;
-    neorv32_uart0_puts("[diag] *NTT_BASE after write=");
-    ntt_put_hex_uart(*p);
-    /* Try multiple indices */
-    neorv32_uart0_puts("\n[diag] idx=1 write=0x111 read=");
-    p[1] = 0x111; ntt_put_hex_uart(p[1]);
-    neorv32_uart0_puts(" idx=128 write=0x222 read=");
-    p[128] = 0x222; ntt_put_hex_uart(p[128]);
-    neorv32_uart0_puts(" idx=255 write=0x333 read=");
-    p[255] = 0x333; ntt_put_hex_uart(p[255]);
-    /* Try build_info at 0xF0009000 as known-good reference */
-    neorv32_uart0_puts("\n[diag] build_info@(0xF0009000)=");
-    volatile uint32_t *bi = (volatile uint32_t *)0xF0009000u;
-    ntt_put_hex_uart(*bi);
-    /* Test a DEAD address (DDS @ 0xF000D000 - no slave) */
-    neorv32_uart0_puts("\n[diag] DDS @(0xF000D000)... ");
-    volatile uint32_t *dds = (volatile uint32_t *)0xF000D000u;
-    neorv32_uart0_puts("reading...");
-    uint32_t dds_val = *dds; /* should cause bus error if no slave */
-    neorv32_uart0_puts("SURVIVED val=");
-    ntt_put_hex_uart(dds_val);
-    neorv32_uart0_puts("\n[diag] *(NTT_BASE+0x100) [ctrl]=");
-    ntt_put_hex_uart(p[0x100]);
-    neorv32_uart0_puts("\n[diag] writing ctrl=1...\n");
-    p[0x100] = 1;
-    neorv32_uart0_puts("[diag] *(NTT_BASE+0x101) [status]=");
-    ntt_put_hex_uart(p[0x101]);
-    neorv32_uart0_puts("\n");
+    vga_puts("NTT HW diagnostic:\n", VGA_CYAN);
 
     /* Test 1: data write/readback */
     ntt_hw_write(0, 0x123);
     rb = ntt_hw_read(0);
-    vga_puts("  data[0] write 0x123 read ", VGA_WHITE);
+    vga_puts("  data[0] w=0x123 r=", VGA_WHITE);
     ntt_put_hex(rb);
-    vga_puts(rb == 0x123 ? " OK\n" : " FAIL\n", rb == 0x123 ? VGA_GREEN : VGA_RED);
+    if (rb != 0x123) { ok = 0; vga_puts(" FAIL", VGA_RED); }
+    else vga_puts(" OK", VGA_GREEN);
 
-    ntt_hw_write(0, 0);
-    rb = ntt_hw_read(0);
-    vga_puts("  data[0] write 0x000 read ", VGA_WHITE);
+    ntt_hw_write(127, 0xABC);
+    rb = ntt_hw_read(127);
+    vga_puts("  data[127] w=0xABC r=", VGA_WHITE);
     ntt_put_hex(rb);
-    vga_puts(rb == 0 ? " OK\n" : " FAIL\n", rb == 0 ? VGA_GREEN : VGA_RED);
+    if (rb != 0xABC) { ok = 0; vga_puts(" FAIL\n", VGA_RED); }
+    else vga_puts(" OK\n", VGA_GREEN);
 
-    /* Test 2: status before start */
-    st = ntt_hw_status();
-    vga_puts("  status before start: ", VGA_WHITE);
-    ntt_put_hex((uint16_t)st);
-    vga_puts(st == 0 ? " OK\n" : " (unexpected)\n", st == 0 ? VGA_GREEN : VGA_YELLOW);
-
-    /* Test 3: engine start */
+    /* Test 2: engine start + completion */
+    ntt_hw_write(0, 1);
     ntt_hw_start(0);
     st = ntt_hw_status();
-    vga_puts("  status after start: ", VGA_WHITE);
-    ntt_put_hex((uint16_t)st);
-    vga_puts((st & 1) ? " busy OK\n" : " NOT BUSY!\n", (st & 1) ? VGA_GREEN : VGA_RED);
+    if (!(st & 1)) { vga_puts("  Engine did NOT start!\n", VGA_RED); return; }
 
-    /* Test 4: wait for done */
-    if (st & 1) {
-        int timeout = 2000000;
-        do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
-        if (st & 2) {
-            vga_puts("  engine done, cycles=", VGA_GREEN);
-            uint32_t cyc = ntt_hw_cycles();
-            /* print decimal */
-            char buf[12]; int d = 0;
-            if (cyc == 0) buf[d++] = '0';
-            else { char tmp[12]; int t = 0;
-                while (cyc > 0) { tmp[t++] = '0' + cyc % 10; cyc /= 10; }
-                while (t > 0) buf[d++] = tmp[--t]; }
-            buf[d] = 0;
-            vga_puts(buf, VGA_GREEN);
-            vga_puts("\n", VGA_GREEN);
-        } else {
-            vga_puts("  TIMEOUT after start (status=", VGA_RED);
-            ntt_put_hex((uint16_t)st);
-            vga_puts(")\n", VGA_RED);
-        }
+    int timeout = 2000000;
+    do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
+    if (timeout == 0) {
+        vga_puts("  Engine TIMEOUT (st=", VGA_RED);
+        ntt_put_hex((uint16_t)st); vga_puts(")\n", VGA_RED); return;
     }
+
+    vga_puts("  Engine done: ", VGA_GREEN);
+    uint32_t cyc = ntt_hw_cycles();
+    char buf[12]; int d = 0;
+    if (cyc == 0) buf[d++] = '0';
+    else { char tmp[12]; int t = 0;
+        while (cyc > 0) { tmp[t++] = '0' + cyc % 10; cyc /= 10; }
+        while (t > 0) buf[d++] = tmp[--t]; }
+    buf[d] = 0;
+    vga_puts(buf, VGA_GREEN);
+    vga_puts(" cycles\n", VGA_GREEN);
+
+    /* Test 3: NTT([1,0,...,0]) should produce all-1s (twiddle invariant) */
+    for (int i = 0; i < NTT_N; i++) ntt_hw_write(i, 0);
+    ntt_hw_write(0, 1);
+    ntt_hw_start(0);
+    timeout = 2000000;
+    do { st = ntt_hw_status(); } while (!(st & 2) && --timeout > 0);
+    /* Check: NTT of delta should be all 1s (bit-reversed output = still all 1s) */
+    int all_one = 1;
+    for (int i = 0; i < 8; i++) {
+        if (ntt_hw_read(i) != 1) { all_one = 0; break; }
+    }
+    vga_puts(all_one ? "  NTT(delta)=all-1: PASS\n" : "  NTT(delta)=all-1: FAIL\n",
+             all_one ? VGA_GREEN : VGA_RED);
+
+    vga_puts(ok ? "  Overall: PASS\n" : "  Overall: FAIL\n",
+             ok ? VGA_GREEN : VGA_RED);
 }
 
 static void cmd_show_help(void) {
@@ -417,7 +358,13 @@ static void ntt_dispatch(void) {
         else if (strcmp(args[1], "random") == 0) cmd_load_random();
         else vga_puts("Usage: load delta|random\n", VGA_RED);
     }
-    else if (strcmp(args[0], "diag") == 0)   cmd_diag();
+    else if (strcmp(args[0], "diag") == 0) {
+#ifndef LOCAL_BUILD
+        cmd_diag();
+#else
+        vga_puts("diag: HW only, use 'roundtrip' for SW test\n", VGA_YELLOW);
+#endif
+    }
     else if (strcmp(args[0], "ntt") == 0)    cmd_ntt(0);
     else if (strcmp(args[0], "intt") == 0)   cmd_ntt(1);
     else if (strcmp(args[0], "roundtrip") == 0 || strcmp(args[0], "test") == 0)

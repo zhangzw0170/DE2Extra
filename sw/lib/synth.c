@@ -275,8 +275,15 @@ static void draw_help(void) {
     vga_puts("F10 / Q: Quit to shell", VGA_GRAY);
 }
 
+static void update_lcd_note(void) {
+    uint8_t ml = (t1_held >= 0) ? (uint8_t)(t1_base + t1_held) : 0u;
+    uint8_t mr = (t2_held >= 0) ? (uint8_t)(t2_base + t2_held) : 0u;
+    board_status_set_program(11u, BOARD_STATE_RUN, 0u,
+                             (uint16_t)((uint16_t)ml << 8u) | mr);
+}
+
 static void init(void) {
-    board_status_set_program(13u, BOARD_STATE_RUN, 0u, 0u);
+    board_status_set_program(11u, BOARD_STATE_RUN, 0u, 0u);
     t1_base = 60;  /* C4 */
     t2_base = 60;
     mode = 0;
@@ -288,6 +295,7 @@ static void init(void) {
     SYNTH_CTRL = 0x10u;   /* unmute, 3xOSC, vol=1/4 */
     preset_3xosc();
     initialized = 1;
+    board_status_set_program(11u, BOARD_STATE_RUN, 0u, 0u);  /* L:-- R:-- */
 
     redraw_synth();
 }
@@ -304,11 +312,11 @@ static void update(void) {
             if (!help_open) {
                 if (t1_held >= 0) {
                     int semi = lookup_semi(t1_keys, (int)T1_COUNT, key.scancode);
-                    if (semi == t1_held) { note_off(1); t1_held = -1; }
+                    if (semi == t1_held) { note_off(1); t1_held = -1; update_lcd_note(); }
                 }
                 if (t2_held >= 0) {
                     int semi = lookup_semi(t2_keys, (int)T2_COUNT, key.scancode);
-                    if (semi == t2_held) { note_off(2); t2_held = -1; }
+                    if (semi == t2_held) { note_off(2); t2_held = -1; update_lcd_note(); }
                 }
             }
             continue;
@@ -378,6 +386,7 @@ static void update(void) {
             if (semi >= 0) {
                 t1_held = semi;
                 note_on(1, t1_base + semi);
+                update_lcd_note();
                 continue;
             }
         }
@@ -388,6 +397,7 @@ static void update(void) {
             if (semi >= 0) {
                 t2_held = semi;
                 note_on(2, t2_base + semi);
+                update_lcd_note();
                 continue;
             }
         }

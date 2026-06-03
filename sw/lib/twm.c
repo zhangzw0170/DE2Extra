@@ -172,7 +172,7 @@ static void process_key(uint8_t ascii, uint8_t scancode,
 /* Program interface */
 
 static void tiling_init(void) {
-    board_status_set_program(9u, BOARD_STATE_RUN, 0u, 0u);
+    board_status_set_program(8u, BOARD_STATE_RUN, 0u, 0u);
     fb_init();
     fb_set_debug_pattern(0);
     ps2_dec_init();

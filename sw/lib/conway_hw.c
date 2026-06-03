@@ -198,8 +198,8 @@ static void draw_hud(void) {
     int gps = (speed_ms > 0) ? 1000 / speed_ms : 0;
     uint8_t state = edit_mode ? BOARD_STATE_EDIT : BOARD_STATE_RUN;
 
-    board_status_set_program(10u, state, 0u,
-                             (uint16_t)(((cursor_y & 0xffu) << 8) | (cursor_x & 0xffu)));
+    board_status_set_program(9u, state, 0u,
+                             (uint16_t)(((gen & 0xFFu) << 8u) | (pop & 0xFFu)));
 
     /* Only redraw HUD if values changed */
     if (gen != prev_gen || pop != prev_pop || edit_mode != prev_edit || gps != prev_gps) {

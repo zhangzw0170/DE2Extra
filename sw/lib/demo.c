@@ -1298,7 +1298,7 @@ static void accept_enter(void) {
 }
 
 static void init(void) {
-    board_status_set_program(8u, BOARD_STATE_RUN, 0u, 0u);
+    board_status_set_program(7u, BOARD_STATE_RUN, 0u, 0u);
     active = 1;
     running = 0;
     dirty = 1;
