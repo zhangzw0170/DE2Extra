@@ -85,7 +85,6 @@ typedef enum {
     PROG_TWM,
     PROG_CONWAY,
     PROG_NTT,
-    PROG_SYNTH,
     PROG_FORTH,
     PROG_CRYPTOVIZ,
     PROG_COUNT
@@ -107,7 +106,6 @@ extern const program_t prog_demo;
 extern const program_t prog_twm;
 extern const program_t prog_conway;
 extern const program_t prog_ntt;
-extern const program_t prog_synth;
 extern const program_t prog_forth;
 extern const program_t prog_cryptoviz;
 
@@ -135,7 +133,6 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_TWM]       = &prog_twm,
     [PROG_CONWAY]    = &prog_conway,
     [PROG_NTT]       = &prog_ntt,
-    [PROG_SYNTH]     = &prog_synth,
     [PROG_FORTH]     = &prog_forth,
     [PROG_CRYPTOVIZ] = &prog_cryptoviz,
 };
@@ -420,7 +417,7 @@ static void shell_input(char c) {
         if (shell_line_pos == 0) {
             /* empty line — show prompt again */
         } else if (strcmp(shell_line, "help") == 0) {
-            vga_puts("Commands: hello, crypto, ps2, snake, conway, ntt, synth, info, riscvasm, expdemo, twm, pforth, cryptoviz, cls, quit\n",
+            vga_puts("Commands: hello, crypto, ps2, snake, conway, ntt, info, riscvasm, expdemo, twm, pforth, cryptoviz, cls, quit\n",
                      VGA_GREEN);
         } else if (strcmp(shell_line, "hello") == 0) {
             enter_program(PROG_HELLO);
@@ -435,7 +432,7 @@ static void shell_input(char c) {
         } else if (strcmp(shell_line, "ntt") == 0) {
             enter_program(PROG_NTT);
         } else if (strcmp(shell_line, "synth") == 0) {
-            enter_program(PROG_SYNTH);
+            vga_puts("synth: disabled (HW module removed from build)\n", VGA_YELLOW);
         } else if (strcmp(shell_line, "info") == 0) {
             enter_program(PROG_INFO);
         } else if (strcmp(shell_line, "riscvasm") == 0 ||
@@ -579,7 +576,7 @@ static void handle_ir(uint8_t cmd) {
         case IR_BTN_6: new_prog = PROG_NTT;       break;
         case IR_BTN_7: new_prog = PROG_INFO;      break;
         case IR_BTN_8: new_prog = PROG_MONITOR;   break;
-        case IR_BTN_9: new_prog = PROG_SYNTH;     break;
+        case IR_BTN_9: break;  /* synth disabled */
         case IR_BTN_A: new_prog = PROG_DEMO;      break;
         case IR_BTN_CH_DN:
             if (active_prog > 0) {

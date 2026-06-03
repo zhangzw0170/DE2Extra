@@ -321,18 +321,18 @@ begin
     vga_reg_dat_i    <= vga_px_reg_dat_i when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_dat_i;
     vga_reg_ack      <= vga_px_reg_ack when unsigned(vga_reg_adr) >= to_unsigned(16#7000#, 16) else vga_txt_reg_ack;
 
-    -- NTT accelerator (Number Theoretic Transform)
-    u_ntt : entity work.ntt_sdf
-    port map (
-        clk_i     => clk_50m,
-        rst_n_i   => rst_n,
-        wb_adr_i  => ntt_wb_adr,
-        wb_dat_i  => ntt_wb_dat_o,
-        wb_dat_o  => ntt_wb_dat_i,
-        wb_we_i   => ntt_wb_we,
-        wb_stb_i  => ntt_wb_stb,
-        wb_ack_o  => ntt_wb_ack
-    );
+    -- NTT accelerator — disabled (HW removed from build, SW NTT used instead)
+    -- u_ntt : entity work.ntt_sdf
+    -- port map (
+    --     clk_i     => clk_50m,
+    --     rst_n_i   => rst_n,
+    --     wb_adr_i  => ntt_wb_adr,
+    --     wb_dat_i  => ntt_wb_dat_o,
+    --     wb_dat_o  => ntt_wb_dat_i,
+    --     wb_we_i   => ntt_wb_we,
+    --     wb_stb_i  => ntt_wb_stb,
+    --     wb_ack_o  => ntt_wb_ack
+    -- );
 
     -- ================================================================
     -- Clock and Reset Generation
@@ -810,24 +810,25 @@ begin
     );
 
     -- Audio synthesizer (dual-track 3xOSC + DX7 FM)
-    u_synth : entity work.synth_engine
-    port map (
-        clk_i         => clk_50m,
-        clk_18m_i     => clk_18m,
-        rst_n_i       => rst_n,
-        wb_adr_i      => synth_wb_adr,
-        wb_dat_i      => synth_wb_dat_o,
-        wb_dat_o      => synth_wb_dat_i,
-        wb_we_i       => synth_wb_we,
-        wb_stb_i      => synth_wb_stb,
-        wb_ack_o      => synth_wb_ack,
-        aud_xck_o     => AUD_XCK,
-        aud_bclk_o    => AUD_BCLK,
-        aud_daclrck_o => AUD_DACLRCK,
-        aud_dacdat_o  => AUD_DACDAT,
-        i2c_sclk_o    => I2C_SCLK,
-        i2c_sdat_io   => I2C_SDAT
-    );
+    -- Audio synthesizer — disabled (HW removed from build)
+    -- u_synth : entity work.synth_engine
+    -- port map (
+    --     clk_i         => clk_50m,
+    --     clk_18m_i     => clk_18m,
+    --     rst_n_i       => rst_n,
+    --     wb_adr_i      => synth_wb_adr,
+    --     wb_dat_i      => synth_wb_dat_o,
+    --     wb_dat_o      => synth_wb_dat_i,
+    --     wb_we_i       => synth_wb_we,
+    --     wb_stb_i      => synth_wb_stb,
+    --     wb_ack_o      => synth_wb_ack,
+    --     aud_xck_o     => AUD_XCK,
+    --     aud_bclk_o    => AUD_BCLK,
+    --     aud_daclrck_o => AUD_DACLRCK,
+    --     aud_dacdat_o  => AUD_DACDAT,
+    --     i2c_sclk_o    => I2C_SCLK,
+    --     i2c_sdat_io   => I2C_SDAT
+    -- );
 
     -- GPU 2D accelerator
     u_gpu_2d : entity work.gpu_2d

@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/CPU-NEORV32_RV32IMC-e94560" alt="CPU">
   <img src="https://img.shields.io/badge/FPGA-Cyclone_IV_E-00d4ff" alt="FPGA">
   <img src="https://img.shields.io/badge/RTOS-FreeRTOS_V11.3-f39c12" alt="RTOS">
-  <img src="https://img.shields.io/badge/Peripherals-12_Wishbone-66f4a0" alt="Peripherals">
+  <img src="https://img.shields.io/badge/Peripherals-10_Wishbone-66f4a0" alt="Peripherals">
   <img src="https://img.shields.io/badge/License-MIT-66f4a0" alt="License">
 </p>
 
@@ -27,13 +27,13 @@ DE2Extra is a complete RISC-V SoC system built around the [NEORV32](https://gith
 | | |
 |---|---|
 | **CPU** | NEORV32 v1.13.1 · RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx/Zknd/Zkne/Zknh |
-| **Bus** | Wishbone B4 · 1 master / 12 slaves · 32-bit · combinational address decode |
+| **Bus** | Wishbone B4 · 1 master / 12 slaves (10 active) · 32-bit · combinational address decode |
 | **Firmware** | FreeRTOS V11.3 · 4 tasks (uart_input/shell/active/status) |
-| **Boot** | Boot mode 0: 2KB IMEM bootloader → UART upload → SDRAM @ `0x01000000` (156KB) |
+| **Boot** | Boot mode 0: 2KB IMEM bootloader → UART upload → SDRAM @ `0x01000000` (~206KB) |
 | **Display** | VGA 640×480 @60Hz · 80×30 text mode + RGB565 pixel mode · GPU 2D FILL |
 | **Input** | PS/2 keyboard (primary) · UART 115200 · IR NEC remote |
-| **Audio** | 3×OSC + DX7 FM synthesis · WM8731 I2S DAC |
-| **Acceleration** | AES-128 hardware **107.6×** speedup · NTT ML-KEM-512 · Conway HW engine |
+| **Audio** | 3×OSC + DX7 FM synthesis · WM8731 I2S DAC *(disabled)* |
+| **Acceleration** | AES-128 hardware **107.6×** speedup · Conway HW engine |
 | **Board** | SDRAM 128MB · HD44780 LCD 16×2 · 7-SEG ×8 · LED ×24 |
 
 ## System Architecture
@@ -54,10 +54,10 @@ See also: [Interactive Architecture Diagram](doc/promo/architecture.html) · [Pr
 | `build_info_wb` | `0xF0009000` | HW/SW version ROM | ⚠️ |
 | `lcd_wb` | `0xF000B000` | HD44780 16×2 LCD | ✅ |
 | `ir_nec_wb` | `0xF000C000` | NEC IR decoder | ✅ |
-| `ntt_sdf` | `0xF000F000` | NTT accelerator (ML-KEM-512) | ⚠️ |
+| `ntt_sdf` | `0xF000F000` | Software NTT (HW disabled) | ⚠️ |
 | `expdemo_wb` | `0xF0010000` | 13 course lab hardware multiplexer | ✅ |
 | `conway_engine` | `0xF0011000` | Conway 64×25 hardware engine | ✅ |
-| `synth_engine` | `0xF0012000` | 3×OSC + DX7 FM, WM8731 | ✅ |
+| `synth_engine` | `0xF0012000` | 3×OSC + DX7 FM, WM8731 *(disabled)* | — |
 | `gpu_2d` | `0xF0015000` | FILL rect, SDRAM burst write | ✅ |
 
 Full board verification status: [`doc/phases/de2os-rtos-status.md`](doc/phases/de2os-rtos-status.md)
@@ -66,7 +66,7 @@ Full board verification status: [`doc/phases/de2os-rtos-status.md`](doc/phases/d
 
 **Interactive programs** (F1=help, F10=quit):
 
-`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · `synth` · `pforth` · `cryptoviz`
+`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · ~~`synth`~~ · `pforth` · `cryptoviz`
 
 **Utility commands**:
 
@@ -120,7 +120,7 @@ python run/upload_de2os.py --wait
 | Clock | 50 MHz |
 | FPGA utilization | ~24% (27K / 114K LEs) |
 | AES hardware speedup | 107.6× (vs software) |
-| Firmware size | ~156KB (SDRAM exec) |
+| Firmware size | ~206KB (SDRAM exec) |
 | Incremental deploy | ~25s (compile + upload) |
 | Stability test | 7h38m no crash |
 

@@ -38,7 +38,7 @@
 
 <!-- Title -->
 <text x="600" y="32" class="t1">DE2Extra — RISC-V 全外设终端系统</text>
-<text x="600" y="52" class="t2">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) · 12 Wishbone slaves · FreeRTOS 4 tasks · 20 CLI commands</text>
+<text x="600" y="52" class="t2">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) · 12 Wishbone slaves (10 active) · FreeRTOS 4 tasks · 20 CLI commands</text>
 
 <!-- ====== SOFTWARE LAYER ====== -->
 <rect x="40" y="70" width="1120" height="118" rx="12" fill="url(#gSW)" stroke="#2a2a4a"/>
@@ -110,7 +110,7 @@
 
 <!-- Wishbone Bus bar -->
 <rect x="300" y="324" width="600" height="34" rx="8" fill="url(#gWB)"/>
-<text x="600" y="344" font-size="13" font-weight="700" fill="#1a1a1a" text-anchor="middle" letter-spacing="2">WISHBONE BUS — 1 主 / 12 从</text>
+<text x="600" y="344" font-size="13" font-weight="700" fill="#1a1a1a" text-anchor="middle" letter-spacing="2">WISHBONE BUS — 1 主 / 12 从 (10 active)</text>
 <text x="600" y="354" font-size="9" fill="#2c2c2c" text-anchor="middle">32-bit 数据 | 组合地址解码 | wb_intercon.vhd</text>
 
 <!-- ====== PERIPHERAL GRID (6 cols × 2 rows) ====== -->
@@ -151,10 +151,10 @@
 <text x="150" y="474" class="pa" fill="#66f4a0">0xF000C000</text>
 <text x="150" y="486" class="pd" fill="#66f4a0">NEC 解码</text>
 
-<rect x="244" y="440" width="172" height="62" rx="8" fill="#38291b" stroke="#5e4a2d"/>
-<text x="330" y="462" class="pn" fill="#f4c866">NTT 加速器</text>
-<text x="330" y="474" class="pa" fill="#f4c866">0xF000F000</text>
-<text x="330" y="486" class="pd" fill="#f4c866">ML-KEM-512 | q=3329</text>
+<rect x="244" y="440" width="172" height="62" rx="8" fill="#2d2d2d" stroke="#4a4a4a" stroke-dasharray="4,3"/>
+<text x="330" y="462" class="pn" fill="#888">NTT (SW)</text>
+<text x="330" y="474" class="pa" fill="#888">0xF000F000</text>
+<text x="330" y="486" class="pd" fill="#888">软件实现 (HW disabled)</text>
 
 <rect x="424" y="440" width="172" height="62" rx="8" fill="#38291b" stroke="#5e4a2d"/>
 <text x="510" y="462" class="pn" fill="#f4c866">ExpDemo</text>
@@ -166,10 +166,10 @@
 <text x="690" y="474" class="pa" fill="#f4c866">0xF0011000</text>
 <text x="690" y="486" class="pd" fill="#f4c866">64×25 | LE 寄存器</text>
 
-<rect x="784" y="440" width="172" height="62" rx="8" fill="#1b2e38" stroke="#2d5a6e"/>
-<text x="870" y="462" class="pn" fill="#66e0f4">Synth 音频</text>
-<text x="870" y="474" class="pa" fill="#66e0f4">0xF0012000</text>
-<text x="870" y="486" class="pd" fill="#66e0f4">3xOSC + DX7 FM | WM8731</text>
+<rect x="784" y="440" width="172" height="62" rx="8" fill="#2d2d2d" stroke="#4a4a4a" stroke-dasharray="4,3"/>
+<text x="870" y="462" class="pn" fill="#888">Synth (disabled)</text>
+<text x="870" y="474" class="pa" fill="#888">0xF0012000</text>
+<text x="870" y="486" class="pd" fill="#888">3xOSC + DX7 FM *(disabled)*</text>
 
 <rect x="964" y="440" width="172" height="62" rx="8" fill="#38291b" stroke="#5e4a2d"/>
 <text x="1050" y="462" class="pn" fill="#f4c866">GPU 2D</text>
@@ -210,10 +210,10 @@
 <text x="260" y="655" class="id">主输入源</text>
 <text x="260" y="667" class="id">Scancode Set 2</text>
 
-<rect x="336" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
-<text x="396" y="641" class="ion">WM8731 音频</text>
-<text x="396" y="655" class="id">I2S 24-bit DAC</text>
-<text x="396" y="667" class="id">I2C 配置</text>
+<rect x="336" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50" stroke-dasharray="4,3"/>
+<text x="396" y="641" class="ion" fill="#666">WM8731</text>
+<text x="396" y="655" class="id" fill="#666">*(disabled)*</text>
+<text x="396" y="667" class="id" fill="#666">I2S DAC</text>
 
 <rect x="472" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
 <text x="532" y="641" class="ion">7-SEG ×8</text>
@@ -242,11 +242,11 @@
 
 <!-- ====== STATS BAR ====== -->
 <rect x="200" y="706" width="800" height="52" rx="10" fill="#ffffff" fill-opacity=".03" stroke="#ffffff" stroke-opacity=".06"/>
-<text x="275" y="730" class="sv">12</text>
-<text x="275" y="745" class="sl">Wishbone 外设</text>
+<text x="275" y="730" class="sv">10</text>
+<text x="275" y="745" class="sl">active 外设</text>
 <text x="405" y="730" class="sv">20</text>
 <text x="405" y="745" class="sl">CLI 命令</text>
-<text x="535" y="730" class="sv">128</text>
+<text x="535" y="730" class="sv">~140</text>
 <text x="535" y="745" class="sl">Git 提交</text>
 <text x="665" y="730" class="sv">12</text>
 <text x="665" y="745" class="sl">开发天数</text>

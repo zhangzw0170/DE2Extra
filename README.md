@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/CPU-NEORV32_RV32IMC-e94560" alt="CPU">
   <img src="https://img.shields.io/badge/FPGA-Cyclone_IV_E-00d4ff" alt="FPGA">
   <img src="https://img.shields.io/badge/RTOS-FreeRTOS_V11.3-f39c12" alt="RTOS">
-  <img src="https://img.shields.io/badge/Peripherals-12_Wishbone-66f4a0" alt="Peripherals">
+  <img src="https://img.shields.io/badge/Peripherals-10_Wishbone-66f4a0" alt="Peripherals">
   <img src="https://img.shields.io/badge/License-MIT-66f4a0" alt="License">
 </p>
 
@@ -22,18 +22,18 @@
 
 ## 项目概览
 
-DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 软核的完整 SoC 系统，运行在 Altera DE2-115 (Cyclone IV E, 114K LEs) FPGA 上。围绕开源 CPU 核心自研了 12 个 Wishbone 外设 IP、SoC 互联、FreeRTOS 固件及 18 个命令行应用。
+DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 软核的完整 SoC 系统，运行在 Altera DE2-115 (Cyclone IV E, 114K LEs) FPGA 上。围绕开源 CPU 核心自研了 12 个 Wishbone 外设 IP、SoC 互联、FreeRTOS 固件及 20 个命令行应用。
 
 | | |
 |---|---|
 | **CPU** | NEORV32 v1.13.1 · RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx/Zknd/Zkne/Zknh |
-| **总线** | Wishbone B4 · 1 主 / 12 从 · 32-bit · 组合地址解码 |
+| **总线** | Wishbone B4 · 1 主 / 12 从 (10 active) · 32-bit · 组合地址解码 |
 | **固件** | FreeRTOS V11.3 · 4 任务 (uart_input/shell/active/status) |
-| **启动** | Boot mode 0: 2KB IMEM bootloader → UART 上传 → SDRAM @ `0x01000000` (156KB) |
+| **启动** | Boot mode 0: 2KB IMEM bootloader → UART 上传 → SDRAM @ `0x01000000` (~206KB) |
 | **显示** | VGA 640×480 @60Hz · 80×30 文本模式 + RGB565 像素模式 · GPU 2D FILL |
 | **输入** | PS/2 键盘 (主输入) · UART 115200 · IR NEC 红外遥控 |
-| **音频** | 3×OSC + DX7 FM 合成 · WM8731 I2S DAC |
-| **加速** | AES-128 硬件 **107.6×** 加速 · NTT ML-KEM-512 · Conway HW 引擎 |
+| **音频** | 3×OSC + DX7 FM 合成 · WM8731 I2S DAC *(disabled)* |
+| **加速** | AES-128 硬件 **107.6×** 加速 · Conway HW 引擎 |
 | **板级** | SDRAM 128MB · HD44780 LCD 16×2 · 7-SEG ×8 · LED ×24 |
 
 ## 系统架构
@@ -54,10 +54,10 @@ DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 
 | `build_info_wb` | `0xF0009000` | HW/SW 版本 ROM | ⚠️ |
 | `lcd_wb` | `0xF000B000` | HD44780 16×2 LCD | ✅ |
 | `ir_nec_wb` | `0xF000C000` | NEC 红外解码 | ✅ |
-| `ntt_sdf` | `0xF000F000` | NTT 加速器 (ML-KEM-512) | ⚠️ |
+| `ntt_sdf` | `0xF000F000` | NTT 软件实现 (HW 已禁用) | ⚠️ |
 | `expdemo_wb` | `0xF0010000` | 13 个课程实验多路复用 | ✅ |
 | `conway_engine` | `0xF0011000` | Conway 64×25 硬件引擎 | ✅ |
-| `synth_engine` | `0xF0012000` | 3×OSC + DX7 FM, WM8731 | ✅ |
+| `synth_engine` | `0xF0012000` | 3×OSC + DX7 FM, WM8731 *(disabled)* | — |
 | `gpu_2d` | `0xF0015000` | FILL rect, SDRAM burst 写 | ✅ |
 
 完整板级验证状态: [`doc/phases/de2os-rtos-status.md`](doc/phases/de2os-rtos-status.md)
@@ -66,7 +66,7 @@ DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 
 
 **交互程序** (F1=帮助, F10=退出):
 
-`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · `synth` · `pforth` · `cryptoviz`
+`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · ~~`synth`~~ · `pforth` · `cryptoviz`
 
 **工具命令**:
 
@@ -120,7 +120,7 @@ python run/upload_de2os.py --wait
 | 主频 | 50 MHz |
 | FPGA 资源 | ~24% (27K / 114K LEs) |
 | AES 硬件加速 | 107.6× (vs 纯软件) |
-| 固件大小 | ~156KB (SDRAM 执行) |
+| 固件大小 | ~206KB (SDRAM 执行) |
 | 增量部署 | ~25s (编译 + 上传) |
 | 长稳测试 | 7h38m 无崩溃 |
 

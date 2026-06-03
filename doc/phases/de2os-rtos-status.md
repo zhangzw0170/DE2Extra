@@ -30,9 +30,19 @@
 | cryptoviz | ✅ | AES-128 step-through 可视化, pixel mode, FIPS 197 测试向量 |
 | pforth | ✅ | pForth 解释器, `1 2 + .` → `3 OK`, ESC 退出正常 |
 | twm 像素模式 | ✅ | Tiling window mgr, serial 命令正常, ESC 退出正常 |
-| synth | 🟡 | 启动正常, pixel mode 无串口 echo, BUG-5a/5b/5c 待物理验收 |
-| ntt | 🔧 | 引擎启动正常, Barrett 修复已部署, 但 NTT 计算结果仍错误 (255/256 mismatch) |
+| synth | ⬜ | HW 模块已从综合移除, 命令显示 "disabled" |
+| ntt | ⬜ | HW 模块已从综合移除, 使用 SW NTT (~0.4ms) |
 | 长稳 | ✅ | 7h38m 无崩溃 |
+
+## 本次变更 (2026-06-03, session 4)
+
+### NTT / Synth HW 从综合移除
+
+- `ntt_sdf.vhd` 和 `synth_engine.vhd` 从 Quartus 工程文件注释掉
+- `de2os_top.vhd` 中 NTT 和 Synth 实例注释掉 (端口和信号保留)
+- NTT 程序改为纯 SW 实现 (~0.4ms, 20000 cycles @50MHz)
+- Synth 命令改为 "disabled" 提示
+- 活跃外设: 12 → 10, README / promo / 状态文档同步更新
 
 ## 本次变更 (2026-06-03, session 3)
 
@@ -102,7 +112,7 @@
 
 - **修复**: TRNG seed + 逐格刷新 + partial refresh
 
-### BUG-3: NTT HW TIMEOUT (FIXED, 但计算结果仍错误)
+### BUG-3: NTT HW TIMEOUT (FIXED, 但计算结果仍错误) — HW 已移除
 
 - **已修**: Stage 0 比特反转 + Stage 0 twiddle + Read mux stb 竞争 (2026-06-02)
 - **已修**: Barrett off-by-one shift (2026-06-03)
@@ -114,7 +124,7 @@
   - 疑似 Quartus 对 VHDL function 在 clocked process 的综合问题
 - **文件**: `src/rtl/periph/ntt_sdf.vhd`
 
-### BUG-5: Synth 音频子问题 (待物理验收)
+### BUG-5: Synth 音频子问题 (待物理验收) — HW 已移除
 
 - **已修 SW**: `synth.c` mute + note_off + volume ↑/↓
 - **已修 RTL**: `synth_engine.vhd` auto-mute (已编译部署)
@@ -130,10 +140,10 @@
 | lcd_wb | ✅ | ✅ | ✅ | HD44780 16×2 |
 | ir_nec_wb | ✅ | ✅ | ✅ | NEC decoder |
 | build_info_wb | ✅ | ✅ | ✅ | 版本信息正常 |
-| ntt_sdf | ✅ | ✅ | 🔧 | 引擎启动, 计算结果错误 |
+| ntt_sdf | ⬜ | ✅ | ⬜ | HW 已从综合移除, SW NTT 替代 |
 | expdemo_wb | ✅ | ✅ | ✅ | 13 experiments |
 | conway_engine | ✅ | ✅ | ✅ | TRNG seed, 逐格刷新 |
-| synth_engine | ✅ | ✅ | 🟡 | 有音频, BUG-5 子问题待验收 |
+| synth_engine | ⬜ | ⬜ | ⬜ | HW 已从综合移除, 命令已禁用 |
 | gpu_2d | ✅ | ✅ | ✅ | FILL rect burst-write |
 | chroma_shader | ✅ | ✅ | N/A | excluded from build |
 
@@ -150,8 +160,8 @@
 | riscvasm | prog_monitor | RISC-V monitor |
 | expdemo | prog_demo | 13 course labs |
 | twm | prog_twm | Tiling window mgr |
-| ntt | prog_ntt | NTT accelerator |
-| synth | prog_synth | Audio synth |
+| ntt | prog_ntt | NTT (SW only, HW disabled) |
+| ~~synth~~ | — | Audio synth (disabled) |
 | pforth | prog_forth | pForth 解释器 |
 | cryptoviz | prog_cryptoviz | AES/SHA step-through viz (pixel mode) |
 | selfcheck | — | Board self-test (boot) |
@@ -173,11 +183,11 @@
 - **2026-05-30**: PS/2 TUI, Snake 2P, crypto viz
 - **2026-06-01**: GPU 2D, VGA PLL fix, TWM pixel mode on monitor
 - **2026-06-02**: Full board test, 5 bugs found, 7h38m stability verified
-- **2026-06-03**: BUG-1/2/3 修复, Barrett fix, cryptoviz/pforth/twm/snake 上板验证通过, 本地 SDL2 构建, V2 残余清理
+- **2026-06-03**: BUG-1/2/3 修复, Barrett fix, cryptoviz/pforth/twm/snake 上板验证通过, 本地 SDL2 构建, V2 残余清理, NTT/synth HW 从综合移除 (10 active 外设)
 
 ## 待办 (按优先级)
 
-1. **NTT 根因排查**: HW NTT 计算错误, 需要 QuestaSim testbench 或参考开源重写
-2. **Synth 物理验收**: BUG-5a/5b/5c — 需插耳机/音箱, 按键测试
+1. ~~**NTT 根因排查**: HW NTT 计算错误, 需要 QuestaSim testbench 或参考开源重写~~ (已移除 HW, SW NTT 替代)
+2. ~~**Synth 物理验收**: BUG-5a/5b/5c — 需插耳机/音箱, 按键测试~~ (已移除 HW)
 3. **V3P8 TWM 刷新优化**: 见 `doc/phases/v3p8a.md`，P0 起步 (GPU 路由所有矩形填充)
 4. **doc/promo**: slides.html 占位图需替换为实际截图

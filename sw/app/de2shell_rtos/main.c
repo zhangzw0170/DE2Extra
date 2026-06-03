@@ -58,7 +58,6 @@ extern const program_t prog_demo;
 extern const program_t prog_twm;
 extern const program_t prog_conway;
 extern const program_t prog_ntt;
-extern const program_t prog_synth;
 extern const program_t prog_forth;
 extern const program_t prog_cryptoviz;
 
@@ -79,7 +78,6 @@ typedef enum {
     PROG_TWM,
     PROG_CONWAY,
     PROG_NTT,
-    PROG_SYNTH,
     PROG_FORTH,
     PROG_CRYPTOVIZ,
     PROG_COUNT
@@ -101,7 +99,6 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_TWM]     = &prog_twm,
     [PROG_CONWAY]  = &prog_conway,
     [PROG_NTT]      = &prog_ntt,
-    [PROG_SYNTH]    = &prog_synth,
     [PROG_FORTH]    = &prog_forth,
     [PROG_CRYPTOVIZ] = &prog_cryptoviz
 };
@@ -406,7 +403,6 @@ PROG_CMD(riscvasm, PROG_MONITOR)
 PROG_CMD(expdemo, PROG_DEMO)
 PROG_CMD(conway,  PROG_CONWAY)
 PROG_CMD(ntt,     PROG_NTT)
-PROG_CMD(synth,   PROG_SYNTH)
 PROG_CMD(pforth,   PROG_FORTH)
 
 static BaseType_t cli_cryptoviz(char *buf, size_t len, const char *cmd) {
@@ -743,8 +739,15 @@ static const CLI_Command_Definition_t cmd_twm_def =
 
 static const CLI_Command_Definition_t cmd_ntt_def =
     {"ntt", "ntt:      NTT accelerator\r\n", cli_ntt, 0};
+static BaseType_t cli_synth_disabled(char *buf, size_t len, const char *cmd) {
+    (void)cmd;
+    char *p = buf; (void)len;
+    p += strcpy_local(p, "synth disabled (HW module removed from build)\r\n");
+    return pdFALSE;
+}
+
 static const CLI_Command_Definition_t cmd_synth_def =
-    {"synth", "synth:    Audio synth\r\n", cli_synth, 0};
+    {"synth", "synth:    Audio synth [disabled]\r\n", cli_synth_disabled, 0};
 static const CLI_Command_Definition_t cmd_pforth_def =
     {"pforth", "pforth:   pForth interpreter\r\n", cli_pforth, 0};
 static const CLI_Command_Definition_t cmd_cryptoviz_def =
@@ -1223,7 +1226,7 @@ static void t_uart_input(void *pv) {
 
         {
             uint32_t budget = PS2_POLL_BUDGET;
-            if (active_prog != PROG_PS2 && active_prog != PROG_TWM && active_prog != PROG_SYNTH) {
+            if (active_prog != PROG_PS2 && active_prog != PROG_TWM) {
                 while (((ps2[PS2_REG_STAT] & PS2_STAT_READY) != 0u) && (budget != 0u)) {
                     uint8_t raw = (uint8_t)ps2[PS2_REG_DATA];
                     budget--;
