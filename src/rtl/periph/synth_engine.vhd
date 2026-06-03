@@ -28,6 +28,7 @@ entity synth_engine is
     port (
         -- Clock and reset
         clk_i        : in  std_logic;
+        clk_18m_i    : in  std_logic;   -- 18 MHz audio MCLK (from PLL)
         rst_n_i      : in  std_logic;
         -- Wishbone slave
         wb_adr_i     : in  std_logic_vector(4 downto 0);
@@ -38,11 +39,11 @@ entity synth_engine is
         wb_ack_o     : out std_logic;
         -- Audio codec (WM8731)
         aud_xck_o    : out std_logic;
-        aud_bclk_i   : in  std_logic;    -- WM8731 slave mode: input
-        aud_daclrck_i: in  std_logic;    -- WM8731 slave mode: input
+        aud_bclk_o   : out std_logic;    -- FPGA-generated BCLK (slave mode)
+        aud_daclrck_o: out std_logic;    -- FPGA-generated LRCK (slave mode)
         aud_dacdat_o : out std_logic;
         i2c_sclk_o   : out std_logic;
-        i2c_sdat_o   : out std_logic
+        i2c_sdat_io  : inout std_logic
     );
 end entity synth_engine;
 
@@ -55,7 +56,6 @@ architecture rtl of synth_engine is
 
     -- ── WM8731 I2C controller ──────────────────────────────────
     signal i2c_sclk : std_logic;
-    signal i2c_sdat : std_logic;
     signal codec_ready : std_logic;
 
     -- ── Wishbone registers ────────────────────────────────────
@@ -128,13 +128,28 @@ architecture rtl of synth_engine is
     signal i2s_left  : std_logic_vector(15 downto 0);
     signal i2s_right : std_logic_vector(15 downto 0);
 
-    -- ── AUD_XCK: 50/4 = 12.5 MHz ─────────────────────────
-    -- WM8731 register 8 = 0x0006: USB mode, PLL enabled, accepts
-    -- MCLK in range 11.2896-12.288 MHz (48 kHz x 256x).
-    signal xck_div   : unsigned(1 downto 0);
+    -- ── Auto-mute: silence when no notes active ────────────────
+    signal any_note_active : std_logic;
+
+    -- ── AUD_XCK: 18 MHz from PLL (Terasic reference) ─────────
+    -- WM8731 register 8 = 0x1002: normal mode, BOSR=1, 384fs
+    -- MCLK/384 = 18MHz/384 = 46.875 kHz
     signal aud_xck_r : std_logic;
 
+    -- ── BCLK / LRCK generation from 18 MHz (Terasic reference) ──
+    -- BCLK divider: 18MHz / (48kHz × 16 × 2 × 2) - 1 = 5 (toggle every 6)
+    --   BCLK = 18MHz / (2 × 6) = 1.5 MHz
+    -- LRCK divider: 18MHz / (48kHz × 2) - 1 = 187 (toggle every 188)
+    --   LRCK = 18MHz / (2 × 188) = 47.87 kHz
+    signal bclk_cnt   : integer range 0 to 5;
+    signal lrck_cnt   : integer range 0 to 187;
+    signal bclk_r     : std_logic;
+    signal lrck_r     : std_logic;
+
 begin
+
+    -- Auto-mute: silence output when no notes are active
+    any_note_active <= '1' when (unsigned(t1_note) /= 0 or unsigned(t2_note) /= 0) else '0';
 
     -- ── 48 kHz sample tick ────────────────────────────────────
     p_sample_tick : process(clk_i, rst_n_i)
@@ -154,19 +169,44 @@ begin
         end if;
     end process;
 
-    -- ── AUD_XCK: ~12.5 MHz from 50 MHz (divide by 4) ───────
-    -- WM8731 with internal PLL (reg 0x08 bit 2) can accept this
-    p_xck : process(clk_i, rst_n_i)
+    -- ── AUD_XCK: 18 MHz from PLL (pass through) ───────────────
+    aud_xck_r <= clk_18m_i;
+    aud_xck_o <= aud_xck_r;
+
+    -- ── BCLK generator (from 18 MHz, matches Terasic AUDIO_DAC.v) ──
+    p_bclk : process(clk_18m_i, rst_n_i)
     begin
         if rst_n_i = '0' then
-            xck_div <= (others => '0');
-            aud_xck_r <= '0';
-        elsif rising_edge(clk_i) then
-            xck_div <= xck_div + 1;
-            aud_xck_r <= xck_div(1);
+            bclk_cnt <= 0;
+            bclk_r <= '0';
+        elsif rising_edge(clk_18m_i) then
+            if bclk_cnt >= 5 then  -- 18MHz/(48k*16*2*2) - 1 = 5
+                bclk_cnt <= 0;
+                bclk_r   <= not bclk_r;
+            else
+                bclk_cnt <= bclk_cnt + 1;
+            end if;
         end if;
     end process;
-    aud_xck_o <= aud_xck_r;
+
+    -- ── LRCK generator (from 18 MHz, matches Terasic) ───────────
+    p_lrck : process(clk_18m_i, rst_n_i)
+    begin
+        if rst_n_i = '0' then
+            lrck_cnt <= 0;
+            lrck_r   <= '0';
+        elsif rising_edge(clk_18m_i) then
+            if lrck_cnt >= 187 then  -- 18MHz/(48k*2) - 1 = 187
+                lrck_cnt <= 0;
+                lrck_r   <= not lrck_r;
+            else
+                lrck_cnt <= lrck_cnt + 1;
+            end if;
+        end if;
+    end process;
+
+    aud_bclk_o    <= bclk_r;
+    aud_daclrck_o <= lrck_r;
 
     -- ── WM8731 I2C controller ──────────────────────────────────
     u_i2c : entity work.wm8731_ctrl
@@ -174,11 +214,10 @@ begin
             clk_i     => clk_i,
             rst_n_i   => rst_n_i,
             i2c_sclk_o => i2c_sclk,
-            i2c_sdat_o => i2c_sdat,
+            i2c_sdat_io => i2c_sdat_io,
             ready_o   => codec_ready
         );
     i2c_sclk_o <= i2c_sclk;
-    i2c_sdat_o <= i2c_sdat;
 
     -- ── Status register ───────────────────────────────────────
     status_reg <= (0 => codec_ready, others => '0');
@@ -227,7 +266,20 @@ begin
             elsif wb_stb_i = '1' then
                 wb_ack_o <= '1';
                 case wb_adr_i is
+                    when "00000" => wb_dat_o <= ctrl_reg;
                     when "00001" => wb_dat_o <= status_reg;
+                    when "00010" => wb_dat_o <= t1_note;
+                    when "00011" => wb_dat_o <= t1_osc1;
+                    when "00100" => wb_dat_o <= t1_osc2;
+                    when "00101" => wb_dat_o <= t1_osc3;
+                    when "00110" => wb_dat_o <= t1_dx7_ri;
+                    when "00111" => wb_dat_o <= t1_dx7_adsr;
+                    when "01000" => wb_dat_o <= t2_note;
+                    when "01001" => wb_dat_o <= t2_osc1;
+                    when "01010" => wb_dat_o <= t2_osc2;
+                    when "01011" => wb_dat_o <= t2_osc3;
+                    when "01100" => wb_dat_o <= t2_dx7_ri;
+                    when "01101" => wb_dat_o <= t2_dx7_adsr;
                     when others => null;
                 end case;
             end if;
@@ -468,6 +520,7 @@ begin
     end process;
 
     -- ── Mixer: master volume on mux output ────────────────────
+    -- Auto-mute when no notes are active (TW=0 on both tracks)
     p_mix : process(clk_i, rst_n_i)
     begin
         if rst_n_i = '0' then
@@ -476,7 +529,7 @@ begin
             i2s_left    <= (others => '0');
             i2s_right   <= (others => '0');
         elsif rising_edge(clk_i) then
-            if mute = '1' then
+            if mute = '1' or any_note_active = '0' then
                 mix_l_clip <= (others => '0');
                 mix_r_clip <= (others => '0');
             else
@@ -497,8 +550,8 @@ begin
         port map (
             clk_50m_i     => clk_i,
             rst_n_i       => rst_n_i,
-            bclk_i        => aud_bclk_i,
-            lrck_i        => aud_daclrck_i,
+            bclk_i        => bclk_r,
+            lrck_i        => lrck_r,
             sample_left_i  => i2s_left,
             sample_right_i => i2s_right,
             dacdat_o      => aud_dacdat_o

@@ -235,11 +235,14 @@ begin
                         end if;
 
                     when S_SCALE =>
+                        -- elem is 7-bit (0..127); process 2 elements per cycle
                         cycle_cnt <= cycle_cnt + 1;
                         s_elem := to_integer(elem);
-                        if s_elem < 256 then
-                            prod_v := buf(s_elem) * N_INV_C;
-                            buf(s_elem) <= barrett_reduce(prod_v);
+                        prod_v := buf(s_elem) * N_INV_C;
+                        buf(s_elem) <= barrett_reduce(prod_v);
+                        prod_v := buf(s_elem + 128) * N_INV_C;
+                        buf(s_elem + 128) <= barrett_reduce(prod_v);
+                        if elem < 127 then
                             elem <= elem + 1;
                         else
                             state <= S_DONE;
@@ -253,22 +256,20 @@ begin
         end if;
     end process;
 
-    -- Read mux (combinational)
-    process(all)
-        variable ridx : unsigned(7 downto 0);
+    -- Read mux (combinational, DIAGNOSTIC: return constants for each register)
+    process(wb_stb_i, wb_we_i, wb_adr_i, status_busy, status_done, cycle_cnt)
     begin
         wb_dat_o <= (others => '0');
         if wb_stb_i = '1' and wb_we_i = '0' then
             if unsigned(wb_adr_i) = x"101" then
+                wb_dat_o <= x"AAAA0000";
                 wb_dat_o(0) <= status_busy;
                 wb_dat_o(1) <= status_done;
             elsif unsigned(wb_adr_i) = x"102" then
+                wb_dat_o <= x"BBBB0000";
                 wb_dat_o <= std_logic_vector(cycle_cnt);
-            elsif unsigned(wb_adr_i(11 downto 8)) = 0 then
-                ridx := unsigned(wb_adr_i(7 downto 0));
-                if ridx < 256 then
-                    wb_dat_o(11 downto 0) <= std_logic_vector(buf(to_integer(ridx)));
-                end if;
+            else
+                wb_dat_o <= x"CCCC0000";
             end if;
         end if;
     end process;

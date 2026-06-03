@@ -45,6 +45,33 @@ void gfx_fill_rect(int x, int y, int w, int h, uint16_t color) {
             fb_set_pixel(col, row, color);
 }
 
+void gfx_gradient_v(int x, int y, int w, int h,
+                    uint16_t top_color, uint16_t bot_color) {
+    if (x < 0) { w += x; x = 0; }
+    if (y < 0) { h += y; y = 0; }
+    if (x + w > FB_W) w = FB_W - x;
+    if (y + h > FB_H) h = FB_H - y;
+    if (w <= 0 || h <= 0) return;
+
+    /* Decompose RGB565 endpoints */
+    int r0 = (top_color >> 11) & 0x1F;
+    int g0 = (top_color >> 5)  & 0x3F;
+    int b0 =  top_color        & 0x1F;
+    int r1 = (bot_color >> 11) & 0x1F;
+    int g1 = (bot_color >> 5)  & 0x3F;
+    int b1 =  bot_color        & 0x1F;
+
+    for (int row = y; row < y + h; row++) {
+        int t = (h > 1) ? (row - y) : 0;
+        int r = r0 + ((r1 - r0) * t + h/2) / h;
+        int g = g0 + ((g1 - g0) * t + h/2) / h;
+        int b = b0 + ((b1 - b0) * t + h/2) / h;
+        uint16_t c = (uint16_t)((r << 11) | (g << 5) | b);
+        for (int col = x; col < x + w; col++)
+            fb_set_pixel(col, row, c);
+    }
+}
+
 void gfx_rect(int x, int y, int w, int h, uint16_t color) {
     gfx_hline(x, y, w, color);
     gfx_hline(x, y + h - 1, w, color);

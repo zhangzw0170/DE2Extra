@@ -57,46 +57,14 @@ static int alt_held;
 /* Redraw only after layout/input changes; continuous full-screen repaint
  * saturates the FPGA framebuffer path and causes visible corruption. */
 static int redraw_pending;
+/* UART /-prefix command state */
+static int uart_slash;
 
 /* Helpers */
 
 #ifndef LOCAL_BUILD
-static void uart_hex32(uint32_t value) {
-    static const char hex[] = "0123456789ABCDEF";
-    int shift;
-    for (shift = 28; shift >= 0; shift -= 4) {
-        neorv32_uart0_putc(hex[(value >> shift) & 0x0f]);
-    }
-}
-
-static void twm_dump_px_regs(void) {
-    neorv32_uart0_puts("TWM: px regs ");
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_MODE_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_FB_BASE_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_STATUS_REG]);
-    neorv32_uart0_putc('\n');
-
-    neorv32_uart0_puts("TWM: px dbg  ");
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG0_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG1_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG2_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_DEBUG3_REG]);
-    neorv32_uart0_putc('\n');
-
-    neorv32_uart0_puts("TWM: px samp ");
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE0_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE1_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE2_REG]);
-    neorv32_uart0_putc(' ');
-    uart_hex32(VGA_MMIO_BASE[VGA_PX_SAMPLE3_REG]);
-    neorv32_uart0_putc('\n');
+static void twm_prompt(void) {
+    neorv32_uart0_puts("\rtwm > ");
 }
 #endif
 
@@ -207,10 +175,6 @@ static void tiling_init(void) {
     board_status_set_program(9u, BOARD_STATE_RUN, 0u, 0u);
     fb_init();
     fb_set_debug_pattern(0);
-#ifndef LOCAL_BUILD
-    neorv32_uart0_puts("TWM: framebuffer init\n");
-    twm_dump_px_regs();
-#endif
     ps2_dec_init();
     tile_init();
     tile_set_panel_render(panel_render);
@@ -219,6 +183,11 @@ static void tiling_init(void) {
     running = 1;
     alt_held = 0;
     redraw_pending = 0;
+    uart_slash = 0;
+#ifndef LOCAL_BUILD
+    neorv32_uart0_puts("\nTWM: /h /v /w /f /j /l /i /k  Tab=cycle  F10=quit\n");
+    twm_prompt();
+#endif
 }
 
 static void tiling_update(void) {
@@ -278,7 +247,50 @@ static void tiling_update(void) {
 }
 
 static void tiling_input(char c) {
-    process_key((uint8_t)c, 0, 1, 0);
+    uint8_t k = (uint8_t)c;
+
+    /* F10 / ESC → quit */
+    if (k == PS2_VK_F10 || k == 0x1b) { running = 0; return; }
+
+    /* /-prefix: /h /v /w /f /j /l /i /k /J /L /I /K */
+    if (uart_slash) {
+        uart_slash = 0;
+        switch (k) {
+        case 'h': tile_split(TILE_SPLIT_H);  break;
+        case 'v': tile_split(TILE_SPLIT_V);  break;
+        case 'w': tile_close();               break;
+        case 'f': tile_toggle_fullscreen();   break;
+        case 'j': tile_focus_dir(0);          break; /* focus left  */
+        case 'l': tile_focus_dir(1);          break; /* focus right */
+        case 'i': tile_focus_dir(2);          break; /* focus up    */
+        case 'k': tile_focus_dir(3);          break; /* focus down  */
+        case 'J': tile_resize(0, -1);         break; /* shrink ←    */
+        case 'L': tile_resize(0, +1);         break; /* grow →      */
+        case 'I': tile_resize(1, -1);         break; /* shrink ↑    */
+        case 'K': tile_resize(1, +1);         break; /* grow ↓      */
+        default: break;
+        }
+        request_redraw();
+#ifndef LOCAL_BUILD
+        twm_prompt();
+#endif
+        return;
+    }
+
+    if (k == '/') { uart_slash = 1; return; }
+
+    /* Tab = cycle focus */
+    if (k == 0x09) {
+        tile_focus_cycle(0);
+        request_redraw();
+#ifndef LOCAL_BUILD
+        twm_prompt();
+#endif
+        return;
+    }
+
+    /* Pass through to PS/2 handler for other keys */
+    process_key(k, 0, 1, 0);
 }
 
 static int tiling_finish(void) {

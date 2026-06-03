@@ -86,7 +86,7 @@ static int hw_clear(void) {
 }
 
 static int hw_randomize(uint16_t seed) {
-    CONWAY_CMD = (2u | ((uint32_t)seed << 16));
+    CONWAY_CMD = 2u | ((uint32_t)(seed & 0xFFE0u));
     return hw_wait(HW_TIMEOUT);
 }
 

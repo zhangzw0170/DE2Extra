@@ -82,11 +82,11 @@ entity de2os_top is
 
         -- Audio codec (WM8731)
         AUD_XCK     : out std_logic;
-        AUD_BCLK    : in  std_logic;
-        AUD_DACLRCK : in  std_logic;
+        AUD_BCLK    : out std_logic;
+        AUD_DACLRCK : out std_logic;
         AUD_DACDAT  : out std_logic;
         I2C_SCLK    : out std_logic;
-        I2C_SDAT    : out std_logic
+        I2C_SDAT    : inout std_logic
     );
 end entity de2os_top;
 
@@ -97,6 +97,7 @@ architecture rtl of de2os_top is
     signal clk_sdram   : std_logic;
     signal clk_sdram_shift : std_logic;
     signal clk_25m     : std_logic;
+    signal clk_18m     : std_logic;  -- 18 MHz audio MCLK
     signal rst_n       : std_logic;
     signal rst_sdram_n : std_logic;
     signal rst_sdram_sync : std_logic_vector(1 downto 0);
@@ -344,6 +345,7 @@ begin
         clk_sdram_o => clk_sdram,
         clk_sdram_shift_o => clk_sdram_shift,
         clk_25m_o   => clk_25m,
+        clk_18m_o   => clk_18m,
         clk_vga_o   => open,
         rst_n_o     => rst_n,
         pll_locked_o => open
@@ -654,6 +656,8 @@ begin
 
     u_build_info : entity work.build_info_wb
     port map (
+        clk_i    => clk_50m,
+        rst_n_i  => rst_n,
         wb_adr_i => buildinfo_wb_adr,
         wb_dat_o => buildinfo_wb_dat_i,
         wb_stb_i => buildinfo_wb_stb,
@@ -809,6 +813,7 @@ begin
     u_synth : entity work.synth_engine
     port map (
         clk_i         => clk_50m,
+        clk_18m_i     => clk_18m,
         rst_n_i       => rst_n,
         wb_adr_i      => synth_wb_adr,
         wb_dat_i      => synth_wb_dat_o,
@@ -817,11 +822,11 @@ begin
         wb_stb_i      => synth_wb_stb,
         wb_ack_o      => synth_wb_ack,
         aud_xck_o     => AUD_XCK,
-        aud_bclk_i    => AUD_BCLK,
-        aud_daclrck_i => AUD_DACLRCK,
+        aud_bclk_o    => AUD_BCLK,
+        aud_daclrck_o => AUD_DACLRCK,
         aud_dacdat_o  => AUD_DACDAT,
         i2c_sclk_o    => I2C_SCLK,
-        i2c_sdat_o    => I2C_SDAT
+        i2c_sdat_io   => I2C_SDAT
     );
 
     -- GPU 2D accelerator

@@ -106,6 +106,7 @@ set_global_assignment -name VHDL_FILE ../../src/rtl/exp/uart.vhd
 # JTAG UART (Platform Designer generated)
 set_global_assignment -name QIP_FILE ../../par/jtag_uart_0/synthesis/jtag_uart_0.qip
 set_global_assignment -name VHDL_FILE ../../src/ip/altpll_50_100.vhd
+set_global_assignment -name VHDL_FILE ../../src/ip/altpll_audio.vhd
 
 # NEORV32 CPU (submodule) — all core VHDL files
 set_global_assignment -name VHDL_FILE ../../neorv32/rtl/core/neorv32_package.vhd

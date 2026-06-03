@@ -126,6 +126,7 @@ static int initialized;
 static int help_open;
 static int t1_base;       /* base MIDI note (default 60=C4) */
 static int t2_base;
+static int master_vol;    /* 0=max, 1=1/2, 2=1/4, 3=1/8 */
 static int mode;          /* 0=3xOSC, 1=DX7 */
 static int t1_held;       /* currently held semitone (-1=none) */
 static int t2_held;
@@ -144,15 +145,24 @@ static uint32_t midi_to_tw(int midi) {
     return tuning_table[midi - MIDI_LO];
 }
 
+static void update_mute(void) {
+    int playing = (t1_held >= 0 || t2_held >= 0);
+    uint32_t ctrl = SYNTH_CTRL & ~0x01u;
+    if (!playing) ctrl |= 0x01u;
+    SYNTH_CTRL = ctrl;
+}
+
 static void note_on(int track, int midi) {
     uint32_t tw = midi_to_tw(midi);
     if (track == 1) SYNTH_T1_NOTE = tw;
     else            SYNTH_T2_NOTE = tw;
+    update_mute();
 }
 
 static void note_off(int track) {
     if (track == 1) SYNTH_T1_NOTE = 0;
     else            SYNTH_T2_NOTE = 0;
+    update_mute();
 }
 
 static void set_osc(int track, int osc, int wave, int octave, int vol) {
@@ -177,6 +187,11 @@ static void set_adsr(int track, int ar, int dr, int sl, int rr) {
                  | ((uint32_t)(ar & 0xF));
     if (track == 1) SYNTH_T1_ADSR = val;
     else            SYNTH_T2_ADSR = val;
+}
+
+static void set_master_vol(int vol) {
+    master_vol = vol;
+    SYNTH_CTRL = (SYNTH_CTRL & ~0x18u) | ((uint32_t)(vol & 0x3) << 3);
 }
 
 static int lookup_semi(const key_map_t *map, int count, uint8_t sc) {
@@ -211,6 +226,10 @@ static void redraw_synth(void) {
     vga_puts(mode ? "DX7 FM" : "3xOSC", VGA_WHITE);
     vga_goto(70, 0);
     vga_puts("F1=Help", VGA_GRAY);
+    /* Volume bar */
+    vga_goto(50, 0);
+    vga_puts("Vol:", VGA_GRAY);
+    { int i; for (i = 0; i < 3 - master_vol; i++) vga_puts("|||", VGA_GREEN); }
 }
 
 static void draw_help(void) {
@@ -248,6 +267,8 @@ static void draw_help(void) {
     vga_puts("NumLock: Octave up (T2)", VGA_WHITE);
     vga_goto(bx + 2, by + 10);
     vga_puts("M: Toggle 3xOSC / DX7 FM", VGA_WHITE);
+    vga_goto(bx + 2, by + 10);
+    vga_puts("Up/Down: Volume", VGA_WHITE);
     vga_goto(bx + 2, by + 12);
     vga_puts("F1:  Close help", VGA_GRAY);
     vga_goto(bx + 2, by + 13);
@@ -262,8 +283,9 @@ static void init(void) {
     t1_held = -1;
     t2_held = -1;
     help_open = 0;
+    master_vol = 2;   /* 1/4 volume ≈ 3/10 */
 
-    SYNTH_CTRL = 0;   /* unmute, 3xOSC, max volume */
+    SYNTH_CTRL = 0x10u;   /* unmute, 3xOSC, vol=1/4 */
     preset_3xosc();
     initialized = 1;
 
@@ -337,6 +359,16 @@ static void update(void) {
             if (mode == 0) preset_3xosc();
             else           preset_dx7();
             redraw_synth();
+            continue;
+        }
+
+        /* Volume up/down (arrow keys) */
+        if (key.ascii == PS2_VK_UP) {
+            if (master_vol > 0) { set_master_vol(master_vol - 1); redraw_synth(); }
+            continue;
+        }
+        if (key.ascii == PS2_VK_DOWN) {
+            if (master_vol < 3) { set_master_vol(master_vol + 1); redraw_synth(); }
             continue;
         }
 
@@ -490,7 +522,15 @@ static void input(char c) {
     }
 }
 
-static int finish(void) { return !initialized; }
+static int finish(void) {
+    if (!initialized) {
+        SYNTH_T1_NOTE = 0;
+        SYNTH_T2_NOTE = 0;
+        SYNTH_CTRL = 1;  /* mute */
+        return 1;
+    }
+    return 0;
+}
 
 const program_t prog_synth = {
     "Synth", "Audio synth — piano (A-; keys, Z/X octave, M mode, Q quit)",

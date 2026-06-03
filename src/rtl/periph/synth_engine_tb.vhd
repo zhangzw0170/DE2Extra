@@ -14,8 +14,10 @@ end entity synth_engine_tb;
 architecture sim of synth_engine_tb is
 
     constant CLK_PERIOD : time := 20 ns; -- 50 MHz
+    constant CLK18_PERIOD : time := 55555 ps; -- 18 MHz (~55.6 ns)
 
     signal clk     : std_logic := '0';
+    signal clk_18m : std_logic := '0';
     signal rst_n   : std_logic := '0';
 
     -- Wishbone
@@ -34,16 +36,11 @@ architecture sim of synth_engine_tb is
     signal i2c_sclk   : std_logic;
     signal i2c_sdat   : std_logic;
 
-    -- Simulated WM8731 BCLK/LRCK
-    constant BCLK_PERIOD : time := 325 ns; -- ~3.072 MHz
-    constant LRCK_PERIOD : time := 20.83 us; -- 48 kHz
-    signal bclk_gen    : std_logic := '0';
-    signal lrck_gen    : std_logic := '0';
-
 begin
 
     -- Clock
-    clk <= not clk after CLK_PERIOD / 2;
+    clk     <= not clk after CLK_PERIOD / 2;
+    clk_18m <= not clk_18m after CLK18_PERIOD / 2;
 
     -- Reset
     p_rst : process
@@ -54,21 +51,11 @@ begin
         wait;
     end process;
 
-    -- Simulate WM8731 BCLK and LRCK in slave mode
-    p_bclk : process
-    begin
-        bclk_gen <= not bclk_gen after BCLK_PERIOD / 2;
-    end process;
-
-    p_lrck : process
-    begin
-        lrck_gen <= not lrck_gen after LRCK_PERIOD / 2;
-    end process;
-
-    -- DUT
+    -- DUT (BCLK/LRCK now generated internally by synth_engine)
     u_dut : entity work.synth_engine
         port map (
             clk_i        => clk,
+            clk_18m_i     => clk_18m,
             rst_n_i      => rst_n,
             wb_adr_i     => wb_adr,
             wb_dat_i     => wb_dat_i,
@@ -77,11 +64,11 @@ begin
             wb_stb_i     => wb_stb,
             wb_ack_o     => wb_ack,
             aud_xck_o    => aud_xck,
-            aud_bclk_i   => bclk_gen,
-            aud_daclrck_i=> lrck_gen,
+            aud_bclk_o   => aud_bclk,
+            aud_daclrck_o=> aud_daclrck,
             aud_dacdat_o => aud_dacdat,
             i2c_sclk_o   => i2c_sclk,
-            i2c_sdat_o   => i2c_sdat
+            i2c_sdat_io  => i2c_sdat
         );
 
     -- Stimulus

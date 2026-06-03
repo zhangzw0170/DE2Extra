@@ -13,6 +13,7 @@
 
 void gfx_clear(uint16_t color);
 void gfx_fill_rect(int x, int y, int w, int h, uint16_t color);
+void gfx_gradient_v(int x, int y, int w, int h, uint16_t top_color, uint16_t bot_color);
 void gfx_rect(int x, int y, int w, int h, uint16_t color);
 void gfx_hline(int x, int y, int w, uint16_t color);
 void gfx_vline(int x, int y, int h, uint16_t color);

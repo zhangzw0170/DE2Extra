@@ -12,7 +12,7 @@ entity wm8731_ctrl is
         clk_i      : in  std_logic;
         rst_n_i    : in  std_logic;
         i2c_sclk_o : out std_logic;
-        i2c_sdat_o : out std_logic;
+        i2c_sdat_io: inout std_logic;
         ready_o    : out std_logic
     );
 end entity wm8731_ctrl;
@@ -26,11 +26,11 @@ architecture rtl of wm8731_ctrl is
     constant CFG : reg_t := (
         x"001A", x"021A",  -- Reg 0,1:   Line In -6dB
         x"047B", x"067B",  -- Reg 2,3:   Headphone 0dB
-        x"0812",            -- Reg 4:     DAC selected, mic muted
+        x"08F8",            -- Reg 4:     BYPASS, INSEL=line, MUTEMIC, DACSEL
         x"0A06",            -- Reg 5:     DAC unmuted, deemphasis 48kHz
         x"0C00",            -- Reg 6:     All power on
-        x"0E12",            -- Reg 7:     I2S 16-bit, WM8731 MASTER
-        x"1000",            -- Reg 8:     Normal mode, MCLK/256
+        x"0E01",            -- Reg 7:     I2S 16-bit, SLAVE
+        x"1002",            -- Reg 8:     Normal mode, BOSR (384fs for 18MHz)
         x"1201"             -- Reg 9:     ACTIVE
     );
 
@@ -48,7 +48,7 @@ architecture rtl of wm8731_ctrl is
 begin
 
     i2c_sclk_o <= scl_r;
-    i2c_sdat_o <= sda_r;
+    i2c_sdat_io <= '0' when sda_r = '0' else 'Z';
     ready_o    <= ready_r;
 
     p_main : process(clk_i, rst_n_i)

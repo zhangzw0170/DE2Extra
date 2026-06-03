@@ -303,6 +303,10 @@ void tile_layout(void) {
 
 /* ── Render ─────────────────────────────────────────────────────── */
 
+/* Background gradient: deep navy → dark indigo */
+#define BG_TOP    0x1084  /* RGB565: dark navy (R=2,G=4,B=4) */
+#define BG_BOT    0x3020  /* RGB565: dark indigo (R=6,G=1,B=0) */
+
 #define TITLE_H 18
 
 static void render_tile(tile_t *t) {
@@ -344,7 +348,7 @@ static void render_tile(tile_t *t) {
 }
 
 void tile_render_all(void) {
-    gfx_clear(FB_BLACK);
+    gfx_fill_rect(0, 0, FB_W, FB_H, FB_BLACK);
 
     if (zoomed && zoom_tile) {
         render_tile(zoom_tile);
