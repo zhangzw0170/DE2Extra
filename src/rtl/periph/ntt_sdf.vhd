@@ -168,7 +168,7 @@ begin
                         b127 := elem;
 
                         case to_integer(stage) is
-                            when 0 => idx := b127(6 downto 0); grp := "0000000";
+                            when 0 => idx := "0000000"; grp := b127;
                             when 1 => idx := "000000" & b127(0 downto 0); grp := "0" & b127(6 downto 1);
                             when 2 => idx := "00000" & b127(1 downto 0); grp := "00" & b127(6 downto 2);
                             when 3 => idx := "0000" & b127(2 downto 0); grp := "000" & b127(6 downto 3);
@@ -186,14 +186,14 @@ begin
                         b_val := buf(s_elem + to_integer(half));
 
                         case to_integer(stage) is
-                            when 0 => tw_idx_v := idx(0 downto 0) & "000000";
-                            when 1 => tw_idx_v := idx(1 downto 0) & "00000";
-                            when 2 => tw_idx_v := idx(2 downto 0) & "0000";
-                            when 3 => tw_idx_v := idx(3 downto 0) & "000";
-                            when 4 => tw_idx_v := idx(4 downto 0) & "00";
-                            when 5 => tw_idx_v := idx(5 downto 0) & "0";
-                            when 6 => tw_idx_v := idx;
-                            when 7 => tw_idx_v := "0000000";
+                            when 0 => tw_idx_v := "0000000";
+                            when 1 => tw_idx_v := idx(0 downto 0) & "000000";
+                            when 2 => tw_idx_v := idx(1 downto 0) & "00000";
+                            when 3 => tw_idx_v := idx(2 downto 0) & "0000";
+                            when 4 => tw_idx_v := idx(3 downto 0) & "000";
+                            when 5 => tw_idx_v := idx(4 downto 0) & "00";
+                            when 6 => tw_idx_v := idx(5 downto 0) & "0";
+                            when 7 => tw_idx_v := idx;
                             when others => tw_idx_v := "0000000";
                         end case;
 
@@ -256,20 +256,19 @@ begin
         end if;
     end process;
 
-    -- Read mux (combinational, DIAGNOSTIC: return constants for each register)
-    process(wb_stb_i, wb_we_i, wb_adr_i, status_busy, status_done, cycle_cnt)
+    -- Read mux (combinational, no stb check — Quartus drops process output when
+    -- wb_stb_i is read here AND in the separate clocked process; expdemo_wb pattern)
+    process(all)
     begin
         wb_dat_o <= (others => '0');
-        if wb_stb_i = '1' and wb_we_i = '0' then
-            if unsigned(wb_adr_i) = x"101" then
-                wb_dat_o <= x"AAAA0000";
+        if wb_we_i = '0' then
+            if unsigned(wb_adr_i(11 downto 8)) = 0 then
+                wb_dat_o(11 downto 0) <= std_logic_vector(buf(to_integer(unsigned(wb_adr_i(7 downto 0)))));
+            elsif unsigned(wb_adr_i) = x"101" then
                 wb_dat_o(0) <= status_busy;
                 wb_dat_o(1) <= status_done;
             elsif unsigned(wb_adr_i) = x"102" then
-                wb_dat_o <= x"BBBB0000";
                 wb_dat_o <= std_logic_vector(cycle_cnt);
-            else
-                wb_dat_o <= x"CCCC0000";
             end if;
         end if;
     end process;

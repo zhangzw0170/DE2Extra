@@ -36,8 +36,11 @@ python run/upload_de2os.py --wait
 
 ### Software local test (no FPGA needed)
 ```bash
-cd sw/lib && make local   # compiles with host gcc, -DLOCAL_BUILD (needs SDL2 via scoop)
+cd sw/lib && make          # build de2shell.exe (SDL2 pixel-mode shell)
+cd sw/lib && make run      # build + run
+cd sw/lib && make clean    # remove build artifacts
 ```
+Requires: GCC 15+ (scoop), SDL2 (scoop `SDL2` package). Uses `-DLOCAL_BUILD` to stub NEORV32 hardware. Programs available: hello, crypto, ps2, snake, conway, ntt, synth, info, riscvasm, expdemo, twm, pforth, cryptoviz.
 
 ### Quartus VHDL version
 
@@ -104,13 +107,13 @@ Per-peripheral board status and known issues: `doc/phases/de2os-rtos-status.md`.
 | Directory | Description |
 |-----------|-------------|
 | **`sw/app/de2shell_rtos/`** | **主固件**: FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI。4 任务 (uart_input/shell/active/status)，shell 从 PS/2 和 UART 双路接收输入。程序启动器 (PROG_TWM 等) |
-| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + GPU 驱动 (gpu) + 程序 (crypto, ps2, snake, conway_hw, ntt, synth, monitor, selfcheck 等) + TWM 窗口管理器 (twm, gfx)。RTOS makefile 直接编译 |
+| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + GPU 驱动 (gpu) + 程序 (crypto, crypto_viz, ps2, snake, conway_hw, ntt, synth, monitor, selfcheck 等) + TWM 窗口管理器 (twm, gfx)。RTOS makefile 直接编译 |
 | `sw/app/crypto_cli/` | 加密库: AES/SHA/SM4 (RTOS makefile 直接编译) |
 | `sw/app/common/` | 公共头文件 |
 
 **de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~156KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
 
-CLI commands (18 + help builtin):
+CLI commands (20 + help builtin):
 
 | Program commands | Description |
 |-----------------|-------------|
@@ -125,6 +128,8 @@ CLI commands (18 + help builtin):
 | twm | Tiling window mgr |
 | ntt | NTT accelerator |
 | synth | Audio synth |
+| pforth | pForth interpreter |
+| cryptoviz | AES/SHA step-through viz (pixel mode) |
 
 | Utility commands | Description |
 |-----------------|-------------|
@@ -136,7 +141,7 @@ CLI commands (18 + help builtin):
 | vgadump | Dump VGA to UART |
 | vgamon | Periodic VGA dump |
 
-All interactive programs: F1=help overlay (pauses game), F10=quit to shell. Note: `chroma` command registered in source but excluded from build.
+All interactive programs: F1=help overlay (pauses game), F10=quit to shell. cryptoviz uses Space=step, A=auto-play, P=pause, L/R=skip, Q=quit. Note: `chroma` command registered in source but excluded from build.
 
 ### NEORV32 ISA Extensions
 

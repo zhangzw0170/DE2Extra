@@ -108,7 +108,7 @@
   }
 
   void fb_init(void) {
-      fb_mode_flags = 1u | VGA_PX_TESTPAT;
+      fb_mode_flags = 1u;  /* pixel mode on, no test pattern */
       fb_hw_mode_set(1u);
   }
 

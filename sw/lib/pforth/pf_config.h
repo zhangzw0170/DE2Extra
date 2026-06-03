@@ -2,6 +2,7 @@
  *
  * These defines are also passed via -D flags in the makefile for the
  * NEORV32 cross-compile. Guard with #ifndef to avoid redefinition warnings.
+ * LOCAL_BUILD: stdlib available, no need for bare-metal stubs.
  */
 
 #ifndef PF_CONFIG_H
@@ -12,6 +13,7 @@
  * dictionary building. Do NOT define PF_NO_SHELL — it removes
  * CreateDicEntry which pfBuildDictionary needs. */
 
+#ifndef LOCAL_BUILD
 #ifndef PF_NO_FILEIO
 #define PF_NO_FILEIO
 #endif
@@ -21,6 +23,7 @@
 #ifndef PF_NO_MALLOC
 #define PF_NO_MALLOC
 #endif
+#endif /* !LOCAL_BUILD */
 
 #ifndef PF_DEFAULT_HEADER_SIZE
 #define PF_DEFAULT_HEADER_SIZE  (65536)

@@ -1,0 +1,260 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 790" width="1200">
+<style>
+  text{font-family:'Segoe UI','Microsoft YaHei',Arial,sans-serif}
+  .t1{font-size:24px;fill:#e0e0e0;font-weight:700;text-anchor:middle}
+  .t2{font-size:12px;fill:#888;text-anchor:middle}
+  .badge{font-size:11px;font-weight:600;text-anchor:middle}
+  .chip{font-size:11px;font-family:Consolas,monospace;text-anchor:middle;fill:#a8d8ea}
+  .chip-hl{font-size:11px;font-family:Consolas,monospace;text-anchor:middle;fill:#95d5b2}
+  .pn{font-size:12px;font-weight:600;text-anchor:middle}
+  .pa{font-size:9px;font-family:Consolas,monospace;text-anchor:middle;opacity:.7}
+  .pd{font-size:9px;text-anchor:middle;opacity:.6}
+  .ion{font-size:11px;font-weight:600;text-anchor:middle;fill:#a8d8ea}
+  .id{font-size:9px;text-anchor:middle;fill:#6a8da8}
+  .sv{font-size:22px;font-weight:700;text-anchor:middle;fill:#f39c12}
+  .sl{font-size:10px;text-anchor:middle;fill:#888}
+  .fn{font-size:10px;text-anchor:middle;fill:#555}
+</style>
+<defs>
+  <linearGradient id="gSW" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#1a1a2e"/><stop offset="100%" stop-color="#16213e"/>
+  </linearGradient>
+  <linearGradient id="gCPU" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#1a1a1a"/><stop offset="100%" stop-color="#2d2d2d"/>
+  </linearGradient>
+  <linearGradient id="gCPUB" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#e94560"/><stop offset="100%" stop-color="#c23152"/>
+  </linearGradient>
+  <linearGradient id="gWB" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#f39c12"/><stop offset="50%" stop-color="#e67e22"/><stop offset="100%" stop-color="#f39c12"/>
+  </linearGradient>
+  <linearGradient id="gIO" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#0d1b2a"/><stop offset="100%" stop-color="#1b2838"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<rect width="1200" height="790" fill="#0a0a0f"/>
+
+<!-- Title -->
+<text x="600" y="32" class="t1">DE2Extra — RISC-V 全外设终端系统</text>
+<text x="600" y="52" class="t2">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) · 12 Wishbone slaves · FreeRTOS 4 tasks · 20 CLI commands</text>
+
+<!-- ====== SOFTWARE LAYER ====== -->
+<rect x="40" y="70" width="1120" height="118" rx="12" fill="url(#gSW)" stroke="#2a2a4a"/>
+<rect x="440" y="80" width="320" height="22" rx="4" fill="#0f3460"/>
+<text x="600" y="95" class="badge" fill="#a8d8ea">软件层 — FreeRTOS V11.3 + SDRAM 执行</text>
+
+<!-- Row 1: 12 chips, 82px wide, 6px gap -->
+<rect x="75" y="110" width="82" height="22" rx="4" fill="#1b4332" stroke="#2d6a4f"/>
+<text x="116" y="125" class="chip-hl">hello</text>
+<rect x="163" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="204" y="125" class="chip">crypto</text>
+<rect x="251" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="292" y="125" class="chip">ps2</text>
+<rect x="339" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="380" y="125" class="chip">snake</text>
+<rect x="427" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="468" y="125" class="chip">conway</text>
+<rect x="515" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="556" y="125" class="chip">info</text>
+<rect x="603" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="644" y="125" class="chip">riscvasm</text>
+<rect x="691" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="732" y="125" class="chip">expdemo</text>
+<rect x="779" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="820" y="125" class="chip">twm</text>
+<rect x="867" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="908" y="125" class="chip">ntt</text>
+<rect x="955" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="996" y="125" class="chip">synth</text>
+<rect x="1043" y="110" width="82" height="22" rx="4" fill="#1b4332" stroke="#2d6a4f"/>
+<text x="1084" y="125" class="chip-hl">pforth</text>
+<rect x="1131" y="110" width="90" height="22" rx="4" fill="#1b4332" stroke="#2d6a4f"/>
+<text x="1176" y="125" class="chip-hl">cryptoviz</text>
+
+<!-- Row 2: 7 chips -->
+<rect x="295" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="336" y="155" class="chip">selfcheck</text>
+<rect x="383" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="424" y="155" class="chip">stats</text>
+<rect x="471" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="512" y="155" class="chip">ver</text>
+<rect x="559" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="600" y="155" class="chip">clear</text>
+<rect x="647" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="688" y="155" class="chip">pxtest</text>
+<rect x="735" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="776" y="155" class="chip">vgadump</text>
+<rect x="823" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="864" y="155" class="chip">vgamon</text>
+
+<text x="600" y="178" font-size="10" fill="#666" text-anchor="middle">4 FreeRTOS 任务: t_uart_input / t_shell / t_active / t_status | F1=帮助 F10=退出</text>
+
+<!-- Connector arrow 1 -->
+<line x1="600" y1="190" x2="600" y2="206" stroke="#f39c12" stroke-width="2" opacity=".5"/>
+<polygon points="594,206 606,206 600,214" fill="#f39c12" opacity=".6"/>
+
+<!-- ====== CPU + BUS LAYER ====== -->
+<rect x="40" y="216" width="1120" height="340" rx="12" fill="url(#gCPU)" stroke="#3a3a3a"/>
+
+<!-- CPU block -->
+<rect x="350" y="230" width="500" height="58" rx="10" fill="url(#gCPUB)"/>
+<text x="600" y="252" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">NEORV32 RISC-V</text>
+<text x="600" y="268" font-size="10" fill="#fff" opacity=".8" text-anchor="middle">RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx + Zknd/Zkne/Zknh</text>
+<text x="600" y="280" font-size="10" fill="#fff" opacity=".8" text-anchor="middle">50MHz | IMEM 64KB | DMEM 16KB | UART 115200 | GPIO 32-bit | TRNG</text>
+
+<!-- XBUS label -->
+<rect x="370" y="298" width="460" height="18" rx="4" fill="#444"/>
+<text x="600" y="312" font-size="10" fill="#f39c12" font-family="Consolas,monospace" text-anchor="middle">XBUS Master | timeout 2048 cycles | burst cti/tag</text>
+
+<!-- Wishbone Bus bar -->
+<rect x="300" y="324" width="600" height="34" rx="8" fill="url(#gWB)"/>
+<text x="600" y="344" font-size="13" font-weight="700" fill="#1a1a1a" text-anchor="middle" letter-spacing="2">WISHBONE BUS — 1 主 / 12 从</text>
+<text x="600" y="354" font-size="9" fill="#2c2c2c" text-anchor="middle">32-bit 数据 | 组合地址解码 | wb_intercon.vhd</text>
+
+<!-- ====== PERIPHERAL GRID (6 cols × 2 rows) ====== -->
+<!-- Row 1 -->
+<rect x="64" y="370" width="172" height="62" rx="8" fill="#1b2838" stroke="#2a475e"/>
+<text x="150" y="392" class="pn" fill="#66c0f4">SDRAM</text>
+<text x="150" y="404" class="pa" fill="#66c0f4">0x01000000</text>
+<text x="150" y="416" class="pd" fill="#66c0f4">128MB | burst | async FIFO</text>
+
+<rect x="244" y="370" width="172" height="62" rx="8" fill="#2d1b38" stroke="#4a2d5e"/>
+<text x="330" y="392" class="pn" fill="#c866f4">VGA 终端</text>
+<text x="330" y="404" class="pa" fill="#c866f4">0xF0000000</text>
+<text x="330" y="416" class="pd" fill="#c866f4">80×30 文本 + 像素 RGB565</text>
+
+<rect x="424" y="370" width="172" height="62" rx="8" fill="#1b3828" stroke="#2d5e3e"/>
+<text x="510" y="392" class="pn" fill="#66f4a0">PS/2 键盘</text>
+<text x="510" y="404" class="pa" fill="#66f4a0">0xF0008000</text>
+<text x="510" y="416" class="pd" fill="#66f4a0">scancode + IRQ</text>
+
+<rect x="604" y="370" width="172" height="62" rx="8" fill="#381b1b" stroke="#5e2d2d"/>
+<text x="690" y="392" class="pn" fill="#f46666">BuildInfo</text>
+<text x="690" y="404" class="pa" fill="#f46666">0xF0009000</text>
+<text x="690" y="416" class="pd" fill="#f46666">HW/SW 版本 ROM</text>
+
+<rect x="784" y="370" width="172" height="62" rx="8" fill="#381b1b" stroke="#5e2d2d"/>
+<text x="870" y="392" class="pn" fill="#f46666">INTC</text>
+<text x="870" y="404" class="pa" fill="#f46666">0xF000A000</text>
+<text x="870" y="416" class="pd" fill="#f46666">中断控制器 (reserved)</text>
+
+<rect x="964" y="370" width="172" height="62" rx="8" fill="#2d1b38" stroke="#4a2d5e"/>
+<text x="1050" y="392" class="pn" fill="#c866f4">LCD</text>
+<text x="1050" y="404" class="pa" fill="#c866f4">0xF000B000</text>
+<text x="1050" y="416" class="pd" fill="#c866f4">HD44780 16×2</text>
+
+<!-- Row 2 -->
+<rect x="64" y="440" width="172" height="62" rx="8" fill="#1b3828" stroke="#2d5e3e"/>
+<text x="150" y="462" class="pn" fill="#66f4a0">IR 红外</text>
+<text x="150" y="474" class="pa" fill="#66f4a0">0xF000C000</text>
+<text x="150" y="486" class="pd" fill="#66f4a0">NEC 解码</text>
+
+<rect x="244" y="440" width="172" height="62" rx="8" fill="#38291b" stroke="#5e4a2d"/>
+<text x="330" y="462" class="pn" fill="#f4c866">NTT 加速器</text>
+<text x="330" y="474" class="pa" fill="#f4c866">0xF000F000</text>
+<text x="330" y="486" class="pd" fill="#f4c866">ML-KEM-512 | q=3329</text>
+
+<rect x="424" y="440" width="172" height="62" rx="8" fill="#38291b" stroke="#5e4a2d"/>
+<text x="510" y="462" class="pn" fill="#f4c866">ExpDemo</text>
+<text x="510" y="474" class="pa" fill="#f4c866">0xF0010000</text>
+<text x="510" y="486" class="pd" fill="#f4c866">13 个实验多路复用</text>
+
+<rect x="604" y="440" width="172" height="62" rx="8" fill="#38291b" stroke="#5e4a2d"/>
+<text x="690" y="462" class="pn" fill="#f4c866">Conway 引擎</text>
+<text x="690" y="474" class="pa" fill="#f4c866">0xF0011000</text>
+<text x="690" y="486" class="pd" fill="#f4c866">64×25 | LE 寄存器</text>
+
+<rect x="784" y="440" width="172" height="62" rx="8" fill="#1b2e38" stroke="#2d5a6e"/>
+<text x="870" y="462" class="pn" fill="#66e0f4">Synth 音频</text>
+<text x="870" y="474" class="pa" fill="#66e0f4">0xF0012000</text>
+<text x="870" y="486" class="pd" fill="#66e0f4">3xOSC + DX7 FM | WM8731</text>
+
+<rect x="964" y="440" width="172" height="62" rx="8" fill="#38291b" stroke="#5e4a2d"/>
+<text x="1050" y="462" class="pn" fill="#f4c866">GPU 2D</text>
+<text x="1050" y="474" class="pa" fill="#f4c866">0xF0015000</text>
+<text x="1050" y="486" class="pd" fill="#f4c866">FILL rect | burst 写</text>
+
+<!-- Legend -->
+<rect x="253" y="515" width="10" height="10" rx="2" fill="#66c0f4" stroke="#2a475e"/>
+<text x="268" y="524" font-size="10" fill="#aaa">存储</text>
+<rect x="333" y="515" width="10" height="10" rx="2" fill="#c866f4" stroke="#4a2d5e"/>
+<text x="348" y="524" font-size="10" fill="#aaa">显示</text>
+<rect x="413" y="515" width="10" height="10" rx="2" fill="#66f4a0" stroke="#2d5e3e"/>
+<text x="428" y="524" font-size="10" fill="#aaa">输入</text>
+<rect x="493" y="515" width="10" height="10" rx="2" fill="#f4c866" stroke="#5e4a2d"/>
+<text x="508" y="524" font-size="10" fill="#aaa">加速器</text>
+<rect x="593" y="515" width="10" height="10" rx="2" fill="#f46666" stroke="#5e2d2d"/>
+<text x="608" y="524" font-size="10" fill="#aaa">系统</text>
+<rect x="673" y="515" width="10" height="10" rx="2" fill="#66e0f4" stroke="#2d5a6e"/>
+<text x="688" y="524" font-size="10" fill="#aaa">音频</text>
+
+<!-- Connector arrow 2 -->
+<line x1="600" y1="556" x2="600" y2="572" stroke="#f39c12" stroke-width="2" opacity=".5"/>
+<polygon points="594,572 606,572 600,580" fill="#f39c12" opacity=".6"/>
+
+<!-- ====== BOARD I/O LAYER ====== -->
+<rect x="40" y="582" width="1120" height="110" rx="12" fill="url(#gIO)" stroke="#2a3a4a"/>
+<rect x="340" y="592" width="520" height="22" rx="4" fill="#162030"/>
+<text x="600" y="607" class="badge" fill="#a8d8ea">DE2-115 板级 I/O — Cyclone IV E (EP4CE115F29C7, 114K LEs)</text>
+
+<!-- I/O blocks: 8 × 120px, gap 16px -->
+<rect x="64" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="124" y="641" class="ion">VGA 显示器</text>
+<text x="124" y="655" class="id">640×480@60Hz</text>
+<text x="124" y="667" class="id">RGB565 像素 + 文本</text>
+
+<rect x="200" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="260" y="641" class="ion">PS/2 键盘</text>
+<text x="260" y="655" class="id">主输入源</text>
+<text x="260" y="667" class="id">Scancode Set 2</text>
+
+<rect x="336" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="396" y="641" class="ion">WM8731 音频</text>
+<text x="396" y="655" class="id">I2S 24-bit DAC</text>
+<text x="396" y="667" class="id">I2C 配置</text>
+
+<rect x="472" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="532" y="641" class="ion">7-SEG ×8</text>
+<text x="532" y="655" class="id">HEX0–HEX7</text>
+<text x="532" y="667" class="id">Heap% / Uptime</text>
+
+<rect x="608" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="668" y="641" class="ion">LED ×24</text>
+<text x="668" y="655" class="id">LEDR 16 + LEDG 8</text>
+<text x="668" y="667" class="id">程序状态指示</text>
+
+<rect x="744" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="804" y="641" class="ion">LCD 16×2</text>
+<text x="804" y="655" class="id">HD44780</text>
+<text x="804" y="667" class="id">DE2Extra Status</text>
+
+<rect x="880" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="940" y="641" class="ion">IR 红外</text>
+<text x="940" y="655" class="id">NEC 协议</text>
+<text x="940" y="667" class="id">遥控器输入</text>
+
+<rect x="1016" y="620" width="120" height="55" rx="8" fill="#162030" stroke="#2a3a50"/>
+<text x="1076" y="641" class="ion">UART 串口</text>
+<text x="1076" y="655" class="id">COM10 115200</text>
+<text x="1076" y="667" class="id">调试 + 上传</text>
+
+<!-- ====== STATS BAR ====== -->
+<rect x="200" y="706" width="800" height="52" rx="10" fill="#ffffff" fill-opacity=".03" stroke="#ffffff" stroke-opacity=".06"/>
+<text x="275" y="730" class="sv">12</text>
+<text x="275" y="745" class="sl">Wishbone 外设</text>
+<text x="405" y="730" class="sv">20</text>
+<text x="405" y="745" class="sl">CLI 命令</text>
+<text x="535" y="730" class="sv">128</text>
+<text x="535" y="745" class="sl">Git 提交</text>
+<text x="665" y="730" class="sv">12</text>
+<text x="665" y="745" class="sl">开发天数</text>
+<text x="795" y="730" class="sv">7h+</text>
+<text x="795" y="745" class="sl">长稳无崩溃</text>
+<text x="925" y="730" class="sv">~24%</text>
+<text x="925" y="745" class="sl">FPGA 资源</text>
+
+<!-- Footer -->
+<text x="600" y="778" class="fn">Boot mode 0: 2KB bootloader (IMEM) → UART upload → SDRAM exec (0x01000000) | FreeRTOS heap @ 0x01900000 | Framebuffer @ 0x01800000</text>
+</svg>

@@ -76,16 +76,17 @@
 typedef enum {
     PROG_SHELL = 0,
     PROG_HELLO,
-    PROG_MEMTEST,
     PROG_CRYPTO,
     PROG_PS2,
     PROG_SNAKE,
-    PROG_LIFE,
-    PROG_DASHBOARD,
     PROG_INFO,
     PROG_MONITOR,
     PROG_DEMO,
     PROG_TWM,
+    PROG_CONWAY,
+    PROG_NTT,
+    PROG_SYNTH,
+    PROG_FORTH,
     PROG_CRYPTOVIZ,
     PROG_COUNT
 } prog_id_t;
@@ -97,15 +98,17 @@ typedef enum {
 static void shell_init(void);
 
 extern const program_t prog_hello;
-extern const program_t prog_memtest;
 extern const program_t prog_crypto;
 extern const program_t prog_ps2;
 extern const program_t prog_snake;
-extern const program_t prog_life;
 extern const program_t prog_info;
 extern const program_t prog_monitor;
 extern const program_t prog_demo;
 extern const program_t prog_twm;
+extern const program_t prog_conway;
+extern const program_t prog_ntt;
+extern const program_t prog_synth;
+extern const program_t prog_forth;
 extern const program_t prog_cryptoviz;
 
 /* Dummy strcmp for NEORV32 target (no libc) */
@@ -123,16 +126,17 @@ static int strcmp(const char *a, const char *b) {
 static const program_t *programs[PROG_COUNT] = {
     [PROG_SHELL]     = NULL,   /* shell is built-in */
     [PROG_HELLO]     = &prog_hello,
-    [PROG_MEMTEST]   = &prog_memtest,
     [PROG_CRYPTO]    = &prog_crypto,
     [PROG_PS2]       = &prog_ps2,
     [PROG_SNAKE]     = &prog_snake,
-    [PROG_LIFE]      = &prog_life,
-    [PROG_DASHBOARD] = &prog_info,
     [PROG_INFO]      = &prog_info,
     [PROG_MONITOR]   = &prog_monitor,
     [PROG_DEMO]      = &prog_demo,
     [PROG_TWM]       = &prog_twm,
+    [PROG_CONWAY]    = &prog_conway,
+    [PROG_NTT]       = &prog_ntt,
+    [PROG_SYNTH]     = &prog_synth,
+    [PROG_FORTH]     = &prog_forth,
     [PROG_CRYPTOVIZ] = &prog_cryptoviz,
 };
 
@@ -295,7 +299,7 @@ static int global_key_hotkeys_enabled(void) {
      * selected hardware experiment, so shell-level shortcuts must not steal
      * those presses.
      */
-    return (active_prog != PROG_DASHBOARD) && (active_prog != PROG_DEMO);
+    return (active_prog != PROG_DEMO);
 }
 
 static void board_status_refresh(void) {
@@ -308,10 +312,6 @@ static void board_status_refresh(void) {
     uint16_t data = (uint16_t)(((selected & 0x0fu) << 12) |
                                ((key_bits & 0x07u) << 8) |
                                (uint32_t)last_uart_char);
-
-    if (active_prog == PROG_MEMTEST) {
-        return; /* memtest owns the LCD/LED fail/pass protocol */
-    }
 
     if (active_prog == PROG_SHELL) {
         board_status_set_program((uint8_t)active_prog, BOARD_STATE_READY, flags, data);
@@ -420,22 +420,23 @@ static void shell_input(char c) {
         if (shell_line_pos == 0) {
             /* empty line — show prompt again */
         } else if (strcmp(shell_line, "help") == 0) {
-            vga_puts("Commands: hello, memtest, crypto, ps2, snake, conwaylife, info, riscvasm, expdemo, twm, lcdmon, cls, quit\n",
+            vga_puts("Commands: hello, crypto, ps2, snake, conway, ntt, synth, info, riscvasm, expdemo, twm, pforth, cryptoviz, cls, quit\n",
                      VGA_GREEN);
         } else if (strcmp(shell_line, "hello") == 0) {
             enter_program(PROG_HELLO);
-        } else if (strcmp(shell_line, "memtest") == 0 || strcmp(shell_line, "sdram") == 0 ||
-                   strcmp(shell_line, "sdram_test") == 0) {
-            enter_program(PROG_MEMTEST);
         } else if (strcmp(shell_line, "crypto") == 0) {
             enter_program(PROG_CRYPTO);
         } else if (strcmp(shell_line, "ps2") == 0 || strcmp(shell_line, "kbd") == 0) {
             enter_program(PROG_PS2);
         } else if (strcmp(shell_line, "snake") == 0) {
             enter_program(PROG_SNAKE);
-        } else if (strcmp(shell_line, "conwaylife") == 0 || strcmp(shell_line, "life") == 0) {
-            enter_program(PROG_LIFE);
-        } else if (strcmp(shell_line, "info") == 0 || strcmp(shell_line, "dash") == 0) {
+        } else if (strcmp(shell_line, "conway") == 0) {
+            enter_program(PROG_CONWAY);
+        } else if (strcmp(shell_line, "ntt") == 0) {
+            enter_program(PROG_NTT);
+        } else if (strcmp(shell_line, "synth") == 0) {
+            enter_program(PROG_SYNTH);
+        } else if (strcmp(shell_line, "info") == 0) {
             enter_program(PROG_INFO);
         } else if (strcmp(shell_line, "riscvasm") == 0 ||
                    strcmp(shell_line, "monitor") == 0 ||
@@ -445,6 +446,8 @@ static void shell_input(char c) {
             enter_program(PROG_DEMO);
         } else if (strcmp(shell_line, "twm") == 0) {
             enter_program(PROG_TWM);
+        } else if (strcmp(shell_line, "pforth") == 0 || strcmp(shell_line, "forth") == 0) {
+            enter_program(PROG_FORTH);
         } else if (strncmp(shell_line, "cryptoviz", 9) == 0) {
             /* Parse: cryptoviz <algo> [arg1] [arg2] */
             {
@@ -569,14 +572,14 @@ static void handle_ir(uint8_t cmd) {
             return_to_shell();
             return; /* 0 / RETURN */
         case IR_BTN_1: new_prog = PROG_HELLO;     break;
-        case IR_BTN_2: new_prog = PROG_MEMTEST;   break;
-        case IR_BTN_3: new_prog = PROG_CRYPTO;    break;
-        case IR_BTN_4: new_prog = PROG_PS2;       break;
-        case IR_BTN_5: new_prog = PROG_SNAKE;     break;
-        case IR_BTN_6: new_prog = PROG_LIFE;      break;
+        case IR_BTN_2: new_prog = PROG_CRYPTO;    break;
+        case IR_BTN_3: new_prog = PROG_PS2;       break;
+        case IR_BTN_4: new_prog = PROG_SNAKE;     break;
+        case IR_BTN_5: new_prog = PROG_CONWAY;    break;
+        case IR_BTN_6: new_prog = PROG_NTT;       break;
         case IR_BTN_7: new_prog = PROG_INFO;      break;
-        case IR_BTN_8: new_prog = PROG_INFO;      break;
-        case IR_BTN_9: new_prog = PROG_MONITOR;   break;
+        case IR_BTN_8: new_prog = PROG_MONITOR;   break;
+        case IR_BTN_9: new_prog = PROG_SYNTH;     break;
         case IR_BTN_A: new_prog = PROG_DEMO;      break;
         case IR_BTN_CH_DN:
             if (active_prog > 0) {

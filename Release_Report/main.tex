@@ -31,7 +31,7 @@
 以 NEORV32 软核处理器~\cite{neorv32}为核心，通过 Wishbone 总线~\cite{wishbone}连接 12 个自定义外设（SDRAM 控制器、VGA 文本/像素终端、PS/2 键盘、音频合成器、GPU 2D 加速器等），
 运行 FreeRTOS 实时操作系统~\cite{freertos}，通过 UART bootloader 从 SDRAM 执行用户固件。
 
-系统提供 18 条 shell 命令，包括：硬件加速的 Conway 生命游戏~\cite{conway1970game}、Snake 双人游戏、TWM 像素窗口管理器、AES/SHA/SM4 密码学基准测试、NTT 数论变换加速器、
+系统提供 20 条 shell 命令，包括：硬件加速的 Conway 生命游戏~\cite{conway1970game}、Snake 双人游戏、TWM 像素窗口管理器、AES/SHA/SM4 密码学基准测试、NTT 数论变换加速器、
 13 个课程实验的硬件多路复用器、RISC-V 汇编监视器等。所有交互式程序统一 F1 帮助 / F10 退出操作逻辑。
 
 项目历时 12 天、110 余次提交，覆盖 RTL 设计、固件开发、RTOS 移植、硬件加速器设计。
@@ -307,7 +307,7 @@ CPU 执行一轮约 10ms，硬件约 100$\mu$s，加速比约 100$\times$。
 
 \subsection{Shell 命令}
 
-系统提供 18 条 shell 命令，分为程序命令和工具命令两类。
+系统提供 20 条 shell 命令，分为程序命令和工具命令两类。
 
 \begin{table}[!htbp]
     \centering
@@ -520,7 +520,7 @@ AI 加速了重复性代码的编写（Wishbone 从接口、shell 命令注册�
 \begin{itemize}
     \item 12 个 Wishbone 外设（含 3 个硬件加速器）
     \item FreeRTOS 实时操作系统（4 任务调度）
-    \item 18 条 shell 命令
+    \item 20 条 shell 命令
     \item VGA 文本 + 像素双模式图形系统
     \item PS/2 键盘 + UART 双路输入
     \item 13 个课程实验的硬件多路复用

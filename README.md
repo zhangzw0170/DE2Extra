@@ -39,7 +39,7 @@ DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 
 ## 系统架构
 
 <p align="center">
-  <img src="doc/promo/architecture.html" alt="系统架构图">
+  <img src="doc/promo/architecture.svg" alt="系统架构图">
 </p>
 
 详见: [交互式架构图](doc/promo/architecture.html) · [演示文稿](doc/promo/slides.html)
@@ -62,11 +62,11 @@ DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 
 
 完整板级验证状态: [`doc/phases/de2os-rtos-status.md`](doc/phases/de2os-rtos-status.md)
 
-## CLI 命令 (18 + help)
+## CLI 命令 (20 + help)
 
 **交互程序** (F1=帮助, F10=退出):
 
-`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · `synth`
+`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · `synth` · `pforth` · `cryptoviz`
 
 **工具命令**:
 

@@ -242,3 +242,13 @@ ThrowCode sdResizeFile( FileStream * File, uint64_t NewSize )
 
 #endif
 
+/* sdResizeFile — not in the stdio section, provide a minimal impl */
+#ifndef PF_NO_FILEIO
+ThrowCode sdResizeFile(FileStream *File, uint64_t NewSize)
+{
+    (void)File;
+    (void)NewSize;
+    return THROW_RESIZE_FILE;
+}
+#endif
+

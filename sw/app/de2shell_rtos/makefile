@@ -78,6 +78,7 @@ APP_SRC += $(DE2SHELL_DIR)/gui.c
 APP_SRC += $(DE2SHELL_DIR)/gui_widgets.c
 APP_SRC += $(DE2SHELL_DIR)/twm.c
 APP_SRC += $(DE2SHELL_DIR)/ps2_decoder.c
+APP_SRC += $(DE2SHELL_DIR)/crypto_viz.c
 
 # de2shell HAL layer
 APP_SRC += $(DE2SHELL_DIR)/vga_hal.c

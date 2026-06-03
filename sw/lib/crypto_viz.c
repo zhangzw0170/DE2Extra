@@ -314,18 +314,28 @@ static void cv_init(void) {
     cv_key_q = 0;
     cv_auto_tick = 0;
     fb_init();
+    fb_clear(CV_BG);  /* wipe any previous framebuffer content */
+    fb_present();
 
     if (strcmp(g_arg_algo, "aes") == 0) {
         uint8_t key[16], pt[16];
-        if (cv_hex(g_arg_a1, key, 16)!=16 || cv_hex(g_arg_a2, pt, 16)!=16) {
-            cv_done = 1; return;
-        }
+        static const uint8_t def_key[16] = {0x2B,0x7E,0x15,0x16,0x28,0xAE,0xD2,0xA6,
+                                             0xAB,0xF7,0x15,0x88,0x09,0xCF,0x4F,0x3C};
+        static const uint8_t def_pt[16]  = {0x6B,0xC1,0xBE,0xE2,0x2E,0x40,0x9F,0x96,
+                                             0xE9,0x3D,0x7E,0x11,0x73,0x93,0x17,0x2A};
+        int got_key = (cv_hex(g_arg_a1, key, 16) == 16);
+        int got_pt   = (cv_hex(g_arg_a2, pt, 16) == 16);
+        if (!got_key) memcpy(key, def_key, 16);
+        if (!got_pt)  memcpy(pt, def_pt, 16);
         cv_mode = CV_AES;
         aes_precompute(&cv_state.aes, key, pt);
     } else if (strcmp(g_arg_algo, "sha256") == 0) {
         uint8_t msg[64];
         int ml = cv_hex(g_arg_a1, msg, 64);
-        if (ml <= 0) { cv_done = 1; return; }
+        if (ml <= 0) {
+            static const char def_msg[] = "616263"; /* "abc" */
+            ml = cv_hex(def_msg, msg, 64);
+        }
         cv_mode = CV_SHA;
         sha_precompute(&cv_state.sha, msg, ml);
     } else {

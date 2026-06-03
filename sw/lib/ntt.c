@@ -303,6 +303,7 @@ static void cmd_diag(void) {
     vga_puts(ok ? "  Overall: PASS\n" : "  Overall: FAIL\n",
              ok ? VGA_GREEN : VGA_RED);
 }
+#endif /* !LOCAL_BUILD */
 
 static void cmd_show_help(void) {
     vga_puts("NTT: Number Theoretic Transform\n", VGA_CYAN);

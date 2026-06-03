@@ -21,6 +21,7 @@
 #include "gpio_hal.h"
 #include "board_status.h"
 #include "ps2_decoder.h"
+#include "crypto_viz.h"
 
 #define BAUD_RATE 115200
 #define APP_BOOT_ADDR 0x01000000u
@@ -59,6 +60,7 @@ extern const program_t prog_conway;
 extern const program_t prog_ntt;
 extern const program_t prog_synth;
 extern const program_t prog_forth;
+extern const program_t prog_cryptoviz;
 
 uint8_t last_ir_cmd = 0;
 
@@ -79,6 +81,7 @@ typedef enum {
     PROG_NTT,
     PROG_SYNTH,
     PROG_FORTH,
+    PROG_CRYPTOVIZ,
     PROG_COUNT
 } prog_id_t;
 
@@ -99,7 +102,8 @@ static const program_t *programs[PROG_COUNT] = {
     [PROG_CONWAY]  = &prog_conway,
     [PROG_NTT]      = &prog_ntt,
     [PROG_SYNTH]    = &prog_synth,
-    [PROG_FORTH]    = &prog_forth
+    [PROG_FORTH]    = &prog_forth,
+    [PROG_CRYPTOVIZ] = &prog_cryptoviz
 };
 
 static volatile prog_id_t active_prog = PROG_SHELL;
@@ -321,6 +325,7 @@ static configSTACK_DEPTH_TYPE active_prog_stack_words(prog_id_t pid) {
         case PROG_MONITOR:
         case PROG_NTT:
         case PROG_FORTH:
+        case PROG_CRYPTOVIZ:
             return 1024;
         case PROG_DEMO:
             return 896;
@@ -403,6 +408,17 @@ PROG_CMD(conway,  PROG_CONWAY)
 PROG_CMD(ntt,     PROG_NTT)
 PROG_CMD(synth,   PROG_SYNTH)
 PROG_CMD(pforth,   PROG_FORTH)
+
+static BaseType_t cli_cryptoviz(char *buf, size_t len, const char *cmd) {
+    char *p = buf;
+    (void)len;
+    p += strcpy_local(p, "Starting cryptoviz...\r\n");
+    crypto_viz_set_args("aes",
+        "2B7E151628AED2A6ABF7158809CF4F3C",
+        "6BC1BEE22E409F96E93D7E117393172A");
+    cli_launch_req = PROG_CRYPTOVIZ;
+    return pdFALSE;
+}
 
 static void buf_replace_tabs(char *buf) {
     char out[512];
@@ -731,6 +747,8 @@ static const CLI_Command_Definition_t cmd_synth_def =
     {"synth", "synth:    Audio synth\r\n", cli_synth, 0};
 static const CLI_Command_Definition_t cmd_pforth_def =
     {"pforth", "pforth:   pForth interpreter\r\n", cli_pforth, 0};
+static const CLI_Command_Definition_t cmd_cryptoviz_def =
+    {"cryptoviz", "cryptoviz:AES/SHA step viz\r\n", cli_cryptoviz, 0};
 
 static BaseType_t cli_selfcheck(char *buf, size_t len, const char *cmd) {
     (void)cmd;
@@ -957,6 +975,7 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_clear_def);
     FreeRTOS_CLIRegisterCommand(&cmd_conway_def);
     FreeRTOS_CLIRegisterCommand(&cmd_crypto_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_cryptoviz_def);
     FreeRTOS_CLIRegisterCommand(&cmd_expdemo_def);
     FreeRTOS_CLIRegisterCommand(&cmd_hello_def);
     FreeRTOS_CLIRegisterCommand(&cmd_info_def);

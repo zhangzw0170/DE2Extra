@@ -22,7 +22,7 @@
 
 ## Overview
 
-DE2Extra is a complete RISC-V SoC system built around the [NEORV32](https://github.com/stnolting/neorv32) soft core, running on the Altera DE2-115 (Cyclone IV E, 114K LEs) FPGA. Around the open-source CPU core, we developed 12 Wishbone peripheral IPs, SoC interconnect, FreeRTOS firmware, and 18 CLI applications.
+DE2Extra is a complete RISC-V SoC system built around the [NEORV32](https://github.com/stnolting/neorv32) soft core, running on the Altera DE2-115 (Cyclone IV E, 114K LEs) FPGA. Around the open-source CPU core, we developed 12 Wishbone peripheral IPs, SoC interconnect, FreeRTOS firmware, and 20 CLI applications.
 
 | | |
 |---|---|
@@ -39,7 +39,7 @@ DE2Extra is a complete RISC-V SoC system built around the [NEORV32](https://gith
 ## System Architecture
 
 <p align="center">
-  <img src="doc/promo/architecture.html" alt="System Architecture">
+  <img src="doc/promo/architecture.svg" alt="System Architecture">
 </p>
 
 See also: [Interactive Architecture Diagram](doc/promo/architecture.html) · [Presentation Slides](doc/promo/slides.html)
@@ -62,11 +62,11 @@ See also: [Interactive Architecture Diagram](doc/promo/architecture.html) · [Pr
 
 Full board verification status: [`doc/phases/de2os-rtos-status.md`](doc/phases/de2os-rtos-status.md)
 
-## CLI Commands (18 + help)
+## CLI Commands (20 + help)
 
 **Interactive programs** (F1=help, F10=quit):
 
-`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · `synth`
+`hello` · `crypto` · `ps2` · `snake` · `conway` · `info` · `riscvasm` · `expdemo` · `twm` · `ntt` · `synth` · `pforth` · `cryptoviz`
 
 **Utility commands**:
 
