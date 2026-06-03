@@ -111,7 +111,7 @@ Per-peripheral board status and known issues: `doc/phases/de2os-rtos-status.md`.
 | `sw/app/crypto_cli/` | 加密库: AES/SHA/SM4 (RTOS makefile 直接编译) |
 | `sw/app/common/` | 公共头文件 |
 
-**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~156KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~212KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
 
 CLI commands (20 + help builtin):
 
@@ -209,4 +209,4 @@ When running a non-shell program, `board_status_set_program()` shows PROG_ID/sta
 
 ## Project Status
 
-**V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). Board verified 2026-06-02, 5 known bugs. Details: `doc/phases/de2os-rtos-status.md`.
+**V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). Board verified 2026-06-03, 16/18 modules verified, 2 remaining (NTT compute error, synth audio sub-issues). Details: `doc/phases/de2os-rtos-status.md`.
