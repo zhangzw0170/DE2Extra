@@ -297,7 +297,7 @@ html { scroll-behavior: auto; }
     <h1 class="slide-title reveal delay-1">DE2<span class="title-accent">Extra</span></h1>
     <p class="slide-subtitle reveal delay-2">
       在 DE2-115 开发板上构建的完整 RISC-V 计算机<br>
-      NEORV32 软核 · 12 Wishbone 外设 · FreeRTOS · VGA 终端 · PS/2 键盘
+      NEORV32 软核 · 10 active Wishbone 外设 · FreeRTOS · VGA 终端 · PS/2 键盘
     </p>
     <div class="author-line reveal delay-3">
       <span class="name">[姓名]</span> &nbsp;|&nbsp; [学号] &nbsp;|&nbsp; [课程名称] &nbsp;|&nbsp; 2026 年 6 月
@@ -311,13 +311,13 @@ html { scroll-behavior: auto; }
     <div class="section-tag reveal">Overview</div>
     <h2 class="slide-title reveal delay-1" style="font-size:var(--h2-size);">项目概览</h2>
     <p class="slide-subtitle reveal delay-2" style="max-width:min(85vw,750px);">
-      DE2Extra 是一个基于开源 NEORV32 RISC-V 处理器核的完整 SoC 系统，运行在 Altera DE2-115 FPGA 上。在本项目中，围绕开源 CPU 核心自研了 12 个 Wishbone 外设 IP、SoC 互联、FreeRTOS 固件及 18 个命令行应用——从 RTL 到 C 代码的全栈工程实践。
+      DE2Extra 是一个基于开源 NEORV32 RISC-V 处理器核的完整 SoC 系统，运行在 Altera DE2-115 FPGA 上。在本项目中，围绕开源 CPU 核心自研了 10 active Wishbone 外设 IP、SoC 互联、FreeRTOS 固件及 21+ 命令行应用——从 RTL 到 C 代码的全栈工程实践。
     </p>
     <div class="stat-row reveal delay-3" style="margin-top:var(--content-gap);">
       <div class="stat-item"><div class="stat-val c-accent">128</div><div class="stat-lbl">Git 提交</div></div>
       <div class="stat-item"><div class="stat-val c-cyan">12</div><div class="stat-lbl">开发天数</div></div>
-      <div class="stat-item"><div class="stat-val c-green">12</div><div class="stat-lbl">Wishbone 外设</div></div>
-      <div class="stat-item"><div class="stat-val c-purple">20</div><div class="stat-lbl">CLI 命令</div></div>
+      <div class="stat-item"><div class="stat-val c-green">10</div><div class="stat-lbl">Wishbone 外设</div></div>
+      <div class="stat-item"><div class="stat-val c-purple">21+</div><div class="stat-lbl">CLI 命令</div></div>
       <div class="stat-item"><div class="stat-val c-red">~24%</div><div class="stat-lbl">FPGA 资源</div></div>
     </div>
   </div>
@@ -336,7 +336,7 @@ html { scroll-behavior: auto; }
         <div class="sw-chips">
           <span class="sw-chip">hello</span><span class="sw-chip">snake</span>
           <span class="sw-chip">conway</span><span class="sw-chip">crypto</span>
-          <span class="sw-chip">synth</span><span class="sw-chip">expdemo</span>
+          <span class="sw-chip">synth</span><span class="sw-chip">postverify</span><span class="sw-chip">expdemo</span>
           <span class="sw-chip">pforth</span><span class="sw-chip">cryptoviz</span><span class="sw-chip">+10</span>
         </div>
       </div>
@@ -349,15 +349,15 @@ html { scroll-behavior: auto; }
       <div class="arch-conn"></div>
       <!-- Wishbone bus -->
       <div class="arch-bus-bar">
-        <span class="bus-label">WISHBONE BUS &mdash; 1 主 / 12 从 &mdash; 32-bit</span>
+        <span class="bus-label">WISHBONE BUS &mdash; 1 主 / 12 从 (10 active) &mdash; 32-bit</span>
       </div>
       <div class="arch-conn"></div>
       <!-- Peripherals — proportional widths -->
       <div class="arch-periph-bar">
         <div class="apb-block apb-sdram"><div class="apb-name">SDRAM</div><div class="apb-detail">128MB</div></div>
         <div class="apb-block apb-vga"><div class="apb-name">VGA</div><div class="apb-detail">80×30</div></div>
-        <div class="apb-block apb-synth"><div class="apb-name">Synth</div><div class="apb-detail">3×OSC</div></div>
-        <div class="apb-block apb-ntt"><div class="apb-name">NTT</div><div class="apb-detail">ML-KEM</div></div>
+        <div class="apb-block apb-synth"><div class="apb-name">Synth</div><div class="apb-detail">disabled</div></div>
+        <div class="apb-block apb-ntt"><div class="apb-name">NTT</div><div class="apb-detail">SW only</div></div>
         <div class="apb-block apb-conway"><div class="apb-name">Conway</div><div class="apb-detail">64×25</div></div>
         <div class="apb-block apb-gpu"><div class="apb-name">GPU</div><div class="apb-detail">2D</div></div>
         <div class="apb-block apb-expdemo"><div class="apb-name">Exp</div><div class="apb-detail">13exp</div></div>
@@ -385,7 +385,7 @@ html { scroll-behavior: auto; }
   <div class="footnote reveal">DE2-115 User Manual: terasic.com<br>RISC-V Privileged Spec: riscv.org</div>
   <div class="slide-content">
     <div class="section-tag reveal">Hardware</div>
-    <h2 class="slide-title reveal delay-1" style="font-size:var(--h2-size);text-align:center;">12 Wishbone 外设</h2>
+    <h2 class="slide-title reveal delay-1" style="font-size:var(--h2-size);text-align:center;">10 active Wishbone 外设</h2>
     <div class="grid-4 reveal delay-2" style="margin-top:var(--element-gap);">
       <div class="card" style="text-align:center;"><span class="pdot pdot-memory"></span><strong>SDRAM</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">128MB burst</span></div>
       <div class="card" style="text-align:center;"><span class="pdot pdot-display"></span><strong>VGA 终端</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">80×30 + RGB565</span></div>
@@ -393,10 +393,10 @@ html { scroll-behavior: auto; }
       <div class="card" style="text-align:center;"><span class="pdot pdot-display"></span><strong>LCD 16×2</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">HD44780</span></div>
       <div class="card" style="text-align:center;"><span class="pdot pdot-input"></span><strong>IR 红外</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">NEC 解码</span></div>
       <div class="card" style="text-align:center;"><span class="pdot pdot-sys"></span><strong>BuildInfo</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">HW/SW 版本</span></div>
-      <div class="card" style="text-align:center;"><span class="pdot pdot-accel"></span><strong>NTT 加速器</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">ML-KEM-512</span></div>
+      <div class="card" style="text-align:center;"><span class="pdot pdot-accel"></span><strong>NTT 加速器</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">ML-KEM-512 (SW only)</span></div>
       <div class="card" style="text-align:center;"><span class="pdot pdot-accel"></span><strong>ExpDemo</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">13 个实验</span></div>
       <div class="card" style="text-align:center;"><span class="pdot pdot-accel"></span><strong>Conway 引擎</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">64×25 HW</span></div>
-      <div class="card" style="text-align:center;"><span class="pdot pdot-audio"></span><strong>Synth 音频</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">3×OSC + FM</span></div>
+      <div class="card" style="text-align:center;"><span class="pdot pdot-audio"></span><strong>Synth 音频</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">3×OSC + FM (HW removed)</span></div>
       <div class="card" style="text-align:center;"><span class="pdot pdot-accel"></span><strong>GPU 2D</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">FILL burst</span></div>
       <div class="card" style="text-align:center;"><span class="pdot pdot-sys"></span><strong>INTC</strong><br><span style="font-size:var(--small-size);color:var(--text-dim);">reserved</span></div>
     </div>
@@ -423,19 +423,20 @@ html { scroll-behavior: auto; }
         <ul class="bullet-list">
           <li>4 任务: uart_input / shell / active / status</li>
           <li>PS/2 键盘主输入 + UART 双路接收</li>
-          <li>SDRAM 执行 @ 0x01000000 (156KB 固件)</li>
+          <li>SDRAM 执行 @ 0x01000000 (~207KB 固件)</li>
           <li>Boot mode 0: 2KB bootloader → UART 上传</li>
         </ul>
       </div>
       <div class="card">
-        <h3 style="font-size:var(--h3-size);margin:0 0 var(--element-gap) 0;color:var(--accent2);">20 CLI 命令</h3>
+        <h3 style="font-size:var(--h3-size);margin:0 0 var(--element-gap) 0;color:var(--accent2);">21+ CLI 命令</h3>
         <div style="display:flex;flex-wrap:wrap;gap:5px;">
           <span class="chip">hello</span><span class="chip">crypto</span><span class="chip">ps2</span>
           <span class="chip">snake</span><span class="chip">conway</span><span class="chip">info</span>
           <span class="chip">riscvasm</span><span class="chip">expdemo</span><span class="chip">twm</span>
           <span class="chip">ntt</span><span class="chip">synth</span><span class="chip">pforth</span><span class="chip">cryptoviz</span>
           <span class="chip">selfcheck</span><span class="chip">stats</span><span class="chip">ver</span>
-          <span class="chip">clear</span><span class="chip">pxtest</span><span class="chip">vgadump</span>
+          <span class="chip">clear</span><span class="chip">pxtest</span><span class="chip">vgadump</span><span class="chip">vgamon</span>
+          <span class="chip">postverify</span>
         </div>
         <p style="font-size:var(--small-size);color:var(--text-dim);margin-top:var(--element-gap);">
           交互程序: F1=帮助 F10=退出
@@ -542,7 +543,7 @@ html { scroll-behavior: auto; }
           <li>AES-128 加解密: <strong class="c-accent">107.6×</strong> 硬件加速</li>
           <li>SHA-256 哈希 + SM4 国密对称加密</li>
           <li>VGA 可视化: 实时显示加密轮次状态</li>
-          <li>NTT 加速器: ML-KEM-512 格密码 (q=3329)</li>
+          <li>NTT 加速器: ML-KEM-512 格密码 (q=3329, SW only)</li>
         </ul>
       </div>
     </div>
@@ -567,7 +568,7 @@ html { scroll-behavior: auto; }
         </p>
       </div>
       <div>
-        <h3 style="font-size:var(--h3-size);margin:0 0 var(--element-gap) 0;color:var(--accent2);">Synth — 音频合成器</h3>
+        <h3 style="font-size:var(--h3-size);margin:0 0 var(--element-gap) 0;color:var(--accent2);">Synth — 音频合成器 (disabled)</h3>
         <div class="footnote" style="position:static;margin-top:auto;">WM8731 Datasheet: cirrus.com</div>
         <div class="img-placeholder" style="min-height:min(30vh, 240px);">
           <div class="ph-icon">🎹</div>
@@ -591,7 +592,7 @@ html { scroll-behavior: auto; }
       <div class="perf-card"><div class="pv c-accent">50</div><div class="pl">MHz 主频</div><div class="ps">RV32IMC + Zk*</div></div>
       <div class="perf-card"><div class="pv c-cyan">~24%</div><div class="pl">FPGA 资源</div><div class="ps">27K / 114K LEs</div></div>
       <div class="perf-card"><div class="pv c-green">7h+</div><div class="pl">长稳无崩溃</div><div class="ps">连续运行测试</div></div>
-      <div class="perf-card"><div class="pv c-purple">156</div><div class="pl">KB 固件</div><div class="ps">SDRAM 执行</div></div>
+      <div class="perf-card"><div class="pv c-purple">~207</div><div class="pl">KB 固件</div><div class="ps">SDRAM 执行</div></div>
       <div class="perf-card"><div class="pv c-accent">107×</div><div class="pl">AES 加速比</div><div class="ps">硬件 vs 软件</div></div>
       <div class="perf-card"><div class="pv c-red">~25s</div><div class="pl">增量部署</div><div class="ps">编译 + 上传</div></div>
     </div>
@@ -658,7 +659,7 @@ html { scroll-behavior: auto; }
       <div class="card" style="text-align:center;">
         <div style="font-size:28px;margin-bottom:8px;">🔌</div>
         <div style="font-size:var(--h3-size);font-weight:600;">Bus</div>
-        <div style="font-size:var(--small-size);color:var(--text-dim);margin-top:6px;">Wishbone B4<br>1 Master / 12 Slave<br>32-bit</div>
+        <div style="font-size:var(--small-size);color:var(--text-dim);margin-top:6px;">Wishbone B4<br>1 Master / 12 Slave (10 active)<br>32-bit</div>
       </div>
       <div class="card" style="text-align:center;">
         <div style="font-size:28px;margin-bottom:8px;">🖥️</div>

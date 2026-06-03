@@ -317,20 +317,18 @@ static void render_tile(tile_t *t) {
         uint16_t frame_c = t->focused ? FB_WHITE : FB_DKGRAY;
         gfx_rect(t->x, t->y, t->w, t->h, frame_c);
 
-        /* Title bar */
-        uint16_t bg = t->active ? FB_BLUE : FB_GRAY;
+        /* Title bar — dark overlay to keep readability over gradient */
+        uint16_t bg = t->active ? 0x0841 : 0x2104;
         gfx_fill_rect(t->x + 1, t->y + 1, t->w - 2, TITLE_H, bg);
 
         if (t->title[0])
-            gfx_text(t->x + 4, t->y + 2, t->title, FB_WHITE, 0xFFFF);
+            gfx_text(t->x + 4, t->y + 2, t->title, FB_YELLOW, 0xFFFF);
 
-        /* Content area */
+        /* Content area — no fill, gradient shows through */
         int cx = t->x + 1, cy = t->y + 1 + TITLE_H;
         int cw = t->w - 2, ch = t->h - 2 - TITLE_H;
-        if (cw > 0 && ch > 0) {
-            gfx_fill_rect(cx, cy, cw, ch, FB_BLACK);
-            if (panel_render_fn) panel_render_fn(t, cx, cy, cw, ch);
-        }
+        if (cw > 0 && ch > 0 && panel_render_fn)
+            panel_render_fn(t, cx, cy, cw, ch);
     } else {
         /* Separator */
         if (t->type == TILE_SPLIT_H) {
@@ -348,23 +346,21 @@ static void render_tile(tile_t *t) {
 }
 
 static void twm_draw_bg(void) {
-    int n = 64;
+    /* Smooth gradient: R/G/B computed directly from horizontal position.
+     * Left=blue, middle=cyan/green, right=red. 50% brightness for desktop. */
+    int n = 80;
     int sw = FB_W / n;
     for (int i = 0; i < n; i++) {
-        int hue = i * 6 / n;
-        int f = (i * 6 * 255 / n) % 256;
-        uint8_t r, g, b;
-        switch (hue) {
-            case 0: r = 255; g = (uint8_t)f;     b = 0;   break;
-            case 1: r = (uint8_t)(255-f); g = 255; b = 0;   break;
-            case 2: r = 0;   g = 255; b = (uint8_t)f;     break;
-            case 3: r = 0;   g = (uint8_t)(255-f); b = 255; break;
-            case 4: r = (uint8_t)f;     g = 0;   b = 255; break;
-            default: r = 255; g = 0;   b = (uint8_t)(255-f); break;
-        }
-        r = (uint8_t)(r * 2 / 5);
-        g = (uint8_t)(g * 2 / 5);
-        b = (uint8_t)(b * 2 / 5);
+        int x = i * 255 / (n - 1);  /* 0..255 across screen */
+        uint8_t r = (uint8_t)x;
+        uint8_t b = (uint8_t)(255 - x);
+        /* G peaks in the center (triangle wave) */
+        int g_raw = x < 128 ? x * 2 : (255 - x) * 2;
+        uint8_t g = (uint8_t)(g_raw > 255 ? 255 : g_raw);
+        /* Darken to 45% for desktop bg */
+        r = (uint8_t)(r * 45 / 100);
+        g = (uint8_t)(g * 45 / 100);
+        b = (uint8_t)(b * 45 / 100);
         gfx_fill_rect(i * sw, 0, sw, FB_H, fb_rgb565(r, g, b));
     }
 }
@@ -378,20 +374,19 @@ void tile_render_all(void) {
         render_tile(root);
     }
 
-    /* Status bar */
+    /* Status bar — no fill, gradient shows through */
     int sby = FB_H - 24;
-    gfx_fill_rect(0, sby, FB_W, 24, FB_DKGRAY);
     gfx_bevel(0, sby, FB_W, 24, 1);
-    gfx_text(4, sby + 6, "DE2Extra", FB_WHITE, 0xFFFF);
+    gfx_text(4, sby + 6, "DE2Extra", FB_YELLOW, 0xFFFF);
 
     if (focused && focused->title[0]) {
         char buf[32];
         snprintf(buf, sizeof(buf), "[%s]", focused->title);
-        gfx_text(FB_W - 160, sby + 6, buf, FB_LTGRAY, 0xFFFF);
+        gfx_text(FB_W - 160, sby + 6, buf, FB_WHITE, 0xFFFF);
     }
 
     if (zoomed)
-        gfx_text(FB_W - 260, sby + 6, "[ZOOM]", FB_YELLOW, 0xFFFF);
+        gfx_text(FB_W - 260, sby + 6, "[ZOOM]", FB_CYAN, 0xFFFF);
 
     fb_present();
 }

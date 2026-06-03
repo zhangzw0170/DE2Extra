@@ -28,8 +28,8 @@ DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 
 |---|---|
 | **CPU** | NEORV32 v1.13.1 · RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx/Zknd/Zkne/Zknh |
 | **总线** | Wishbone B4 · 1 主 / 12 从 (10 active) · 32-bit · 组合地址解码 |
-| **固件** | FreeRTOS V11.3 · 4 任务 (uart_input/shell/active/status) |
-| **启动** | Boot mode 0: 2KB IMEM bootloader → UART 上传 → SDRAM @ `0x01000000` (~206KB) |
+| **固件** | FreeRTOS V11.3 · 4 任务 (uart_input/shell/active/status) · ~207KB |
+| **启动** | Boot mode 0: 2KB IMEM bootloader → UART 上传 → SDRAM @ `0x01000000` (~207KB) |
 | **显示** | VGA 640×480 @60Hz · 80×30 文本模式 + RGB565 像素模式 · GPU 2D FILL |
 | **输入** | PS/2 键盘 (主输入) · UART 115200 · IR NEC 红外遥控 |
 | **音频** | 3×OSC + DX7 FM 合成 · WM8731 I2S DAC *(disabled)* |
@@ -70,7 +70,7 @@ DE2Extra 是一个基于 [NEORV32](https://github.com/stnolting/neorv32) RISC-V 
 
 **工具命令**:
 
-`selfcheck` · `stats` · `ver` · `clear` · `pxtest` · `vgadump` · `vgamon`
+`selfcheck` · `stats` · `ver` · `clear` · `pxtest` · `vgadump` · `vgamon` · `postverify`
 
 ## 目录结构
 
@@ -90,7 +90,8 @@ DE2Extra/
 ├── run/                       # 部署脚本
 ├── doc/                       # 文档 + 宣传物料
 │   └── promo/                 # 架构图, 演示 PPT, 横幅
-└── sw/app/common/             # 公共头文件
+└── doc/                       # 文档 + 宣传物料
+    └── promo/                 # 架构图, 演示 PPT, 横幅
 ```
 
 ## 构建
@@ -120,7 +121,7 @@ python run/upload_de2os.py --wait
 | 主频 | 50 MHz |
 | FPGA 资源 | ~24% (27K / 114K LEs) |
 | AES 硬件加速 | 107.6× (vs 纯软件) |
-| 固件大小 | ~206KB (SDRAM 执行) |
+| 固件大小 | ~207KB (SDRAM 执行) |
 | 增量部署 | ~25s (编译 + 上传) |
 | 长稳测试 | 7h38m 无崩溃 |
 

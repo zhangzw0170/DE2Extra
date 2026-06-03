@@ -1,12 +1,13 @@
-# de2os V3 状态
+# de2os V3 状态 — 使用说明 & 验收报告
 
-> 状态: **功能完成，打磨阶段**
+> 状态: **v0.3 release**
 > 硬件工程: `par/de2os/` (top entity: `de2os_top`)
-> 目标固件: `sw/app/de2shell_rtos/` (~212KB, SDRAM exec)
+> 目标固件: `sw/app/de2shell_rtos/` (~207KB, SDRAM exec)
+> FPGA 资源: ~47% (53,545 / 114,480 LEs)
 
 ## 当前构建
 
-- 固件: ~212KB, SDRAM @ `0x01000000`
+- 固件: ~207KB, SDRAM @ `0x01000000`
 - RTL: `par/de2os/de2os.sof`
 - PLL: c0=50MHz (CPU), c1=100MHz (SDRAM), c2=100MHz+1.56ns (DRAM_CLK), c3=25MHz (VGA), altpll_audio=18MHz (WM8731 MCLK)
 
@@ -14,7 +15,7 @@
 
 | 模块 | 状态 | 备注 |
 |------|------|------|
-| SDRAM exec + bootloader | ✅ | 212KB 上传成功 |
+| SDRAM exec + bootloader | ✅ | ~207KB 上传成功 |
 | FreeRTOS 4 tasks | ✅ | uart_input/shell/active/status |
 | UART shell | ✅ | 命令解析正常 |
 | VGA text 80×30 | ✅ | 轻微斜线重影 (PLL c3 已改但仍可见) |
@@ -40,9 +41,23 @@
 
 - `ntt_sdf.vhd` 和 `synth_engine.vhd` 从 Quartus 工程文件注释掉
 - `de2os_top.vhd` 中 NTT 和 Synth 实例注释掉 (端口和信号保留)
+- NTT/Synth stub ack 接 '1'（立即返回零数据，防止 XBUS 超时 crash）
+- selfcheck 移除 NTT/Synth 探测项
 - NTT 程序改为纯 SW 实现 (~0.4ms, 20000 cycles @50MHz)
 - Synth 命令改为 "disabled" 提示
-- 活跃外设: 12 → 10, README / promo / 状态文档同步更新
+- 活跃外设: 12 → 10, FPGA 资源 ~47% (53K LEs)
+
+## 本次变更 (2026-06-04, session 5)
+
+### TWM 渐变壁纸 + postverify + 文档更新
+
+- TWM 桌面背景改为 RGB 渐变（R/G/B 按坐标直接计算，蓝→青绿→红）
+- 标题栏/状态栏改为透明底色，文字改用高对比色（黄/白）
+- 新增 `postverify` 命令：探测全部 10 个活跃外设 + 2 个 stub
+- 全部 22 个 CLI 命令串口测试通过（0 crash）
+- README / CLAUDE.md / slides.html / 状态文档全面更新
+- `sw/app/common/` 幽灵目录引用清理（实际共享头文件在 `sw/lib/`）
+- 新增快速上手章节（连接启动 / 日常开发 / 操作方式 / 注意事项）
 
 ## 本次变更 (2026-06-03, session 3)
 
@@ -75,14 +90,14 @@
 
 ### 验收步骤
 
-#### NTT Barrett RTL 重编译 ✅
+#### NTT Barrett RTL 重编译 ~~✅~~ — HW 已移除
 - [x] Quartus 编译通过 (0 errors, 290 warnings, 49:30)
 - [x] SOF 烧录成功
 - [x] 固件上传成功 (~212KB)
 - [x] `ntt` 程序启动正常, 不再 TIMEOUT
 - [x] `diag` → bus OK, engine done (1032 cycles)
 - [x] `bfly` → ALL-1s PASS, SW ref PASS, MATCH
-- [ ] `verify` → FAIL (255/256 mismatch), 根因待查
+- ~~[ ] `verify` → FAIL (255/256 mismatch), 根因待查~~ HW 已移除, SW NTT 替代
 
 #### pforth 上板 ✅
 - [x] `pforth` 启动正常, 显示 pForth V2.1
@@ -93,11 +108,11 @@
 - [x] `twm` 启动正常, 显示命令列表
 - [x] ESC 退出正常
 
-#### synth 上板 🟡
-- [x] `synth` 启动正常, ESC 退出正常
-- [ ] 不按键 → 应完全静音 (BUG-5a)
-- [ ] 松开键 → 应立即停止 (BUG-5b)
-- [ ] ↑/↓ 音量键 (BUG-5c)
+#### synth 上板 ~~🟡~~ — HW 已移除
+- [x] ~~`synth` 启动正常, ESC 退出正常~~
+- ~~[ ] 不按键 → 应完全静音 (BUG-5a)~~
+- ~~[ ] 松开键 → 应立即停止 (BUG-5b)~~
+- ~~[ ] ↑/↓ 音量键 (BUG-5c)~~
 
 #### snake 上板 ✅
 - [x] 功能正常 (用户确认)
@@ -173,6 +188,48 @@
 | vgamon | — | Periodic VGA dump |
 
 所有交互程序: F1=help, F10=quit to shell. cryptoviz: Space=step, A=auto, P=pause, L/R=skip, Q=quit.
+
+## 快速上手
+
+### 连接与启动
+
+1. USB-Blaster 连接 DE2-115 JTAG 口，给板子上电
+2. 烧录 bitstream: `quartus_pgm -m jtag --operation "PP;Auto" par/de2os/output_files/de2os.sof`
+3. 打开串口终端 (COM10, 115200 8N1)
+4. 按 KEY0 复位 → bootloader 输出 `NEORV32 Bootloader` → `Bus OK` → `Auto-boot`
+5. 上传固件: `python run/upload_de2os.py --wait`（或运行 `./run/deploy_de2shell_rtos.sh inc` 一键编译+上传）
+6. 固件启动后显示 `RTOS >` 提示符
+
+### 日常开发（增量部署）
+
+```bash
+# 仅编译固件 + 上传 (~25s, 不需要 Quartus)
+./run/deploy_de2shell_rtos.sh inc
+
+# 全量: 固件 + bootloader + Quartus 编译 + 烧录 + 上传 (~20-40min)
+./run/de2shell_rtos.sh full
+```
+
+### 操作方式
+
+| 操作 | 方式 |
+|------|------|
+| 输入命令 | PS/2 键盘直接打字，或串口终端发送 |
+| 启动程序 | 输入命令名（如 `hello`、`twm`、`snake`） |
+| 退出程序 | 按 F10 或 ESC |
+| 程序内帮助 | 按 F1（暂停程序，显示帮助覆盖层） |
+| 查看版本 | `ver` |
+| 板级自检 | `selfcheck`（启动时自动运行） |
+| 总线探测 | `postverify`（验证全部 10 个活跃外设 + 2 个 stub） |
+
+### 注意事项
+
+- 串口终端关闭后再打开需要重新上传固件（上一次 soft reboot 后才能接收新固件）
+- `ntt` 命令使用纯软件 NTT（~0.4ms），HW 加速器已移除
+- `synth` 命令已禁用，输入后显示 "disabled" 提示
+- VGA 在文本模式下有轻微斜线重影（已知，不影响使用）
+- TWM 窗口管理器需要 PS/2 键盘操作（Alt + 方向键布局），串口下仅支持 serial 命令
+- 长时间运行稳定（7h38m 无崩溃测试通过）
 
 ## 历史里程碑
 

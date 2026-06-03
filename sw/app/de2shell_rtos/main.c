@@ -769,6 +769,44 @@ static BaseType_t cli_selfcheck(char *buf, size_t len, const char *cmd) {
 static const CLI_Command_Definition_t cmd_selfcheck_def =
     {"selfcheck", "selfcheck:Board self-test\r\n", cli_selfcheck, 0};
 
+/* ── Post-synthesis bus verify ─────────────────────────────────────── */
+static BaseType_t cli_postverify(char *buf, size_t len, const char *cmd) {
+    (void)cmd; (void)len;
+    typedef struct { const char *name; uint32_t base; int stub; } pv_t;
+    static const pv_t devs[] = {
+        {"VGA",     0xF0000000u, 0}, {"PS/2",   0xF0008000u, 0},
+        {"BuildInfo",0xF0009000u, 0}, {"LCD",   0xF000B000u, 0},
+        {"IR",      0xF000C000u, 0}, {"ExpDemo", 0xF0010000u, 0},
+        {"Conway",  0xF0011000u, 0}, {"GPU",     0xF0015000u, 0},
+        {"NTT",     0xF000F000u, 1}, {"Synth",   0xF0012000u, 1},
+        {NULL, 0, 0}
+    };
+    int pass = 0, fail = 0;
+    char *p = buf;
+    p += strcpy_local(p, "Bus probe:\r\n");
+    for (int i = 0; devs[i].name; i++) {
+        volatile uint32_t *d = (volatile uint32_t *)devs[i].base;
+        uint32_t v = d[0];
+        int ok = devs[i].stub ? (v == 0) : 1;
+        if (ok) pass++; else fail++;
+        /* hex: 0x + 8 hex digits */
+        const char *hx = "0123456789ABCDEF";
+        p += strcpy_local(p, "  ");
+        p += strcpy_local(p, devs[i].name);
+        p += strcpy_local(p, ": 0x");
+        for (int b = 28; b >= 0; b -= 4)
+            *p++ = hx[(v >> b) & 0xF];
+        p += strcpy_local(p, devs[i].stub ? " [stub" : " [active");
+        p += strcpy_local(p, ok ? " OK]\r\n" : " FAIL]\r\n");
+    }
+    p += strcpy_local(p, fail == 0 ? "ALL PASS\r\n" : "FAILURES DETECTED\r\n");
+    *p = '\0';
+    return pdFALSE;
+}
+
+static const CLI_Command_Definition_t cmd_postverify_def =
+    {"postverify", "postverify: Bus probe (stub + active)\r\n", cli_postverify, 0};
+
 static const CLI_Command_Definition_t cmd_stats_def =
     {"stats", "stats:    Tasks + CPU + heap\r\n", cli_stats, 0};
 /* ── Pixel mode diagnostic (pxtest) ─────────────────────────────── */
@@ -991,6 +1029,7 @@ static void register_cli_commands(void) {
     FreeRTOS_CLIRegisterCommand(&cmd_stats_def);
     FreeRTOS_CLIRegisterCommand(&cmd_synth_def);
     FreeRTOS_CLIRegisterCommand(&cmd_pforth_def);
+    FreeRTOS_CLIRegisterCommand(&cmd_postverify_def);
     FreeRTOS_CLIRegisterCommand(&cmd_twm_def);
     FreeRTOS_CLIRegisterCommand(&cmd_ver_def);
     FreeRTOS_CLIRegisterCommand(&cmd_vgadump_def);

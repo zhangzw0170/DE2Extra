@@ -57,18 +57,18 @@ de2os_top.vhd (top entity, knows board pins)
 │       ├── DMEM         16KB
 │       ├── XBUS         Wishbone external bus master (timeout 2048 cycles), supports burst cti/tag signals
 │       └── Built-in     UART0 (115200), GPIO(32), TRNG, CLINT, OCD
-├── wb_intercon          1-master, 12-slave address decoder (combinational)
+├── wb_intercon          1-master, 12-slave address decoder (combinational, 10 active)
 │   ├── s0: sdram_ctrl   0x01000000 (128MB, 100MHz state machine)
 │   ├── s1: vga_text_terminal  0xF0000000 (32KB, 80×30 text mode + pixel mode via SDRAM FB)
 │   ├── s2: ps2_controller    0xF0008000 (scancode + IRQ)
 │   ├── s3: ir_nec_wb         0xF000C000 (NEC IR decoder)
-│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator)
+│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator, HW removed from synthesis, stub ack)
 │   ├── s5: lcd_wb            0xF000B000 (LCD Wishbone controller)
 │   ├── s6: build_info_wb      0xF0009000 (build info ROM; timer address reused)
 │   ├── s7: (stub ack)        0xF000A000 (INTC address reserved, ack loopback)
 │   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 13 experiments)
 │   ├── s9: conway_engine   0xF0011000 (Conway engine)
-│   ├── s10: synth_engine    0xF0012000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S)
+│   ├── s10: synth_engine    0xF0012000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S; HW removed from synthesis, stub ack)
 │   └── s11: gpu_2d          0xF0015000 (2D GPU: FILL rect via SDRAM burst-write)
 │   Note: DDS (0xF000D000), SD card (0xF000E000), ChromaShader (0xF0014000) have
 │         address constants but no slave ports in wb_intercon. chroma.c excluded from build.
@@ -92,10 +92,10 @@ de2os_top.vhd (top entity, knows board pins)
 | 0xF000A000 | INTC (reserved) | 4KB | 32-bit |
 | 0xF000B000 | LCD | 4KB | 32-bit |
 | 0xF000C000 | IR receiver | 4KB | 32-bit |
-| 0xF000F000 | NTT accelerator | 4KB | 32-bit |
+| 0xF000F000 | NTT accelerator (HW removed, stub ack) | 4KB | 32-bit |
 | 0xF0010000 | ExpDemo | 4KB | 32-bit |
 | 0xF0011000 | Conway engine | 4KB | 32-bit |
-| 0xF0012000 | Audio synth | 4KB | 32-bit |
+| 0xF0012000 | Audio synth (HW removed, stub ack) | 4KB | 32-bit |
 | 0xF0015000 | GPU 2D accelerator | 4KB | 32-bit |
 
 Address constants: `src/rtl/lib/de2extra_pkg.vhd`.
@@ -107,13 +107,12 @@ Per-peripheral board status and known issues: `doc/phases/de2os-rtos-status.md`.
 | Directory | Description |
 |-----------|-------------|
 | **`sw/app/de2shell_rtos/`** | **主固件**: FreeRTOS + SDRAM 执行 + PS/2 键盘主输入 + VGA 像素 GUI。4 任务 (uart_input/shell/active/status)，shell 从 PS/2 和 UART 双路接收输入。程序启动器 (PROG_TWM 等) |
-| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + GPU 驱动 (gpu) + 程序 (crypto, crypto_viz, ps2, snake, conway_hw, ntt, synth, monitor, selfcheck 等) + TWM 窗口管理器 (twm, gfx)。RTOS makefile 直接编译 |
+| `sw/lib/` | 源码库: HAL (vga_hal, fb_hal, gpio_hal, lcd_hal) + GPU 驱动 (gpu) + 程序 (crypto, crypto_viz, ps2, snake, conway_hw, ntt, synth, monitor, selfcheck 等) + TWM 窗口管理器 (twm, gfx, gui)。RTOS makefile 直接编译 |
 | `sw/app/crypto_cli/` | 加密库: AES/SHA/SM4 (RTOS makefile 直接编译) |
-| `sw/app/common/` | 公共头文件 |
 
-**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~212KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
+**de2shell_rtos (V3 target)**: Runs from SDRAM at `0x01000000` via bootloader (boot mode 0). FreeRTOS heap at `0x01900000`, framebuffer at `0x01800000`. Quartus project: `par/de2os/` (top entity: `de2os_top`). ICACHE currently disabled (burst CDC infrastructure pre-wired for future enable). PS/2 keyboard is the primary input (polled in `t_uart_input` alongside UART). Latest firmware: ~207KB. See `doc/phases/de2os-rtos-status.md` for build status. Source library at `sw/lib/`, crypto library at `sw/app/crypto_cli/`.
 
-CLI commands (20 + help builtin):
+CLI commands (21 + help builtin):
 
 | Program commands | Description |
 |-----------------|-------------|
@@ -126,14 +125,15 @@ CLI commands (20 + help builtin):
 | riscvasm | RISC-V monitor/asm |
 | expdemo | HW course labs (13 exp) |
 | twm | Tiling window mgr |
-| ntt | NTT accelerator |
-| synth | Audio synth |
+| ntt | NTT (SW only, HW disabled) |
+| ~~synth~~ | Audio synth (disabled) |
 | pforth | pForth interpreter |
 | cryptoviz | AES/SHA step-through viz (pixel mode) |
 
 | Utility commands | Description |
 |-----------------|-------------|
 | selfcheck | Board self-test (also runs at boot) |
+| postverify | Bus probe (active + stub verification) |
 | stats | Tasks + CPU + heap |
 | ver | Version / build info |
 | clear | Clear screen |
@@ -209,4 +209,4 @@ When running a non-shell program, `board_status_set_program()` shows PROG_ID/sta
 
 ## Project Status
 
-**V3 active** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). Board verified 2026-06-03, 16/18 modules verified, 2 remaining (NTT compute error, synth audio sub-issues). Details: `doc/phases/de2os-rtos-status.md`.
+**V3 active (v0.3)** — de2os (FreeRTOS + SDRAM exec + PS/2 keyboard + VGA pixel GUI). 10 active Wishbone peripherals (NTT/Synth HW removed). Board verified 2026-06-03, 22/22 CLI commands tested, 0 crashes. Details: `doc/phases/de2os-rtos-status.md`.

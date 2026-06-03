@@ -28,8 +28,8 @@ DE2Extra is a complete RISC-V SoC system built around the [NEORV32](https://gith
 |---|---|
 | **CPU** | NEORV32 v1.13.1 · RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx/Zknd/Zkne/Zknh |
 | **Bus** | Wishbone B4 · 1 master / 12 slaves (10 active) · 32-bit · combinational address decode |
-| **Firmware** | FreeRTOS V11.3 · 4 tasks (uart_input/shell/active/status) |
-| **Boot** | Boot mode 0: 2KB IMEM bootloader → UART upload → SDRAM @ `0x01000000` (~206KB) |
+| **Firmware** | FreeRTOS V11.3 · 4 tasks (uart_input/shell/active/status) · ~207KB |
+| **Boot** | Boot mode 0: 2KB IMEM bootloader → UART upload → SDRAM @ `0x01000000` (~207KB) |
 | **Display** | VGA 640×480 @60Hz · 80×30 text mode + RGB565 pixel mode · GPU 2D FILL |
 | **Input** | PS/2 keyboard (primary) · UART 115200 · IR NEC remote |
 | **Audio** | 3×OSC + DX7 FM synthesis · WM8731 I2S DAC *(disabled)* |
@@ -70,7 +70,7 @@ Full board verification status: [`doc/phases/de2os-rtos-status.md`](doc/phases/d
 
 **Utility commands**:
 
-`selfcheck` · `stats` · `ver` · `clear` · `pxtest` · `vgadump` · `vgamon`
+`selfcheck` · `stats` · `ver` · `clear` · `pxtest` · `vgadump` · `vgamon` · `postverify`
 
 ## Directory Layout
 
@@ -88,9 +88,8 @@ DE2Extra/
 │   └── app/crypto_cli/       # Crypto library (AES/SHA/SM4)
 ├── par/de2os/                 # Quartus project
 ├── run/                       # Deploy scripts
-├── doc/                       # Documentation + promo materials
-│   └── promo/                 # Architecture diagram, slides, banner
-└── sw/app/common/             # Shared headers
+└── doc/                       # Documentation + promo materials
+    └── promo/                 # Architecture diagram, slides, banner
 ```
 
 ## Build
@@ -120,7 +119,7 @@ python run/upload_de2os.py --wait
 | Clock | 50 MHz |
 | FPGA utilization | ~24% (27K / 114K LEs) |
 | AES hardware speedup | 107.6× (vs software) |
-| Firmware size | ~206KB (SDRAM exec) |
+| Firmware size | ~207KB (SDRAM exec) |
 | Incremental deploy | ~25s (compile + upload) |
 | Stability test | 7h38m no crash |
 
