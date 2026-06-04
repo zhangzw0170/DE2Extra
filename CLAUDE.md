@@ -68,23 +68,22 @@ de2os_top.vhd (top entity, knows board pins)
 │       ├── XBUS         Wishbone external bus master (timeout 2048 cycles), supports burst cti/tag signals
 │       └── Built-in     UART0 (115200), GPIO(32), TRNG, CLINT, OCD
 ├── wb_intercon          1-master, 12-slave address decoder (combinational, 10 active)
-│   ├── s0: sdram_ctrl   0x01000000 (128MB, 100MHz state machine)
-│   ├── s1: vga_text_terminal  0xF0000000 (32KB, 80×30 text mode + pixel mode via SDRAM FB)
-│   ├── s2: ps2_controller    0xF0008000 (scancode + IRQ)
-│   ├── s3: ir_nec_wb         0xF000C000 (NEC IR decoder)
-│   ├── s4: ntt_sdf           0xF000F000 (NTT accelerator, HW removed from synthesis, stub ack)
-│   ├── s5: lcd_wb            0xF000B000 (LCD Wishbone controller)
-│   ├── s6: build_info_wb      0xF0009000 (build info ROM; timer address reused)
-│   ├── s7: (stub ack)        0xF000A000 (INTC address reserved, ack loopback)
-│   ├── s8: expdemo_wb        0xF0010000 (Hardware experiment multiplexer, 11 experiments: Exp1-5,8-13; Exp6/7 removed)
-│   ├── s9: conway_engine   0xF0011000 (Conway engine)
-│   ├── s10: synth_engine    0xF0012000 (Audio synth: 3xOSC + DX7 FM, WM8731 I2S; HW removed from synthesis, stub ack)
-│   └── s11: gpu_2d          0xF0015000 (2D GPU: FILL rect via SDRAM burst-write)
-│   Note: DDS (0xF000D000), SD card (0xF000E000), ChromaShader (0xF0014000) have
-│         address constants but no slave ports in wb_intercon. chroma.c excluded from build.
+│   ├── s0: sdram_ctrl        0x01000000 (128MB, 100MHz state machine)
+│   ├── s1: vga_text_terminal 0xF0000000 (32KB, 80×30 text + pixel mode via SDRAM FB)
+│   ├── s2: ps2_controller   0xF0008000 (scancode + IRQ)
+│   ├── s3: ir_nec_wb        0xF000C000 (NEC IR decoder)
+│   ├── s4: ntt_sdf          0xF000F000 (HW removed, stub ack)
+│   ├── s5: lcd_wb           0xF000B000 (HD44780 Wishbone)
+│   ├── s6: build_info_wb    0xF0009000 (build info ROM)
+│   ├── s7: (stub ack)       0xF000A000 (INTC reserved)
+│   ├── s8: expdemo_wb       0xF0010000 (11 exp: 1-5,8-13; ch12/13 own LCD)
+│   ├── s9: conway_engine    0xF0011000 (Conway engine)
+│   ├── s10: synth_engine    0xF0012000 (HW removed, stub ack)
+│   └── s11: gpu_2d          0xF0015000 (FILL rect via SDRAM burst)
+│   Note: DDS, SD card, ChromaShader have address constants but no slave ports
 ├── seg7_mapper (×2)     GPIO[23:0] → HEX0–HEX7
-├── lcd_status / lcd_debug  HD44780 16×2 LCD (muxed by SW16; LCD data mux: expdemo ch12/13 → hardware, else → software-controlled)
-├── uart_jtag_bridge     UART TX → JTAG UART IP (view output in Quartus System Console)
+├── lcd_status / lcd_debug  HD44780 16×2 LCD (SW16 mux; expdemo ch12/13 → HW, else → SW)
+├── uart_jtag_bridge     UART TX → JTAG UART IP
 └── jtag_uart_0           Platform Designer IP (Avalon JTAG UART)
 ```
 
