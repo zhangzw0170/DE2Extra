@@ -1,6 +1,6 @@
 # DE2-115 Pin Table Backup
 
-- Source: `E:\Main\JuniorII\NonExam\FPGA\DE2-115引脚表.xlsx`
+- Source: DE2-115 User Manual (Terasic)
 - Sheet: `Sheet1`
 - Clean rows exported: `525`
 - Groups: `23`

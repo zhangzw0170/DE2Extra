@@ -128,8 +128,8 @@
   }
 
   void fb_clear(uint16_t color) {
-      gpu_fill_rect(FRAMEBUFFER_BASE, FB_W, FB_H, FB_W * 2, color);
-      gpu_wait();
+      for (int i = 0; i < FB_H * FB_W; i++)
+          ((volatile uint16_t *)fb)[i] = color;
   }
 
   void fb_set_debug_pattern(int enabled) {

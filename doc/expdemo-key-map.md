@@ -11,7 +11,7 @@
 
 已对照当前 Quartus 引脚约束 [par/de2extra.qsf](par/de2extra.qsf)、仓库内备份 [DE2-115_pin_table_backup.md](DE2-115_pin_table_backup.md) 与板卡资源汇总 [DE2-115_Resource_Summary.md](doc/DE2-115_Resource_Summary.md) 中的 KEY 表，当前物理顺序为：
 
-> 备注：原始 Excel 仍在仓库外 `E:\Main\JuniorII\NonExam\FPGA\DE2-115引脚表.xlsx`，仓库内现在保留了便于查阅的清洗备份。
+> 备注：原始来源见仓库内备份 [DE2-115_pin_table_backup.md](DE2-115_pin_table_backup.md)。
 
 | 物理键 | 引脚 |
 | --- | --- |

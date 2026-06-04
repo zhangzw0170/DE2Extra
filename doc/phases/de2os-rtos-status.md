@@ -195,7 +195,7 @@
 
 1. USB-Blaster 连接 DE2-115 JTAG 口，给板子上电
 2. 烧录 bitstream: `quartus_pgm -m jtag --operation "PP;Auto" par/de2os/output_files/de2os.sof`
-3. 打开串口终端 (COM10, 115200 8N1)
+3. 打开串口终端 ((见设备管理器), 115200 8N1)
 4. 按 KEY0 复位 → bootloader 输出 `NEORV32 Bootloader` → `Bus OK` → `Auto-boot`
 5. 上传固件: `python run/upload_de2os.py --wait`（或运行 `./run/deploy_de2shell_rtos.sh inc` 一键编译+上传）
 6. 固件启动后显示 `RTOS >` 提示符

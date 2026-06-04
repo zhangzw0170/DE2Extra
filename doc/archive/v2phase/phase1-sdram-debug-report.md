@@ -89,7 +89,7 @@ LCD 只能看到一个失败点，不足以继续定位，所以在 `sw/app/sdra
 
 串口配置确认如下：
 
-- 端口: `COM10`
+- 端口: `(见设备管理器)`
 - 波特率: `115200`
 - 格式: `8N1`
 
@@ -312,7 +312,7 @@ SDRAM_CLK_SHIFT_PS : string := "1560"
 - `tools/serial/serial_monitor.ps1`
 - `tools/serial/start_serial_monitor.ps1`
 - `tools/serial/stop_serial_monitor.ps1`
-  - 用于常驻抓取 `COM10` 日志，避免错过复位后的第一屏输出
+  - 用于常驻抓取 `(见设备管理器)` 日志，避免错过复位后的第一屏输出
 
 ---
 
@@ -346,7 +346,7 @@ E:\Software\Scoop\apps\git\2.53.0.2\bin\bash.exe build.sh --flash app/sdram_test
 
 日志文件：
 
-- `logs/serial-com10.log`
+- `logs/serial.log`
 
 ### 7.3 当前结论
 

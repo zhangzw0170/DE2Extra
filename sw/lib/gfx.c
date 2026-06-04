@@ -72,6 +72,30 @@ void gfx_gradient_v(int x, int y, int w, int h,
     }
 }
 
+/* ── Shared background gradient ──────────────────────────────────── */
+
+#define BG_STRIPS 80
+static uint16_t bg_strip_colors[BG_STRIPS];
+
+void gfx_draw_bg_gradient(void) {
+    int sw = FB_W / BG_STRIPS;
+    for (int i = 0; i < BG_STRIPS; i++) {
+        int x = i * 255 / (BG_STRIPS - 1);
+        uint8_t r = (uint8_t)(x * 45 / 100);
+        uint8_t b = (uint8_t)((255 - x) * 45 / 100);
+        int g_raw = x < 128 ? x * 2 : (255 - x) * 2;
+        uint8_t g = (uint8_t)((g_raw > 255 ? 255 : g_raw) * 45 / 100);
+        bg_strip_colors[i] = fb_rgb565(r, g, b);
+        gfx_fill_rect(i * sw, 0, sw, FB_H, bg_strip_colors[i]);
+    }
+}
+
+uint16_t gfx_bg_gradient_at(int x) {
+    if (x < 0) x = 0;
+    if (x >= FB_W) x = FB_W - 1;
+    return bg_strip_colors[x / (FB_W / BG_STRIPS)];
+}
+
 void gfx_rect(int x, int y, int w, int h, uint16_t color) {
     gfx_hline(x, y, w, color);
     gfx_hline(x, y + h - 1, w, color);

@@ -12,7 +12,6 @@
 #endif
 
 /* ── Color scheme ───────────────────────────────────────────────── */
-#define CV_BG   FB_TEAL
 #define CV_ACT  FB_GREEN
 #define CV_DONE FB_ORANGE
 #define CV_WAIT FB_DKGRAY
@@ -101,7 +100,7 @@ static const char *op_name[4] = {"SubBytes","ShiftRows","MixColumns","AddRoundKe
 
 static void aes_draw(aes_t *s) {
     char buf[80];
-    gfx_clear(CV_BG);
+    gfx_draw_bg_gradient();
 
     gfx_text(8, 4, "AES-128 Encryption", CV_TXT, 0xFFFF);
 
@@ -185,7 +184,7 @@ static void aes_draw(aes_t *s) {
     sprintf(buf, "%d/%d", s->step, s->max_step);
     gfx_text(570, 340, buf, CV_DIM, 0xFFFF);
 
-    gfx_text(8, 400, "Space:Step  A:Auto  P:Pause  Left/Right:Skip  Q:Quit",
+    gfx_text(8, 400, "Space:Step  A:Auto  P:Pause  L/R:Skip  Q:Quit",
              CV_DIM, 0xFFFF);
     if (s->auto_play) gfx_text(540, 400, "[PLAY]", CV_ACT, 0xFFFF);
 
@@ -235,7 +234,7 @@ static void sha_precompute(sha_t *s, const uint8_t *msg, int mlen) {
 
 static void sha_draw(sha_t *s) {
     char buf[80];
-    gfx_clear(CV_BG);
+    gfx_draw_bg_gradient();
 
     gfx_text(8, 4, "SHA-256 Compression Function", CV_TXT, 0xFFFF);
     sprintf(buf, "Round %d / 64", s->step);
@@ -283,7 +282,7 @@ static void sha_draw(sha_t *s) {
     sprintf(buf, "%d/64", s->step);
     gfx_text(570, 340, buf, CV_DIM, 0xFFFF);
 
-    gfx_text(8, 400, "Space:Step  A:Auto  P:Pause  Left/Right:Skip  Q:Quit",
+    gfx_text(8, 400, "Space:Step  A:Auto  P:Pause  L/R:Skip  Q:Quit",
              CV_DIM, 0xFFFF);
     if (s->auto_play) gfx_text(540, 400, "[PLAY]", CV_ACT, 0xFFFF);
 
@@ -300,6 +299,7 @@ static int cv_mode;
 static int cv_done;
 static int cv_key_q;
 static uint32_t cv_auto_tick;
+static int cv_prev_step;
 
 /* AES / SHA state live in a union to save space */
 typedef union {
@@ -313,8 +313,9 @@ static void cv_init(void) {
     cv_done = 0;
     cv_key_q = 0;
     cv_auto_tick = 0;
+    cv_prev_step = -1;
     fb_init();
-    fb_clear(CV_BG);  /* wipe any previous framebuffer content */
+    gfx_draw_bg_gradient();
     fb_present();
 
     if (strcmp(g_arg_algo, "aes") == 0) {
@@ -346,7 +347,6 @@ static void cv_init(void) {
 static void cv_update(void) {
     if (cv_done) return;
 
-    /* Drain queued key */
     int c = cv_key_q;
     cv_key_q = 0;
 
@@ -360,7 +360,10 @@ static void cv_update(void) {
         else if (c=='L') { if(s->step>0) s->step--; }
         if (s->auto_play && s->step<s->max_step && ++cv_auto_tick>=30)
             { s->step++; cv_auto_tick=0; }
-        aes_draw(s);
+        if (s->step != cv_prev_step || c != 0) {
+            aes_draw(s);
+            cv_prev_step = s->step;
+        }
     } else if (cv_mode == CV_SHA) {
         sha_t *s = &cv_state.sha;
         if (c=='Q') { cv_done = 1; return; }
@@ -371,7 +374,10 @@ static void cv_update(void) {
         else if (c=='L') { if(s->step>0) s->step--; }
         if (s->auto_play && s->step<64 && ++cv_auto_tick>=30)
             { s->step++; cv_auto_tick=0; }
-        sha_draw(s);
+        if (s->step != cv_prev_step || c != 0) {
+            sha_draw(s);
+            cv_prev_step = s->step;
+        }
     }
 }
 

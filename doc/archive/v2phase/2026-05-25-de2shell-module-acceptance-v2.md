@@ -11,7 +11,7 @@
 
 - 构建/烧录: Docker 手动构建 + Quartus 手动编译 → JTAG 烧录
 - 实测板卡: `EP4CE115F29C7`
-- 串口: `COM10`, `115200 8N1`
+- 串口: `(见设备管理器)`, `115200 8N1`
 - shell 首页: `DE2Extra Shell v0.2`
 - LCD 修复: busy-polling → 固定延时 (2ms/cmd, 1ms/char)，待目视确认
 - HEX/状态字: shell 空闲时可见心跳翻转，证明主循环仍在推进
@@ -75,7 +75,7 @@
 | A1.1 | 命令解析 | `help` 输出当前全部命令列表 (含 startui) | ✅ |
 | A1.2 | 程序调度 | 输入子命令名称后在 `active_prog` 间切换 | ✅ |
 | A1.3 | 程序 init/update/input/finish 回调 | 每个程序切换时调 `init()`，每帧调 `update()`，按键调 `input()`，返回 shell 时调 `finish()` | ✅ |
-| A1.4 | UART 输入 | `uart_kbhit()/uart_getc()` 正确读取 COM10 115200 8N1 | ✅ |
+| A1.4 | UART 输入 | `uart_kbhit()/uart_getc()` 正确读取 (见设备管理器) 115200 8N1 | ✅ |
 | A1.5 | 退格处理 | 退格键删除上一个输入字符并回退光标 | ✅ |
 | A1.6 | 空行处理 | 按下回车不解析空命令，直接重打提示符 | ✅ |
 | A1.7 | 未知命令 | 输入未注册命令时输出 `? Unknown command. Type 'help'` | ✅ |

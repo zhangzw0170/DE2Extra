@@ -32,7 +32,7 @@
 
 已恢复工程实际引用的共享约束文件：
 
-- [par/constraints/de2extra.sdc](/E:/Main/JuniorII/NonExam/FPGA/DE2Extra/par/constraints/de2extra.sdc:1)
+- [par/constraints/de2extra.sdc](par/constraints/de2extra.sdc)
 
 当前这份约束包含：
 

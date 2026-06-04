@@ -27,7 +27,7 @@ Detailed guide: `doc/编译烧录前必看.md`.
 ### Manual build (if deploy script unavailable)
 ```bash
 # Compile (~25s)
-docker run --rm -v "E:/Main/JuniorII/NonExam/FPGA/DE2Extra:/work" de2extra-builder bash -c \
+docker run --rm -v "$(pwd):/work" de2extra-builder bash -c \
   "cd /work && mkdir -p sw/app/de2shell_rtos/build && make -C sw/app/de2shell_rtos all image NEORV32_HOME=/work/neorv32"
 
 # Upload (~5s, use --wait if board is running firmware; omit if bootloader is waiting)
@@ -202,10 +202,10 @@ When running a non-shell program, `board_status_set_program()` shows PROG_ID/sta
 
 | Tool | Version/Path |
 |------|-------------|
-| Quartus Prime | 23.1std Lite (`/e/Software/intelFPGA_lite/23.1std/`) |
+| Quartus Prime | 23.1std Lite |
 | NEORV32 | v1.13.1 release tag (submodule at `neorv32/`) |
 | RISC-V GCC | Docker image `de2extra-builder` |
-| Serial monitor | `COM10`, `115200 8N1` |
+| Serial monitor | UART `115200 8N1` |
 
 ## Project Status
 
