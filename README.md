@@ -95,20 +95,17 @@ DE2Extra/
 
 详细指南: [`doc/编译烧录前必看.md`](doc/编译烧录前必看.md)
 
-> **Bash 环境**: 所有 `bash` / `sh` 脚本必须在 **Git Bash** 中运行（非 WSL 的 `bash.exe`、PowerShell 或 CMD）。
-
-**快速部署**:
+**CLI 工具 (跨平台)**:
 ```bash
-./run/deploy_de2shell_rtos.sh inc    # 增量: 重编 app + 上传 (~25s)
-./run/deploy_de2shell_rtos.sh full   # 全量: app + bootloader + Quartus + 烧录 + 上传
+pip install pyserial                                                    # 首次需要
+python run/de2extra.py sw-build && python run/de2extra.py sw-upload    # 改软件 (~45s)
+python run/de2extra.py hw-build && python run/de2extra.py hw-flash     # 改硬件 (~15min)
 ```
 
-**手动编译上传**:
+**旧脚本 (仅 Git Bash)**:
 ```bash
-docker run --rm -v "$(pwd):/work" de2extra-builder bash -c \
-  "cd /work && mkdir -p sw/app/de2shell_rtos/build && make -C sw/app/de2shell_rtos all image NEORV32_HOME=/work/neorv32"
-
-python run/upload_de2os.py --wait
+./run/deploy_de2shell_rtos.sh inc    # 增量: 重编 app + 上传
+./run/deploy_de2shell_rtos.sh full   # 全量: app + bootloader + Quartus + 烧录 + 上传
 ```
 
 **本地仿真** (无需 FPGA):
@@ -122,9 +119,10 @@ cd sw/lib && make run    # SDL2 像素模式 shell, 需 GCC 15+ 和 SDL2
 |------|------|
 | 主频 | 50 MHz |
 | FPGA 资源 | ~47% (53.5K / 114.5K LEs) |
-| AES 硬件加速 | 107.6× (vs 纯软件) |
+| AES 硬件加速 | 100+x (vs 纯软件) |
 | 固件大小 | ~207KB (SDRAM 执行) |
-| 增量部署 | ~25s (编译 + 上传) |
+| 软件增量部署 | ~45s (编译 ~25s + 上传 ~20s) |
+| 硬件全量编译 | ~15min (bootloader + Quartus 综合) |
 | 长稳测试 | 7h38m 无崩溃 |
 
 ## 参考资源

@@ -95,20 +95,17 @@ DE2Extra/
 
 Detailed guide (Chinese): [`doc/编译烧录前必看.md`](doc/编译烧录前必看.md)
 
-> **Bash environment**: All `bash` / `sh` scripts must run in **Git Bash** — not WSL's `bash.exe`, PowerShell, or CMD.
-
-**Quick deploy**:
+**CLI tool (cross-platform)**:
 ```bash
-./run/deploy_de2shell_rtos.sh inc    # Incremental: recompile app + upload (~25s)
-./run/deploy_de2shell_rtos.sh full   # Full: app + bootloader + Quartus + flash + upload
+pip install pyserial                                                    # First-time setup
+python run/de2extra.py sw-build && python run/de2extra.py sw-upload    # Software changes (~45s)
+python run/de2extra.py hw-build && python run/de2extra.py hw-flash     # Hardware changes (~15min)
 ```
 
-**Manual build & upload**:
+**Legacy scripts (Git Bash only)**:
 ```bash
-docker run --rm -v "$(pwd):/work" de2extra-builder bash -c \
-  "cd /work && mkdir -p sw/app/de2shell_rtos/build && make -C sw/app/de2shell_rtos all image NEORV32_HOME=/work/neorv32"
-
-python run/upload_de2os.py --wait
+./run/deploy_de2shell_rtos.sh inc    # Incremental: recompile app + upload
+./run/deploy_de2shell_rtos.sh full   # Full: app + bootloader + Quartus + flash + upload
 ```
 
 **Local simulation** (no FPGA needed):
@@ -122,9 +119,10 @@ cd sw/lib && make run    # SDL2 pixel-mode shell, requires GCC 15+ and SDL2
 |--------|-------|
 | Clock | 50 MHz |
 | FPGA utilization | ~47% (53.5K / 114.5K LEs) |
-| AES hardware speedup | 107.6× (vs software) |
+| AES hardware speedup | 100+x (vs software) |
 | Firmware size | ~207KB (SDRAM exec) |
-| Incremental deploy | ~25s (compile + upload) |
+| Software incremental deploy | ~45s (compile ~25s + upload ~20s) |
+| Hardware full build | ~15min (bootloader + Quartus synthesis) |
 | Stability test | 7h38m no crash |
 
 ## References

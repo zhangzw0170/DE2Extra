@@ -153,7 +153,7 @@ def connect_bootloader(port, wait_mode):
             else:
                 log(f'Connecting to {port} @ {baud}...')
                 time.sleep(0.25)
-                ready, banner = wait_for_prompt_with_abort(ser, initial_timeout=12.0, prompt_timeout=3.0)
+                ready, banner = wait_for_prompt(ser, initial_timeout=12.0, prompt_timeout=3.0)
 
             if ready:
                 if banner:
