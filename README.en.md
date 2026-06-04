@@ -127,11 +127,37 @@ cd sw/lib && make run    # SDL2 pixel-mode shell, requires GCC 15+ and SDL2
 
 ## References
 
-- [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) — RISC-V soft core (v1.13.1, BSD-3-Clause)
+- [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) — RISC-V soft core (v1.13.1 + local patches, BSD-3-Clause)
 - [FreeRTOS](https://www.freertos.org/) — Real-time OS kernel (MIT)
 - [Wishbone B4 Specification](https://opencores.org/howto/wishbone) — On-chip bus protocol
 - [DE2-115 User Manual](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=139&No=502) — Development board docs
 - [RISC-V Privileged Specification](https://riscv.org/specifications/) — ISA specification
+
+## NEORV32 Local Patches
+
+The submodule is pinned at upstream **v1.13.1** with 1 local commit (`72fbfc57`). Changes are confined to the bootloader only; the CPU core RTL is unmodified.
+
+| Change | File | Detail |
+|--------|------|--------|
+| UART baud: 19200 → 115200 | `sw/bootloader/config.h` | Match our board setup |
+| Auto-boot timeout: 8s → 1s | `sw/bootloader/config.h` | Faster boot cycle |
+| SPI flash: disabled | `sw/bootloader/config.h` | Not used on DE2-115 |
+| SDRAM self-test on boot | `sw/bootloader/main.c` + `hal/` | Validates SDRAM before upload |
+| SDRAM resume after KEY0 reset | `sw/bootloader/main.c` | Reads marker at `0x018FFFF0` to re-boot last uploaded image without re-download |
+| VGA mirror + upload progress | `hal/source/uart.c`, `system.c` | Mirrors bootloader output to VGA, shows upload progress bar |
+
+## AI Usage Declaration
+
+This project used AI-assisted development throughout its lifecycle. All AI-generated code was reviewed, tested on hardware, and modified as needed before inclusion.
+
+| Category | Tools Used |
+|----------|-----------|
+| Models | GLM 5.1, DeepSeek V4, GPT 5.4 |
+| Harness | Claude Code, DeepSeek TUI, Codex |
+
+## Disclaimer
+
+This project is for learning and research purposes only. Following this guide involves FPGA bitstream flashing, SDRAM read/write, and other hardware operations — **make sure you know what you are doing**. The author is not responsible for any damage to development boards, data loss, or other losses caused by improper operation.
 
 ## License
 
@@ -141,7 +167,7 @@ Third-party components:
 
 | Component | License |
 |-----------|---------|
-| [NEORV32](https://github.com/stnolting/neorv32) RISC-V Processor | BSD-3-Clause |
+| [NEORV32](https://github.com/stnolting/neorv32) RISC-V Processor (v1.13.1 + local patches) | BSD-3-Clause |
 | [FreeRTOS](https://www.freertos.org/) V11.3 Kernel | MIT |
 | [RISC-V ISA](https://riscv.org) Specifications | CC-BY-4.0 |
 | [Wishbone B4](https://opencores.org/howto/wishbone) Specification | OpenCores License |

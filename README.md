@@ -127,11 +127,37 @@ cd sw/lib && make run    # SDL2 像素模式 shell, 需 GCC 15+ 和 SDL2
 
 ## 参考资源
 
-- [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) — RISC-V 软核 (v1.13.1, BSD-3-Clause)
+- [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) — RISC-V 软核 (v1.13.1 + 本地补丁, BSD-3-Clause)
 - [FreeRTOS](https://www.freertos.org/) — 实时操作系统内核 (MIT)
 - [Wishbone B4 Specification](https://opencores.org/howto/wishbone) — 片上总线协议
 - [DE2-115 User Manual](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=139&No=502) — 开发板文档
 - [RISC-V Privileged Specification](https://riscv.org/specifications/) — ISA 规范
+
+## NEORV32 本地补丁
+
+子模块锁定在上游 **v1.13.1**，在此基础上有 1 个本地 commit（`72fbfc57`）。改动仅涉及 bootloader，CPU 核心 RTL 未修改。
+
+| 改动 | 文件 | 说明 |
+|------|------|------|
+| UART 波特率: 19200 → 115200 | `sw/bootloader/config.h` | 匹配板级设置 |
+| 自动启动超时: 8s → 1s | `sw/bootloader/config.h` | 加快启动循环 |
+| SPI flash: 禁用 | `sw/bootloader/config.h` | DE2-115 未使用 |
+| 启动时 SDRAM 自检 | `sw/bootloader/main.c` + `hal/` | 上传前验证 SDRAM |
+| KEY0 复位后恢复 SDRAM 固件 | `sw/bootloader/main.c` | 读取 `0x018FFFF0` 标记，免重新下载即可重启上次上传的固件 |
+| VGA 镜像 + 上传进度条 | `hal/source/uart.c`, `system.c` | bootloader 输出同步到 VGA，上传时显示进度条 |
+
+## AI 使用声明
+
+本项目在开发过程中使用了 AI 辅助编程。所有 AI 生成的代码均经过审查、上板测试，并按需修改后才纳入最终代码库。
+
+| 类别 | 使用的工具 |
+|------|-----------|
+| 模型 | GLM 5.1, DeepSeek V4, GPT 5.4 |
+| 编程环境 | Claude Code, DeepSeek TUI, Codex |
+
+## 免责声明
+
+本项目仅供学习和研究目的。按照本文档操作涉及 FPGA bitstream 烧录、SDRAM 读写等硬件操作，**请确保你清楚自己在做什么**。因不当操作导致的开发板损坏、数据丢失或其他损失，作者不承担任何责任。
 
 ## 许可
 
@@ -141,7 +167,7 @@ cd sw/lib && make run    # SDL2 像素模式 shell, 需 GCC 15+ 和 SDL2
 
 | 组件 | 许可 |
 |------|------|
-| [NEORV32](https://github.com/stnolting/neorv32) RISC-V Processor | BSD-3-Clause |
+| [NEORV32](https://github.com/stnolting/neorv32) RISC-V Processor (v1.13.1 + 本地补丁) | BSD-3-Clause |
 | [FreeRTOS](https://www.freertos.org/) V11.3 Kernel | MIT |
 | [RISC-V ISA](https://riscv.org) Specifications | CC-BY-4.0 |
 | [Wishbone B4](https://opencores.org/howto/wishbone) Specification | OpenCores License |

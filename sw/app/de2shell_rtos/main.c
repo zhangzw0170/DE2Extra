@@ -632,6 +632,7 @@ static BaseType_t cli_ver(char *buf, size_t len, const char *cmd) {
     vga_puts("HW Build: ", VGA_WHITE); vga_puts(HW_BUILD_TAG, VGA_YELLOW); vga_puts(" GMT+8\n", VGA_GRAY);
     vga_putc('\n', VGA_WHITE);
     vga_puts("== Software ==\n", VGA_GREEN);
+    vga_puts("Version:  v0.3\n", VGA_WHITE);
     vga_puts("RTOS:     FreeRTOS ", VGA_WHITE); vga_puts(tskKERNEL_VERSION_NUMBER "\n", VGA_YELLOW);
     vga_puts("Firmware: de2shell_rtos\n", VGA_WHITE);
     vga_puts("SW Build: ", VGA_WHITE); vga_puts(SW_BUILD_TAG, VGA_YELLOW); vga_puts(" GMT+8\n", VGA_GRAY);
@@ -652,6 +653,7 @@ static BaseType_t cli_ver(char *buf, size_t len, const char *cmd) {
     neorv32_uart0_puts("VGA:      640x480@60Hz 80x30 text\n");
     neorv32_uart0_puts("HW Build: " HW_BUILD_TAG " GMT+8\n");
     neorv32_uart0_puts("\n== Software ==\n");
+    neorv32_uart0_puts("Version:  v0.3\n");
     neorv32_uart0_puts("RTOS:     FreeRTOS " tskKERNEL_VERSION_NUMBER "\n");
     neorv32_uart0_puts("Firmware: de2shell_rtos\n");
     neorv32_uart0_puts("SW Build: " SW_BUILD_TAG " GMT+8\n");
