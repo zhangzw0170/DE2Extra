@@ -124,7 +124,7 @@
 <body>
 <div class="container">
   <h1>DE2Extra — RISC-V 全外设终端系统</h1>
-  <p class="subtitle">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) | 12 Wishbone slaves | FreeRTOS 4 tasks | 20 CLI commands</p>
+  <p class="subtitle">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) | 12 Wishbone slaves (10 active) | FreeRTOS 4 tasks | 22 CLI commands</p>
 
   <!-- ============ SOFTWARE LAYER ============ -->
   <div class="layer sw-layer">
@@ -144,12 +144,12 @@
       <span class="cmd-chip">expdemo</span>
       <span class="cmd-chip">twm</span>
       <span class="cmd-chip">ntt</span>
-      <span class="cmd-chip">synth</span>
       <span class="cmd-chip highlight">pforth</span>
       <span class="cmd-chip highlight">cryptoviz</span>
     </div>
     <div class="sw-row">
       <span class="cmd-chip">selfcheck</span>
+      <span class="cmd-chip">postverify</span>
       <span class="cmd-chip">stats</span>
       <span class="cmd-chip">ver</span>
       <span class="cmd-chip">clear</span>
@@ -171,7 +171,7 @@
       <div class="cpu-row">
         <div class="cpu-block">
           <div class="name">NEORV32 RISC-V</div>
-          <div class="detail">RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx + Zknd/Zkne/Zknh</div>
+          <div class="detail">RV32IMC + Zicsr + Zicntr + Zbkb/Zbkc/Zbkx + Zknd/Zkne/Zknh + Zksed/Zksh</div>
           <div class="detail">50MHz | IMEM 64KB | DMEM 16KB | UART 115200 | GPIO 32-bit | TRNG</div>
         </div>
       </div>
@@ -185,7 +185,7 @@
 
       <!-- Wishbone Bus -->
       <div class="wb-bus">
-        <div class="bus-label">WISHBONE BUS &mdash; 1 主 / 12 从</div>
+        <div class="bus-label">WISHBONE BUS &mdash; 1 主 / 12 从 (10 active)</div>
         <div class="bus-detail">32-bit 数据 &nbsp;|&nbsp; 组合地址解码 &nbsp;|&nbsp; wb_intercon.vhd</div>
       </div>
 
@@ -226,10 +226,10 @@
           <div class="paddr">0xF000C000</div>
           <div class="pdesc">NEC 解码</div>
         </div>
-        <div class="periph-block p-accel">
+        <div class="periph-block p-accel" style="opacity:0.5">
           <div class="pname">NTT 加速器</div>
           <div class="paddr">0xF000F000</div>
-          <div class="pdesc">ML-KEM-512 | q=3329</div>
+          <div class="pdesc">ML-KEM-512 (HW removed)</div>
         </div>
         <div class="periph-block p-accel">
           <div class="pname">ExpDemo</div>
@@ -241,10 +241,10 @@
           <div class="paddr">0xF0011000</div>
           <div class="pdesc">64×25 | LE 寄存器</div>
         </div>
-        <div class="periph-block p-audio">
+        <div class="periph-block p-audio" style="opacity:0.5">
           <div class="pname">Synth 音频</div>
           <div class="paddr">0xF0012000</div>
-          <div class="pdesc">3xOSC + DX7 FM | WM8731</div>
+          <div class="pdesc">3xOSC + FM (HW removed)</div>
         </div>
         <div class="periph-block p-accel">
           <div class="pname">GPU 2D</div>
@@ -275,56 +275,48 @@
     </div>
     <div class="io-grid">
       <div class="io-block">
-        <div class="io-icon">🖥️</div>
         <div class="io-name">VGA 显示器</div>
         <div class="io-detail">640×480@60Hz<br>RGB565 像素 + 文本</div>
       </div>
       <div class="io-block">
-        <div class="io-icon">⌨️</div>
         <div class="io-name">PS/2 键盘</div>
         <div class="io-detail">主输入源<br>Scancode Set 2</div>
       </div>
-      <div class="io-block">
-        <div class="io-icon">🔊</div>
+      <div class="io-block" style="opacity:0.4">
         <div class="io-name">WM8731 音频</div>
-        <div class="io-detail">I2S 24-bit DAC<br>I2C 配置</div>
+        <div class="io-detail">I2S 24-bit DAC<br>(disabled)</div>
       </div>
       <div class="io-block">
-        <div class="io-icon">🔢</div>
         <div class="io-name">7-SEG ×8</div>
         <div class="io-detail">HEX0–HEX7<br>Heap% / Uptime</div>
       </div>
       <div class="io-block">
-        <div class="io-icon">💡</div>
         <div class="io-name">LED ×24</div>
         <div class="io-detail">LEDR 16 + LEDG 8<br>程序状态指示</div>
       </div>
       <div class="io-block">
-        <div class="io-icon">📟</div>
         <div class="io-name">LCD 16×2</div>
         <div class="io-detail">HD44780<br>DE2Extra Status</div>
       </div>
       <div class="io-block">
-        <div class="io-icon">📡</div>
         <div class="io-name">IR 红外</div>
         <div class="io-detail">NEC 协议<br>遥控器输入</div>
       </div>
       <div class="io-block">
-        <div class="io-icon">🔌</div>
         <div class="io-name">UART 串口</div>
-        <div class="io-detail">COM10 115200<br>调试 + 上传</div>
+        <div class="io-detail">UART 115200<br>调试 + 上传</div>
       </div>
     </div>
   </div>
 
   <!-- ============ STATS BAR ============ -->
   <div class="stats-bar">
-    <div class="stat"><div class="val">12</div><div class="lbl">Wishbone 外设</div></div>
-    <div class="stat"><div class="val">20</div><div class="lbl">CLI 命令</div></div>
-    <div class="stat"><div class="val">128</div><div class="lbl">Git 提交</div></div>
+    <div class="stat"><div class="val">10</div><div class="lbl">Active 外设</div></div>
+    <div class="stat"><div class="val">22</div><div class="lbl">CLI 命令</div></div>
+    <div class="stat"><div class="val">144</div><div class="lbl">Git 提交</div></div>
     <div class="stat"><div class="val">12</div><div class="lbl">开发天数</div></div>
     <div class="stat"><div class="val">7h+</div><div class="lbl">长稳无崩溃</div></div>
-    <div class="stat"><div class="val">~24%</div><div class="lbl">FPGA 资源</div></div>
+    <div class="stat"><div class="val">~47%</div><div class="lbl">FPGA 资源</div></div>
   </div>
 
   <div style="text-align:center;margin-top:20px;color:#555;font-size:11px;">

@@ -78,8 +78,7 @@
   <line x1="140" y1="128" x2="140" y2="136" stroke="#f39c12" stroke-opacity="0.4" stroke-width="1.5"/>
   <polygon points="137,135 143,135 140,140" fill="#f39c12" fill-opacity="0.4"/>
 
-  <!-- Peripheral row 1 — 5 blocks filling 184px (48 to 232) -->
-  <!-- gap=3, 5 blocks: each = (184 - 4*3) / 5 = 34.4 → 34px, remainder 2px -->
+  <!-- Peripheral row 1 — 5 blocks (active only) -->
   <g font-family="Consolas,monospace" font-size="7.5" font-weight="600" text-anchor="middle">
     <rect x="48"  y="140" width="35" height="20" rx="3" fill="#1b2838" stroke="#2a475e" stroke-width="0.8"/>
     <text x="65"  y="154" fill="#66c0f4">SDRAM</text>
@@ -87,37 +86,27 @@
     <rect x="86"  y="140" width="35" height="20" rx="3" fill="#2d1b38" stroke="#4a2d5e" stroke-width="0.8"/>
     <text x="103" y="154" fill="#c866f4">VGA</text>
 
-    <rect x="124" y="140" width="35" height="20" rx="3" fill="#1b2e38" stroke="#2d5a6e" stroke-width="0.8"/>
-    <text x="141" y="154" fill="#66e0f4">Synth</text>
+    <rect x="124" y="140" width="35" height="20" rx="3" fill="#38291b" stroke="#5e4a2d" stroke-width="0.8"/>
+    <text x="141" y="154" fill="#f4c866">Con</text>
 
     <rect x="162" y="140" width="35" height="20" rx="3" fill="#38291b" stroke="#5e4a2d" stroke-width="0.8"/>
-    <text x="179" y="154" fill="#f4c866">NTT</text>
+    <text x="179" y="154" fill="#f4c866">GPU</text>
 
     <rect x="200" y="140" width="32" height="20" rx="3" fill="#38291b" stroke="#5e4a2d" stroke-width="0.8"/>
-    <text x="216" y="154" fill="#f4c866">Con</text>
+    <text x="216" y="154" fill="#f4c866">Exp</text>
 
-    <!-- Peripheral row 2 — 7 blocks filling 184px -->
-    <!-- gap=3, 7 blocks: each = (184 - 6*3) / 7 = 23.7 → 23px, remainder 6px distributed -->
-    <rect x="48"  y="164" width="23" height="20" rx="3" fill="#38291b" stroke="#5e4a2d" stroke-width="0.8"/>
-    <text x="59"  y="178" fill="#f4c866">GPU</text>
+    <!-- Peripheral row 2 — 4 blocks (active) -->
+    <rect x="48"  y="164" width="38" height="20" rx="3" fill="#1b3828" stroke="#2d5e3e" stroke-width="0.8"/>
+    <text x="67"  y="178" fill="#66f4a0">PS/2</text>
 
-    <rect x="74"  y="164" width="23" height="20" rx="3" fill="#38291b" stroke="#5e4a2d" stroke-width="0.8"/>
-    <text x="85"  y="178" fill="#f4c866">Exp</text>
+    <rect x="90"  y="164" width="38" height="20" rx="3" fill="#2d1b38" stroke="#4a2d5e" stroke-width="0.8"/>
+    <text x="109" y="178" fill="#c866f4">LCD</text>
 
-    <rect x="100" y="164" width="23" height="20" rx="3" fill="#1b3828" stroke="#2d5e3e" stroke-width="0.8"/>
-    <text x="111" y="178" fill="#66f4a0">PS2</text>
+    <rect x="132" y="164" width="38" height="20" rx="3" fill="#1b3828" stroke="#2d5e3e" stroke-width="0.8"/>
+    <text x="151" y="178" fill="#66f4a0">IR</text>
 
-    <rect x="126" y="164" width="24" height="20" rx="3" fill="#2d1b38" stroke="#4a2d5e" stroke-width="0.8"/>
-    <text x="138" y="178" fill="#c866f4">LCD</text>
-
-    <rect x="153" y="164" width="23" height="20" rx="3" fill="#1b3828" stroke="#2d5e3e" stroke-width="0.8"/>
-    <text x="164" y="178" fill="#66f4a0">IR</text>
-
-    <rect x="179" y="164" width="25" height="20" rx="3" fill="#381b1b" stroke="#5e2d2d" stroke-width="0.8"/>
-    <text x="191" y="178" fill="#f46666">Info</text>
-
-    <rect x="207" y="164" width="25" height="20" rx="3" fill="#381b1b" stroke="#5e2d2d" stroke-width="0.8"/>
-    <text x="219" y="178" fill="#f46666">INTC</text>
+    <rect x="174" y="164" width="58" height="20" rx="3" fill="#381b1b" stroke="#5e2d2d" stroke-width="0.8"/>
+    <text x="203" y="178" fill="#f46666">Info</text>
   </g>
 
   <!-- Arrow -->
@@ -130,11 +119,11 @@
 
   <!-- Footer stats inside left panel -->
   <g font-family="Consolas,monospace" font-size="9" text-anchor="middle">
-    <text x="85"  y="248" fill="#f39c12" font-weight="700">128</text>
+    <text x="85"  y="248" fill="#f39c12" font-weight="700">144</text>
     <text x="85"  y="260" fill="#555" font-size="7.5">commits</text>
     <text x="140" y="248" fill="#00d4ff" font-weight="700">12</text>
     <text x="140" y="260" fill="#555" font-size="7.5">days</text>
-    <text x="195" y="248" fill="#66f4a0" font-weight="700">~24%</text>
+    <text x="195" y="248" fill="#66f4a0" font-weight="700">~47%</text>
     <text x="195" y="260" fill="#555" font-size="7.5">FPGA</text>
   </g>
 
@@ -154,7 +143,7 @@
   <rect x="440" y="180" width="400" height="4" rx="2" fill="url(#busGrad)" opacity="0.7"/>
 
   <text x="640" y="210" text-anchor="middle" fill="#666666" font-family="'Segoe UI','Microsoft YaHei',Arial,sans-serif" font-size="14">
-    NEORV32 · 12 Wishbone 外设 · FreeRTOS · VGA 终端 · PS/2 键盘
+    NEORV32 · 10 active Wishbone 外设 · FreeRTOS · VGA 终端 · PS/2 键盘
   </text>
 
 
@@ -164,10 +153,10 @@
 
   <!-- Stats row — 3 items evenly in 220px -->
   <g font-family="Consolas,monospace" text-anchor="middle">
-    <text x="1073" y="72" fill="#f39c12" font-size="24" font-weight="700">12</text>
+    <text x="1073" y="72" fill="#f39c12" font-size="24" font-weight="700">10</text>
     <text x="1073" y="86" fill="#555" font-size="8">外设</text>
 
-    <text x="1137" y="72" fill="#00d4ff" font-size="24" font-weight="700">20</text>
+    <text x="1137" y="72" fill="#00d4ff" font-size="24" font-weight="700">22</text>
     <text x="1137" y="86" fill="#555" font-size="8">命令</text>
 
     <text x="1200" y="72" fill="#66f4a0" font-size="24" font-weight="700">7h+</text>
@@ -180,8 +169,7 @@
   <!-- ISA label -->
   <text x="1028" y="114" fill="#555" font-family="Consolas,monospace" font-size="8" letter-spacing="1">ISA EXTENSIONS</text>
 
-  <!-- ISA badges — 4 per row, 2 rows, filling 200px -->
-  <!-- Row 1: x=1028..1228, gap=4, 4 blocks: each (200 - 3*4) / 4 = 47 -->
+  <!-- ISA badges — 4 per row, 2 rows -->
   <g font-family="Consolas,monospace" font-size="9" text-anchor="middle">
     <rect x="1028" y="120" width="47" height="20" rx="4" fill="#1a1a2e" stroke="#2a2a4a" stroke-width="0.8"/>
     <text x="1051" y="134" fill="#c866f4">RV32IMC</text>
@@ -212,7 +200,7 @@
   <!-- Divider -->
   <line x1="1036" y1="174" x2="1224" y2="174" stroke="#222" stroke-width="0.8"/>
 
-  <!-- Crypto label -->
+  <!-- Highlights label -->
   <text x="1028" y="192" fill="#555" font-family="Consolas,monospace" font-size="8" letter-spacing="1">HIGHLIGHTS</text>
 
   <!-- Highlight badges -->
@@ -220,8 +208,8 @@
     <rect x="1028" y="198" width="95" height="20" rx="4" fill="rgba(243,156,18,0.08)" stroke="rgba(243,156,18,0.2)" stroke-width="0.8"/>
     <text x="1075" y="212" fill="#f39c12">107x AES</text>
 
-    <rect x="1127" y="198" width="101" height="20" rx="4" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.2)" stroke-width="0.8"/>
-    <text x="1177" y="212" fill="#00d4ff">ML-KEM-512</text>
+    <rect x="1127" y="198" width="101" height="20" rx="4" fill="rgba(102,244,160,0.08)" stroke="rgba(102,244,160,0.2)" stroke-width="0.8"/>
+    <text x="1177" y="212" fill="#66f4a0">GPU 2D</text>
 
     <rect x="1028" y="222" width="95" height="20" rx="4" fill="rgba(200,102,244,0.08)" stroke="rgba(200,102,244,0.2)" stroke-width="0.8"/>
     <text x="1075" y="236" fill="#c866f4">VGA 80x30</text>
