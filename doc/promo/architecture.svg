@@ -38,56 +38,56 @@
 
 <!-- Title -->
 <text x="600" y="32" class="t1">DE2Extra — RISC-V 全外设终端系统</text>
-<text x="600" y="52" class="t2">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) · 12 Wishbone slaves (10 active) · FreeRTOS 4 tasks · 20 CLI commands</text>
+<text x="600" y="52" class="t2">NEORV32 RV32IMC+Zk* on DE2-115 (Cyclone IV E) · 12 Wishbone slaves (10 active) · FreeRTOS 4 tasks · 22 CLI commands</text>
 
 <!-- ====== SOFTWARE LAYER ====== -->
 <rect x="40" y="70" width="1120" height="118" rx="12" fill="url(#gSW)" stroke="#2a2a4a"/>
 <rect x="440" y="80" width="320" height="22" rx="4" fill="#0f3460"/>
 <text x="600" y="95" class="badge" fill="#a8d8ea">软件层 — FreeRTOS V11.3 + SDRAM 执行</text>
 
-<!-- Row 1: 12 chips, 82px wide, 6px gap -->
-<rect x="75" y="110" width="82" height="22" rx="4" fill="#1b4332" stroke="#2d6a4f"/>
-<text x="116" y="125" class="chip-hl">hello</text>
-<rect x="163" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="204" y="125" class="chip">crypto</text>
-<rect x="251" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="292" y="125" class="chip">ps2</text>
-<rect x="339" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="380" y="125" class="chip">snake</text>
-<rect x="427" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="468" y="125" class="chip">conway</text>
-<rect x="515" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="556" y="125" class="chip">info</text>
-<rect x="603" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="644" y="125" class="chip">riscvasm</text>
-<rect x="691" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="732" y="125" class="chip">expdemo</text>
-<rect x="779" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="820" y="125" class="chip">twm</text>
-<rect x="867" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="908" y="125" class="chip">ntt</text>
-<rect x="955" y="110" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="996" y="125" class="chip">synth</text>
-<rect x="1043" y="110" width="82" height="22" rx="4" fill="#1b4332" stroke="#2d6a4f"/>
-<text x="1084" y="125" class="chip-hl">pforth</text>
-<rect x="1131" y="110" width="90" height="22" rx="4" fill="#1b4332" stroke="#2d6a4f"/>
-<text x="1176" y="125" class="chip-hl">cryptoviz</text>
+<!-- Row 1: 10 chips, 88px wide, 8px gap, total = 10*88+9*8 = 952, start at (1200-952)/2+40 = 164 -->
+<rect x="124" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="168" y="125" class="chip">hello</text>
+<rect x="220" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="264" y="125" class="chip">crypto</text>
+<rect x="316" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="360" y="125" class="chip">ps2</text>
+<rect x="412" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="456" y="125" class="chip">snake</text>
+<rect x="508" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="552" y="125" class="chip">conway</text>
+<rect x="604" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="648" y="125" class="chip">info</text>
+<rect x="700" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="744" y="125" class="chip">riscvasm</text>
+<rect x="796" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="840" y="125" class="chip">expdemo</text>
+<rect x="892" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="936" y="125" class="chip">twm</text>
+<rect x="988" y="110" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="1032" y="125" class="chip">ntt</text>
 
-<!-- Row 2: 7 chips -->
-<rect x="295" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="336" y="155" class="chip">selfcheck</text>
-<rect x="383" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="424" y="155" class="chip">stats</text>
-<rect x="471" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="512" y="155" class="chip">ver</text>
-<rect x="559" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="600" y="155" class="chip">clear</text>
-<rect x="647" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="688" y="155" class="chip">pxtest</text>
-<rect x="735" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="776" y="155" class="chip">vgadump</text>
-<rect x="823" y="140" width="82" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
-<text x="864" y="155" class="chip">vgamon</text>
+<!-- Row 2: 10 chips, 88px wide, 8px gap -->
+<rect x="124" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="168" y="155" class="chip">pforth</text>
+<rect x="220" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="264" y="155" class="chip">cryptoviz</text>
+<rect x="316" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="360" y="155" class="chip">selfcheck</text>
+<rect x="412" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="456" y="155" class="chip">postverify</text>
+<rect x="508" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="552" y="155" class="chip">stats</text>
+<rect x="604" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="648" y="155" class="chip">ver</text>
+<rect x="700" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="744" y="155" class="chip">clear</text>
+<rect x="796" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="840" y="155" class="chip">pxtest</text>
+<rect x="892" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="936" y="155" class="chip">vgadump</text>
+<rect x="988" y="140" width="88" height="22" rx="4" fill="#0f3460" stroke="#1a5276"/>
+<text x="1032" y="155" class="chip">vgamon</text>
 
 <text x="600" y="178" font-size="10" fill="#666" text-anchor="middle">4 FreeRTOS 任务: t_uart_input / t_shell / t_active / t_status | F1=帮助 F10=退出</text>
 
@@ -244,15 +244,15 @@
 <rect x="200" y="706" width="800" height="52" rx="10" fill="#ffffff" fill-opacity=".03" stroke="#ffffff" stroke-opacity=".06"/>
 <text x="275" y="730" class="sv">10</text>
 <text x="275" y="745" class="sl">active 外设</text>
-<text x="405" y="730" class="sv">20</text>
+<text x="405" y="730" class="sv">22</text>
 <text x="405" y="745" class="sl">CLI 命令</text>
-<text x="535" y="730" class="sv">~140</text>
+<text x="535" y="730" class="sv">~150</text>
 <text x="535" y="745" class="sl">Git 提交</text>
-<text x="665" y="730" class="sv">12</text>
+<text x="665" y="730" class="sv">14</text>
 <text x="665" y="745" class="sl">开发天数</text>
 <text x="795" y="730" class="sv">7h+</text>
 <text x="795" y="745" class="sl">长稳无崩溃</text>
-<text x="925" y="730" class="sv">~24%</text>
+<text x="925" y="730" class="sv">~47%</text>
 <text x="925" y="745" class="sl">FPGA 资源</text>
 
 <!-- Footer -->
