@@ -206,7 +206,7 @@
   <!-- Highlight badges -->
   <g font-family="Consolas,monospace" font-size="9" text-anchor="middle">
     <rect x="1028" y="198" width="95" height="20" rx="4" fill="rgba(243,156,18,0.08)" stroke="rgba(243,156,18,0.2)" stroke-width="0.8"/>
-    <text x="1075" y="212" fill="#f39c12">107x AES</text>
+    <text x="1075" y="212" fill="#f39c12">100+x AES</text>
 
     <rect x="1127" y="198" width="101" height="20" rx="4" fill="rgba(102,244,160,0.08)" stroke="rgba(102,244,160,0.2)" stroke-width="0.8"/>
     <text x="1177" y="212" fill="#66f4a0">GPU 2D</text>
