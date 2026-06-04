@@ -28,6 +28,8 @@ static uint8_t  prev_dbg_cmd;
 static uint32_t prev_ir_data;
 static uint32_t prev_ir_status;
 static uint8_t  prev_last_ir;
+static uint32_t prev_ledr;
+static uint16_t prev_ledg;
 static int      first_frame;
 
 static const char *ir_label(uint8_t cmd) {
@@ -86,6 +88,14 @@ static void put_bits(uint32_t value, int width, uint16_t color) {
     }
 }
 
+static void put_bits_on_off(uint32_t value, int width,
+                            uint16_t on_color, uint16_t off_color) {
+    for (int i = width - 1; i >= 0; i--) {
+        vga_putc((value & (1u << i)) ? '1' : '0',
+                 (value & (1u << i)) ? on_color : off_color);
+    }
+}
+
 static void init(void) {
     done = 0;
     first_frame = 1;
@@ -93,6 +103,8 @@ static void init(void) {
     prev_key_bits = prev_raw_ir = prev_dbg_valid = prev_dbg_cmd = 0;
     prev_ir_data = prev_ir_status = 0;
     prev_last_ir = 0xFFu;
+    prev_ledr = ~0u;
+    prev_ledg = ~0u;
     vga_clear();
     vga_goto(0, 0);
     vga_puts("DE2Extra System Info\n", VGA_CYAN);
@@ -104,7 +116,7 @@ static void init(void) {
     vga_puts("VGA:     640x480@60Hz  80x30 text\n", VGA_GREEN);
     vga_puts("Input:   UART + PS/2 + IR Remote\n", VGA_GREEN);
     vga_puts("Crypto:  AES-128 SHA-256 SHA-512 SM4 SM3\n", VGA_GREEN);
-    vga_puts("Live:    SW / KEY / IR / GPIO / uptime\n", VGA_GREEN);
+    vga_puts("Live:    SW / KEY / IR / LEDR / LEDG / GPIO / uptime\n", VGA_GREEN);
     vga_puts("\nPress 'q' to return. KEY0 = board reset.                \n", VGA_GRAY);
 }
 
@@ -138,7 +150,7 @@ static void update(void) {
     /* Draw header once on first frame */
     if (first_frame) {
         vga_goto(0, 11);
-        vga_puts("Live Board State                                  \n", VGA_CYAN);
+        vga_puts("Live Board State (LEDR=red, LEDG=green, 0=gray)  \n", VGA_CYAN);
         vga_puts("--------------------------------------------------\n", VGA_WHITE);
         first_frame = 0;
         /* Force first data draw */
@@ -156,29 +168,48 @@ static void update(void) {
     }
 
     /* Only redraw lines that changed */
+    /* LEDR[17:0] = SW[17:16] + gpio_out[15:0], LEDG[7:0] = gpio_out[23:16] */
+    {
+        uint32_t ledr = (gpio_in & 0x30000u) | (gpio_out & 0xFFFFu);
+        uint16_t ledg = (uint16_t)(gpio_out >> 16) & 0xFFu;
+        if (ledr != prev_ledr) {
+            vga_goto(0, 13);
+            vga_puts("LEDR[17:0]: ", VGA_WHITE);
+            put_bits_on_off(ledr, 18, VGA_RED, VGA_GRAY);
+            vga_puts("        \n", VGA_GRAY);
+            prev_ledr = ledr;
+        }
+        if (ledg != prev_ledg) {
+            vga_goto(0, 14);
+            vga_puts("LEDG[7:0] : ", VGA_WHITE);
+            put_bits_on_off(ledg, 8, VGA_GREEN, VGA_GRAY);
+            vga_puts("                      \n", VGA_GRAY);
+            prev_ledg = ledg;
+        }
+    }
     if (gpio_in != prev_gpio_in) {
-        vga_goto(0, 13);
+        vga_goto(0, 15);
         vga_puts("SW[17:0] : ", VGA_WHITE);
         put_bits(gpio_in & 0x3ffffu, 18, VGA_YELLOW);
         vga_puts("          \n", VGA_GRAY);
         prev_gpio_in = gpio_in;
     }
     if (key_bits != prev_key_bits) {
-        vga_goto(0, 14);
+        vga_goto(0, 16);
         vga_puts("KEY[3:1] : ", VGA_WHITE);
         put_bits(key_bits, 3, VGA_YELLOW);
         vga_puts("  (KEY0 = reset)      \n", VGA_GRAY);
         prev_key_bits = key_bits;
     }
     if (gpio_out != prev_gpio_out) {
-        vga_goto(0, 15);
+        vga_goto(0, 17);
         vga_puts("GPIO OUT : 0x", VGA_WHITE);
         put_hex32(gpio_out, VGA_CYAN);
         vga_puts("              \n", VGA_GRAY);
         prev_gpio_out = gpio_out;
     }
     if (last_ir_cmd != prev_last_ir) {
-        vga_goto(0, 16);
+        vga_goto(0, 18);
         vga_puts("Last IR  : ", VGA_WHITE);
         if (last_ir_cmd != 0u) {
             put_hex8(last_ir_cmd, VGA_YELLOW);
@@ -192,7 +223,7 @@ static void update(void) {
         prev_last_ir = last_ir_cmd;
     }
     if (raw_ir != prev_raw_ir || dbg_valid != prev_dbg_valid || dbg_cmd != prev_dbg_cmd) {
-        vga_goto(0, 17);
+        vga_goto(0, 19);
         vga_puts("IR RAW   : ", VGA_WHITE);
         vga_putc(raw_ir ? '1' : '0', raw_ir ? VGA_GREEN : VGA_YELLOW);
         vga_puts("  DBG V/CMD: ", VGA_WHITE);
@@ -205,7 +236,7 @@ static void update(void) {
         prev_dbg_cmd = dbg_cmd;
     }
     if (ir_data != prev_ir_data || ir_status != prev_ir_status) {
-        vga_goto(0, 18);
+        vga_goto(0, 20);
         vga_puts("IR REG   : DATA=0x", VGA_WHITE);
         put_hex32(ir_data, VGA_CYAN);
         vga_puts("  ST=0x", VGA_WHITE);
@@ -215,7 +246,7 @@ static void update(void) {
         prev_ir_status = ir_status;
     }
     if (uptime != prev_uptime) {
-        vga_goto(0, 19);
+        vga_goto(0, 21);
         vga_puts("Uptime   : 0x", VGA_WHITE);
         put_hex32(uptime, VGA_CYAN);
         vga_puts(" s           \n", VGA_GREEN);

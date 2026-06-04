@@ -877,10 +877,10 @@ begin
         lcd_blon => lcd_shell_blon
     );
 
-    LCD_DATA <= exp_lcd_data when expdemo_active = '1' else lcd_shell_data;
-    LCD_RS   <= exp_lcd_rs   when expdemo_active = '1' else lcd_shell_rs;
-    LCD_RW   <= exp_lcd_rw   when expdemo_active = '1' else lcd_shell_rw;
-    LCD_EN   <= exp_lcd_en   when expdemo_active = '1' else lcd_shell_en;
+    LCD_DATA <= exp_lcd_data when expdemo_active = '1' and (expdemo_channel = 12 or expdemo_channel = 13) else lcd_shell_data;
+    LCD_RS   <= exp_lcd_rs   when expdemo_active = '1' and (expdemo_channel = 12 or expdemo_channel = 13) else lcd_shell_rs;
+    LCD_RW   <= exp_lcd_rw   when expdemo_active = '1' and (expdemo_channel = 12 or expdemo_channel = 13) else lcd_shell_rw;
+    LCD_EN   <= exp_lcd_en   when expdemo_active = '1' and (expdemo_channel = 12 or expdemo_channel = 13) else lcd_shell_en;
     LCD_ON   <= lcd_shell_on;
     LCD_BLON <= lcd_shell_blon;
 

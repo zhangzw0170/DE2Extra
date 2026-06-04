@@ -55,7 +55,7 @@
 
 /* ── FreeRTOS+CLI ──────────────────────────────────────────────── */
 
-#define configCOMMAND_INT_MAX_OUTPUT_SIZE    256
+#define configCOMMAND_INT_MAX_OUTPUT_SIZE    512
 #define configAPPLICATION_PROVIDES_cOutputBuffer    1
 
 /* ── Run-time stats (mcycle CSR @ 50 MHz) ─────────────────────── */

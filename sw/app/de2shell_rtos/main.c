@@ -105,6 +105,7 @@ static const program_t *programs[PROG_COUNT] = {
 
 static volatile prog_id_t active_prog = PROG_SHELL;
 static volatile prog_id_t cli_launch_req = PROG_SHELL;
+volatile prog_id_t g_chain_program = PROG_SHELL; /* program-to-program chain (e.g. expdemo→ps2) */
 static volatile uint32_t g_dbg_code = 0xD000u;
 static volatile uint32_t g_idle_count = 0u;
 static volatile uint8_t g_vga_dump_req = 0u;
@@ -633,7 +634,7 @@ static BaseType_t cli_ver(char *buf, size_t len, const char *cmd) {
     vga_putc('\n', VGA_WHITE);
     vga_puts("== Software ==\n", VGA_GREEN);
     vga_puts("Version:  v0.3\n", VGA_WHITE);
-    vga_puts("RTOS:     FreeRTOS ", VGA_WHITE); vga_puts(tskKERNEL_VERSION_NUMBER "\n", VGA_YELLOW);
+    vga_puts("RTOS:     FreeRTOS ", VGA_WHITE); vga_puts(tskKERNEL_VERSION_NUMBER "\n", VGA_WHITE);
     vga_puts("Firmware: de2shell_rtos\n", VGA_WHITE);
     vga_puts("SW Build: ", VGA_WHITE); vga_puts(SW_BUILD_TAG, VGA_YELLOW); vga_puts(" GMT+8\n", VGA_GRAY);
     vga_putc('\n', VGA_WHITE);
@@ -1421,6 +1422,12 @@ static void t_shell(void *pv) {
         if (active_prog != PROG_SHELL) {
             vTaskDelay(pdMS_TO_TICKS(50));
             if (active_prog == PROG_SHELL) {
+                if (g_chain_program != PROG_SHELL) {
+                    prog_id_t chain = g_chain_program;
+                    g_chain_program = PROG_SHELL;
+                    launch_program(chain);
+                    continue;
+                }
                 shell_init_screen();
             }
             continue;
@@ -1499,7 +1506,15 @@ static void t_status(void *pv) {
         TickType_t now = xTaskGetTickCount();
         int do_vga_dump = 0;
 
-        /* GPIO/board_status update — no VGA mutex needed */
+        if (g_vga_dump_req != 0u) {
+            g_vga_dump_req = 0u;
+            do_vga_dump = 1;
+        } else if ((g_vga_dump_period_ticks != 0) && (now >= g_vga_dump_next_tick)) {
+            g_vga_dump_next_tick = now + g_vga_dump_period_ticks;
+            do_vga_dump = 1;
+        }
+
+        xSemaphoreTake(xVgaMutex, portMAX_DELAY);
         {
             uint32_t up = board_status_uptime_seconds() & 0xFFFFu;
             if (active_prog == PROG_SHELL) {
@@ -1512,16 +1527,6 @@ static void t_status(void *pv) {
                 board_status_apply_fallback((uint8_t)active_prog, BOARD_STATE_RUN);
             }
         }
-
-        if (g_vga_dump_req != 0u) {
-            g_vga_dump_req = 0u;
-            do_vga_dump = 1;
-        } else if ((g_vga_dump_period_ticks != 0) && (now >= g_vga_dump_next_tick)) {
-            g_vga_dump_next_tick = now + g_vga_dump_period_ticks;
-            do_vga_dump = 1;
-        }
-
-        xSemaphoreTake(xVgaMutex, portMAX_DELAY);
         if (g_status_suspend == 0u) {
             render_status_bar();
         }
@@ -1536,6 +1541,11 @@ static void t_status(void *pv) {
 
 int main(void) {
     extern void freertos_risc_v_trap_handler(void);
+
+    /* Zero .sdram_bss (crt0 only clears .bss in DMEM) */
+    extern char __sdram_bss_start, __sdram_bss_end;
+    for (char *p = &__sdram_bss_start; p < &__sdram_bss_end; p++)
+        *p = 0;
 
     neorv32_rte_setup();
     neorv32_uart0_setup(BAUD_RATE, 0);

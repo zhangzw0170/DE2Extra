@@ -6,12 +6,16 @@ Subcommands:
   sw-upload   Upload firmware via UART
   hw-build    Quartus synthesis (FPGA bitstream)
   hw-flash    Program FPGA via JTAG
+  full        hw-build + hw-flash + sw-build + sw-upload
+  inc         sw-build + sw-upload (incremental, no Quartus)
 
 Usage:
   python run/de2extra.py sw-build
   python run/de2extra.py sw-upload [--port PORT]
   python run/de2extra.py hw-build
   python run/de2extra.py hw-flash
+  python run/de2extra.py full [--port PORT]
+  python run/de2extra.py inc [--port PORT]
 """
 
 import argparse
@@ -347,6 +351,34 @@ def cmd_hw_flash(args: argparse.Namespace) -> None:
     log(f"  -> {time.time()-t0:.1f}s")
 
 
+def cmd_full(args: argparse.Namespace) -> None:
+    """Full deploy: hw-build + hw-flash + sw-build + sw-upload."""
+    log("=" * 60)
+    log("  Full Deploy (Quartus + Flash + Firmware + Upload)")
+    log("=" * 60)
+    t0 = time.time()
+
+    cmd_hw_build(args)
+    cmd_hw_flash(args)
+    cmd_sw_build(args)
+    cmd_sw_upload(args)
+
+    log(f"\n  Total: {time.time()-t0:.1f}s")
+
+
+def cmd_inc(args: argparse.Namespace) -> None:
+    """Incremental deploy: sw-build + sw-upload (no Quartus)."""
+    log("=" * 60)
+    log("  Incremental Deploy (Firmware + Upload)")
+    log("=" * 60)
+    t0 = time.time()
+
+    cmd_sw_build(args)
+    cmd_sw_upload(args)
+
+    log(f"\n  Total: {time.time()-t0:.1f}s")
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -374,6 +406,16 @@ def build_parser() -> argparse.ArgumentParser:
     # hw-flash
     p = sub.add_parser("hw-flash", help="Program FPGA via JTAG")
     p.set_defaults(func=cmd_hw_flash)
+
+    # full
+    p = sub.add_parser("full", help="Full deploy: hw-build + hw-flash + sw-build + sw-upload")
+    p.add_argument("--port", "-p", help="Serial port (auto-detect if omitted)")
+    p.set_defaults(func=cmd_full)
+
+    # inc
+    p = sub.add_parser("inc", help="Incremental deploy: sw-build + sw-upload")
+    p.add_argument("--port", "-p", help="Serial port (auto-detect if omitted)")
+    p.set_defaults(func=cmd_inc)
 
     return parser
 
