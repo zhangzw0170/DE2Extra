@@ -23,7 +23,7 @@
 | hello / info | ✅ | ESC 退出正常 |
 | snake | ✅ | 功能正常, ESC 退出正常 |
 | crypto bench | ✅ | AES 107.6x 加速 |
-| expdemo 13 exp | ✅ | 全可用 |
+| expdemo 11 exp | ✅ | Exp1-5,8-13; Exp6/7 removed; Exp8→PS/2 chain |
 | conway | ✅ | 功能正常, TRNG seed, 逐格刷新 |
 | ver / BuildInfo | ✅ | 硬件/软件版本正常显示 |
 | selfcheck | ✅ | 启动自检通过 |
@@ -58,6 +58,20 @@
 - README / CLAUDE.md / slides.html / 状态文档全面更新
 - `sw/app/common/` 幽灵目录引用清理（实际共享头文件在 `sw/lib/`）
 - 新增快速上手章节（连接启动 / 日常开发 / 操作方式 / 注意事项）
+
+## 本次变更 (2026-06-04, session 6)
+
+### LCD / postverify / FreeRTOS heap / 程序链接 / LED 显示
+
+- **LCD mux fix**: `de2os_top` 只在 expdemo ch12/13 时路由 LCD 到硬件；其他通道使用软件控制 LCD。修复 expdemo 中 LCD 不更新问题。
+- **LCD 并发修复**: `t_status` 的 `board_status` 写入移到 `xVgaMutex` 保护下，防止 Wishbone 碰撞 crash。
+- **postverify crash fix**: `cOutputBuffer` 从 256→512 bytes，解决长输出溢出 crash。
+- **FreeRTOS heap in SDRAM**: linker script `.freertos_heap` section 在 `0x01900000`，`ucHeap` 64KB 不再占 DMEM。
+- **程序链接**: `g_chain_program` volatile 变量允许程序退出时请求启动另一个程序。Exp8→PS/2 使用此功能。
+- **LEDR/G 显示**: info 和 expdemo 显示 `LEDR[17:0]` (红色) 和 `LEDG[7:0]` (绿色) 彩色编码。LEDR = SW[17:16] + gpio_out[15:0], LEDG = gpio_out[23:16]。
+- **expdemo 优化**: 条件 `vga_clear` 防止闪烁, Q 键返回菜单, LCD 显示实验 ID, Exp6/7 移除, Exp8→PS/2 链接。
+- **de2extra.py CLI**: 新增 `full` (Quartus+flash+firmware+upload) 和 `inc` (firmware+upload) 命令。
+- **Release_Report 移除**。
 
 ## 本次变更 (2026-06-03, session 3)
 
@@ -156,13 +170,13 @@
 | ir_nec_wb | ✅ | ✅ | ✅ | NEC decoder |
 | build_info_wb | ✅ | ✅ | ✅ | 版本信息正常 |
 | ntt_sdf | ⬜ | ✅ | ⬜ | HW 已从综合移除, SW NTT 替代 |
-| expdemo_wb | ✅ | ✅ | ✅ | 13 experiments |
+| expdemo_wb | ✅ | ✅ | ✅ | 11 experiments (Exp1-5,8-13; Exp6/7 removed) |
 | conway_engine | ✅ | ✅ | ✅ | TRNG seed, 逐格刷新 |
 | synth_engine | ⬜ | ⬜ | ⬜ | HW 已从综合移除, 命令已禁用 |
 | gpu_2d | ✅ | ✅ | ✅ | FILL rect burst-write |
 | chroma_shader | ✅ | ✅ | N/A | excluded from build |
 
-## CLI 命令 (20 + help)
+## CLI 命令 (21 + help)
 
 | 命令 | 程序 | 说明 |
 |------|------|------|
@@ -173,13 +187,14 @@
 | conway | prog_conway | Conway HW 64×25 |
 | info | prog_info | System dashboard |
 | riscvasm | prog_monitor | RISC-V monitor |
-| expdemo | prog_demo | 13 course labs |
+| expdemo | prog_demo | 11 course labs (Exp1-5,8-13; Exp8→PS/2 chain) |
 | twm | prog_twm | Tiling window mgr |
 | ntt | prog_ntt | NTT (SW only, HW disabled) |
 | ~~synth~~ | — | Audio synth (disabled) |
 | pforth | prog_forth | pForth 解释器 |
 | cryptoviz | prog_cryptoviz | AES/SHA step-through viz (pixel mode) |
 | selfcheck | — | Board self-test (boot) |
+| postverify | — | Bus probe (10 active + 2 stub verification) |
 | stats | — | Tasks + CPU + heap |
 | ver | — | Version / build info |
 | clear | — | Clear screen |
@@ -207,7 +222,11 @@
 ./run/deploy_de2shell_rtos.sh inc
 
 # 全量: 固件 + bootloader + Quartus 编译 + 烧录 + 上传 (~20-40min)
-./run/de2shell_rtos.sh full
+./run/deploy_de2shell_rtos.sh full
+
+# 跨平台 CLI (run/de2extra.py)
+python run/de2extra.py inc              # sw-build + sw-upload
+python run/de2extra.py full             # hw-build + hw-flash + sw-build + sw-upload
 ```
 
 ### 操作方式
@@ -226,6 +245,7 @@
 
 - 串口终端关闭后再打开需要重新上传固件（上一次 soft reboot 后才能接收新固件）
 - `ntt` 命令使用纯软件 NTT（~0.4ms），HW 加速器已移除
+- FreeRTOS heap (64KB) 在 SDRAM `0x01900000`，不占 DMEM
 - `synth` 命令已禁用，输入后显示 "disabled" 提示
 - VGA 在文本模式下有轻微斜线重影（已知，不影响使用）
 - TWM 窗口管理器需要 PS/2 键盘操作（Alt + 方向键布局），串口下仅支持 serial 命令
@@ -241,6 +261,7 @@
 - **2026-06-01**: GPU 2D, VGA PLL fix, TWM pixel mode on monitor
 - **2026-06-02**: Full board test, 5 bugs found, 7h38m stability verified
 - **2026-06-03**: BUG-1/2/3 修复, Barrett fix, cryptoviz/pforth/twm/snake 上板验证通过, 本地 SDL2 构建, V2 残余清理, NTT/synth HW 从综合移除 (10 active 外设)
+- **2026-06-04**: LCD mux/并发修复, postverify crash fix (cOutputBuffer 512B), FreeRTOS heap 64KB→SDRAM, 程序链接 (g_chain_program), LEDR/LEDG 彩色显示, expdemo 优化 (11 exp), de2extra.py CLI
 
 ## 待办 (按优先级)
 
