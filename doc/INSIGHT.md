@@ -1,6 +1,6 @@
 # INSIGHT — 从"点亮 LED"到"一台完整的计算机"
 
-> 基于 git 历史（2026-05-21 ~ 2026-06-02，128 次提交）梳理项目发展历程。
+> 基于 git 历史（2026-05-21 ~ 2026-06-04，149 次提交）梳理项目发展历程。
 
 ## 一个被忽略的约束
 
@@ -455,7 +455,123 @@ UART 从"第二 VGA"变成调试通道：
 
 ---
 
-## 七个决策速览
+## Day 13: 功能收尾 + NTT 测试 + 硬件精简 (06-03)
+
+### 凌晨：Promo 物料 + Conway 修复
+
+**`cccfef7` docs: add promotional architecture diagram and presentation slides**
+
+交互式架构图（HTML+CSS，自适应布局）和演示文稿 PPT（reveal.js，5 页幻灯片）。用代码生成而非截图，方便后续更新。
+
+**`e5ff326` docs: add banner SVG and rewrite bilingual READMEs**
+
+Banner SVG（深色主题，6 个统计指标），README 中英双语重写，badge 标签。
+
+**`631cd87` fix: conway cursor blink, finish crash, TRNG seed, partial refresh**
+
+Conway 四连修：
+1. 光标闪烁导致数据竞争——在刷新循环中停止闪烁
+2. 游戏结束时 `finish()` 崩溃——空指针解引用
+3. TRNG 种子初始化时机错误
+4. 局部刷新边界条件
+
+### 上午：Synth + TWM + 多程序修复
+
+**`01985e1` feat: synth audio output, TWM serial commands, conway/snake/ntt fixes**
+
+多个程序的一轮集中修复：synth 首次有音频输出、TWM 加了串口命令支持、conway/snake/ntt 各有小修。
+
+### 下午：Cryptoviz 上板 + LCD 重设计
+
+**`e19a6f6` fix: LCD display redesign — correct prog_id mapping, unified Line1, per-program Line2**
+
+LCD 显示逻辑重写：Line 1 统一显示 "DE2Extra Status"，Line 2 按当前程序显示不同内容。之前的 prog_id 映射有错，导致 LCD 显示的程序名和实际运行的程序不对应。
+
+**`62fa7a2` feat: cryptoviz board verification, NTT RTL fix, local SDL2 build, V2 cleanup**
+
+Cryptoviz 上板验证通过——AES/SHA 的逐步可视化在物理 VGA 显示器上正确渲染。同时修了 NTT RTL 的一个问题，加了本地 SDL2 构建支持，清理了 V2 时代的残留文件。
+
+### 晚上：NTT 测试套件 + 硬件精简
+
+**`646810a` feat: add NTT automated test suite (test_ntt.py)**
+
+NTT Python 自动化测试套件——DIF/DIT 正变换/逆变换、round-trip 一致性、卷积验证。为后续调试提供了可靠基线。
+
+**`2ee5d9d` feat: remove NTT/synth HW from synthesis, SW NTT fallback, 10 active peripherals**
+
+关键决策：**NTT 和 Synth 硬件从综合中移除**。两个模块的 RTL 代码保留在仓库中，但不再参与 Quartus 编译。NTT 改为纯软件实现，Synth 禁用。原因：
+- NTT：255/256 元素不匹配的根因未定位，硬件不可靠
+- Synth：WM8731 音频输出有背景噪音，缺少专业音频测试设备验证
+
+FPGA 利用率从 ~55% 降到 **~47%**（53.5K / 114.5K LEs），时序裕量更宽。
+
+Wishbone 总线从 12 active 变为 **10 active**，2 个从站改为 stub ack（返回全零 + 立即 ack）。
+
+**`2d751a1` fix: stub ack for removed NTT/synth Wishbone slaves, remove selfcheck probe**
+
+wb_intercon 中 NTT/Synth 的 slave port 改为 stub ack。selfcheck 不再探测这两个地址。
+
+**`b997c20` feat: TWM desktop background changed to 8-color vertical bars (Exp7 mode 01)**
+
+TWM 桌面背景改为 8 色竖条（复用 Exp7 的 VGA 测试图案 mode 01），比纯色更有视觉效果。
+
+---
+
+## Day 14: 跨平台 CLI + Release (06-04)
+
+### 凌晨：Release 文档准备
+
+**`f0071ef` docs: v0.3 release — update all docs, promo, add quick-start guide**
+
+v0.3 发布文档准备：README 快速入门、promo 数据更新（144 commits 等）、构建指南。
+
+**`4d4fedd` docs: update all repository facade for v0.3 release**
+
+Banner、架构图、PPT 的数据一致性更新。
+
+**`f808854` fix: promo polish — AES 100+x, Display font size, remove highlight chips**
+
+Promo 细节打磨：AES 加速比改为 "100+x"、Display 字体大小调整、移除 highlight chips。
+
+**`fe71d8d` chore: save accumulated progress — docs, CLAUDE.md, sw/lib, build info**
+
+保存累积进度：CLAUDE.md 更新、sw/lib 代码整理、build info 同步。
+
+### 上午：跨平台 CLI 工具
+
+**`67d18a7` feat: add cross-platform CLI tool (run/de2extra.py)**
+
+替代 `deploy_de2shell_rtos.sh` 的跨平台 Python CLI：
+
+| 子命令 | 功能 | 耗时 |
+|--------|------|------|
+| `sw-build` | Docker 交叉编译固件 | ~25s |
+| `sw-upload` | UART 上传 + 软重启 | ~20s |
+| `hw-build` | Quartus 综合 | ~15min |
+| `hw-flash` | JTAG 烧录 SOF | ~11s |
+
+自动检测：串口（pyserial 扫描）、Quartus 安装路径（全盘搜索）、Docker。环境变量覆盖：`DE2OS_COM`、`QUARTUS_ROOTDIR`。
+
+同时修了 `upload_de2os.py` 的 bootloader 检测 bug——no-wait 模式下 `wait_for_prompt_with_abort()` 每 0.23s 发空格，阻止 bootloader 完成自动启动序列。改为 `wait_for_prompt()` 静默等待。
+
+所有 4 个子命令在真实硬件上验证通过。
+
+### 下午：Release 完成
+
+**`cd1a9f0` docs: v0.3 release — AI declaration, disclaimer, NEORV32 patches, promo data**
+
+最终发布提交：
+- AI 使用声明（GLM 5.1, DeepSeek V4, GPT 5.4 / Claude Code, DeepSeek TUI, Codex）
+- 硬件免责声明
+- NEORV32 v1.13.1 本地补丁文档（6 项 bootloader 修改）
+- `ver` 命令新增 `Version: v0.3`
+- Promo 数据更新：148 commits，~45s 增量部署
+
+GitHub Release `v0.3` 发布，中英双语 Release Notes，43 commits 分类汇总。
+
+---
+
+## 八个决策速览
 
 | # | 决策 | 日期 | 解决什么问题 |
 |---|------|------|-----------|
@@ -466,6 +582,7 @@ UART 从"第二 VGA"变成调试通道：
 | 5 | 硬件加速器针对 CPU 瓶颈 | 05-23/06-01 | CPU 逐像素写帧 2 秒，NTT 运算慢两个数量级 |
 | 6 | VGA 像素模式 + TWM | 06-01 | 文字终端和串口输出没有视觉区分度 |
 | 7 | 统一操作逻辑，打磨体验 | 06-02 | 各程序操作不一致，Bug 影响可用性 |
+| 8 | 精简未完成硬件，专注可靠性 | 06-03 | NTT/Synth 硬件不可靠，占用 FPGA 资源且无法验证 |
 
 ## 时间线
 
@@ -488,9 +605,16 @@ Day 10-12 (06-02) 程序打磨：F1/F10 统一帮助系统，Conway 64×25 ramst
                 + toggle_cell，NTT 地址解码修复，UART 角色重设计
                 Synth WM8731 5 连修，TRNG selftest 修复
                 Conway 局部刷新，文档整理归档
+Day 13 (06-03)  15 commits: Cryptoviz 上板验证，NTT 测试套件
+                NTT/Synth 硬件从综合移除（10 active peripherals）
+                Stub ack + SW fallback，TWM 8 色竖条背景
+                Promo 物料（架构图 + PPT + Banner + 双语 README）
+Day 14 (06-04)  6 commits: 跨平台 Python CLI 工具（de2extra.py）
+                AI 使用声明 + 免责声明 + NEORV32 补丁文档
+                Promo 数据更新，v0.3 GitHub Release 发布
 ```
 
-12 天，128 次提交。从零到一个有 12 个 Wishbone 外设、19 条 CLI 命令、FreeRTOS 4 任务、VGA 像素 GUI、7 小时+ 长稳无崩溃的完整系统。
+14 天，149 次提交。从零到一个有 10 个活跃 Wishbone 外设、22 条 CLI 命令、FreeRTOS 4 任务、VGA 像素 GUI、7 小时+ 长稳无崩溃的完整系统。
 
 ## 一句话总结
 
